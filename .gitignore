@@ -19,3 +19,8 @@ web-build/
 
 expo-env.d.ts
 # @end expo-cli
+
+# Yarn
+.yarn/*
+!.yarn/releases
+!.yarn/plugins
