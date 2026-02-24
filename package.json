@@ -1,0 +1,47 @@
+{
+  "name": "@monorepo/mobile",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Volontariapp React Native mobile application (Expo SDK 54)",
+  "license": "UNLICENSED",
+  "main": "expo-router/entry",
+  "scripts": {
+    "start": "expo start",
+    "android": "expo start --android",
+    "ios": "expo start --ios",
+    "web": "expo start --web",
+    "lint": "eslint src/",
+    "ts:check": "tsc --noEmit",
+    "prebuild": "expo prebuild",
+    "build:ios": "eas build --platform ios",
+    "build:android": "eas build --platform android"
+  },
+  "engines": {
+    "node": ">=24.14.0"
+  },
+  "dependencies": {
+    "expo": "~54.0.0",
+    "expo-constants": "~17.0.0",
+    "expo-font": "~13.0.0",
+    "expo-linking": "~7.0.0",
+    "expo-router": "~4.0.0",
+    "expo-splash-screen": "~0.29.0",
+    "expo-status-bar": "~2.0.0",
+    "expo-system-ui": "~4.0.0",
+    "expo-web-browser": "~14.0.0",
+    "react": "19.1.0",
+    "react-dom": "19.1.0",
+    "react-native": "0.81.0",
+    "react-native-gesture-handler": "~2.24.0",
+    "react-native-reanimated": "~3.17.0",
+    "react-native-safe-area-context": "~5.4.0",
+    "react-native-screens": "~4.10.0",
+    "react-native-web": "~0.20.0"
+  },
+  "devDependencies": {
+    "@babel/core": "^7.26.0",
+    "@types/react": "~19.1.0",
+    "eslint": "~9.18.0",
+    "typescript": "~5.7.3"
+  }
+}
