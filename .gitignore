@@ -24,3 +24,10 @@ expo-env.d.ts
 .yarn/*
 !.yarn/releases
 !.yarn/plugins
+
+# VSCode
+.vscode/*
+!.vscode/settings.json
+!.vscode/tasks.json
+!.vscode/launch.json
+!.vscode/extensions.json

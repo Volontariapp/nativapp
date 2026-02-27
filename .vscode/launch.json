@@ -1,0 +1,14 @@
+{
+  "version": "0.2.0",
+  "configurations": [
+    {
+      "name": "Debug Expo",
+      "type": "node",
+      "request": "attach",
+      "port": 8081,
+      "sourceMaps": true,
+      "cwd": "${workspaceFolder}",
+      "console": "integratedTerminal"
+    }
+  ]
+}
