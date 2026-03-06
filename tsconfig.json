@@ -1,5 +1,4 @@
 {
-  "extends": "../npm-packages/tsconfig.json",
   "compilerOptions": {
     "strict": true,
     "baseUrl": ".",
@@ -11,7 +10,9 @@
     "resolveJsonModule": true,
     "allowJs": true,
     "paths": {
-      "@/*": ["./src/*"]
+      "@/*": [
+        "./src/*"
+      ]
     }
   },
   "include": [
@@ -25,5 +26,6 @@
     "dist",
     "babel.config.js",
     "metro.config.js"
-  ]
+  ],
+  "extends": "expo/tsconfig.base"
 }
