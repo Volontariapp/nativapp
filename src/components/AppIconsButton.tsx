@@ -1,0 +1,66 @@
+  import React from "react";
+  import { TouchableOpacity, StyleSheet } from "react-native";
+
+  import { ICONS_BUTTON_VARIANTS } from "@/themes/buttonVariants";
+  import { theme } from "@/themes/theme";
+  import { AppIcons } from "@/components/AppIcons";
+
+  type IconLibrary = "Feather" | "FontAwesome" | "FontAwesome5";
+  type Variant = keyof typeof ICONS_BUTTON_VARIANTS;
+
+  interface AppIconsButtonProps {
+    variant?: Variant;
+    icon?: string;
+    size?: number;
+    iconLibrary?: IconLibrary;
+    iconColor?: string;
+    onPress?: () => void;
+  }
+
+  export const AppIconsButton = ({
+                                   variant = "eco",
+                                   icon,
+                                   iconLibrary = "Feather",
+                                   iconColor = theme.colors.white,
+                                   onPress,
+                                   size = 24,
+                                 }: AppIconsButtonProps) => {
+    const stylesVariant = ICONS_BUTTON_VARIANTS[variant];
+
+    const backgroundColor =
+      stylesVariant !== ICONS_BUTTON_VARIANTS.noBackground
+        ? stylesVariant.backgroundColor
+        : "transparent";
+
+    return (
+      <TouchableOpacity
+        onPress={onPress}
+        activeOpacity={0.8}
+        style={[
+          styles.button,
+          {
+            width: size,
+            height: size,
+            borderRadius: theme.radius.full,
+            backgroundColor,
+          },
+        ]}
+      >
+        {icon && (
+          <AppIcons
+            icon={icon}
+            iconLibrary={iconLibrary}
+            size={size * 0.5}
+            color={iconColor}
+          />
+        )}
+      </TouchableOpacity>
+    );
+  };
+
+  const styles = StyleSheet.create({
+    button: {
+      alignItems: "center",
+      justifyContent: "center",
+    },
+  });

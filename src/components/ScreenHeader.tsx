@@ -1,4 +1,5 @@
 import { View, Text, StyleSheet } from "react-native";
+import {theme} from "@/themes/theme";
 
 interface ScreenHeaderProps {
     title: string;
@@ -21,19 +22,19 @@ export function ScreenHeader({
 
 const styles = StyleSheet.create({
     container: {
-        paddingHorizontal: 24,
-        paddingTop: 60,
-        paddingBottom: 16,
+        paddingHorizontal: theme.spacing.md,
+        paddingTop: theme.spacing.md,
+        paddingBottom: theme.spacing.xs,
     },
     title: {
-        fontSize: 32,
-        fontWeight: "800",
-        color: "#1a1a2e",
+        fontSize: theme.typography.fontSize.sm,
+        fontWeight: theme.typography.fontWeight.bold,
+        color: theme.colors.background,
         letterSpacing: -0.5,
     },
     subtitle: {
-        fontSize: 16,
-        color: "#6c6c80",
-        marginTop: 4,
+        fontSize: theme.typography.fontSize.md,
+        color: theme.colors.grey,
+        marginTop: theme.spacing.xs,
     },
 });
