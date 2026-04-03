@@ -16,53 +16,41 @@ jobs:
         working-directory: .
 
     steps:
-      - name: 🏗 Checkout
+      - name: Checkout
         uses: actions/checkout@v4
 
-      - name: 🛠 Enable Corepack
+      - name: Enable Corepack
         run: corepack enable
 
-      - name: ⚙️ Setup Node.js
+      - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
           node-version: 'lts/*'
           cache: 'yarn'
           cache-dependency-path: yarn.lock
 
-      - name: 🛠 Enable Corepack
-        run: corepack enable
+      - name: Install dependencies
+        run: yarn install --immutable
 
-      - name: 📦 Install dependencies
-        run: |
-          yarn install --immutable
-
-      - name: 🔍 Lint
+      - name: Lint
         run: yarn lint
 
-      - name: ⌨️ Type Check
+      - name: Type Check
         run: yarn ts:check
 
-      - name: 🚀 Expo Setup
+      - name: Expo Setup
         run: |
-          npm install --global eas-cli
-          npx expo install --check
+          yarn dlx eas-cli --version
+          yarn expo install --check
 
-      - name: 🏗 Preview Build (Prebuild Check)
-        run: |
-          # EAS Prebuild validates native config (app.json / app.config.js)
-          # and ensures dependencies are compatible without credentials.
-          npx expo prebuild --no-install
+      - name: Preview Build (Prebuild Check)
+        run: npx expo prebuild --no-install
         env:
           EXPO_TOKEN: ${{ secrets.EXPO_TOKEN }}
 
-      - name: 🏗 EAS Build Dry Run
+      - name: EAS Build Dry Run
         run: |
-          # EAS build normally requires EXPO_TOKEN for authentication.
-          # Here we run a check to ensure the configuration is valid without actually starting a build.
-          # To truly build, you will need to configure EXPO_TOKEN in your GitHub Secrets.
           echo "Verifying EAS configuration..."
-          # Since EAS authentication is required for most EAS commands, 
-          # we validate the expo config as a "pre-build" check.
           npx expo config --type public
         env:
           EXPO_TOKEN: ${{ secrets.EXPO_TOKEN }}
