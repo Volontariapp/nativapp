@@ -12,7 +12,9 @@ export function ScreenHeader({
     return (
         <View style={styles.container}>
             <Text style={styles.title}>{title}</Text>
-            {subtitle ? <Text style={styles.subtitle}>{subtitle}</Text> : null}
+            {subtitle !== undefined && subtitle !== "" && (
+                <Text style={styles.subtitle}>{subtitle}</Text>
+            )}
         </View>
     );
 }
