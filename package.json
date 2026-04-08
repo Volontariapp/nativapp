@@ -22,6 +22,8 @@
     "node": ">=24.14.0"
   },
   "dependencies": {
+    "@volontariapp/contracts": "2.2.0",
+    "@volontariapp/logger": "0.2.0",
     "expo": "~54.0.0",
     "expo-constants": "~18.0.13",
     "expo-font": "~14.0.11",
