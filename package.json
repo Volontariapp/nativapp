@@ -8,6 +8,10 @@
   "scripts": {
     "dev": "expo start",
     "start": "expo start",
+    "start:local": "NODE_ENV=local expo start",
+    "start:dev": "NODE_ENV=development expo start",
+    "start:test": "NODE_ENV=test expo start",
+    "start:prod": "NODE_ENV=production expo start",
     "android": "expo start --android",
     "ios": "expo start --ios",
     "web": "expo start --web",
@@ -22,7 +26,7 @@
     "node": ">=24.14.0"
   },
   "dependencies": {
-    "@volontariapp/config": "1.0.0-next.20260409094921",
+    "@volontariapp/config": "1.0.0",
     "@volontariapp/contracts": "2.2.0",
     "@volontariapp/logger": "0.2.0",
     "class-transformer": "^0.5.1",
