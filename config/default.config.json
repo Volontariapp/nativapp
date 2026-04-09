@@ -1,0 +1,8 @@
+{
+  "apiGatewayUrl": "http://localhost:3000",
+  "port": 8081,
+  "logger": {
+    "level": "info",
+    "format": "text"
+  }
+}

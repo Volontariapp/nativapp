@@ -1,0 +1,4 @@
+{
+  "nodeEnv": "local",
+  "apiGatewayUrl": "http://localhost:3000"
+}

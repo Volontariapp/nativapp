@@ -1,0 +1,7 @@
+{
+  "nodeEnv": "production",
+  "logger": {
+    "level": "warn",
+    "format": "json"
+  }
+}

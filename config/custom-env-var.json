@@ -1,0 +1,8 @@
+{
+  "apiGatewayUrl": "API_GATEWAY_URL",
+  "port": "PORT",
+  "logger": {
+    "level": "LOG_LEVEL",
+    "format": "LOG_FORMAT"
+  }
+}
