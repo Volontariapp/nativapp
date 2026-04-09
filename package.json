@@ -22,7 +22,7 @@
     "node": ">=24.14.0"
   },
   "dependencies": {
-    "@volontariapp/config": "1.0.0-next.20260409091954",
+    "@volontariapp/config": "1.0.0-next.20260409094921",
     "@volontariapp/contracts": "2.2.0",
     "@volontariapp/logger": "0.2.0",
     "class-transformer": "^0.5.1",
