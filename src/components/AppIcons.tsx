@@ -1,3 +1,4 @@
+    import type {JSX} from "react";
     import React from "react";
     import Feather from "react-native-vector-icons/Feather";
     import FontAwesome from "react-native-vector-icons/FontAwesome";
@@ -6,16 +7,10 @@
     type IconLibrary = "Feather" | "FontAwesome" | "FontAwesome5";
 
     import {
-      Text,
-      TouchableOpacity,
       StyleSheet,
       View,
-      Image,
     } from "react-native";
-    import { BUTTON_VARIANTS } from "@/themes/buttonVariants";
     import { theme } from "@/themes/theme";
-
-    type Variant = keyof typeof BUTTON_VARIANTS;
 
     interface AppIconsProps {
       icon: string;
@@ -29,7 +24,7 @@
                                 iconLibrary = "Feather",
                                 color = theme.colors.white,
                                 size,
-                              }: AppIconsProps) => {
+                              }: AppIconsProps): JSX.Element => {
       let IconComponent;
       if (iconLibrary === "FontAwesome5") IconComponent = FontAwesome5;
       else if (iconLibrary === "FontAwesome") IconComponent = FontAwesome;

@@ -1,6 +1,8 @@
-  import React from "react";
+  import type {JSX} from "react";
+import React from "react";
   import { Text, View, StyleSheet } from "react-native";
-  import { TagsNames, TAGS_CONFIG } from "@/types/tagsTypes";
+  import type { TagsNames} from "@/types/tagsTypes";
+  import { TAGS_CONFIG } from "@/types/tagsTypes";
   import {AppIcons} from "@/components/AppIcons";
   import {theme} from "@/themes/theme";
 
@@ -8,7 +10,7 @@
     type: TagsNames;
   }
 
-  export const TagComponent = ({ type }: TagProps) => {
+  export const TagComponent = ({ type }: TagProps): JSX.Element => {
     const tag = TAGS_CONFIG[type];
 
     return (
@@ -18,7 +20,7 @@
           { backgroundColor: tag.backgroundColor },
         ]}
       >
-        { tag.icon && <AppIcons icon={tag.icon} size={12}/> }
+        { (tag.icon != null) && <AppIcons icon={tag.icon} size={12}/> }
         <Text style={[styles.text, { color: tag.textColor }]}>
           {tag.textContent}
         </Text>

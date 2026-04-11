@@ -1,7 +1,7 @@
+import type { JSX} from "react";
 import React, {
   useState,
-  forwardRef,
-  useImperativeHandle,
+  forwardRef
 } from "react";
 import { View, TextInput, StyleSheet } from "react-native";
 import { theme } from "@/themes/theme";
@@ -22,17 +22,17 @@ interface InputBoxProps {
 }
 
 export const InputBox = forwardRef<InputBoxRef, InputBoxProps>(
-  ({ placeholder = "Entrez du texte...", errorMessage, label, maxLength, minLength, disabled}, ref) => {
+  ({ placeholder = "Entrez du texte...", errorMessage, label, maxLength, minLength, disabled}): JSX.Element => {
     const [value, setValue] = useState("");
     const [isFocused, setIsFocused] = useState(false);
 
     let isError = false;
-    if (value.length != 0 && ((maxLength && value.length > maxLength) || (minLength && value.length < minLength)))
+    if (value.length != 0 && (((maxLength != null) && value.length > maxLength) || ((minLength != null) && value.length < minLength)))
       isError = true;
 
     return (
       <View style={styles.container}>
-        {label && (
+        {(label != null) && (
           <AppText variant="caption" style={styles.label}>
             {label}
           </AppText>
@@ -41,15 +41,15 @@ export const InputBox = forwardRef<InputBoxRef, InputBoxProps>(
         <TextInput
           value={value}
           onChangeText={setValue}
-          placeholder={isFocused && !disabled ? "" : placeholder}
+          placeholder={isFocused && (disabled === false) ? "" : placeholder}
           placeholderTextColor={theme.colors.grey}
-          onFocus={() => setIsFocused(true)}
-          onBlur={() => setIsFocused(false)}
-          editable={!disabled}
+          onFocus={() => { setIsFocused(true); }}
+          onBlur={() => { setIsFocused(false); }}
+          editable={disabled === false}
           style={[
             styles.input,
             isError && styles.inputError,
-            disabled && styles.inputDisabled, // ✅ style disabled
+            (disabled === true) && styles.inputDisabled,
           ]}
         />
 

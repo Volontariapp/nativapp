@@ -1,4 +1,4 @@
-import {View, StyleSheet, ScrollView, Linking, Image} from "react-native";
+import {View, StyleSheet, ScrollView, Linking} from "react-native";
 import {ScreenHeader} from "@/components";
 import {useRouter} from "expo-router";
 import {theme} from "@/themes/theme";
@@ -11,6 +11,8 @@ import {AppIcons} from "@/components/AppIcons";
 import {AppIconsButton} from "@/components/AppIconsButton";
 import {AppImage} from "@/components/AppImage";
 import React from "react";
+
+import chienPng from "../../assets/chien.png";
 
 export function SandBoxScreen(): React.JSX.Element {
   const router = useRouter();
@@ -31,7 +33,7 @@ export function SandBoxScreen(): React.JSX.Element {
             text="Retourner à l'accueil"
             icon="home"
             iconLibrary="FontAwesome5"
-            onPress={() => router.push("/")}
+            onPress={() => {router.push("/")}}
           />
         </View>
       </View>
@@ -109,11 +111,11 @@ export function SandBoxScreen(): React.JSX.Element {
             Nous utilisons react-native-vector-icons voir{" "}
             <AppText
               style={styles.link}
-              onPress={() =>
-                Linking.openURL(
+              onPress={() => {
+                void Linking.openURL(
                   "https://oblador.github.io/react-native-vector-icons/"
                 )
-              }
+              }}
             >
               ici
             </AppText>
@@ -188,9 +190,9 @@ export function SandBoxScreen(): React.JSX.Element {
             Images
           </AppText>
           <View style={styles.rowWrap}>
-            <AppImage image={require("../../assets/chien.png")} height={200} width={200}/>
-            <AppImage image={require("../../assets/chien.png")} height={100} width={100} rounded={10}/>
-            <AppImage image={require("../../assets/chien.png")} height={170} width={300} rounded={5}/>
+            <AppImage image={chienPng} height={200} width={200}/>
+            <AppImage image={chienPng} height={100} width={100} rounded={10}/>
+            <AppImage image={chienPng} height={170} width={300} rounded={5}/>
           </View>
         </View>
       </ScrollView>

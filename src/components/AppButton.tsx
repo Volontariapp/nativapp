@@ -1,3 +1,4 @@
+import type {JSX} from "react";
 import React from "react";
 
 type IconLibrary = "Feather" | "FontAwesome" | "FontAwesome5";
@@ -7,7 +8,6 @@ import {
   TouchableOpacity,
   StyleSheet,
   View,
-  Image,
 } from "react-native";
 import { BUTTON_VARIANTS } from "@/themes/buttonVariants";
 import { theme } from "@/themes/theme";
@@ -29,7 +29,7 @@ export const AppButton = ({
                             icon,
                             iconLibrary = "Feather",
                             onPress,
-                          }: AppButtonProps) => {
+                          }: AppButtonProps): JSX.Element => {
   const stylesVariant = BUTTON_VARIANTS[variant];
 
   return (
@@ -42,7 +42,7 @@ export const AppButton = ({
       activeOpacity={0.8}
     >
       <View style={styles.content}>
-        {icon && (
+        {(icon != null) && (
           <AppIcons icon={icon} iconLibrary={iconLibrary} size={20} color={stylesVariant.textColor}/>
         )}
         <Text

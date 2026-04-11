@@ -27,7 +27,14 @@ export default tseslint.config(
             "@typescript-eslint/prefer-optional-chain": "error",
         },
     },
+  {
+    files: ["**/*.d.ts"],
+    rules: {
+      "@typescript-eslint/consistent-type-imports": "off",
+    },
+  },
     {
         ignores: ["dist/", "node_modules/", "scripts/", "**/*.js", "**/*.mjs"],
     }
+
 );

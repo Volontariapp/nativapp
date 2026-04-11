@@ -1,3 +1,4 @@
+import type {JSX} from "react";
 import React from "react";
 
 import {
@@ -24,7 +25,7 @@ export const AppImage = ({
                            height,
                            width,
                            style,
-                         }: AppImageProps) => {
+                         }: AppImageProps) : JSX.Element => {
 
   const resolvedSource: ImageSourcePropType =
     typeof image === "string" ? { uri: image } : image;

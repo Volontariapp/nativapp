@@ -1,3 +1,4 @@
+  import type {JSX} from "react";
   import React from "react";
   import { TouchableOpacity, StyleSheet } from "react-native";
 
@@ -24,7 +25,7 @@
                                    iconColor = theme.colors.white,
                                    onPress,
                                    size = 24,
-                                 }: AppIconsButtonProps) => {
+                                 }: AppIconsButtonProps): JSX.Element => {
     const stylesVariant = ICONS_BUTTON_VARIANTS[variant];
 
     const backgroundColor =
@@ -46,7 +47,7 @@
           },
         ]}
       >
-        {icon && (
+        {(icon != null) && (
           <AppIcons
             icon={icon}
             iconLibrary={iconLibrary}

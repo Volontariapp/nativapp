@@ -1,5 +1,7 @@
+import type {JSX} from "react";
 import React from "react";
-import { Text, StyleSheet, TextProps } from "react-native";
+import type { TextProps } from "react-native";
+import { Text, StyleSheet } from "react-native";
 import { theme } from "@/themes/theme";
 
 type Variant = "title" | "subtitle" | "body" | "caption" | "bigTitle";
@@ -17,7 +19,7 @@ export const AppText = ({
                           font = "primary",
                           style,
                           ...props
-                        }: AppTextProps) => {
+                        }: AppTextProps): JSX.Element => {
   return (
     <Text
       style={[
