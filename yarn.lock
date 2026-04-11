@@ -1837,7 +1837,7 @@ __metadata:
     "@eslint/js": "npm:^9.18.0"
     "@types/react": "npm:~19.1.0"
     "@volontariapp/config": "npm:1.0.0"
-    "@volontariapp/contracts": "npm:2.2.0"
+    "@volontariapp/contracts": "npm:3.0.8"
     "@volontariapp/logger": "npm:0.2.0"
     class-transformer: "npm:^0.5.1"
     class-validator: "npm:^0.15.1"
@@ -2983,16 +2983,13 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@volontariapp/contracts@npm:2.2.0":
-  version: 2.2.0
-  resolution: "@volontariapp/contracts@npm:2.2.0"
+"@volontariapp/contracts@npm:3.0.8":
+  version: 3.0.8
+  resolution: "@volontariapp/contracts@npm:3.0.8"
   dependencies:
     "@volontariapp/logger": "npm:0.2.0"
     protobufjs: "npm:7.5.3"
-  peerDependencies:
-    "@nestjs/microservices": ^11.0.0
-    rxjs: ^7.0.0
-  checksum: 10c0/05e588c1e9e3ce56d23c19f4dff2fe81d5dc603975dd04ec80f3ef03cb1f823734eb8149043547d3cc163ff6366e8e1984309749b3b719d123fb94e58b803e03
+  checksum: 10c0/10f13ef813c48db42f908a0c37d3b6423b10b658e6e0b3235ddc880361193ed5bfce04609743221cdc47f9b887d031b785aa6c6f3fb32cfb59f97badbe679182
   languageName: node
   linkType: hard
 

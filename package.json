@@ -27,7 +27,7 @@
   },
   "dependencies": {
     "@volontariapp/config": "1.0.0",
-    "@volontariapp/contracts": "2.2.0",
+    "@volontariapp/contracts": "3.0.8",
     "@volontariapp/logger": "0.2.0",
     "class-transformer": "^0.5.1",
     "class-validator": "^0.15.1",
