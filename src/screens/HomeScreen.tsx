@@ -1,7 +1,12 @@
 import { View, StyleSheet } from "react-native";
-import { ScreenHeader, ActionButton } from "@/components";
+import { ScreenHeader } from "@/components";
+import {AppButton} from "@/components/AppButton";
+import {useRouter} from "expo-router";
 
-export function HomeScreen(): React.JSX.Element {
+const router = useRouter();
+
+// eslint-disable-next-line @typescript-eslint/explicit-function-return-type
+export function HomeScreen() {
     return (
         <View style={styles.container}>
             <ScreenHeader
@@ -9,15 +14,17 @@ export function HomeScreen(): React.JSX.Element {
                 subtitle="Connect. Volunteer. Impact."
             />
             <View style={styles.content}>
-                <ActionButton
-                    label="Get Started"
-                    onPress={() => undefined}
+                <AppButton
+                    icon={"hammer"}
+                    iconLibrary={"FontAwesome5"}
+                    text="Go to sandbox"
+                    onPress={() => { router.push("/SandBox"); }}
                 />
                 <View style={styles.spacer} />
-                <ActionButton
-                    label="Learn More"
-                    onPress={() => undefined}
-                    variant="secondary"
+                <AppButton
+                    text="Site Map"
+                    variant={"secondary"}
+                    onPress={() => { router.push("/_sitemap"); }}
                 />
             </View>
         </View>
