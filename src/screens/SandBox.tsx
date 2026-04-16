@@ -3,7 +3,7 @@ import {ScreenHeader} from "@/components";
 import {useRouter} from "expo-router";
 import {theme} from "@/themes/theme";
 import {TagComponent} from "@/components/Tags";
-import {TagsNames} from "@/types/tagsTypes";
+import {TagsNames} from "@volontariapp/shared";
 import {AppText} from "@/components/AppText";
 import {InputBox} from "@/components/InputBox";
 import {AppButton} from "@/components/AppButton";

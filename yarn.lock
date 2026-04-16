@@ -1884,8 +1884,9 @@ __metadata:
     "@volontariapp/config": "npm:2.0.0"
     "@volontariapp/contracts": "npm:4.0.2"
     "@volontariapp/logger": "npm:0.2.3"
+    "@volontariapp/shared": "npm:0.1.1"
     class-transformer: "npm:^0.5.1"
-    class-validator: "npm:^0.15.1"
+    class-validator: "npm:0.15.1"
     eslint: "npm:~9.18.0"
     expo: "npm:~54.0.0"
     expo-constants: "npm:~18.0.13"
@@ -3090,6 +3091,13 @@ __metadata:
   languageName: node
   linkType: hard
 
+"@volontariapp/shared@npm:0.1.1":
+  version: 0.1.1
+  resolution: "@volontariapp/shared@npm:0.1.1"
+  checksum: 10c0/11300d546c37e9df67e9eed493435f7b0bd17a3ca02098f42417fdcb4d5e243ce4e843c0d0dba581485febe1abe73d01ad13d38c2e0de7dfedf34a2b60829927
+  languageName: node
+  linkType: hard
+
 "@xmldom/xmldom@npm:^0.8.8":
   version: 0.8.12
   resolution: "@xmldom/xmldom@npm:0.8.12"
@@ -3850,7 +3858,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"class-validator@npm:^0.15.1":
+"class-validator@npm:0.15.1, class-validator@npm:^0.15.1":
   version: 0.15.1
   resolution: "class-validator@npm:0.15.1"
   dependencies:
