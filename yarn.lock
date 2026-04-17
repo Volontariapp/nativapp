@@ -1865,7 +1865,7 @@ __metadata:
     "@volontariapp/logger": "npm:0.2.0"
     "@volontariapp/shared": "npm:0.1.1"
     class-transformer: "npm:^0.5.1"
-    class-validator: "npm:^0.15.1"
+    class-validator: "npm:0.15.1"
     eslint: "npm:~9.18.0"
     expo: "npm:~54.0.0"
     expo-constants: "npm:~18.0.13"
@@ -3727,7 +3727,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"class-validator@npm:^0.15.1":
+"class-validator@npm:0.15.1, class-validator@npm:^0.15.1":
   version: 0.15.1
   resolution: "class-validator@npm:0.15.1"
   dependencies:
