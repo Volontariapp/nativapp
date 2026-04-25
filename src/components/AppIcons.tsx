@@ -3,8 +3,10 @@
     import Feather from "react-native-vector-icons/Feather";
     import FontAwesome from "react-native-vector-icons/FontAwesome";
     import FontAwesome5 from "react-native-vector-icons/FontAwesome5";
+    import MaterialDesignIcons from "react-native-vector-icons/MaterialCommunityIcons"
+    import Ionicons from "react-native-vector-icons/Ionicons";
 
-    type IconLibrary = "Feather" | "FontAwesome" | "FontAwesome5";
+    type IconLibrary = "Feather" | "FontAwesome" | "FontAwesome5" | "MaterialDesignIcons" | "Ionicons";
 
     import {
       StyleSheet,
@@ -28,6 +30,8 @@
       let IconComponent;
       if (iconLibrary === "FontAwesome5") IconComponent = FontAwesome5;
       else if (iconLibrary === "FontAwesome") IconComponent = FontAwesome;
+      else if (iconLibrary === "MaterialDesignIcons") IconComponent = MaterialDesignIcons;
+      else if (iconLibrary === "Ionicons") IconComponent = Ionicons;
       else IconComponent = Feather;
 
       return (

@@ -26,6 +26,7 @@
     "node": ">=24.14.0"
   },
   "dependencies": {
+    "@react-navigation/bottom-tabs": "^7.15.9",
     "@volontariapp/config": "1.0.0",
     "@volontariapp/contracts": "3.0.8",
     "@volontariapp/logger": "0.2.0",

@@ -1,14 +1,16 @@
 import { View, StyleSheet } from "react-native";
+import {AppButton} from "@/components/AppButton";
+import {useRouter} from "expo-router";
 import React from "react";
 import {AppText} from "@/components/AppText";
-import AppHeader from "@/components/AppHeader";
 
+const router = useRouter();
 
-export function HomeScreen(): React.JSX.Element {
+export function OnboardingScreen(): React.JSX.Element {
     return (
         <View style={styles.container}>
-          <AppHeader />
-          <AppText> This is the Feed screen </AppText>
+            <AppText> This is the Register screen </AppText>
+          <AppButton variant={"eco"} text="Go to homepage" onPress={() => { router.push("/"); }}/>
         </View>
     );
 }

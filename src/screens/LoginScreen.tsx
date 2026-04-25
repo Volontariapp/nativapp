@@ -1,14 +1,15 @@
 import { View, StyleSheet } from "react-native";
-import React from "react";
+import {AppButton} from "@/components/AppButton";
+import React, {useContext} from "react";
 import {AppText} from "@/components/AppText";
-import AppHeader from "@/components/AppHeader";
+import {AuthContext} from "@/context/AuthContext";
 
-
-export function HomeScreen(): React.JSX.Element {
+export function LoginScreen(): React.JSX.Element {
+    const { signIn } = useContext(AuthContext);
     return (
         <View style={styles.container}>
-          <AppHeader />
-          <AppText> This is the Feed screen </AppText>
+            <AppText> This is the login screen </AppText>
+          <AppButton variant={"eco"} text="se connecter" onPress={() => { signIn() }}/>
         </View>
     );
 }
