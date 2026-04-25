@@ -9,13 +9,6 @@ export interface Tag {
   backgroundColor: string;
 }
 
-// export enum TagsNames {
-//   ECOLOGIE,
-//   SOCIAL,
-//   BENEVOLAT,
-//   CERTIFIED,
-// }
-
 export const TAGS_CONFIG: Record<TagsNames, Tag> = {
   [TagsNames.ECOLOGIE]: {
     name: TagsNames.ECOLOGIE,

@@ -1,14 +1,15 @@
 import { View, StyleSheet } from "react-native";
+
 import React from "react";
 import {AppText} from "@/components/AppText";
 import AppHeader from "@/components/AppHeader";
+import {theme} from "@/themes/theme";
 
-
-export function HomeScreen(): React.JSX.Element {
+export function SwipeScreen(): React.JSX.Element {
     return (
         <View style={styles.container}>
-          <AppHeader />
-          <AppText> This is the Feed screen </AppText>
+            <AppHeader />
+            <AppText> This is the Swipe screen </AppText>
         </View>
     );
 }
@@ -16,14 +17,6 @@ export function HomeScreen(): React.JSX.Element {
 const styles = StyleSheet.create({
     container: {
         flex: 1,
-        backgroundColor: "#f8f9fa",
-    },
-    content: {
-        flex: 1,
-        paddingHorizontal: 24,
-        paddingTop: 40,
-    },
-    spacer: {
-        height: 12,
+        backgroundColor: theme.colors.background,
     },
 });

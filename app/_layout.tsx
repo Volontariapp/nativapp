@@ -1,15 +1,11 @@
-import { Slot } from "expo-router";
-import { StatusBar } from "expo-status-bar";
-import "@/config/base-config";
-import { logger } from "../src/utils/logger";
+import React from "react";
+import { AuthProvider } from "@/context/AuthContext";
+import AdminNavigator from "@/navigation/AdminNavigator";
 
-export default function RootLayout(): React.JSX.Element {
-  logger.log("✅ [Config] Validated and loaded successfully!");
-
+export default function Layout(): React.JSX.Element {
   return (
-    <>
-      <StatusBar style="auto" />
-      <Slot />
-    </>
+    <AuthProvider>
+      <AdminNavigator/>
+    </AuthProvider>
   );
 }
