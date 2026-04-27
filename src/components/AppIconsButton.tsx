@@ -15,6 +15,7 @@
     size?: number;
     iconLibrary?: IconLibrary;
     iconColor?: string;
+    top?: number;
     onPress?: () => void;
   }
 
@@ -23,6 +24,7 @@
                                    icon,
                                    iconLibrary = "Feather",
                                    iconColor = theme.colors.white,
+                                   top = 0,
                                    onPress,
                                    size = 24,
                                  }: AppIconsButtonProps): JSX.Element => {
@@ -40,6 +42,7 @@
         style={[
           styles.button,
           {
+            top: top,
             width: size,
             height: size,
             borderRadius: theme.radius.full,

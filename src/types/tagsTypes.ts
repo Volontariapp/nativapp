@@ -1,4 +1,5 @@
 import { theme } from "@/themes/theme";
+import {TagsNames} from "@volontariapp/shared";
 
 export interface Tag {
   icon?: string;
@@ -6,13 +7,6 @@ export interface Tag {
   textContent: string;
   textColor: string;
   backgroundColor: string;
-}
-
-export enum TagsNames {
-  ECOLOGIE,
-  SOCIAL,
-  BENEVOLAT,
-  CERTIFIED,
 }
 
 export const TAGS_CONFIG: Record<TagsNames, Tag> = {

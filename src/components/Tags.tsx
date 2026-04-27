@@ -1,7 +1,7 @@
   import type {JSX} from "react";
 import React from "react";
   import { Text, View, StyleSheet } from "react-native";
-  import type { TagsNames} from "@/types/tagsTypes";
+  import type { TagsNames } from "@volontariapp/shared"
   import { TAGS_CONFIG } from "@/types/tagsTypes";
   import {AppIcons} from "@/components/AppIcons";
   import {theme} from "@/themes/theme";
