@@ -1883,9 +1883,9 @@ __metadata:
     "@types/react": "npm:~19.1.0"
     "@types/react-native-vector-icons": "npm:^6.4.18"
     "@volontariapp/config": "npm:2.1.0"
-    "@volontariapp/contracts": "npm:4.0.5"
+    "@volontariapp/contracts": "npm:4.0.7"
     "@volontariapp/logger": "npm:0.2.3"
-    "@volontariapp/shared": "npm:0.2.0"
+    "@volontariapp/shared": "npm:0.3.0"
     class-transformer: "npm:^0.5.1"
     class-validator: "npm:^0.15.1"
     eslint: "npm:~9.18.0"
@@ -3075,13 +3075,13 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@volontariapp/contracts@npm:4.0.5":
-  version: 4.0.5
-  resolution: "@volontariapp/contracts@npm:4.0.5"
+"@volontariapp/contracts@npm:4.0.7":
+  version: 4.0.7
+  resolution: "@volontariapp/contracts@npm:4.0.7"
   dependencies:
     "@volontariapp/logger": "npm:0.2.3"
     protobufjs: "npm:7.5.3"
-  checksum: 10c0/62161f1c9ce780d05c85f37af9d561a7c839cbfd792b5369b7c96200ad09a2e09ed7d727a2e8d71106624b966fec614483e8959b05037fdff0fe88e1a4c4d365
+  checksum: 10c0/ac3ff09e8122f913b5e92c12cc5397a233a3f3ffdf20b08c229bc912799f179125da9182de9aa750935a408d331df5d0d90f0905266610cb27337ae606fa4eb9
   languageName: node
   linkType: hard
 
@@ -3092,10 +3092,10 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@volontariapp/shared@npm:0.2.0":
-  version: 0.2.0
-  resolution: "@volontariapp/shared@npm:0.2.0"
-  checksum: 10c0/4991bc456d447fa2e76942ab45910abdff32cc6f281fe21e3048a7acf69d21d516be59e7da0360b272d55b709fb6ef569916a8f0aa8eed2be9b7a7d043719e87
+"@volontariapp/shared@npm:0.3.0":
+  version: 0.3.0
+  resolution: "@volontariapp/shared@npm:0.3.0"
+  checksum: 10c0/d87e0a67f0f1591bb381a7f7741a167395b3842d237a7d079002b72b9107447e1a5ee2e4c3895bdccf5f36664718f7b89d3bf1795e820ca361fa8b8470c42807
   languageName: node
   linkType: hard
 
