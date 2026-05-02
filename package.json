@@ -66,6 +66,8 @@
     "@volontariapp/logger": "0.2.3",
     "@volontariapp/shared": "0.3.0",
     "eslint": "~9.18.0",
+    "lint-staged": "^15.4.3",
+    "prettier": "^3.5.2",
     "typescript": "~5.9.2",
     "typescript-eslint": "^8.19.1"
   },
