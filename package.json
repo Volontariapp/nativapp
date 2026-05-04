@@ -28,7 +28,7 @@
   "dependencies": {
     "@react-navigation/bottom-tabs": "^7.4.0",
     "@volontariapp/config": "2.1.0",
-    "@volontariapp/contracts": "4.0.7",
+    "@volontariapp/contracts": "4.0.9",
     "@volontariapp/logger": "0.2.3",
     "@volontariapp/shared": "0.3.0",
     "class-transformer": "^0.5.1",
@@ -62,7 +62,7 @@
     "@types/react": "~19.1.0",
     "@types/react-native-vector-icons": "^6.4.18",
     "@volontariapp/config": "2.1.0",
-    "@volontariapp/contracts": "4.0.7",
+    "@volontariapp/contracts": "4.0.9",
     "@volontariapp/logger": "0.2.3",
     "@volontariapp/shared": "0.3.0",
     "eslint": "~9.18.0",
