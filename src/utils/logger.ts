@@ -1,7 +1,7 @@
-import { Logger } from "@volontariapp/logger";
-import { config } from "../config/base-config";
+import { Logger } from '@volontariapp/logger';
+import { config } from '../config/base-config';
 
 export const logger = new Logger({
-  context: "MOBILE",
+  context: 'MOBILE',
   format: config.getLoggerFormat(),
 });
