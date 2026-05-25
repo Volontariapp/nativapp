@@ -1,17 +1,12 @@
-import type {JSX} from "react";
-import React from "react";
+import type { JSX } from 'react';
+import React from 'react';
 
-type IconLibrary = "Feather" | "FontAwesome" | "FontAwesome5";
+type IconLibrary = 'Feather' | 'FontAwesome' | 'FontAwesome5';
 
-import {
-  Text,
-  TouchableOpacity,
-  StyleSheet,
-  View,
-} from "react-native";
-import { BUTTON_VARIANTS } from "@/themes/buttonVariants";
-import { theme } from "@/themes/theme";
-import {AppIcons} from "@/components/AppIcons";
+import { Text, TouchableOpacity, StyleSheet, View } from 'react-native';
+import { BUTTON_VARIANTS } from '@/themes/buttonVariants';
+import { theme } from '@/themes/theme';
+import { AppIcons } from '@/components/AppIcons';
 
 type Variant = keyof typeof BUTTON_VARIANTS;
 
@@ -21,29 +16,42 @@ interface AppButtonProps {
   icon?: string;
   iconLibrary?: IconLibrary;
   onPress?: () => void;
+  disabled?: boolean;
 }
 
 export const AppButton = ({
-                            text,
-                            variant = "eco",
-                            icon,
-                            iconLibrary = "Feather",
-                            onPress,
-                          }: AppButtonProps): JSX.Element => {
+  text,
+  variant = 'eco',
+  icon,
+  iconLibrary = 'Feather',
+  onPress,
+  disabled = false,
+}: AppButtonProps): JSX.Element => {
   const stylesVariant = BUTTON_VARIANTS[variant];
 
   return (
     <TouchableOpacity
       onPress={onPress}
+      disabled={disabled}
       style={[
         styles.button,
-        { backgroundColor: stylesVariant.backgroundColor, borderColor: stylesVariant.borderColor, borderWidth:1},
+        {
+          backgroundColor: stylesVariant.backgroundColor,
+          borderColor: stylesVariant.borderColor,
+          borderWidth: 1,
+          opacity: disabled ? 0.6 : 1,
+        },
       ]}
       activeOpacity={0.8}
     >
       <View style={styles.content}>
-        {(icon != null) && (
-          <AppIcons icon={icon} iconLibrary={iconLibrary} size={20} color={stylesVariant.textColor}/>
+        {icon != null && (
+          <AppIcons
+            icon={icon}
+            iconLibrary={iconLibrary}
+            size={20}
+            color={stylesVariant.textColor}
+          />
         )}
         <Text
           style={[
@@ -61,19 +69,18 @@ export const AppButton = ({
   );
 };
 
-
 const styles = StyleSheet.create({
   button: {
     borderRadius: theme.radius.md,
     paddingVertical: theme.spacing.md,
     paddingHorizontal: theme.spacing.md,
-    alignItems: "center",
-    justifyContent: "center",
+    alignItems: 'center',
+    justifyContent: 'center',
   },
 
   content: {
-    flexDirection: "row",
-    alignItems: "center",
+    flexDirection: 'row',
+    alignItems: 'center',
     gap: theme.spacing.sm,
   },
 
@@ -82,4 +89,3 @@ const styles = StyleSheet.create({
     fontWeight: theme.typography.fontWeight.semibold,
   },
 });
-
