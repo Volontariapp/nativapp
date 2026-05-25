@@ -4,9 +4,7 @@ import {
 } from '@react-navigation/native-stack';
 import React from 'react';
 
-import { LoginScreen } from '../screens/auth/LoginScreen';
-import { RegisterScreen } from '../screens/auth/RegisterScreen';
-import { OnboardingScreen } from '@/screens/OnboardingScreen';
+import { LoginScreen, RegisterScreen, OnboardingScreen } from '@/screens';
 
 export type AuthStackParamList = {
   login: undefined;

@@ -33,10 +33,17 @@ const getRawConfig = (): Record<string, unknown> => {
 
   const selectedConfig = configs[env];
 
-  return {
+  const merged = {
     ...defaultCfg,
     ...selectedConfig,
   };
+
+  const apiGatewayUrlFromEnv = extra?.['API_GATEWAY_URL'] as string | undefined;
+  if (apiGatewayUrlFromEnv != null) {
+    merged['apiGatewayUrl'] = apiGatewayUrlFromEnv;
+  }
+
+  return merged;
 };
 
 const initConfig = (): AppConfig => {

@@ -1,11 +1,14 @@
-import React from "react";
-import { AuthProvider } from "@/context/AuthContext";
-import AdminNavigator from "@/navigation/AdminNavigator";
+import React from 'react';
+import { AuthProvider } from '@/context/AuthContext';
+import { SocketProvider } from '@/context/SocketContext';
+import AdminNavigator from '@/navigation/AdminNavigator';
 
 export default function Layout(): React.JSX.Element {
   return (
     <AuthProvider>
-      <AdminNavigator/>
+      <SocketProvider>
+        <AdminNavigator />
+      </SocketProvider>
     </AuthProvider>
   );
 }

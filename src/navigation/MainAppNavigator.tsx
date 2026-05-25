@@ -2,10 +2,8 @@ import React from 'react';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 
 import { HomeScreen } from '@/screens';
-import { SwipeScreen } from '@/screens/SwipeScreen';
-import { ExploreScreen } from '@/screens/ExploreScreen';
-import { ProfileScreen } from '@/screens/ProfileScreen';
-import { CreateEventScreen } from '@/screens/CreateEventScreen';
+import { SwipeScreen, ExploreScreen, CreateEventScreen } from '@/screens';
+import ProfileStack from './ProfileStack';
 import { AppIconsButton } from '@/components/AppIconsButton';
 import { AppIcons } from '@/components/AppIcons';
 import { theme } from '@/themes/theme';
@@ -81,9 +79,10 @@ export default function MainAppNavigator(): React.JSX.Element {
 
       <Tab.Screen
         name="profil"
-        component={ProfileScreen}
+        component={ProfileStack}
         options={{
           title: 'Profil',
+          headerShown: false,
           tabBarIcon: () => (
             <AppIcons icon="person" iconLibrary={'Ionicons'} size={30} color={theme.colors.grey} />
           ),

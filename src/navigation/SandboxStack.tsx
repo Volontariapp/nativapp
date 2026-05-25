@@ -1,7 +1,6 @@
-// src/navigation/AuthStack.tsx
-import { createNativeStackNavigator } from "@react-navigation/native-stack";
-import React from "react";
-import {SandBoxScreen} from "@/screens/SandBox";
+import { createNativeStackNavigator } from '@react-navigation/native-stack';
+import React from 'react';
+import { SandBoxScreen } from '@/screens';
 
 const Stack = createNativeStackNavigator();
 

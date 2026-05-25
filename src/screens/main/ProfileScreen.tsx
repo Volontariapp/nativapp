@@ -7,9 +7,13 @@ import AppHeader from '@/components/AppHeader';
 import { AppLoader } from '@/components/AppLoader';
 import { theme } from '@/themes/theme';
 import { userApi, type UserProfile } from '@/api/user/user.api';
+import { useNavigation } from '@react-navigation/native';
+import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
+import type { ProfileStackParamList } from '@/navigation/ProfileStack';
 
 export function ProfileScreen(): React.JSX.Element {
   const { logout } = useAuth();
+  const navigation = useNavigation<NativeStackNavigationProp<ProfileStackParamList>>();
   const [profile, setProfile] = useState<UserProfile | null>(null);
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
@@ -63,6 +67,14 @@ export function ProfileScreen(): React.JSX.Element {
         ) : null}
 
         <View style={styles.spacer} />
+        <AppButton
+          variant={'eco'}
+          text="WS Feedback"
+          onPress={() => {
+            navigation.navigate('ws-feedback');
+          }}
+        />
+        <View style={{ height: theme.spacing.md }} />
         <AppButton
           variant={'danger'}
           text="Se déconnecter"
