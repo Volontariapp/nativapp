@@ -1,11 +1,8 @@
-import type { JSX} from "react";
-import React, {
-  useState,
-  forwardRef
-} from "react";
-import { View, TextInput, StyleSheet } from "react-native";
-import { theme } from "@/themes/theme";
-import { AppText } from "@/components/AppText";
+import type { JSX } from 'react';
+import React, { useState, forwardRef } from 'react';
+import { View, TextInput, StyleSheet } from 'react-native';
+import { theme } from '@/themes/theme';
+import { AppText } from '@/components/AppText';
 
 export interface InputBoxRef {
   getValue: () => string;
@@ -22,17 +19,31 @@ interface InputBoxProps {
 }
 
 export const InputBox = forwardRef<InputBoxRef, InputBoxProps>(
-  ({ placeholder = "Entrez du texte...", errorMessage, label, maxLength, minLength, disabled}): JSX.Element => {
-    const [value, setValue] = useState("");
+  (
+    { placeholder = 'Entrez du texte...', errorMessage, label, maxLength, minLength, disabled },
+    ref,
+  ): JSX.Element => {
+    const [value, setValue] = useState('');
     const [isFocused, setIsFocused] = useState(false);
 
+    React.useImperativeHandle(ref, () => ({
+      getValue: (): string => value,
+      clear: (): void => {
+        setValue('');
+      },
+    }));
+
     let isError = false;
-    if (value.length != 0 && (((maxLength != null) && value.length > maxLength) || ((minLength != null) && value.length < minLength)))
+    if (
+      value.length != 0 &&
+      ((maxLength != null && value.length > maxLength) ||
+        (minLength != null && value.length < minLength))
+    )
       isError = true;
 
     return (
       <View style={styles.container}>
-        {(label != null) && (
+        {label != null && (
           <AppText variant="caption" style={styles.label}>
             {label}
           </AppText>
@@ -41,15 +52,19 @@ export const InputBox = forwardRef<InputBoxRef, InputBoxProps>(
         <TextInput
           value={value}
           onChangeText={setValue}
-          placeholder={isFocused && (disabled === false) ? "" : placeholder}
+          placeholder={isFocused && disabled === false ? '' : placeholder}
           placeholderTextColor={theme.colors.grey}
-          onFocus={() => { setIsFocused(true); }}
-          onBlur={() => { setIsFocused(false); }}
+          onFocus={() => {
+            setIsFocused(true);
+          }}
+          onBlur={() => {
+            setIsFocused(false);
+          }}
           editable={disabled === false}
           style={[
             styles.input,
             isError && styles.inputError,
-            (disabled === true) && styles.inputDisabled,
+            disabled === true && styles.inputDisabled,
           ]}
         />
 
@@ -60,12 +75,12 @@ export const InputBox = forwardRef<InputBoxRef, InputBoxProps>(
         )}
       </View>
     );
-  }
+  },
 );
 
 const styles = StyleSheet.create({
   container: {
-    width: "100%",
+    width: '100%',
     gap: theme.spacing.xs,
   },
 

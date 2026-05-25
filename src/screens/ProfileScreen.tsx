@@ -1,35 +1,126 @@
-import { View, StyleSheet } from "react-native";
-import {AppButton} from "@/components/AppButton";
-import React from "react";
-import {AppText} from "@/components/AppText";
-import {AuthContext} from "@/context/AuthContext";
-import {useContext} from "react";
-import AppHeader from "@/components/AppHeader";
-import {theme} from "@/themes/theme";
-const { signOut } = useContext(AuthContext);
-
+import { View, StyleSheet } from 'react-native';
+import { AppButton } from '@/components/AppButton';
+import React, { useEffect, useState } from 'react';
+import { AppText } from '@/components/AppText';
+import { useAuth } from '@/context/AuthContext';
+import AppHeader from '@/components/AppHeader';
+import { AppLoader } from '@/components/AppLoader';
+import { theme } from '@/themes/theme';
+import { userApi, type UserProfile } from '@/api/user/user.api';
 
 export function ProfileScreen(): React.JSX.Element {
-    return (
-        <View style={styles.container}>
-            <AppHeader />
-            <AppText> This is the Profile screen </AppText>
-            <AppButton variant={"eco"} text="Se déconnecter" onPress={() => { signOut() }}/>
-        </View>
-    );
+  const { logout } = useAuth();
+  const [profile, setProfile] = useState<UserProfile | null>(null);
+  const [loading, setLoading] = useState<boolean>(true);
+  const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    const fetchProfile = async (): Promise<void> => {
+      try {
+        const data: UserProfile = await userApi.getMe();
+        setProfile(data);
+      } catch (err: unknown) {
+        if (err instanceof Error) {
+          setError(err.message);
+        } else {
+          setError('Impossible de charger le profil.');
+        }
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    void fetchProfile();
+  }, []);
+
+  return (
+    <View style={styles.container}>
+      <AppHeader />
+      <View style={styles.content}>
+        <AppText style={styles.title}>Mon Profil</AppText>
+
+        {loading ? (
+          <AppLoader fullScreen={false} message="Chargement du profil..." />
+        ) : error !== null ? (
+          <AppText style={styles.errorText}>{error}</AppText>
+        ) : profile !== null ? (
+          <View style={styles.card}>
+            <AppText style={styles.label}>ID Utilisateur :</AppText>
+            <AppText style={styles.value}>{profile.id}</AppText>
+
+            <AppText style={styles.label}>Adresse Email :</AppText>
+            <AppText style={styles.value}>{profile.email}</AppText>
+
+            <AppText style={styles.label}>Pseudo :</AppText>
+            <AppText style={styles.value}>{profile.pseudo}</AppText>
+
+            <AppText style={styles.label}>Rôle :</AppText>
+            <AppText style={styles.value}>{profile.role}</AppText>
+
+            <AppText style={styles.label}>Score d'impact :</AppText>
+            <AppText style={styles.value}>{profile.totalImpactScore}</AppText>
+          </View>
+        ) : null}
+
+        <View style={styles.spacer} />
+        <AppButton
+          variant={'danger'}
+          text="Se déconnecter"
+          onPress={() => {
+            void logout();
+          }}
+        />
+        <View style={{ height: theme.spacing.xxl * 2 }} />
+      </View>
+    </View>
+  );
 }
 
 const styles = StyleSheet.create({
-    container: {
-        flex: 1,
-        backgroundColor: theme.colors.background,
-    },
-    content: {
-        flex: 1,
-        paddingHorizontal: theme.spacing.xl,
-        paddingTop: theme.spacing.xxl,
-    },
-    spacer: {
-        height: theme.spacing.md,
-    },
+  container: {
+    flex: 1,
+    backgroundColor: theme.colors.background,
+  },
+  content: {
+    flex: 1,
+    paddingHorizontal: theme.spacing.xl,
+    paddingTop: theme.spacing.xl,
+  },
+  title: {
+    fontSize: 28,
+    fontWeight: 'bold',
+    color: theme.colors.black,
+    marginBottom: theme.spacing.lg,
+  },
+  card: {
+    backgroundColor: '#ffffff',
+    padding: theme.spacing.lg,
+    borderRadius: theme.radius.lg,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 8,
+    elevation: 3,
+    marginBottom: theme.spacing.xl,
+  },
+  label: {
+    fontSize: 14,
+    color: theme.colors.grey,
+    marginTop: theme.spacing.md,
+  },
+  value: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: theme.colors.black,
+    marginBottom: theme.spacing.sm,
+  },
+  errorText: {
+    color: theme.colors.danger,
+    fontSize: 16,
+    textAlign: 'center',
+    marginVertical: theme.spacing.xl,
+  },
+  spacer: {
+    flex: 1,
+  },
 });
