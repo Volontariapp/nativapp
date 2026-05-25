@@ -1,4 +1,4 @@
-import {theme} from "@/themes/theme";
+import { theme } from '@/shared/themes/theme';
 
 export const BUTTON_VARIANTS = {
   eco: {
@@ -20,7 +20,7 @@ export const BUTTON_VARIANTS = {
     backgroundColor: theme.colors.danger,
     textColor: theme.colors.white,
     borderColor: theme.colors.black,
-  }
+  },
 };
 
 export const ICONS_BUTTON_VARIANTS = {
@@ -39,5 +39,5 @@ export const ICONS_BUTTON_VARIANTS = {
   noBackground: {
     backgroundColor: theme.colors.danger,
     textColor: theme.colors.white,
-  }
+  },
 };

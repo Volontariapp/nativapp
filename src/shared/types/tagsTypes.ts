@@ -1,4 +1,4 @@
-import { theme } from '@/themes/theme';
+import { theme } from '@/shared/themes/theme';
 import { TagsNames } from '@volontariapp/shared';
 
 export interface Tag {

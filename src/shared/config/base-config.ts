@@ -3,11 +3,11 @@ import Constants from 'expo-constants';
 import type { AppEnv } from './app-config';
 import { AppConfig } from './app-config';
 
-import defaultCfg from '../../config/default.config.json';
-import localCfg from '../../config/local.config.json';
-import devCfg from '../../config/development.config.json';
-import prodCfg from '../../config/production.config.json';
-import testCfg from '../../config/test.config.json';
+import defaultCfg from '../../../config/default.config.json';
+import localCfg from '../../../config/local.config.json';
+import devCfg from '../../../config/development.config.json';
+import prodCfg from '../../../config/production.config.json';
+import testCfg from '../../../config/test.config.json';
 
 const getRawConfig = (): Record<string, unknown> => {
   const extra = Constants.expoConfig?.extra;

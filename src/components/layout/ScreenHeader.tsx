@@ -1,5 +1,5 @@
 import { View, Text, StyleSheet } from 'react-native';
-import { theme } from '@/themes/theme';
+import { theme } from '@/shared/themes/theme';
 
 interface ScreenHeaderProps {
   title: string;

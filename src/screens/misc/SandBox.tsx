@@ -2,7 +2,7 @@ import { View, StyleSheet, ScrollView, Linking } from 'react-native';
 import { ScreenHeader } from '@/components';
 import { useNavigation } from '@react-navigation/native';
 import { useAdmin } from '../../context/admin/admin.context';
-import { theme } from '@/themes/theme';
+import { theme } from '@/shared/themes/theme';
 import { TagComponent } from '@/components/dataDisplay/Tags';
 import { TagsNames } from '@volontariapp/shared';
 import { AppText } from '@/components/typography/AppText';

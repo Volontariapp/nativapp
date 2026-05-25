@@ -20,6 +20,7 @@
     "lint": "eslint src/",
     "ts:check": "tsc --noEmit",
     "prebuild": "expo prebuild",
+    "build": "expo export",
     "build:ios": "eas build --platform ios",
     "build:android": "eas build --platform android",
     "doctor": "react-doctor"
@@ -29,7 +30,9 @@
     "node": ">=24.14.0"
   },
   "dependencies": {
+    "@hookform/resolvers": "^5.4.0",
     "@react-navigation/bottom-tabs": "^7.4.0",
+    "@tanstack/react-query": "^5.100.14",
     "@volontariapp/config": "3.2.0",
     "@volontariapp/contracts": "4.0.11",
     "@volontariapp/errors": "^0.5.2",
@@ -51,6 +54,7 @@
     "jwt-decode": "^4.0.0",
     "react": "19.1.0",
     "react-dom": "19.1.0",
+    "react-hook-form": "^7.76.1",
     "react-native": "0.81.5",
     "react-native-gesture-handler": "~2.28.0",
     "react-native-reanimated": "~4.1.1",
@@ -60,7 +64,8 @@
     "react-native-web": "^0.21.0",
     "react-native-worklets": "0.5.1",
     "react-native-worklets-core": "^1.6.3",
-    "socket.io-client": "^4.8.3"
+    "socket.io-client": "^4.8.3",
+    "zod": "^4.4.3"
   },
   "devDependencies": {
     "@babel/core": "^7.26.0",

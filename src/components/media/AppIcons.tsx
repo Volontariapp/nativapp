@@ -5,10 +5,10 @@ import FontAwesome5 from 'react-native-vector-icons/FontAwesome5';
 import MaterialDesignIcons from 'react-native-vector-icons/MaterialCommunityIcons';
 import Ionicons from 'react-native-vector-icons/Ionicons';
 
-import type { IconLibrary } from '@/types/components';
+import type { IconLibrary } from '@/shared/types/components';
 
 import { StyleSheet, View } from 'react-native';
-import { theme } from '@/themes/theme';
+import { theme } from '@/shared/themes/theme';
 
 interface AppIconsProps {
   icon: string;

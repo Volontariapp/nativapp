@@ -1,9 +1,9 @@
 import type { JSX } from 'react';
 import { Text, View, StyleSheet } from 'react-native';
 import type { TagsNames } from '@volontariapp/shared';
-import { TAGS_CONFIG } from '@/types/tagsTypes';
+import { TAGS_CONFIG } from '@/shared/types/tagsTypes';
 import { AppIcons } from '@/components/media/AppIcons';
-import { theme } from '@/themes/theme';
+import { theme } from '@/shared/themes/theme';
 
 interface TagProps {
   type: TagsNames;

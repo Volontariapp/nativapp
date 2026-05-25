@@ -6,7 +6,7 @@ import { SwipeScreen, ExploreScreen, CreateEventScreen } from '@/screens';
 import ProfileStack from './stacks/ProfileStack';
 import { AppIconsButton } from '@/components/buttons/AppIconsButton';
 import { AppIcons } from '@/components/media/AppIcons';
-import { theme } from '@/themes/theme';
+import { theme } from '@/shared/themes/theme';
 import { View } from 'react-native';
 
 const Tab = createBottomTabNavigator();

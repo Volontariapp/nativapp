@@ -1,9 +1,9 @@
 import type { JSX } from 'react';
 import { Text, Pressable, StyleSheet, View } from 'react-native';
-import { BUTTON_VARIANTS } from '@/themes/buttonVariants';
-import { theme } from '@/themes/theme';
+import { BUTTON_VARIANTS } from '@/shared/themes/buttonVariants';
+import { theme } from '@/shared/themes/theme';
 import { AppIcons } from '@/components/media/AppIcons';
-import type { IconLibrary, ButtonVariant } from '@/types/components';
+import type { IconLibrary, ButtonVariant } from '@/shared/types/components';
 
 interface AppButtonProps {
   text: string;

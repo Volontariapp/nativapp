@@ -1,4 +1,4 @@
-import type { BUTTON_VARIANTS, ICONS_BUTTON_VARIANTS } from '@/themes/buttonVariants';
+import type { BUTTON_VARIANTS, ICONS_BUTTON_VARIANTS } from '@/shared/themes/buttonVariants';
 
 export type IconLibrary =
   | 'Feather'

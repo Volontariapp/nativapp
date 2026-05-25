@@ -3,7 +3,7 @@ import { View, StyleSheet } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { AppButton } from '@/components/buttons/AppButton';
 import { AppText } from '@/components/typography/AppText';
-import { theme } from '@/themes/theme';
+import { theme } from '@/shared/themes/theme';
 import { useNavigation } from '@react-navigation/native';
 import type { AuthNavigationProp } from '@/navigation/stacks/AuthStack';
 

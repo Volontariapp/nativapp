@@ -1,17 +1,12 @@
 import React, { useState } from 'react';
-import {
-  View,
-  StyleSheet,
-  TextInput,
-  ActivityIndicator,
-  KeyboardAvoidingView,
-  Platform,
-  Pressable,
-  ScrollView,
-} from 'react-native';
+import { ActivityIndicator, Pressable, View, StyleSheet } from 'react-native';
 import { AppButton } from '@/components/buttons/AppButton';
 import { AppText } from '@/components/typography/AppText';
-import { theme } from '@/themes/theme';
+import { AuthCard } from '@/components/layout/AuthCard';
+import { AppInput } from '@/components/inputs/AppInput';
+import { EmailField } from '@/components/inputs/EmailField';
+import { PasswordField } from '@/components/inputs/PasswordField';
+import { theme } from '@/shared/themes/theme';
 import { authApi } from '../../api/auth/auth.api';
 import type { SignUpCommand } from '@volontariapp/contracts';
 import { BaseApiError } from '@volontariapp/errors';
@@ -19,28 +14,42 @@ import { useNavigation } from '@react-navigation/native';
 import { useAuth } from '@/context/AuthContext';
 import type { AuthNavigationProp } from '@/navigation/stacks/AuthStack';
 
+interface RegisterState {
+  email: string;
+  password: string;
+  confirmPassword: string;
+  isLoading: boolean;
+  error: string | null;
+}
+
 export const RegisterScreen = (): React.JSX.Element => {
   const { navigate } = useNavigation<AuthNavigationProp>();
   const { login } = useAuth();
 
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
-  const [isLoading, setIsLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
+  const [state, setState] = useState<RegisterState>({
+    email: '',
+    password: '',
+    confirmPassword: '',
+    isLoading: false,
+    error: null,
+  });
+
+  const updateState = (updates: Partial<typeof state>): void => {
+    setState((prev) => ({ ...prev, ...updates }));
+  };
 
   const handleRegister = async (): Promise<void> => {
-    if (!email || !password) {
-      setError('Veuillez remplir email et mot de passe');
+    if (!state.email || !state.password) {
+      updateState({ error: 'Veuillez remplir email et mot de passe' });
       return;
     }
 
-    setIsLoading(true);
-    setError(null);
+    updateState({ isLoading: true, error: null });
 
     try {
       const payload: SignUpCommand = {
-        email,
-        password,
+        email: state.email,
+        password: state.password,
       };
 
       const response = await authApi.register(payload);
@@ -50,150 +59,78 @@ export const RegisterScreen = (): React.JSX.Element => {
       }
     } catch (err) {
       if (err instanceof BaseApiError) {
-        setError(err.message);
+        updateState({ error: err.message });
       } else {
-        setError("Une erreur inattendue s'est produite.");
+        updateState({ error: "Une erreur inattendue s'est produite." });
       }
     } finally {
-      setIsLoading(false);
+      updateState({ isLoading: false });
     }
   };
 
   return (
-    <KeyboardAvoidingView
-      style={styles.container}
-      behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+    <AuthCard
+      title="Créer un compte"
+      subtitle="Rejoignez-nous en quelques clics"
+      error={state.error}
     >
-      <ScrollView
-        contentContainerStyle={styles.scrollContainer}
-        keyboardShouldPersistTaps="handled"
-      >
-        <View style={styles.header}>
-          <AppText style={styles.title}>Créer un compte</AppText>
-          <AppText style={styles.subtitle}>Rejoignez-nous en quelques clics</AppText>
-        </View>
+      <EmailField
+        value={state.email}
+        onChangeText={(v) => {
+          updateState({ email: v });
+        }}
+        editable={!state.isLoading}
+      />
+      <PasswordField
+        value={state.password}
+        onChangeText={(v) => {
+          updateState({ password: v });
+        }}
+        editable={!state.isLoading}
+      />
 
-        <View style={styles.formContainer}>
-          {error !== null && (
-            <View style={styles.errorContainer}>
-              <AppText style={styles.errorText}>{error}</AppText>
-            </View>
-          )}
+      <AppInput
+        label="Confirmer le mot de passe"
+        placeholder="••••••••"
+        secureTextEntry
+        value={state.confirmPassword}
+        onChangeText={(v) => {
+          updateState({ confirmPassword: v });
+        }}
+        editable={!state.isLoading}
+      />
 
-          <AppText style={styles.label}>Adresse e-mail</AppText>
-          <TextInput
-            style={styles.input}
-            placeholder="jean.dupont@email.com"
-            placeholderTextColor={theme.colors.grey}
-            autoCapitalize="none"
-            keyboardType="email-address"
-            value={email}
-            onChangeText={setEmail}
-            editable={!isLoading}
-          />
+      <View style={styles.spacer} />
 
-          <AppText style={styles.label}>Mot de passe</AppText>
-          <TextInput
-            style={styles.input}
-            placeholder="••••••••"
-            placeholderTextColor={theme.colors.grey}
-            secureTextEntry
-            value={password}
-            onChangeText={setPassword}
-            editable={!isLoading}
-          />
+      {state.isLoading ? (
+        <ActivityIndicator size="large" color={theme.colors.primaryEco} />
+      ) : (
+        <AppButton
+          variant="eco"
+          text="S'inscrire"
+          onPress={() => {
+            void handleRegister();
+          }}
+        />
+      )}
 
-          <View style={styles.spacer} />
-
-          {isLoading ? (
-            <ActivityIndicator size="large" color={theme.colors.primaryEco} />
-          ) : (
-            <AppButton
-              variant="eco"
-              text="S'inscrire"
-              onPress={() => {
-                void handleRegister();
-              }}
-            />
-          )}
-
-          <View style={styles.footer}>
-            <AppText style={styles.footerText}>Déjà un compte ? </AppText>
-            <Pressable
-              onPress={() => {
-                navigate('login');
-              }}
-            >
-              <AppText style={styles.footerLink}>Se connecter</AppText>
-            </Pressable>
-          </View>
-        </View>
-      </ScrollView>
-    </KeyboardAvoidingView>
+      <View style={styles.footer}>
+        <AppText style={styles.footerText}>Déjà un compte ? </AppText>
+        <Pressable
+          onPress={() => {
+            navigate('login');
+          }}
+        >
+          <AppText style={styles.footerLink}>Se connecter</AppText>
+        </Pressable>
+      </View>
+    </AuthCard>
   );
 };
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: theme.colors.background,
-  },
-  scrollContainer: {
-    flexGrow: 1,
-    paddingHorizontal: theme.spacing.xl,
-    paddingTop: theme.spacing.xxl * 2,
-    paddingBottom: theme.spacing.xxl,
-    justifyContent: 'center',
-  },
-  header: {
-    marginBottom: theme.spacing.xxl,
-  },
-  title: {
-    fontSize: 32,
-    fontWeight: 'bold',
-    color: theme.colors.black,
-    marginBottom: theme.spacing.sm,
-  },
-  subtitle: {
-    fontSize: 16,
-    color: theme.colors.grey,
-  },
-  formContainer: {
-    backgroundColor: '#ffffff',
-    padding: theme.spacing.xl,
-    borderRadius: theme.radius.lg,
-    boxShadow: '0 4px 12px rgba(0,0,0,0.1)',
-  },
-  errorContainer: {
-    backgroundColor: '#ffebee',
-    padding: theme.spacing.md,
-    borderRadius: theme.radius.md,
-    marginBottom: theme.spacing.lg,
-  },
-  errorText: {
-    color: '#d32f2f',
-    fontSize: 14,
-    textAlign: 'center',
-  },
-  label: {
-    fontSize: 14,
-    fontWeight: '600',
-    color: theme.colors.black,
-    marginBottom: theme.spacing.sm,
-  },
-  input: {
-    backgroundColor: '#f5f7fa',
-    borderWidth: 1,
-    borderColor: '#e2e8f0',
-    borderRadius: theme.radius.md,
-    paddingHorizontal: theme.spacing.md,
-    paddingVertical: theme.spacing.md,
-    fontSize: 16,
-    color: theme.colors.black,
-    marginBottom: theme.spacing.lg,
-  },
   spacer: {
-    height: theme.spacing.lg,
+    height: theme.spacing.md,
   },
   footer: {
     flexDirection: 'row',

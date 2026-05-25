@@ -7,7 +7,7 @@ import {
   type StyleProp,
   type ImageStyle,
 } from 'react-native';
-import { theme } from '@/themes/theme';
+import { theme } from '@/shared/themes/theme';
 
 interface AppImageProps {
   image: ImageSourcePropType | string;

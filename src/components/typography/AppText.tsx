@@ -2,8 +2,8 @@ import type { JSX } from 'react';
 import React from 'react';
 import type { TextProps } from 'react-native';
 import { Text, StyleSheet } from 'react-native';
-import { theme } from '@/themes/theme';
-import type { AppTextVariant, FontType } from '@/types/components';
+import { theme } from '@/shared/themes/theme';
+import type { AppTextVariant, FontType } from '@/shared/types/components';
 
 interface AppTextProps extends TextProps {
   children: React.ReactNode;

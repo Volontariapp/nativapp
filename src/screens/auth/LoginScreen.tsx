@@ -1,18 +1,12 @@
 import React, { useState } from 'react';
-import {
-  View,
-  StyleSheet,
-  TextInput,
-  ActivityIndicator,
-  KeyboardAvoidingView,
-  Platform,
-  Pressable,
-  ScrollView,
-} from 'react-native';
+import { View, StyleSheet, ActivityIndicator, Pressable } from 'react-native';
 import { AppButton } from '@/components/buttons/AppButton';
 import { AppText } from '@/components/typography/AppText';
+import { AuthCard } from '@/components/layout/AuthCard';
+import { EmailField } from '@/components/inputs/EmailField';
+import { PasswordField } from '@/components/inputs/PasswordField';
 import { useAuth } from '@/context/AuthContext';
-import { theme } from '@/themes/theme';
+import { theme } from '@/shared/themes/theme';
 import { authApi } from '@/api/auth/auth.api';
 import { BaseApiError } from '@volontariapp/errors';
 import { useNavigation } from '@react-navigation/native';
@@ -53,142 +47,43 @@ export function LoginScreen(): React.JSX.Element {
   };
 
   return (
-    <KeyboardAvoidingView
-      style={styles.container}
-      behavior={Platform.OS === 'ios' ? 'padding' : undefined}
-    >
-      <ScrollView
-        contentContainerStyle={styles.scrollContainer}
-        keyboardShouldPersistTaps="handled"
-      >
-        <View style={styles.header}>
-          <AppText style={styles.title}>Bienvenue !</AppText>
-          <AppText style={styles.subtitle}>Connectez-vous pour continuer</AppText>
-        </View>
+    <AuthCard title="Bienvenue !" subtitle="Connectez-vous pour continuer" error={error}>
+      <EmailField value={email} onChangeText={setEmail} editable={!isLoading} />
+      <PasswordField value={password} onChangeText={setPassword} editable={!isLoading} />
 
-        <View style={styles.formContainer}>
-          {error !== null && (
-            <View style={styles.errorContainer}>
-              <AppText style={styles.errorText}>{error}</AppText>
-            </View>
-          )}
+      <Pressable style={styles.forgotPassword}>
+        <AppText style={styles.forgotPasswordText}>Mot de passe oublié ?</AppText>
+      </Pressable>
 
-          <AppText style={styles.label}>Adresse e-mail</AppText>
-          <TextInput
-            style={styles.input}
-            placeholder="jean.dupont@email.com"
-            placeholderTextColor={theme.colors.grey}
-            autoCapitalize="none"
-            keyboardType="email-address"
-            value={email}
-            onChangeText={setEmail}
-            editable={!isLoading}
-          />
+      <View style={styles.spacer} />
 
-          <AppText style={styles.label}>Mot de passe</AppText>
-          <TextInput
-            style={styles.input}
-            placeholder="••••••••"
-            placeholderTextColor={theme.colors.grey}
-            secureTextEntry
-            value={password}
-            onChangeText={setPassword}
-            editable={!isLoading}
-          />
+      {isLoading ? (
+        <ActivityIndicator size="large" color={theme.colors.primaryEco} />
+      ) : (
+        <AppButton
+          variant="eco"
+          text="Se connecter"
+          onPress={() => {
+            void handleLogin();
+          }}
+        />
+      )}
 
-          <Pressable style={styles.forgotPassword}>
-            <AppText style={styles.forgotPasswordText}>Mot de passe oublié ?</AppText>
-          </Pressable>
-
-          <View style={styles.spacer} />
-
-          {isLoading ? (
-            <ActivityIndicator size="large" color={theme.colors.primaryEco} />
-          ) : (
-            <AppButton
-              variant="eco"
-              text="Se connecter"
-              onPress={() => {
-                void handleLogin();
-              }}
-            />
-          )}
-
-          <View style={styles.footer}>
-            <AppText style={styles.footerText}>Nouveau parmi nous ? </AppText>
-            <Pressable
-              onPress={() => {
-                navigate('register');
-              }}
-            >
-              <AppText style={styles.footerLink}>S'inscrire</AppText>
-            </Pressable>
-          </View>
-        </View>
-      </ScrollView>
-    </KeyboardAvoidingView>
+      <View style={styles.footer}>
+        <AppText style={styles.footerText}>Nouveau parmi nous ? </AppText>
+        <Pressable
+          onPress={() => {
+            navigate('register');
+          }}
+        >
+          <AppText style={styles.footerLink}>S'inscrire</AppText>
+        </Pressable>
+      </View>
+    </AuthCard>
   );
 }
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: theme.colors.background,
-  },
-  scrollContainer: {
-    flexGrow: 1,
-    paddingHorizontal: theme.spacing.xl,
-    paddingTop: theme.spacing.xxl * 2,
-    paddingBottom: theme.spacing.xxl,
-    justifyContent: 'center',
-  },
-  header: {
-    marginBottom: theme.spacing.xxl,
-  },
-  title: {
-    fontSize: 32,
-    fontWeight: 'bold',
-    color: theme.colors.black,
-    marginBottom: theme.spacing.sm,
-  },
-  subtitle: {
-    fontSize: 16,
-    color: theme.colors.grey,
-  },
-  formContainer: {
-    backgroundColor: '#ffffff',
-    padding: theme.spacing.xl,
-    borderRadius: theme.radius.lg,
-    boxShadow: '0 4px 12px rgba(0,0,0,0.1)',
-  },
-  errorContainer: {
-    backgroundColor: '#ffebee',
-    padding: theme.spacing.md,
-    borderRadius: theme.radius.md,
-    marginBottom: theme.spacing.lg,
-  },
-  errorText: {
-    color: '#d32f2f',
-    fontSize: 14,
-    textAlign: 'center',
-  },
-  label: {
-    fontSize: 14,
-    fontWeight: '600',
-    color: theme.colors.black,
-    marginBottom: theme.spacing.sm,
-  },
-  input: {
-    backgroundColor: '#f5f7fa',
-    borderWidth: 1,
-    borderColor: '#e2e8f0',
-    borderRadius: theme.radius.md,
-    paddingHorizontal: theme.spacing.md,
-    paddingVertical: theme.spacing.md,
-    fontSize: 16,
-    color: theme.colors.black,
-    marginBottom: theme.spacing.lg,
-  },
   forgotPassword: {
     alignSelf: 'flex-end',
     marginBottom: theme.spacing.lg,

@@ -1,10 +1,5 @@
-import type {
-  FrontendConfig,
-  LoggerConfig,
-  LoggerFormat,
-  NodeEnv,
-} from "@volontariapp/config";
-import { IsDefined, IsNotEmpty, IsNumber, IsString } from "class-validator";
+import type { FrontendConfig, LoggerConfig, LoggerFormat, NodeEnv } from '@volontariapp/config';
+import { IsDefined, IsNotEmpty, IsNumber, IsString } from 'class-validator';
 
 export class AppConfig implements FrontendConfig {
   @IsDefined()
@@ -27,4 +22,4 @@ export class AppConfig implements FrontendConfig {
     return this.logger.format;
   }
 }
-export type AppEnv = "local" | "development" | "production" | "test";
+export type AppEnv = 'local' | 'development' | 'production' | 'test';

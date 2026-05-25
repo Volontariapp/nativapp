@@ -3,7 +3,7 @@ import { View, StyleSheet } from 'react-native';
 import React from 'react';
 import { AppText } from '@/components/typography/AppText';
 import AppHeader from '@/components/layout/AppHeader';
-import { theme } from '@/themes/theme';
+import { theme } from '@/shared/themes/theme';
 
 export function SwipeScreen(): React.JSX.Element {
   return (

@@ -1,6 +1,6 @@
 import { TokenService } from '../services/token.service';
 import { authExpiredBus } from '../services/event-bus.service';
-import { config } from '../config/base-config';
+import { config } from '../shared/config/base-config';
 import axios, { type AxiosError } from 'axios';
 import { createApiError } from './core/api-error.factory';
 import type { FetchOptions } from './core/api.types';

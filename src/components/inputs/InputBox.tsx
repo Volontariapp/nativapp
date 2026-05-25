@@ -1,7 +1,7 @@
 import type { JSX } from 'react';
 import React, { useState } from 'react';
 import { View, TextInput, StyleSheet } from 'react-native';
-import { theme } from '@/themes/theme';
+import { theme } from '@/shared/themes/theme';
 import { AppText } from '@/components/typography/AppText';
 
 export interface InputBoxRef {

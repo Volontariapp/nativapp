@@ -5,7 +5,7 @@ import { AppText } from '@/components/typography/AppText';
 import { useAuth } from '@/context/AuthContext';
 import AppHeader from '@/components/layout/AppHeader';
 import { AppLoader } from '@/components/feedback/AppLoader';
-import { theme } from '@/themes/theme';
+import { theme } from '@/shared/themes/theme';
 import { userApi, type UserProfile } from '@/api/user/user.api';
 import { useNavigation } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';

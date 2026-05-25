@@ -1,11 +1,11 @@
 import type { JSX } from 'react';
 import { Pressable, StyleSheet } from 'react-native';
 
-import { ICONS_BUTTON_VARIANTS } from '@/themes/buttonVariants';
-import { theme } from '@/themes/theme';
+import { ICONS_BUTTON_VARIANTS } from '@/shared/themes/buttonVariants';
+import { theme } from '@/shared/themes/theme';
 import { AppIcons } from '@/components/media/AppIcons';
 import type { GestureResponderEvent } from 'react-native';
-import type { IconLibrary, IconButtonVariant } from '@/types/components';
+import type { IconLibrary, IconButtonVariant } from '@/shared/types/components';
 
 interface AppIconsButtonProps {
   variant?: IconButtonVariant;

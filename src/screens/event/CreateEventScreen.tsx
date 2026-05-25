@@ -1,160 +1,209 @@
-import React, { useState } from 'react';
-import { View, StyleSheet, ScrollView, TextInput, Alert } from 'react-native';
+import React from 'react';
+import {
+  View,
+  StyleSheet,
+  ScrollView,
+  TextInput,
+  Alert,
+  KeyboardAvoidingView,
+  Platform,
+  Text,
+} from 'react-native';
 import { AppText } from '@/components/typography/AppText';
 import { AppButton } from '@/components/buttons/AppButton';
 import AppHeader from '@/components/layout/AppHeader';
-import { theme } from '@/themes/theme';
+import { theme } from '@/shared/themes/theme';
 
 import { eventApi } from '@/api/event/event.api';
 import type { CreateEventRequest } from '@volontariapp/contracts';
 import { EventType } from '@volontariapp/contracts';
 
+import { useForm, Controller } from 'react-hook-form';
+import { zodResolver } from '@hookform/resolvers/zod';
+import { useMutation, useQueryClient } from '@tanstack/react-query';
+import { eventSchema, type EventFormValues } from '@/api/event/event.schema';
+
 export function CreateEventScreen(): React.JSX.Element {
-  // Valeurs par défaut basées sur le CreateEventRequest
-  const [formData, setFormData] = useState({
-    title: 'Nettoyage de la plage',
-    description: 'Rejoignez-nous pour nettoyer la plage et protéger notre environnement !',
-    localisationName: 'Plage du Prado, Marseille',
-    type: EventType.EVENT_TYPE_ECOLOGY,
-    awardedImpactScore: '100',
-    maxParticipants: '50',
-    startAt: '2026-06-01T10:00:00Z',
-    endAt: '2026-06-01T18:00:00Z',
+  const queryClient = useQueryClient();
+
+  const {
+    control,
+    handleSubmit,
+    formState: { errors },
+  } = useForm({
+    resolver: zodResolver(eventSchema),
+    defaultValues: {
+      title: 'Nettoyage de la plage',
+      description: 'Rejoignez-nous pour nettoyer la plage et protéger notre environnement !',
+      localisationName: 'Plage du Prado, Marseille',
+      type: EventType.EVENT_TYPE_ECOLOGY,
+      awardedImpactScore: 100,
+      maxParticipants: 50,
+      startAt: '2026-06-01T10:00:00Z',
+      endAt: '2026-06-01T18:00:00Z',
+    },
   });
 
-  const [loading, setLoading] = useState(false);
-
-  const handleChange = (field: string, value: string | number): void => {
-    setFormData((prev) => ({ ...prev, [field]: value }));
-  };
-
-  const handleCreate = async (): Promise<void> => {
-    setLoading(true);
-    try {
+  const mutation = useMutation({
+    mutationFn: (data: EventFormValues) => {
       const payload: CreateEventRequest = {
-        title: formData.title,
-        description: formData.description,
-        localisationName: formData.localisationName,
-        type: formData.type,
-        awardedImpactScore: parseInt(formData.awardedImpactScore, 10),
-        maxParticipants: parseInt(formData.maxParticipants, 10),
-        startAt: new Date(formData.startAt),
-        endAt: new Date(formData.endAt),
-        tagIds: [], // TODO: peut etre mettre ca en optionel dans le backend
+        title: data.title,
+        description: data.description,
+        localisationName: data.localisationName,
+        type: data.type,
+        awardedImpactScore: data.awardedImpactScore,
+        maxParticipants: data.maxParticipants,
+        startAt: new Date(data.startAt),
+        endAt: new Date(data.endAt),
+        tagIds: [],
       };
-
-      const newEvent = await eventApi.createEvent(payload);
+      return eventApi.createEvent(payload);
+    },
+    onSuccess: (newEvent) => {
+      void queryClient.invalidateQueries({ queryKey: ['events'] });
       Alert.alert('Succès', `L'évènement "${newEvent.title}" a été créé avec succès !`);
-    } catch (err) {
+    },
+    onError: (err) => {
       console.error(err);
       Alert.alert('Erreur', "Impossible de créer l'évènement.");
-    } finally {
-      setLoading(false);
-    }
+    },
+  });
+
+  const onSubmit = (data: EventFormValues): void => {
+    mutation.mutate(data);
   };
 
   return (
-    <View style={styles.container}>
+    <KeyboardAvoidingView
+      style={styles.container}
+      behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+    >
       <AppHeader />
       <ScrollView
         contentContainerStyle={styles.scrollContent}
         contentInsetAdjustmentBehavior="automatic"
+        keyboardShouldPersistTaps="handled"
       >
         <AppText style={styles.title}>Créer un Évènement</AppText>
 
         <View style={styles.inputGroup}>
           <AppText style={styles.label}>Titre de l'évènement</AppText>
-          <TextInput
-            style={styles.input}
-            value={formData.title}
-            onChangeText={(text) => {
-              handleChange('title', text);
-            }}
+          <Controller
+            control={control}
+            name="title"
+            render={({ field: { onChange, value } }) => (
+              <TextInput style={styles.input} value={value} onChangeText={onChange} />
+            )}
           />
+          {errors.title && <Text style={styles.errorText}>{errors.title.message}</Text>}
         </View>
 
         <View style={styles.inputGroup}>
           <AppText style={styles.label}>Description</AppText>
-          <TextInput
-            style={[styles.input, styles.textArea]}
-            value={formData.description}
-            onChangeText={(text) => {
-              handleChange('description', text);
-            }}
-            multiline
-            numberOfLines={4}
+          <Controller
+            control={control}
+            name="description"
+            render={({ field: { onChange, value } }) => (
+              <TextInput
+                style={[styles.input, styles.textArea]}
+                value={value}
+                onChangeText={onChange}
+                multiline
+                numberOfLines={4}
+              />
+            )}
           />
+          {errors.description && <Text style={styles.errorText}>{errors.description.message}</Text>}
         </View>
 
         <View style={styles.inputGroup}>
           <AppText style={styles.label}>Lieu</AppText>
-          <TextInput
-            style={styles.input}
-            value={formData.localisationName}
-            onChangeText={(text) => {
-              handleChange('localisationName', text);
-            }}
+          <Controller
+            control={control}
+            name="localisationName"
+            render={({ field: { onChange, value } }) => (
+              <TextInput style={styles.input} value={value} onChangeText={onChange} />
+            )}
           />
+          {errors.localisationName && (
+            <Text style={styles.errorText}>{errors.localisationName.message}</Text>
+          )}
         </View>
 
         <View style={styles.row}>
           <View style={[styles.inputGroup, { flex: 1, marginRight: theme.spacing.sm }]}>
             <AppText style={styles.label}>Date de début</AppText>
-            <TextInput
-              style={styles.input}
-              value={formData.startAt}
-              onChangeText={(text) => {
-                handleChange('startAt', text);
-              }}
+            <Controller
+              control={control}
+              name="startAt"
+              render={({ field: { onChange, value } }) => (
+                <TextInput style={styles.input} value={value} onChangeText={onChange} />
+              )}
             />
+            {errors.startAt && <Text style={styles.errorText}>{errors.startAt.message}</Text>}
           </View>
           <View style={[styles.inputGroup, { flex: 1, marginLeft: theme.spacing.sm }]}>
             <AppText style={styles.label}>Date de fin</AppText>
-            <TextInput
-              style={styles.input}
-              value={formData.endAt}
-              onChangeText={(text) => {
-                handleChange('endAt', text);
-              }}
+            <Controller
+              control={control}
+              name="endAt"
+              render={({ field: { onChange, value } }) => (
+                <TextInput style={styles.input} value={value} onChangeText={onChange} />
+              )}
             />
+            {errors.endAt && <Text style={styles.errorText}>{errors.endAt.message}</Text>}
           </View>
         </View>
 
         <View style={styles.row}>
           <View style={[styles.inputGroup, { flex: 1, marginRight: theme.spacing.sm }]}>
             <AppText style={styles.label}>Participants Max</AppText>
-            <TextInput
-              style={styles.input}
-              value={formData.maxParticipants}
-              keyboardType="numeric"
-              onChangeText={(text) => {
-                handleChange('maxParticipants', text);
-              }}
+            <Controller
+              control={control}
+              name="maxParticipants"
+              render={({ field: { onChange, value } }) => (
+                <TextInput
+                  style={styles.input}
+                  value={String(value)}
+                  keyboardType="numeric"
+                  onChangeText={onChange}
+                />
+              )}
             />
+            {errors.maxParticipants && (
+              <Text style={styles.errorText}>{errors.maxParticipants.message}</Text>
+            )}
           </View>
           <View style={[styles.inputGroup, { flex: 1, marginLeft: theme.spacing.sm }]}>
             <AppText style={styles.label}>Score d'impact</AppText>
-            <TextInput
-              style={styles.input}
-              value={formData.awardedImpactScore}
-              keyboardType="numeric"
-              onChangeText={(text) => {
-                handleChange('awardedImpactScore', text);
-              }}
+            <Controller
+              control={control}
+              name="awardedImpactScore"
+              render={({ field: { onChange, value } }) => (
+                <TextInput
+                  style={styles.input}
+                  value={String(value)}
+                  keyboardType="numeric"
+                  onChangeText={onChange}
+                />
+              )}
             />
+            {errors.awardedImpactScore && (
+              <Text style={styles.errorText}>{errors.awardedImpactScore.message}</Text>
+            )}
           </View>
         </View>
 
         <AppButton
-          text={loading ? 'Création en cours...' : "Créer l'évènement"}
+          text={mutation.isPending ? 'Création en cours...' : "Créer l'évènement"}
           onPress={() => {
-            void handleCreate();
+            void handleSubmit(onSubmit)();
           }}
-          disabled={loading}
+          disabled={mutation.isPending}
         />
         <View style={{ height: theme.spacing.xxl }} />
       </ScrollView>
-    </View>
+    </KeyboardAvoidingView>
   );
 }
 
@@ -182,9 +231,9 @@ const styles = StyleSheet.create({
     fontWeight: '600',
   },
   input: {
-    backgroundColor: '#ffffff',
+    backgroundColor: theme.colors.white,
     borderWidth: 1,
-    borderColor: '#e0e0e0',
+    borderColor: theme.colors.lightGrey,
     borderRadius: theme.radius.md,
     padding: theme.spacing.md,
     fontSize: 16,
@@ -197,5 +246,10 @@ const styles = StyleSheet.create({
   row: {
     flexDirection: 'row',
     justifyContent: 'space-between',
+  },
+  errorText: {
+    color: theme.colors.danger,
+    fontSize: 12,
+    marginTop: 4,
   },
 });

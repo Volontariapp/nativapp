@@ -2,7 +2,7 @@ import React from 'react';
 import type { ViewStyle } from 'react-native';
 import { View, StyleSheet, ActivityIndicator } from 'react-native';
 import { AppText } from '@/components/typography/AppText';
-import { theme } from '@/themes/theme';
+import { theme } from '@/shared/themes/theme';
 
 interface AppLoaderProps {
   message?: string;

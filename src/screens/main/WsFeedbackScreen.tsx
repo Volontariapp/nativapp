@@ -7,7 +7,7 @@ import Animated, {
   withSpring,
 } from 'react-native-reanimated';
 import { AppText } from '@/components/typography/AppText';
-import { theme } from '@/themes/theme';
+import { theme } from '@/shared/themes/theme';
 import { useSocket } from '@/context/SocketContext';
 import { useNavigation } from '@react-navigation/native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';

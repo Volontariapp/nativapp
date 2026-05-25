@@ -10,6 +10,7 @@ export const theme = {
     success: '#46d919',
     white: '#ffffff',
     grey: '#6b7280',
+    lightGrey: '#e0e0e0',
     black: '#000000',
   },
   section: {

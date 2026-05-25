@@ -1,6 +1,6 @@
 import type { Socket } from 'socket.io-client';
 import { io } from 'socket.io-client';
-import { config } from '../config/base-config';
+import { config } from '../shared/config/base-config';
 
 class SocketService {
   private socket: Socket | null = null;
