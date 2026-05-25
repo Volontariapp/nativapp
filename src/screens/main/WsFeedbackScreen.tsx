@@ -1,11 +1,17 @@
-import React, { useEffect, useRef, useState } from 'react';
-import { View, StyleSheet, ScrollView, TouchableOpacity, Animated } from 'react-native';
-import { AppText } from '@/components/AppText';
+import React, { useEffect, useRef, useState, useCallback } from 'react';
+import { View, StyleSheet, FlatList, Pressable } from 'react-native';
+import Animated, {
+  useSharedValue,
+  useAnimatedStyle,
+  withTiming,
+  withSpring,
+} from 'react-native-reanimated';
+import { AppText } from '@/components/typography/AppText';
 import { theme } from '@/themes/theme';
 import { useSocket } from '@/context/SocketContext';
 import { useNavigation } from '@react-navigation/native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { AppIcons } from '@/components/AppIcons';
+import { AppIcons } from '@/components/media/AppIcons';
 
 interface WsEvent {
   id: string;
@@ -24,24 +30,20 @@ const EVENT_COLORS: Record<string, string> = {
 };
 
 function EventCard({ event }: { event: WsEvent }): React.JSX.Element {
-  const fadeAnim = useRef(new Animated.Value(0)).current;
-  const slideAnim = useRef(new Animated.Value(-20)).current;
+  const fadeAnim = useSharedValue(0);
+  const slideAnim = useSharedValue(-20);
 
   useEffect(() => {
-    Animated.parallel([
-      Animated.timing(fadeAnim, {
-        toValue: 1,
-        duration: 350,
-        useNativeDriver: true,
-      }),
-      Animated.spring(slideAnim, {
-        toValue: 0,
-        tension: 80,
-        friction: 8,
-        useNativeDriver: true,
-      }),
-    ]).start();
+    fadeAnim.value = withTiming(1, { duration: 350 });
+    slideAnim.value = withSpring(0, { damping: 10, stiffness: 80 });
   }, [fadeAnim, slideAnim]);
+
+  const animatedStyle = useAnimatedStyle(() => {
+    return {
+      opacity: fadeAnim.value,
+      transform: [{ translateY: slideAnim.value }],
+    };
+  });
 
   const color = EVENT_COLORS[event.eventName] ?? theme.colors.grey;
   const timeStr = event.receivedAt.toLocaleTimeString('fr-FR', {
@@ -51,9 +53,7 @@ function EventCard({ event }: { event: WsEvent }): React.JSX.Element {
   });
 
   return (
-    <Animated.View
-      style={[styles.card, { opacity: fadeAnim, transform: [{ translateY: slideAnim }] }]}
-    >
+    <Animated.View style={[styles.card, animatedStyle]}>
       <View style={[styles.cardAccent, { backgroundColor: color }]} />
       <View style={styles.cardBody}>
         <View style={styles.cardHeader}>
@@ -72,10 +72,10 @@ function EventCard({ event }: { event: WsEvent }): React.JSX.Element {
 
 export function WsFeedbackScreen(): React.JSX.Element {
   const { socket, isConnected } = useSocket();
-  const navigation = useNavigation();
+  const { goBack } = useNavigation();
   const insets = useSafeAreaInsets();
   const [events, setEvents] = useState<WsEvent[]>([]);
-  const scrollRef = useRef<ScrollView>(null);
+  const scrollRef = useRef<FlatList>(null);
 
   useEffect(() => {
     if (!socket) return;
@@ -107,19 +107,21 @@ export function WsFeedbackScreen(): React.JSX.Element {
     setEvents([]);
   };
 
+  const renderItem = useCallback(({ item }: { item: WsEvent }) => <EventCard event={item} />, []);
+
   return (
     <View style={styles.container}>
       {/* Header with back button */}
       <View style={[styles.cardHeader, { paddingTop: insets.top + theme.spacing.sm }]}>
-        <TouchableOpacity
+        <Pressable
           onPress={() => {
-            navigation.goBack();
+            goBack();
           }}
           style={styles.badge}
           hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
         >
           <AppIcons icon="arrow-back" iconLibrary="Ionicons" size={24} color={theme.colors.black} />
-        </TouchableOpacity>
+        </Pressable>
         <AppText style={styles.badgeText}>WS Feedback</AppText>
         <View style={styles.backBtn} />
       </View>
@@ -141,9 +143,9 @@ export function WsFeedbackScreen(): React.JSX.Element {
           </AppText>
         </View>
         {events.length > 0 && (
-          <TouchableOpacity onPress={clearEvents} style={styles.clearBtn}>
+          <Pressable onPress={clearEvents} style={styles.clearBtn}>
             <AppText style={styles.clearBtnText}>Effacer</AppText>
-          </TouchableOpacity>
+          </Pressable>
         )}
       </View>
 
@@ -160,20 +162,21 @@ export function WsFeedbackScreen(): React.JSX.Element {
           </AppText>
         </View>
       ) : (
-        <ScrollView
+        <FlatList
           ref={scrollRef}
           style={styles.list}
           contentContainerStyle={styles.listContent}
           showsVerticalScrollIndicator={false}
-        >
-          <AppText style={styles.count}>
-            {events.length} événement{events.length > 1 ? 's' : ''} reçu
-            {events.length > 1 ? 's' : ''}
-          </AppText>
-          {events.map((event) => (
-            <EventCard key={event.id} event={event} />
-          ))}
-        </ScrollView>
+          data={events}
+          keyExtractor={(item) => item.id}
+          ListHeaderComponent={
+            <AppText style={styles.count}>
+              {events.length} événement{events.length > 1 ? 's' : ''} reçu
+              {events.length > 1 ? 's' : ''}
+            </AppText>
+          }
+          renderItem={renderItem}
+        />
       )}
     </View>
   );

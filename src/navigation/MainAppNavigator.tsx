@@ -3,9 +3,9 @@ import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 
 import { HomeScreen } from '@/screens';
 import { SwipeScreen, ExploreScreen, CreateEventScreen } from '@/screens';
-import ProfileStack from './ProfileStack';
-import { AppIconsButton } from '@/components/AppIconsButton';
-import { AppIcons } from '@/components/AppIcons';
+import ProfileStack from './stacks/ProfileStack';
+import { AppIconsButton } from '@/components/buttons/AppIconsButton';
+import { AppIcons } from '@/components/media/AppIcons';
 import { theme } from '@/themes/theme';
 import { View } from 'react-native';
 

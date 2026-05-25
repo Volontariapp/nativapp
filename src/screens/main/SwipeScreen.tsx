@@ -1,8 +1,8 @@
 import { View, StyleSheet } from 'react-native';
 
 import React from 'react';
-import { AppText } from '@/components/AppText';
-import AppHeader from '@/components/AppHeader';
+import { AppText } from '@/components/typography/AppText';
+import AppHeader from '@/components/layout/AppHeader';
 import { theme } from '@/themes/theme';
 
 export function SwipeScreen(): React.JSX.Element {

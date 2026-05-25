@@ -1,5 +1,3 @@
-// src/components/AppHeader.tsx
-
 import { View, Text } from 'react-native';
 import React from 'react';
 import { theme } from '@/themes/theme';

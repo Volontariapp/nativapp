@@ -6,21 +6,21 @@ import {
   ActivityIndicator,
   KeyboardAvoidingView,
   Platform,
-  TouchableOpacity,
+  Pressable,
   ScrollView,
 } from 'react-native';
-import { AppButton } from '@/components/AppButton';
-import { AppText } from '@/components/AppText';
+import { AppButton } from '@/components/buttons/AppButton';
+import { AppText } from '@/components/typography/AppText';
 import { theme } from '@/themes/theme';
 import { authApi } from '../../api/auth/auth.api';
 import type { SignUpCommand } from '@volontariapp/contracts';
 import { BaseApiError } from '@volontariapp/errors';
 import { useNavigation } from '@react-navigation/native';
 import { useAuth } from '@/context/AuthContext';
-import type { AuthNavigationProp } from '@/navigation/AuthStack';
+import type { AuthNavigationProp } from '@/navigation/stacks/AuthStack';
 
 export const RegisterScreen = (): React.JSX.Element => {
-  const navigation = useNavigation<AuthNavigationProp>();
+  const { navigate } = useNavigation<AuthNavigationProp>();
   const { login } = useAuth();
 
   const [email, setEmail] = useState('');
@@ -119,13 +119,13 @@ export const RegisterScreen = (): React.JSX.Element => {
 
           <View style={styles.footer}>
             <AppText style={styles.footerText}>Déjà un compte ? </AppText>
-            <TouchableOpacity
+            <Pressable
               onPress={() => {
-                navigation.navigate('login');
+                navigate('login');
               }}
             >
               <AppText style={styles.footerLink}>Se connecter</AppText>
-            </TouchableOpacity>
+            </Pressable>
           </View>
         </View>
       </ScrollView>
@@ -162,11 +162,7 @@ const styles = StyleSheet.create({
     backgroundColor: '#ffffff',
     padding: theme.spacing.xl,
     borderRadius: theme.radius.lg,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.1,
-    shadowRadius: 12,
-    elevation: 5,
+    boxShadow: '0 4px 12px rgba(0,0,0,0.1)',
   },
   errorContainer: {
     backgroundColor: '#ffebee',

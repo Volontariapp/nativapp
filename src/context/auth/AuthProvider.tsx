@@ -59,18 +59,17 @@ export const AuthProvider = ({ children }: { children: ReactNode }): React.JSX.E
     setRole(null);
   };
 
-  return (
-    <AuthContext.Provider
-      value={{
-        userId,
-        role,
-        isAuthenticated: userId !== null,
-        isLoading,
-        login,
-        logout,
-      }}
-    >
-      {children}
-    </AuthContext.Provider>
+  const value = React.useMemo(
+    () => ({
+      userId,
+      role,
+      isAuthenticated: userId !== null,
+      isLoading,
+      login,
+      logout,
+    }),
+    [userId, role, isLoading],
   );
+
+  return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 };

@@ -1,8 +1,8 @@
 import { StyleSheet } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import React from 'react';
-import { AppText } from '@/components/AppText';
-import AppHeader from '@/components/AppHeader';
+import { AppText } from '@/components/typography/AppText';
+import AppHeader from '@/components/layout/AppHeader';
 
 export function HomeScreen(): React.JSX.Element {
   return (

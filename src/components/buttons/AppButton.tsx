@@ -1,18 +1,13 @@
 import type { JSX } from 'react';
-import React from 'react';
-
-type IconLibrary = 'Feather' | 'FontAwesome' | 'FontAwesome5';
-
-import { Text, TouchableOpacity, StyleSheet, View } from 'react-native';
+import { Text, Pressable, StyleSheet, View } from 'react-native';
 import { BUTTON_VARIANTS } from '@/themes/buttonVariants';
 import { theme } from '@/themes/theme';
-import { AppIcons } from '@/components/AppIcons';
-
-type Variant = keyof typeof BUTTON_VARIANTS;
+import { AppIcons } from '@/components/media/AppIcons';
+import type { IconLibrary, ButtonVariant } from '@/types/components';
 
 interface AppButtonProps {
   text: string;
-  variant?: Variant;
+  variant?: ButtonVariant;
   icon?: string;
   iconLibrary?: IconLibrary;
   onPress?: () => void;
@@ -30,19 +25,18 @@ export const AppButton = ({
   const stylesVariant = BUTTON_VARIANTS[variant];
 
   return (
-    <TouchableOpacity
+    <Pressable
       onPress={onPress}
       disabled={disabled}
-      style={[
+      style={({ pressed }) => [
         styles.button,
         {
           backgroundColor: stylesVariant.backgroundColor,
           borderColor: stylesVariant.borderColor,
           borderWidth: 1,
-          opacity: disabled ? 0.6 : 1,
+          opacity: disabled ? 0.6 : pressed ? 0.8 : 1,
         },
       ]}
-      activeOpacity={0.8}
     >
       <View style={styles.content}>
         {icon != null && (
@@ -65,7 +59,7 @@ export const AppButton = ({
           {text}
         </Text>
       </View>
-    </TouchableOpacity>
+    </Pressable>
   );
 };
 

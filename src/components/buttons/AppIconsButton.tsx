@@ -1,17 +1,14 @@
 import type { JSX } from 'react';
-import React from 'react';
-import { TouchableOpacity, StyleSheet } from 'react-native';
+import { Pressable, StyleSheet } from 'react-native';
 
 import { ICONS_BUTTON_VARIANTS } from '@/themes/buttonVariants';
 import { theme } from '@/themes/theme';
-import { AppIcons } from '@/components/AppIcons';
-
+import { AppIcons } from '@/components/media/AppIcons';
 import type { GestureResponderEvent } from 'react-native';
-type IconLibrary = 'Feather' | 'FontAwesome' | 'FontAwesome5';
-type Variant = keyof typeof ICONS_BUTTON_VARIANTS;
+import type { IconLibrary, IconButtonVariant } from '@/types/components';
 
 interface AppIconsButtonProps {
-  variant?: Variant;
+  variant?: IconButtonVariant;
   icon?: string;
   size?: number;
   iconLibrary?: IconLibrary;
@@ -37,10 +34,9 @@ export const AppIconsButton = ({
       : 'transparent';
 
   return (
-    <TouchableOpacity
+    <Pressable
       onPress={onPress}
-      activeOpacity={0.8}
-      style={[
+      style={({ pressed }) => [
         styles.button,
         {
           top: top,
@@ -48,13 +44,14 @@ export const AppIconsButton = ({
           height: size,
           borderRadius: theme.radius.full,
           backgroundColor,
+          opacity: pressed ? 0.8 : 1,
         },
       ]}
     >
       {icon != null && (
         <AppIcons icon={icon} iconLibrary={iconLibrary} size={size * 0.5} color={iconColor} />
       )}
-    </TouchableOpacity>
+    </Pressable>
   );
 };
 

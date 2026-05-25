@@ -1,21 +1,23 @@
 import { View, StyleSheet, ScrollView, Linking } from 'react-native';
 import { ScreenHeader } from '@/components';
-import { useRouter } from 'expo-router';
+import { useNavigation } from '@react-navigation/native';
+import { useAdmin } from '../../context/admin/admin.context';
 import { theme } from '@/themes/theme';
-import { TagComponent } from '@/components/Tags';
+import { TagComponent } from '@/components/dataDisplay/Tags';
 import { TagsNames } from '@volontariapp/shared';
-import { AppText } from '@/components/AppText';
-import { InputBox } from '@/components/InputBox';
-import { AppButton } from '@/components/AppButton';
-import { AppIcons } from '@/components/AppIcons';
-import { AppIconsButton } from '@/components/AppIconsButton';
-import { AppImage } from '@/components/AppImage';
+import { AppText } from '@/components/typography/AppText';
+import { InputBox } from '@/components/inputs/InputBox';
+import { AppButton } from '@/components/buttons/AppButton';
+import { AppIcons } from '@/components/media/AppIcons';
+import { AppIconsButton } from '@/components/buttons/AppIconsButton';
+import { AppImage } from '@/components/media/AppImage';
 import React from 'react';
 
 import chienPng from '../../../assets/chien.png';
 
 export function SandBoxScreen(): React.JSX.Element {
-  const router = useRouter();
+  const { goBack, canGoBack } = useNavigation();
+  const { setMode } = useAdmin();
 
   return (
     <View style={styles.container}>
@@ -34,7 +36,11 @@ export function SandBoxScreen(): React.JSX.Element {
             icon="home"
             iconLibrary="FontAwesome5"
             onPress={() => {
-              router.back();
+              if (canGoBack()) {
+                goBack();
+              } else {
+                setMode('menu');
+              }
             }}
           />
         </View>
@@ -240,15 +246,8 @@ const styles = StyleSheet.create({
   header: {
     backgroundColor: theme.colors.background,
 
-    // iOS
-    shadowColor: theme.colors.black,
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 1,
-    shadowRadius: 5,
-    zIndex: 9999,
-
-    // Android
-    elevation: 20,
+    boxShadow: '0 1px 5px rgba(0,0,0,1)',
+    zIndex: 10,
   },
 
   block: {

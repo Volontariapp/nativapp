@@ -1,5 +1,5 @@
-import { theme } from "@/themes/theme";
-import {TagsNames} from "@volontariapp/shared";
+import { theme } from '@/themes/theme';
+import { TagsNames } from '@volontariapp/shared';
 
 export interface Tag {
   icon?: string;
@@ -12,26 +12,26 @@ export interface Tag {
 export const TAGS_CONFIG: Record<TagsNames, Tag> = {
   [TagsNames.ECOLOGIE]: {
     name: TagsNames.ECOLOGIE,
-    textContent: "Écologie",
+    textContent: 'Écologie',
     textColor: theme.colors.white,
     backgroundColor: theme.colors.secondaryEco,
   },
   [TagsNames.SOCIAL]: {
     name: TagsNames.SOCIAL,
-    textContent: "Social",
+    textContent: 'Social',
     textColor: theme.colors.white,
     backgroundColor: theme.colors.secondarySocio,
   },
   [TagsNames.BENEVOLAT]: {
     name: TagsNames.BENEVOLAT,
-    textContent: "Bénévolat",
+    textContent: 'Bénévolat',
     textColor: theme.colors.white,
-    backgroundColor: "#ab9471",
+    backgroundColor: '#ab9471',
   },
   [TagsNames.CERTIFIED]: {
-    icon: "check-circle",
+    icon: 'check-circle',
     name: TagsNames.CERTIFIED,
-    textContent: "Compte certifié",
+    textContent: 'Compte certifié',
     textColor: theme.colors.white,
     backgroundColor: theme.colors.secondaryEco,
   },

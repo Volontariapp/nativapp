@@ -1,11 +1,4 @@
-import React, {
-  createContext,
-  useContext,
-  useEffect,
-  useRef,
-  useState,
-  type ReactNode,
-} from 'react';
+import React, { createContext, use, useEffect, useRef, useState, type ReactNode } from 'react';
 import type { Socket } from 'socket.io-client';
 import { socketService } from '../services/socket.service';
 import { useAuth } from './AuthContext';
@@ -21,7 +14,7 @@ const SocketContext = createContext<SocketContextType>({
   isConnected: false,
 });
 
-export const useSocket = (): SocketContextType => useContext(SocketContext);
+export const useSocket = (): SocketContextType => use(SocketContext);
 
 interface SocketProviderProps {
   children: ReactNode;
@@ -86,7 +79,7 @@ export const SocketProvider = ({ children }: SocketProviderProps): React.JSX.Ele
     };
   }, [isAuthenticated]);
 
-  return (
-    <SocketContext.Provider value={{ socket, isConnected }}>{children}</SocketContext.Provider>
-  );
+  const contextValue = React.useMemo(() => ({ socket, isConnected }), [socket, isConnected]);
+
+  return <SocketContext.Provider value={contextValue}>{children}</SocketContext.Provider>;
 };

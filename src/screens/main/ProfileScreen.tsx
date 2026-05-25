@@ -1,19 +1,19 @@
 import { View, StyleSheet } from 'react-native';
-import { AppButton } from '@/components/AppButton';
+import { AppButton } from '@/components/buttons/AppButton';
 import React, { useEffect, useState } from 'react';
-import { AppText } from '@/components/AppText';
+import { AppText } from '@/components/typography/AppText';
 import { useAuth } from '@/context/AuthContext';
-import AppHeader from '@/components/AppHeader';
-import { AppLoader } from '@/components/AppLoader';
+import AppHeader from '@/components/layout/AppHeader';
+import { AppLoader } from '@/components/feedback/AppLoader';
 import { theme } from '@/themes/theme';
 import { userApi, type UserProfile } from '@/api/user/user.api';
 import { useNavigation } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
-import type { ProfileStackParamList } from '@/navigation/ProfileStack';
+import type { ProfileStackParamList } from '@/navigation/stacks/ProfileStack';
 
 export function ProfileScreen(): React.JSX.Element {
   const { logout } = useAuth();
-  const navigation = useNavigation<NativeStackNavigationProp<ProfileStackParamList>>();
+  const { navigate } = useNavigation<NativeStackNavigationProp<ProfileStackParamList>>();
   const [profile, setProfile] = useState<UserProfile | null>(null);
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
@@ -71,7 +71,7 @@ export function ProfileScreen(): React.JSX.Element {
           variant={'eco'}
           text="WS Feedback"
           onPress={() => {
-            navigation.navigate('ws-feedback');
+            navigate('ws-feedback');
           }}
         />
         <View style={{ height: theme.spacing.md }} />
@@ -108,11 +108,7 @@ const styles = StyleSheet.create({
     backgroundColor: '#ffffff',
     padding: theme.spacing.lg,
     borderRadius: theme.radius.lg,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 8,
-    elevation: 3,
+    boxShadow: '0 2px 8px rgba(0,0,0,0.1)',
     marginBottom: theme.spacing.xl,
   },
   label: {

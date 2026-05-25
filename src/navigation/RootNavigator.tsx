@@ -1,10 +1,10 @@
 import React from 'react';
 
-import AuthStack from './AuthStack';
+import AuthStack from './stacks/AuthStack';
 import MainAppNavigator from './MainAppNavigator';
 import { useAuth } from '@/context/AuthContext';
 import { ActivityIndicator, View } from 'react-native';
-import { AppText } from '@/components/AppText';
+import { AppText } from '@/components/typography/AppText';
 
 export default function RootNavigator(): React.JSX.Element {
   const { isLoading, isAuthenticated } = useAuth();
@@ -12,7 +12,7 @@ export default function RootNavigator(): React.JSX.Element {
   if (isLoading) {
     return (
       <View style={{ flex: 1, justifyContent: 'center' }}>
-        <AppText>Loading...</AppText>
+        <AppText>Loading…</AppText>
         <ActivityIndicator />
       </View>
     );

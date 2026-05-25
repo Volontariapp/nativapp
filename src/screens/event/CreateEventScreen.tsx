@@ -1,10 +1,10 @@
 import React, { useState } from 'react';
 import { View, StyleSheet, ScrollView, TextInput, Alert } from 'react-native';
-import { AppText } from '@/components/AppText';
-import { AppButton } from '@/components/AppButton';
-import AppHeader from '@/components/AppHeader';
+import { AppText } from '@/components/typography/AppText';
+import { AppButton } from '@/components/buttons/AppButton';
+import AppHeader from '@/components/layout/AppHeader';
 import { theme } from '@/themes/theme';
-import { SafeAreaView } from 'react-native-safe-area-context';
+
 import { eventApi } from '@/api/event/event.api';
 import type { CreateEventRequest } from '@volontariapp/contracts';
 import { EventType } from '@volontariapp/contracts';
@@ -54,9 +54,12 @@ export function CreateEventScreen(): React.JSX.Element {
   };
 
   return (
-    <SafeAreaView style={styles.container}>
+    <View style={styles.container}>
       <AppHeader />
-      <ScrollView contentContainerStyle={styles.scrollContent}>
+      <ScrollView
+        contentContainerStyle={styles.scrollContent}
+        contentInsetAdjustmentBehavior="automatic"
+      >
         <AppText style={styles.title}>Créer un Évènement</AppText>
 
         <View style={styles.inputGroup}>
@@ -151,7 +154,7 @@ export function CreateEventScreen(): React.JSX.Element {
         />
         <View style={{ height: theme.spacing.xxl }} />
       </ScrollView>
-    </SafeAreaView>
+    </View>
   );
 }
 
