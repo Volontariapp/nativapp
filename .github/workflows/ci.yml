@@ -8,6 +8,6 @@ on:
 
 jobs:
   run-pipeline:
-    uses: Volontariapp/ci-tools/.github/workflows/nativapp/ci.yml@main
+    uses: Volontariapp/ci-tools/.github/workflows/nativapp-ci.yml@main
     secrets:
       EXPO_TOKEN: ${{ secrets.EXPO_TOKEN }}
