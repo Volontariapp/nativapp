@@ -1,0 +1,12 @@
+/* eslint-disable @typescript-eslint/no-empty-object-type */
+
+// TODO: Ces types n'ont pas été trouvés dans @volontariapp/contracts
+// Veuillez les définir ou les exporter proprement plus tard.
+// TODO: Clement
+
+export interface EventIdWebResponse {}
+export interface IdsListWebResponse {}
+export interface GetUserEventsRequest {}
+export interface GetUserParticipationsRequest {}
+export interface GetUserWishesRequest {}
+export interface ExistsWebResponse {}

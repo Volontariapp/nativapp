@@ -3,11 +3,12 @@ import { View, Button } from 'react-native';
 
 import RootNavigator from './RootNavigator';
 import SandboxStack from '@/navigation/stacks/SandboxStack';
+import AdminAppNavigator from '@/navigation/admin/AdminAppNavigator';
 
 import { AdminContext } from '@/context/admin/admin.context';
 
 export default function AdminNavigator(): React.JSX.Element {
-  const [mode, setMode] = useState<'menu' | 'app' | 'sandbox'>('menu');
+  const [mode, setMode] = useState<'menu' | 'app' | 'sandbox' | 'panel'>('menu');
 
   const adminContextValue = useMemo(() => ({ setMode }), [setMode]);
 
@@ -15,6 +16,7 @@ export default function AdminNavigator(): React.JSX.Element {
     <AdminContext.Provider value={adminContextValue}>
       {mode === 'app' && <RootNavigator />}
       {mode === 'sandbox' && <SandboxStack />}
+      {mode === 'panel' && <AdminAppNavigator />}
       {mode === 'menu' && (
         <View style={{ flex: 1, justifyContent: 'center', gap: 20 }}>
           <Button
@@ -27,6 +29,12 @@ export default function AdminNavigator(): React.JSX.Element {
             title="🧪 Sandbox"
             onPress={(): void => {
               setMode('sandbox');
+            }}
+          />
+          <Button
+            title="⚙️ Super Admin Panel"
+            onPress={(): void => {
+              setMode('panel');
             }}
           />
         </View>
