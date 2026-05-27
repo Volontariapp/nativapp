@@ -40,10 +40,10 @@ const formatTimestamp = (ts: GrpcTimestamp | string | undefined | null): string 
 export const eventApi = {
   async createEvent(payload: CreateEventRequest): Promise<AppEvent> {
     const response = await apiFetch<CreateEventResponse, CreateEventRequest>(
-      EVENT_ENDPOINTS.CREATE.path,
+      EVENT_ENDPOINTS.CREATE_EVENT.path,
       {
-        method: EVENT_ENDPOINTS.CREATE.method,
-        requiresAuth: EVENT_ENDPOINTS.CREATE.requiresAuth,
+        method: EVENT_ENDPOINTS.CREATE_EVENT.method,
+        requiresAuth: EVENT_ENDPOINTS.CREATE_EVENT.requiresAuth,
         body: payload,
       },
     );
