@@ -1,5 +1,5 @@
 import React from 'react';
-import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
+import { createBottomTabNavigator } from '@react-navigation/native-tabs';
 
 import { HomeScreen } from '@/screens';
 import { SwipeScreen, ExploreScreen, CreateEventScreen } from '@/screens';

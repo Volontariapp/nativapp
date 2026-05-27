@@ -1,5 +1,5 @@
 import React from 'react';
-import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
+import { createBottomTabNavigator } from '@react-navigation/native-tabs';
 import Icon from 'react-native-vector-icons/Feather';
 
 import AdminDashboardScreen from '../../screens/admin/dashboard/AdminDashboardScreen';

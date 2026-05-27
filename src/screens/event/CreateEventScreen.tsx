@@ -95,7 +95,7 @@ export function CreateEventScreen(): React.JSX.Element {
               <TextInput style={styles.input} value={value} onChangeText={onChange} />
             )}
           />
-          {errors.title && <Text style={styles.errorText}>{errors.title.message}</Text>}
+          {errors.title ? <Text style={styles.errorText}>{errors.title.message}</Text> : null}
         </View>
 
         <View style={styles.inputGroup}>
@@ -113,7 +113,9 @@ export function CreateEventScreen(): React.JSX.Element {
               />
             )}
           />
-          {errors.description && <Text style={styles.errorText}>{errors.description.message}</Text>}
+          {errors.description ? (
+            <Text style={styles.errorText}>{errors.description.message}</Text>
+          ) : null}
         </View>
 
         <View style={styles.inputGroup}>
@@ -125,9 +127,9 @@ export function CreateEventScreen(): React.JSX.Element {
               <TextInput style={styles.input} value={value} onChangeText={onChange} />
             )}
           />
-          {errors.localisationName && (
+          {errors.localisationName ? (
             <Text style={styles.errorText}>{errors.localisationName.message}</Text>
-          )}
+          ) : null}
         </View>
 
         <View style={styles.row}>
@@ -140,7 +142,7 @@ export function CreateEventScreen(): React.JSX.Element {
                 <TextInput style={styles.input} value={value} onChangeText={onChange} />
               )}
             />
-            {errors.startAt && <Text style={styles.errorText}>{errors.startAt.message}</Text>}
+            {errors.startAt ? <Text style={styles.errorText}>{errors.startAt.message}</Text> : null}
           </View>
           <View style={[styles.inputGroup, { flex: 1, marginLeft: theme.spacing.sm }]}>
             <AppText style={styles.label}>Date de fin</AppText>
@@ -151,7 +153,7 @@ export function CreateEventScreen(): React.JSX.Element {
                 <TextInput style={styles.input} value={value} onChangeText={onChange} />
               )}
             />
-            {errors.endAt && <Text style={styles.errorText}>{errors.endAt.message}</Text>}
+            {errors.endAt ? <Text style={styles.errorText}>{errors.endAt.message}</Text> : null}
           </View>
         </View>
 
@@ -170,9 +172,9 @@ export function CreateEventScreen(): React.JSX.Element {
                 />
               )}
             />
-            {errors.maxParticipants && (
+            {errors.maxParticipants ? (
               <Text style={styles.errorText}>{errors.maxParticipants.message}</Text>
-            )}
+            ) : null}
           </View>
           <View style={[styles.inputGroup, { flex: 1, marginLeft: theme.spacing.sm }]}>
             <AppText style={styles.label}>Score d'impact</AppText>
@@ -188,9 +190,9 @@ export function CreateEventScreen(): React.JSX.Element {
                 />
               )}
             />
-            {errors.awardedImpactScore && (
+            {errors.awardedImpactScore ? (
               <Text style={styles.errorText}>{errors.awardedImpactScore.message}</Text>
-            )}
+            ) : null}
           </View>
         </View>
 

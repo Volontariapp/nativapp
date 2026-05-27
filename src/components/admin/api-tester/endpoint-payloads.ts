@@ -715,15 +715,3 @@ const ENDPOINT_PAYLOADS: Record<string, EndpointMeta> = {
 export function getEndpointMeta(methodName: string): EndpointMeta | null {
   return ENDPOINT_PAYLOADS[methodName] ?? null;
 }
-
-export function getExampleTexts(methodName: string): {
-  payloadText: string;
-  pathParamsText: string;
-} {
-  const meta = ENDPOINT_PAYLOADS[methodName];
-  return {
-    payloadText: meta.examplePayload != null ? JSON.stringify(meta.examplePayload, null, 2) : '{}',
-    pathParamsText:
-      meta.examplePathParams != null ? JSON.stringify(meta.examplePathParams, null, 2) : '{}',
-  };
-}

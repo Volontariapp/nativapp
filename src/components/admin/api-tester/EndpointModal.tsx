@@ -1,4 +1,4 @@
-import React, { useState, useMemo, useReducer } from 'react';
+import React, { useRef, useState, useMemo, useReducer } from 'react';
 import {
   View,
   Modal,
@@ -98,7 +98,11 @@ const JsonInput = ({
   };
   return (
     <TextInput
-      style={[modalStyles.jsonInput, { minHeight }, focused && modalStyles.jsonInputFocused]}
+      style={[
+        modalStyles.jsonInput,
+        { minHeight },
+        focused ? modalStyles.jsonInputFocused : undefined,
+      ]}
       multiline
       value={value}
       onChangeText={onChangeText}
@@ -151,9 +155,9 @@ export const EndpointModal = ({
 
   // Reset overrides when the selected endpoint changes
   // This is safe to do during render (not in an effect) because it's a conditional reset
-  const [prevMethodName, setPrevMethodName] = useState(methodName);
-  if (methodName !== prevMethodName) {
-    setPrevMethodName(methodName);
+  const prevMethodName = useRef(methodName);
+  if (methodName !== prevMethodName.current) {
+    prevMethodName.current = methodName;
     dispatch({ type: 'RESET' });
   }
 
