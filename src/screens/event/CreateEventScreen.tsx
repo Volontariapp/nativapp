@@ -36,7 +36,7 @@ export function CreateEventScreen(): React.JSX.Element {
       title: 'Nettoyage de la plage',
       description: 'Rejoignez-nous pour nettoyer la plage et protéger notre environnement !',
       localisationName: 'Plage du Prado, Marseille',
-      type: EventType.EVENT_TYPE_ECOLOGY,
+      type: EventType[EventType.EVENT_TYPE_ECOLOGY] as unknown as EventType,
       awardedImpactScore: 100,
       maxParticipants: 50,
       startAt: '2026-06-01T10:00:00Z',

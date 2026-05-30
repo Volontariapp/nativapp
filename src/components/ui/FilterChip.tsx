@@ -12,7 +12,7 @@ interface FilterChipProps {
 }
 
 /**
- * A pill-shaped filter chip. When `selected`, it shows a filled background.
+ * A pill-shaped filter chip. When `selected`, it shows a filled background with white text.
  * `color` defaults to primarySocio. Works for any filter use-case.
  */
 export const FilterChip = ({
@@ -28,14 +28,30 @@ export const FilterChip = ({
       style={({ pressed }) => [
         styles.chip,
         {
-          backgroundColor: selected ? color : color + '14',
+          backgroundColor: selected ? color : 'transparent',
           borderColor: color,
+          borderWidth: selected ? 2 : 1.5,
           opacity: pressed ? 0.75 : 1,
+        },
+        selected && {
+          shadowColor: color,
+          shadowOffset: { width: 0, height: 2 },
+          shadowOpacity: 0.3,
+          shadowRadius: 4,
+          elevation: 3,
         },
         style,
       ]}
     >
-      <AppText style={[styles.label, { color: selected ? theme.colors.white : color }]}>
+      <AppText
+        style={[
+          styles.label,
+          {
+            color: selected ? theme.colors.white : color,
+            fontWeight: selected ? '700' : '600',
+          },
+        ]}
+      >
         {label}
       </AppText>
     </Pressable>
@@ -45,14 +61,12 @@ export const FilterChip = ({
 const styles = StyleSheet.create({
   chip: {
     paddingHorizontal: theme.spacing.md,
-    paddingVertical: theme.spacing.xs,
+    paddingVertical: theme.spacing.sm,
     borderRadius: theme.radius.full,
-    borderWidth: 1.5,
     alignSelf: 'flex-start',
   },
   label: {
-    fontSize: theme.typography.fontSize.xs,
-    fontWeight: '700',
-    letterSpacing: 0.3,
+    fontSize: theme.typography.fontSize.sm,
+    letterSpacing: 0.2,
   },
 });
