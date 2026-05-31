@@ -1,47 +1,15 @@
-import React, { useState } from 'react';
+import React from 'react';
 import { View, StyleSheet, ActivityIndicator, Alert, ScrollView } from 'react-native';
-import { useQuery, useQueryClient } from '@tanstack/react-query';
-import { adminHealthApi } from '@/api/admin/admin.health.api';
+import { useQueryClient } from '@tanstack/react-query';
 import { theme } from '@/shared/themes/theme';
 import { AppText } from '@/components/typography/AppText';
 import { AppButton } from '@/components/buttons/AppButton';
 import { AdminCard } from '@/components/admin/AdminCard';
+import { useAdminHealth } from '@/api/admin/hooks/use-admin-health';
 
 export default function AdminSystemScreen(): React.JSX.Element {
   const queryClient = useQueryClient();
-  const [latency, setLatency] = useState<number | null>(null);
-  const [isChecking, setIsChecking] = useState(false);
-
-  const {
-    data: isHealthy,
-    isLoading,
-    error,
-  } = useQuery<boolean>({
-    queryKey: ['admin', 'healthStatus'],
-    queryFn: async () => {
-      const start = Date.now();
-      await adminHealthApi.checkHealth();
-      setLatency(Date.now() - start);
-      return true;
-    },
-    retry: false,
-  });
-
-  const handleManualCheck = async (): Promise<void> => {
-    setIsChecking(true);
-    try {
-      const start = Date.now();
-      await adminHealthApi.checkHealth();
-      setLatency(Date.now() - start);
-      void queryClient.invalidateQueries({ queryKey: ['admin', 'healthStatus'] });
-      Alert.alert('Succès', 'Le serveur répond normalement.');
-    } catch (err) {
-      const errorMsg = err instanceof Error ? err.message : 'Erreur inconnue';
-      Alert.alert('Erreur', `Le serveur est injoignable : ${errorMsg}`);
-    } finally {
-      setIsChecking(false);
-    }
-  };
+  const { isHealthy, isLoading, error, latency, isChecking, handleManualCheck } = useAdminHealth();
 
   return (
     <ScrollView style={styles.container} contentContainerStyle={styles.content}>

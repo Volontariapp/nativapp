@@ -8,8 +8,8 @@ export const eventSchema = z.object({
   type: z.custom<EventType>((val) => Object.values(EventType).includes(val as EventType), {
     message: "Type d'évènement invalide",
   }),
-  awardedImpactScore: z.coerce.number().min(0, 'Doit être positif'),
-  maxParticipants: z.coerce.number().min(1, 'Au moins 1 participant'),
+  awardedImpactScore: z.number().min(0, 'Doit être positif'),
+  maxParticipants: z.number().min(1, 'Au moins 1 participant'),
   startAt: z.string().min(1, 'Date requise'),
   endAt: z.string().min(1, 'Date requise'),
 });

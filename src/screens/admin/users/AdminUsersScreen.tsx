@@ -1,7 +1,5 @@
-import React, { useState, useMemo } from 'react';
+import React, { useReducer, useMemo, useCallback } from 'react';
 import { View, StyleSheet, Alert } from 'react-native';
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { adminUserApi } from '@/api/admin/admin.user.api';
 import { theme } from '@/shared/themes/theme';
 import { AppText } from '@/components/typography/AppText';
 import { AppButton } from '@/components/buttons/AppButton';
@@ -11,117 +9,95 @@ import { SearchBar } from '@/components/ui/SearchBar';
 import { getAdminUsersColumns } from '@/components/admin/users/admin-users.columns';
 import { AdminUserFormModal } from '@/components/admin/users/AdminUserFormModal';
 import { AdminUserEditModal } from '@/components/admin/users/AdminUserEditModal';
-import type {
-  ListUsersWebResponse,
-  UserWeb,
-  SignUpRequest,
-  UpdateUserRequest,
-} from '@volontariapp/contracts';
+import type { UserWeb, SignUpRequest, UpdateUserRequest } from '@volontariapp/contracts';
 import { UserRoles } from '@volontariapp/shared';
+import {
+  useAdminUsersQuery,
+  useCreateUserMutation,
+  useUpdateUserMutation,
+  useDeleteUserMutation,
+  normalizeUsersList,
+} from '@/api/admin/hooks/use-admin-users';
+
+interface AdminUsersState {
+  modalVisible: boolean;
+  editModalVisible: boolean;
+  editingUser: UserWeb | null;
+  searchQuery: string;
+  roleFilter: 'ALL' | UserRoles;
+}
 
 export default function AdminUsersScreen(): React.JSX.Element {
-  const queryClient = useQueryClient();
-  const [modalVisible, setModalVisible] = useState(false);
-  const [editModalVisible, setEditModalVisible] = useState(false);
-  const [editingUser, setEditingUser] = useState<UserWeb | null>(null);
+  const [state, setState] = useReducer(
+    (s: AdminUsersState, a: Partial<AdminUsersState>) => ({ ...s, ...a }),
+    {
+      modalVisible: false,
+      editModalVisible: false,
+      editingUser: null,
+      searchQuery: '',
+      roleFilter: 'ALL',
+    },
+  );
 
-  const [searchQuery, setSearchQuery] = useState('');
-  const [roleFilter, setRoleFilter] = useState<'ALL' | UserRoles>('ALL');
+  const { data, isLoading } = useAdminUsersQuery();
 
-  const { data, isLoading } = useQuery<ListUsersWebResponse>({
-    queryKey: ['admin', 'users'],
-    queryFn: async () => await adminUserApi.listUsers({ pagination: { page: 1, limit: 200 } }),
+  const createUserMutation = useCreateUserMutation(() => {
+    setState({ modalVisible: false });
   });
 
-  const createUserMutation = useMutation({
-    mutationFn: async (payload: SignUpRequest) => await adminUserApi.signUp(payload),
-    onSuccess: () => {
-      void queryClient.invalidateQueries({ queryKey: ['admin', 'users'] });
-      void queryClient.invalidateQueries({ queryKey: ['admin', 'users', 'count'] });
-      setModalVisible(false);
-      Alert.alert('Succès', 'Utilisateur créé avec succès !');
-    },
-    onError: (error: Error) => {
-      Alert.alert('Erreur', error.message || "Impossible de créer l'utilisateur");
-    },
+  const updateUserMutation = useUpdateUserMutation(() => {
+    setState({ editModalVisible: false, editingUser: null });
   });
 
-  const updateUserMutation = useMutation({
-    mutationFn: async ({ userId, payload }: { userId: string; payload: UpdateUserRequest }) =>
-      await adminUserApi.updateUser(payload, { id: userId }),
-    onSuccess: () => {
-      void queryClient.invalidateQueries({ queryKey: ['admin', 'users'] });
-      setEditModalVisible(false);
-      setEditingUser(null);
-      Alert.alert('Succès', 'Utilisateur modifié avec succès !');
-    },
-    onError: (error: Error) => {
-      Alert.alert('Erreur', error.message || "Impossible de modifier l'utilisateur");
-    },
-  });
+  const deleteUserMutation = useDeleteUserMutation();
 
-  const deleteUserMutation = useMutation({
-    mutationFn: async (userId: string) => {
-      await adminUserApi.deleteUser({ id: userId });
+  const handleCreateUser = useCallback(
+    (payload: SignUpRequest): void => {
+      createUserMutation.mutate(payload);
     },
-    onSuccess: () => {
-      void queryClient.invalidateQueries({ queryKey: ['admin', 'users'] });
-      void queryClient.invalidateQueries({ queryKey: ['admin', 'users', 'count'] });
-      Alert.alert('Succès', 'Utilisateur supprimé.');
+    [createUserMutation],
+  );
+
+  const handleUpdateUser = useCallback(
+    (userId: string, payload: UpdateUserRequest): void => {
+      updateUserMutation.mutate({ userId, payload });
     },
-    onError: (error: Error) => {
-      Alert.alert('Erreur', error.message || "Impossible de supprimer l'utilisateur");
-    },
-  });
+    [updateUserMutation],
+  );
 
-  const handleCreateUser = (payload: SignUpRequest): void => {
-    createUserMutation.mutate(payload);
-  };
+  const handleEditPress = useCallback((user: UserWeb): void => {
+    setState({ editingUser: user, editModalVisible: true });
+  }, []);
 
-  const handleUpdateUser = (userId: string, payload: UpdateUserRequest): void => {
-    updateUserMutation.mutate({ userId, payload });
-  };
-
-  const handleEditPress = (user: UserWeb): void => {
-    setEditingUser(user);
-    setEditModalVisible(true);
-  };
-
-  const handleDeletePress = (user: UserWeb): void => {
-    Alert.alert(
-      'Confirmer la suppression',
-      `Voulez-vous vraiment supprimer l'utilisateur "${user.pseudo || ''}" ? Cette action est irréversible.`,
-      [
-        { text: 'Annuler', style: 'cancel' },
-        {
-          text: 'Supprimer',
-          style: 'destructive',
-          onPress: () => {
-            deleteUserMutation.mutate(user.id);
+  const handleDeletePress = useCallback(
+    (user: UserWeb): void => {
+      Alert.alert(
+        'Confirmer la suppression',
+        `Voulez-vous vraiment supprimer l'utilisateur "${user.pseudo || ''}" ? Cette action est irréversible.`,
+        [
+          { text: 'Annuler', style: 'cancel' },
+          {
+            text: 'Supprimer',
+            style: 'destructive',
+            onPress: () => {
+              deleteUserMutation.mutate(user.id);
+            },
           },
-        },
-      ],
-    );
-  };
+        ],
+      );
+    },
+    [deleteUserMutation],
+  );
 
-  const usersList = useMemo((): UserWeb[] => {
-    if (data == null) return [];
-    const unknownData = data as unknown;
-    if (Array.isArray(unknownData)) return unknownData as UserWeb[];
-    const obj = unknownData as Record<string, unknown>;
-    if (Array.isArray(obj.users)) return obj.users as UserWeb[];
-    if (Array.isArray(obj.data)) return obj.data as UserWeb[];
-    if (Array.isArray(obj.items)) return obj.items as UserWeb[];
-    return [];
-  }, [data]);
+  const usersList = useMemo((): UserWeb[] => normalizeUsersList(data), [data]);
 
   const filteredUsers = useMemo((): UserWeb[] => {
     return usersList.filter((user: UserWeb): boolean => {
       const email = user.email || '';
       const pseudo = user.pseudo || '';
       const matchesSearch =
-        pseudo.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        email.toLowerCase().includes(searchQuery.toLowerCase());
+        pseudo.toLowerCase().includes(state.searchQuery.toLowerCase()) ||
+        email.toLowerCase().includes(state.searchQuery.toLowerCase());
 
       const userRole = user.role;
       const isAdmin =
@@ -130,21 +106,21 @@ export default function AdminUsersScreen(): React.JSX.Element {
         pseudo.toLowerCase().includes('admin');
 
       const matchesRole =
-        roleFilter === 'ALL' ||
-        (roleFilter === UserRoles.VOLUNTEER &&
+        state.roleFilter === 'ALL' ||
+        (state.roleFilter === UserRoles.VOLUNTEER &&
           userRole === (UserRoles.VOLUNTEER as string) &&
           !isAdmin) ||
-        (roleFilter === UserRoles.ORGANIZATION &&
+        (state.roleFilter === UserRoles.ORGANIZATION &&
           (user.organisationInfo != null || userRole === (UserRoles.ORGANIZATION as string))) ||
-        (roleFilter === UserRoles.ADMIN && isAdmin);
+        (state.roleFilter === UserRoles.ADMIN && isAdmin);
 
       return matchesSearch && matchesRole;
     });
-  }, [usersList, searchQuery, roleFilter]);
+  }, [usersList, state.searchQuery, state.roleFilter]);
 
   const columns = useMemo(
     () => getAdminUsersColumns({ onEdit: handleEditPress, onDelete: handleDeletePress }),
-    [],
+    [handleEditPress, handleDeletePress],
   );
 
   return (
@@ -159,48 +135,50 @@ export default function AdminUsersScreen(): React.JSX.Element {
           variant="eco"
           icon="plus"
           onPress={() => {
-            setModalVisible(true);
+            setState({ modalVisible: true });
           }}
         />
       </View>
 
       <View style={styles.searchFiltersContainer}>
         <SearchBar
-          value={searchQuery}
-          onChangeText={setSearchQuery}
+          value={state.searchQuery}
+          onChangeText={(v) => {
+            setState({ searchQuery: v });
+          }}
           placeholder="Rechercher par pseudo ou email..."
         />
         <View style={styles.filterChipsRow}>
           <FilterChip
             label="Tous"
-            selected={roleFilter === 'ALL'}
+            selected={state.roleFilter === 'ALL'}
             color={theme.colors.grey}
             onPress={() => {
-              setRoleFilter('ALL');
+              setState({ roleFilter: 'ALL' });
             }}
           />
           <FilterChip
             label="Bénévoles"
-            selected={roleFilter === UserRoles.VOLUNTEER}
+            selected={state.roleFilter === UserRoles.VOLUNTEER}
             color={theme.colors.primaryEco}
             onPress={() => {
-              setRoleFilter(UserRoles.VOLUNTEER);
+              setState({ roleFilter: UserRoles.VOLUNTEER });
             }}
           />
           <FilterChip
             label="Organisations"
-            selected={roleFilter === UserRoles.ORGANIZATION}
+            selected={state.roleFilter === UserRoles.ORGANIZATION}
             color={theme.colors.primarySocio}
             onPress={() => {
-              setRoleFilter(UserRoles.ORGANIZATION);
+              setState({ roleFilter: UserRoles.ORGANIZATION });
             }}
           />
           <FilterChip
             label="Admins"
-            selected={roleFilter === UserRoles.ADMIN}
+            selected={state.roleFilter === UserRoles.ADMIN}
             color={theme.colors.danger}
             onPress={() => {
-              setRoleFilter(UserRoles.ADMIN);
+              setState({ roleFilter: UserRoles.ADMIN });
             }}
           />
         </View>
@@ -216,19 +194,19 @@ export default function AdminUsersScreen(): React.JSX.Element {
       </View>
 
       <AdminUserFormModal
-        visible={modalVisible}
+        visible={state.modalVisible}
         onClose={() => {
-          setModalVisible(false);
+          setState({ modalVisible: false });
         }}
         onSubmit={handleCreateUser}
         isLoading={createUserMutation.isPending}
       />
 
       <AdminUserEditModal
-        visible={editModalVisible}
-        user={editingUser}
+        visible={state.editModalVisible}
+        user={state.editingUser}
         onClose={() => {
-          setEditModalVisible(false);
+          setState({ editModalVisible: false });
         }}
         onSubmit={handleUpdateUser}
         isLoading={updateUserMutation.isPending}

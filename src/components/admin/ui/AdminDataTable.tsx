@@ -1,5 +1,5 @@
 import React from 'react';
-import { View, FlatList, StyleSheet, type ListRenderItem, ActivityIndicator } from 'react-native';
+import { View, FlatList, StyleSheet, ActivityIndicator } from 'react-native';
 import { AppText } from '@/components/typography/AppText';
 import { theme } from '@/shared/themes/theme';
 import { AdminCard } from './AdminCard';
@@ -20,14 +20,8 @@ interface AdminDataTableProps<T> {
   ListEmptyComponent?: React.ReactElement;
 }
 
-export function AdminDataTable<T>({
-  data,
-  columns,
-  keyExtractor,
-  isLoading,
-  ListEmptyComponent,
-}: AdminDataTableProps<T>): React.JSX.Element {
-  const renderHeader = (): React.JSX.Element => (
+function AdminDataTableHeader<T>({ columns }: { columns: TableColumn<T>[] }): React.JSX.Element {
+  return (
     <View style={styles.headerRow}>
       {columns.map((col) => (
         <View key={col.key} style={[styles.headerCell, { flex: col.flex ?? 1 }]}>
@@ -36,8 +30,16 @@ export function AdminDataTable<T>({
       ))}
     </View>
   );
+}
 
-  const renderItem: ListRenderItem<T> = ({ item }) => (
+function AdminDataTableRow<T>({
+  item,
+  columns,
+}: {
+  item: T;
+  columns: TableColumn<T>[];
+}): React.JSX.Element {
+  return (
     <View style={styles.row}>
       {columns.map((col) => (
         <View key={col.key} style={[styles.cell, { flex: col.flex ?? 1 }]}>
@@ -50,10 +52,18 @@ export function AdminDataTable<T>({
       ))}
     </View>
   );
+}
 
+export function AdminDataTable<T>({
+  data,
+  columns,
+  keyExtractor,
+  isLoading,
+  ListEmptyComponent,
+}: AdminDataTableProps<T>): React.JSX.Element {
   return (
     <AdminCard noPadding style={styles.container}>
-      {renderHeader()}
+      <AdminDataTableHeader columns={columns} />
       {isLoading === true ? (
         <View style={styles.loadingContainer}>
           <ActivityIndicator color={theme.colors.primarySocio} />
@@ -61,7 +71,7 @@ export function AdminDataTable<T>({
       ) : (
         <FlatList
           data={data}
-          renderItem={renderItem}
+          renderItem={({ item }) => <AdminDataTableRow item={item} columns={columns} />}
           keyExtractor={keyExtractor}
           ItemSeparatorComponent={() => <View style={styles.separator} />}
           ListEmptyComponent={

@@ -3,6 +3,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import React from 'react';
 import { AppText } from '@/components/typography/AppText';
 import AppHeader from '@/components/layout/AppHeader';
+import { theme } from '@/shared/themes/theme';
 
 export function HomeScreen(): React.JSX.Element {
   return (
@@ -16,7 +17,7 @@ export function HomeScreen(): React.JSX.Element {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#f8f9fa',
+    backgroundColor: theme.colors.background,
   },
   content: {
     flex: 1,

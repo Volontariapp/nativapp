@@ -1,4 +1,6 @@
-import { View, Text, StyleSheet } from 'react-native';
+import React from 'react';
+import { View, StyleSheet } from 'react-native';
+import { AppText } from '@/components/typography/AppText';
 import { theme } from '@/shared/themes/theme';
 
 interface ScreenHeaderProps {
@@ -9,8 +11,10 @@ interface ScreenHeaderProps {
 export function ScreenHeader({ title, subtitle }: ScreenHeaderProps): React.JSX.Element {
   return (
     <View style={styles.container}>
-      <Text style={styles.title}>{title}</Text>
-      {subtitle !== undefined && subtitle !== '' && <Text style={styles.subtitle}>{subtitle}</Text>}
+      <AppText style={styles.title}>{title}</AppText>
+      {subtitle !== undefined && subtitle !== '' && (
+        <AppText style={styles.subtitle}>{subtitle}</AppText>
+      )}
     </View>
   );
 }

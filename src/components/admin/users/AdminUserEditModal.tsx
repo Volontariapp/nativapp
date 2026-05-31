@@ -1,4 +1,4 @@
-import React, { useEffect } from 'react';
+import React from 'react';
 import { View, StyleSheet } from 'react-native';
 import { useForm, Controller } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -37,14 +37,8 @@ export function AdminUserEditModal({
     formState: { errors },
   } = useForm<EditUserFormData>({
     resolver: zodResolver(editUserSchema),
-    defaultValues: { pseudo: '' },
+    values: user ? { pseudo: user.pseudo } : { pseudo: '' },
   });
-
-  useEffect(() => {
-    if (user && visible) {
-      reset({ pseudo: user.pseudo });
-    }
-  }, [user, visible, reset]);
 
   const handleClose = (): void => {
     reset();

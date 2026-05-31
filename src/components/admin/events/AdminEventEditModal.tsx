@@ -1,4 +1,4 @@
-import React, { useEffect } from 'react';
+import React from 'react';
 import { View, StyleSheet } from 'react-native';
 import { useForm, Controller } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -45,28 +45,24 @@ export function AdminEventEditModal({
     formState: { errors },
   } = useForm({
     resolver: zodResolver(editEventSchema),
-    defaultValues: {
-      title: '',
-      description: '',
-      localisationName: '',
-      type: EventType.EVENT_TYPE_SOCIAL,
-      maxParticipants: '10',
-      awardedImpactScore: '100',
-    },
+    values: event
+      ? {
+          title: event.title,
+          description: event.description,
+          localisationName: event.localisationName,
+          type: event.type,
+          maxParticipants: String(event.maxParticipants),
+          awardedImpactScore: String(event.awardedImpactScore),
+        }
+      : {
+          title: '',
+          description: '',
+          localisationName: '',
+          type: EventType.EVENT_TYPE_SOCIAL,
+          maxParticipants: '10',
+          awardedImpactScore: '100',
+        },
   });
-
-  useEffect(() => {
-    if (event && visible) {
-      reset({
-        title: event.title,
-        description: event.description,
-        localisationName: event.localisationName,
-        type: event.type,
-        maxParticipants: String(event.maxParticipants),
-        awardedImpactScore: String(event.awardedImpactScore),
-      });
-    }
-  }, [event, visible, reset]);
 
   const handleClose = (): void => {
     reset();
@@ -169,7 +165,7 @@ export function AdminEventEditModal({
       />
 
       <View style={styles.rowInputs}>
-        <View style={{ flex: 1 }}>
+        <View style={styles.flex1}>
           <Controller
             control={control}
             name="maxParticipants"
@@ -186,7 +182,7 @@ export function AdminEventEditModal({
             )}
           />
         </View>
-        <View style={{ flex: 1 }}>
+        <View style={styles.flex1}>
           <Controller
             control={control}
             name="awardedImpactScore"
@@ -221,6 +217,7 @@ export function AdminEventEditModal({
 }
 
 const styles = StyleSheet.create({
+  flex1: { flex: 1 },
   inputGroup: { gap: theme.spacing.xs },
   label: { fontSize: theme.typography.fontSize.xs, fontWeight: '600', color: theme.colors.grey },
   themeChips: {

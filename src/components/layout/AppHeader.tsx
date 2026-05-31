@@ -1,6 +1,7 @@
-import { View, Text } from 'react-native';
 import React from 'react';
+import { View, StyleSheet } from 'react-native';
 import { theme } from '@/shared/themes/theme';
+import { AppText } from '@/components/typography/AppText';
 import { useSocket } from '@/context/SocketContext';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
@@ -9,27 +10,36 @@ export default function AppHeader(): React.JSX.Element {
   const insets = useSafeAreaInsets();
 
   return (
-    <View
-      style={{
-        backgroundColor: theme.colors.background,
-        justifyContent: 'space-between',
-        alignItems: 'flex-end',
-        flexDirection: 'row',
-        paddingHorizontal: theme.spacing.lg,
-        paddingBottom: theme.spacing.sm,
-        paddingTop: insets.top,
-      }}
-    >
-      <Text style={{ fontSize: 20, fontWeight: 'bold' }}>VolontariApp</Text>
+    <View style={[styles.container, { paddingTop: insets.top }]}>
+      <AppText style={styles.title}>VolontariApp</AppText>
       <View
-        style={{
-          width: 10,
-          height: 10,
-          borderRadius: 5,
-          backgroundColor: isConnected ? theme.colors.success : theme.colors.danger,
-          marginBottom: 6,
-        }}
+        style={[
+          styles.statusDot,
+          { backgroundColor: isConnected ? theme.colors.success : theme.colors.danger },
+        ]}
       />
     </View>
   );
 }
+
+const styles = StyleSheet.create({
+  container: {
+    backgroundColor: theme.colors.background,
+    justifyContent: 'space-between',
+    alignItems: 'flex-end',
+    flexDirection: 'row',
+    paddingHorizontal: theme.spacing.lg,
+    paddingBottom: theme.spacing.sm,
+  },
+  title: {
+    fontSize: 20,
+    fontWeight: 'bold',
+    color: theme.colors.black,
+  },
+  statusDot: {
+    width: 10,
+    height: 10,
+    borderRadius: 5,
+    marginBottom: 6,
+  },
+});

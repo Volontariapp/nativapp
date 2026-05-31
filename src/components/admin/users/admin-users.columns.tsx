@@ -61,7 +61,7 @@ export const getAdminUsersColumns = ({ onEdit, onDelete }: AdminUsersColumnsProp
     title: 'Action',
     flex: 1.0,
     render: (item: UserWeb): React.ReactNode => (
-      <View style={{ flexDirection: 'row', gap: theme.spacing.sm, alignItems: 'center' }}>
+      <View style={styles.actionsRow}>
         <Pressable
           onPress={(): void => {
             onEdit(item);
@@ -115,6 +115,11 @@ const styles = StyleSheet.create({
     fontSize: theme.typography.fontSize.sm,
     fontWeight: '600',
     color: theme.colors.black,
+  },
+  actionsRow: {
+    flexDirection: 'row',
+    gap: theme.spacing.sm,
+    alignItems: 'center',
   },
   actionIconButton: {
     padding: theme.spacing.sm,

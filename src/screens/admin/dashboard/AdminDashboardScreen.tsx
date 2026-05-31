@@ -4,43 +4,22 @@ import { theme } from '@/shared/themes/theme';
 import { AdminStatBadge } from '../../../components/admin/ui/AdminStatBadge';
 import { AppText } from '@/components/typography/AppText';
 import { AppButton } from '@/components/buttons/AppButton';
-import { useQuery } from '@tanstack/react-query';
-import { adminHealthApi } from '@/api/admin/admin.health.api';
-import { adminUserApi } from '@/api/admin/admin.user.api';
-import { adminEventApi } from '@/api/admin/admin.event.api';
 import { useNavigation } from '@react-navigation/native';
-import type { ListUsersWebResponse, SearchEventsResponse } from '@volontariapp/contracts';
+import type { BottomTabNavigationProp } from '@react-navigation/native-tabs';
+import { useAdminDashboard } from '@/api/admin/hooks/use-admin-dashboard';
 
-type AdminNavigationProp = {
-  navigate: (screen: string) => void;
+type AdminTabParamList = {
+  Dashboard: undefined;
+  Users: undefined;
+  Events: undefined;
+  System: undefined;
 };
 
+type AdminDashboardNavigationProp = BottomTabNavigationProp<AdminTabParamList, 'Dashboard'>;
+
 export default function AdminDashboardScreen(): React.JSX.Element {
-  const navigation = useNavigation<AdminNavigationProp>();
-
-  const { data: usersData, error: usersError } = useQuery<ListUsersWebResponse>({
-    queryKey: ['admin', 'users', 'count'],
-    queryFn: async () => await adminUserApi.listUsers({ pagination: { page: 1, limit: 10 } }),
-  });
-
-  const { data: eventsData, error: eventsError } = useQuery<SearchEventsResponse>({
-    queryKey: ['admin', 'events', 'count'],
-    queryFn: async () => await adminEventApi.listEvents({ onlyAvailable: false }),
-  });
-
-  const { isSuccess: isHealthOk } = useQuery({
-    queryKey: ['admin', 'health'],
-    queryFn: async () => {
-      await adminHealthApi.checkHealth();
-      return true;
-    },
-  });
-
-  if (usersError) console.error('Users API Error:', usersError);
-  if (eventsError) console.error('Events API Error:', eventsError);
-
-  const usersCount = usersData?.pagination?.total ?? usersData?.users.length ?? 0;
-  const eventsCount = eventsData?.totalCount ?? eventsData?.events.length ?? 0;
+  const navigation = useNavigation<AdminDashboardNavigationProp>();
+  const { usersCount, eventsCount, isHealthOk } = useAdminDashboard();
 
   return (
     <ScrollView style={styles.container} contentContainerStyle={styles.content}>

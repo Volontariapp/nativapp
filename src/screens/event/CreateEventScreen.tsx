@@ -4,39 +4,36 @@ import {
   StyleSheet,
   ScrollView,
   TextInput,
-  Alert,
   KeyboardAvoidingView,
   Platform,
-  Text,
 } from 'react-native';
 import { AppText } from '@/components/typography/AppText';
 import { AppButton } from '@/components/buttons/AppButton';
 import AppHeader from '@/components/layout/AppHeader';
 import { theme } from '@/shared/themes/theme';
 
-import { eventApi } from '@/api/event/event.api';
 import type { CreateEventRequest } from '@volontariapp/contracts';
 import { EventType } from '@volontariapp/contracts';
 
 import { useForm, Controller } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { eventSchema, type EventFormValues } from '@/api/event/event.schema';
+import { useCreateEvent } from '@/api/event/hooks/use-create-event';
 
 export function CreateEventScreen(): React.JSX.Element {
-  const queryClient = useQueryClient();
+  const mutation = useCreateEvent();
 
   const {
     control,
     handleSubmit,
     formState: { errors },
-  } = useForm({
+  } = useForm<EventFormValues>({
     resolver: zodResolver(eventSchema),
     defaultValues: {
       title: 'Nettoyage de la plage',
       description: 'Rejoignez-nous pour nettoyer la plage et protéger notre environnement !',
       localisationName: 'Plage du Prado, Marseille',
-      type: EventType[EventType.EVENT_TYPE_ECOLOGY] as unknown as EventType,
+      type: EventType.EVENT_TYPE_ECOLOGY,
       awardedImpactScore: 100,
       maxParticipants: 50,
       startAt: '2026-06-01T10:00:00Z',
@@ -44,34 +41,20 @@ export function CreateEventScreen(): React.JSX.Element {
     },
   });
 
-  const mutation = useMutation({
-    mutationFn: (data: EventFormValues) => {
-      const payload: CreateEventRequest = {
-        title: data.title,
-        description: data.description,
-        localisationName: data.localisationName,
-        type: data.type,
-        awardedImpactScore: data.awardedImpactScore,
-        maxParticipants: data.maxParticipants,
-        startAt: new Date(data.startAt),
-        endAt: new Date(data.endAt),
-        tagIds: [],
-      };
-      return eventApi.createEvent(payload);
-    },
-    onSuccess: (newEvent) => {
-      void queryClient.invalidateQueries({ queryKey: ['events'] });
-      Alert.alert('Succès', `L'évènement "${newEvent.title}" a été créé avec succès !`);
-    },
-    onError: (err) => {
-      console.error(err);
-      Alert.alert('Erreur', "Impossible de créer l'évènement.");
-    },
+  const onSubmit = handleSubmit((data) => {
+    const payload: CreateEventRequest = {
+      title: data.title,
+      description: data.description,
+      localisationName: data.localisationName,
+      type: data.type,
+      awardedImpactScore: data.awardedImpactScore,
+      maxParticipants: data.maxParticipants,
+      startAt: new Date(data.startAt),
+      endAt: new Date(data.endAt),
+      tagIds: [],
+    };
+    mutation.mutate(payload);
   });
-
-  const onSubmit = (data: EventFormValues): void => {
-    mutation.mutate(data);
-  };
 
   return (
     <KeyboardAvoidingView
@@ -95,7 +78,7 @@ export function CreateEventScreen(): React.JSX.Element {
               <TextInput style={styles.input} value={value} onChangeText={onChange} />
             )}
           />
-          {errors.title ? <Text style={styles.errorText}>{errors.title.message}</Text> : null}
+          {errors.title ? <AppText style={styles.errorText}>{errors.title.message}</AppText> : null}
         </View>
 
         <View style={styles.inputGroup}>
@@ -114,7 +97,7 @@ export function CreateEventScreen(): React.JSX.Element {
             )}
           />
           {errors.description ? (
-            <Text style={styles.errorText}>{errors.description.message}</Text>
+            <AppText style={styles.errorText}>{errors.description.message}</AppText>
           ) : null}
         </View>
 
@@ -128,12 +111,12 @@ export function CreateEventScreen(): React.JSX.Element {
             )}
           />
           {errors.localisationName ? (
-            <Text style={styles.errorText}>{errors.localisationName.message}</Text>
+            <AppText style={styles.errorText}>{errors.localisationName.message}</AppText>
           ) : null}
         </View>
 
         <View style={styles.row}>
-          <View style={[styles.inputGroup, { flex: 1, marginRight: theme.spacing.sm }]}>
+          <View style={styles.rowItem}>
             <AppText style={styles.label}>Date de début</AppText>
             <Controller
               control={control}
@@ -142,9 +125,11 @@ export function CreateEventScreen(): React.JSX.Element {
                 <TextInput style={styles.input} value={value} onChangeText={onChange} />
               )}
             />
-            {errors.startAt ? <Text style={styles.errorText}>{errors.startAt.message}</Text> : null}
+            {errors.startAt ? (
+              <AppText style={styles.errorText}>{errors.startAt.message}</AppText>
+            ) : null}
           </View>
-          <View style={[styles.inputGroup, { flex: 1, marginLeft: theme.spacing.sm }]}>
+          <View style={styles.rowItem}>
             <AppText style={styles.label}>Date de fin</AppText>
             <Controller
               control={control}
@@ -153,12 +138,14 @@ export function CreateEventScreen(): React.JSX.Element {
                 <TextInput style={styles.input} value={value} onChangeText={onChange} />
               )}
             />
-            {errors.endAt ? <Text style={styles.errorText}>{errors.endAt.message}</Text> : null}
+            {errors.endAt ? (
+              <AppText style={styles.errorText}>{errors.endAt.message}</AppText>
+            ) : null}
           </View>
         </View>
 
         <View style={styles.row}>
-          <View style={[styles.inputGroup, { flex: 1, marginRight: theme.spacing.sm }]}>
+          <View style={styles.rowItem}>
             <AppText style={styles.label}>Participants Max</AppText>
             <Controller
               control={control}
@@ -173,10 +160,10 @@ export function CreateEventScreen(): React.JSX.Element {
               )}
             />
             {errors.maxParticipants ? (
-              <Text style={styles.errorText}>{errors.maxParticipants.message}</Text>
+              <AppText style={styles.errorText}>{errors.maxParticipants.message}</AppText>
             ) : null}
           </View>
-          <View style={[styles.inputGroup, { flex: 1, marginLeft: theme.spacing.sm }]}>
+          <View style={styles.rowItem}>
             <AppText style={styles.label}>Score d'impact</AppText>
             <Controller
               control={control}
@@ -191,7 +178,7 @@ export function CreateEventScreen(): React.JSX.Element {
               )}
             />
             {errors.awardedImpactScore ? (
-              <Text style={styles.errorText}>{errors.awardedImpactScore.message}</Text>
+              <AppText style={styles.errorText}>{errors.awardedImpactScore.message}</AppText>
             ) : null}
           </View>
         </View>
@@ -199,11 +186,11 @@ export function CreateEventScreen(): React.JSX.Element {
         <AppButton
           text={mutation.isPending ? 'Création en cours...' : "Créer l'évènement"}
           onPress={() => {
-            void handleSubmit(onSubmit)();
+            void onSubmit();
           }}
           disabled={mutation.isPending}
         />
-        <View style={{ height: theme.spacing.xxl }} />
+        <View style={styles.bottomSpacer} />
       </ScrollView>
     </KeyboardAvoidingView>
   );
@@ -248,10 +235,18 @@ const styles = StyleSheet.create({
   row: {
     flexDirection: 'row',
     justifyContent: 'space-between',
+    gap: theme.spacing.sm,
+  },
+  rowItem: {
+    flex: 1,
+    marginBottom: theme.spacing.lg,
   },
   errorText: {
     color: theme.colors.danger,
     fontSize: 12,
     marginTop: 4,
+  },
+  bottomSpacer: {
+    height: theme.spacing.xxl,
   },
 });

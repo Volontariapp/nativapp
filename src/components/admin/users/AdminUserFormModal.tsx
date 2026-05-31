@@ -13,12 +13,12 @@ import { UserRoles } from '@volontariapp/shared';
 import type { SignUpRequest } from '@volontariapp/contracts';
 
 const userSchema = z.object({
-  // eslint-disable-next-line @typescript-eslint/no-deprecated
-  email: z.string().email('Adresse email invalide'),
+  email: z.string().regex(/^[^\s@]+@[^\s@]+\.[^\s@]+$/, 'Adresse email invalide'),
   pseudo: z.string().min(3, 'Le pseudo doit contenir au moins 3 caractères'),
   password: z.string().min(6, 'Le mot de passe doit contenir au moins 6 caractères'),
-  // eslint-disable-next-line @typescript-eslint/no-deprecated
-  role: z.nativeEnum(UserRoles),
+  role: z.custom<UserRoles>((val) => Object.values(UserRoles).includes(val as UserRoles), {
+    message: 'Rôle invalide',
+  }),
 });
 
 type UserFormData = z.infer<typeof userSchema>;

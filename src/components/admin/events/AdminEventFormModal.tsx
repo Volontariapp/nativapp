@@ -156,7 +156,7 @@ export function AdminEventFormModal({
       />
 
       <View style={styles.rowInputs}>
-        <View style={{ flex: 1 }}>
+        <View style={styles.flex1}>
           <Controller
             control={control}
             name="maxParticipants"
@@ -173,7 +173,7 @@ export function AdminEventFormModal({
             )}
           />
         </View>
-        <View style={{ flex: 1 }}>
+        <View style={styles.flex1}>
           <Controller
             control={control}
             name="awardedImpactScore"
@@ -208,6 +208,7 @@ export function AdminEventFormModal({
 }
 
 const styles = StyleSheet.create({
+  flex1: { flex: 1 },
   inputGroup: { gap: theme.spacing.xs },
   label: { fontSize: theme.typography.fontSize.xs, fontWeight: '600', color: theme.colors.grey },
   themeChips: {

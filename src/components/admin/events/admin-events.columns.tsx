@@ -87,7 +87,7 @@ export const getAdminEventsColumns = ({
     title: 'Action',
     flex: 1.0,
     render: (item: Event): React.ReactNode => (
-      <View style={{ flexDirection: 'row', gap: theme.spacing.sm, alignItems: 'center' }}>
+      <View style={styles.actionsRow}>
         <Pressable
           onPress={() => {
             onEdit(item);
@@ -140,6 +140,11 @@ const styles = StyleSheet.create({
     alignSelf: 'flex-start',
   },
   stateText: { fontSize: 11, fontWeight: '700' },
+  actionsRow: {
+    flexDirection: 'row',
+    gap: theme.spacing.sm,
+    alignItems: 'center',
+  },
   actionIconButton: {
     padding: theme.spacing.sm,
     borderRadius: theme.radius.sm,
