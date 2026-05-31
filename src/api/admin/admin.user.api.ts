@@ -281,10 +281,18 @@ export const adminUserApi = {
         finalPath = finalPath.replace(':' + k, v);
       });
     }
+    const queryParts: string[] = [];
+    if (payload.pagination != null) {
+      queryParts.push('page=' + String(payload.pagination.page));
+      queryParts.push('limit=' + String(payload.pagination.limit));
+    }
+    const query = queryParts.join('&');
+    if (query !== '') {
+      finalPath += `?${query}`;
+    }
     return apiFetch<ListUsersWebResponse, ListUsersRequest>(finalPath, {
       method: USER_ENDPOINTS.LIST_USERS.method,
       requiresAuth: USER_ENDPOINTS.LIST_USERS.requiresAuth,
-      body: USER_ENDPOINTS.LIST_USERS.method !== 'GET' ? payload : undefined,
     });
   },
 

@@ -1,12 +1,12 @@
+import React from 'react';
 import { View, StyleSheet } from 'react-native';
 import { AppButton } from '@/components/buttons/AppButton';
-import React, { useEffect, useState } from 'react';
 import { AppText } from '@/components/typography/AppText';
 import { useAuth } from '@/context/AuthContext';
 import AppHeader from '@/components/layout/AppHeader';
 import { AppLoader } from '@/components/feedback/AppLoader';
 import { theme } from '@/shared/themes/theme';
-import { userApi, type UserProfile } from '@/api/user/user.api';
+import { useProfile } from '@/api/user/hooks/use-profile';
 import { useNavigation } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import type { ProfileStackParamList } from '@/navigation/stacks/ProfileStack';
@@ -14,28 +14,7 @@ import type { ProfileStackParamList } from '@/navigation/stacks/ProfileStack';
 export function ProfileScreen(): React.JSX.Element {
   const { logout } = useAuth();
   const { navigate } = useNavigation<NativeStackNavigationProp<ProfileStackParamList>>();
-  const [profile, setProfile] = useState<UserProfile | null>(null);
-  const [loading, setLoading] = useState<boolean>(true);
-  const [error, setError] = useState<string | null>(null);
-
-  useEffect(() => {
-    const fetchProfile = async (): Promise<void> => {
-      try {
-        const data: UserProfile = await userApi.getMe();
-        setProfile(data);
-      } catch (err: unknown) {
-        if (err instanceof Error) {
-          setError(err.message);
-        } else {
-          setError('Impossible de charger le profil.');
-        }
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    void fetchProfile();
-  }, []);
+  const { data: profile, isLoading, error } = useProfile();
 
   return (
     <View style={styles.container}>
@@ -43,14 +22,16 @@ export function ProfileScreen(): React.JSX.Element {
       <View style={styles.content}>
         <AppText style={styles.title}>Mon Profil</AppText>
 
-        {loading ? (
+        {isLoading ? (
           <AppLoader fullScreen={false} message="Chargement du profil..." />
-        ) : error !== null ? (
-          <AppText style={styles.errorText}>{error}</AppText>
-        ) : profile !== null ? (
+        ) : error ? (
+          <AppText style={styles.errorText}>
+            {error instanceof Error ? error.message : 'Impossible de charger le profil.'}
+          </AppText>
+        ) : profile ? (
           <View style={styles.card}>
             <AppText style={styles.label}>ID Utilisateur :</AppText>
-            <AppText style={styles.value}>{profile.id}</AppText>
+            <AppText style={styles.value}>s{profile.id}</AppText>
 
             <AppText style={styles.label}>Adresse Email :</AppText>
             <AppText style={styles.value}>{profile.email}</AppText>
@@ -68,21 +49,21 @@ export function ProfileScreen(): React.JSX.Element {
 
         <View style={styles.spacer} />
         <AppButton
-          variant={'eco'}
+          variant="eco"
           text="WS Feedback"
           onPress={() => {
             navigate('ws-feedback');
           }}
         />
-        <View style={{ height: theme.spacing.md }} />
+        <View style={styles.buttonSpacer} />
         <AppButton
-          variant={'danger'}
+          variant="danger"
           text="Se déconnecter"
           onPress={() => {
             void logout();
           }}
         />
-        <View style={{ height: theme.spacing.xxl * 2 }} />
+        <View style={styles.bottomSpacer} />
       </View>
     </View>
   );
@@ -105,10 +86,10 @@ const styles = StyleSheet.create({
     marginBottom: theme.spacing.lg,
   },
   card: {
-    backgroundColor: '#ffffff',
+    backgroundColor: theme.colors.white,
     padding: theme.spacing.lg,
     borderRadius: theme.radius.lg,
-    boxShadow: '0 2px 8px rgba(0,0,0,0.1)',
+    ...theme.shadows.card,
     marginBottom: theme.spacing.xl,
   },
   label: {
@@ -130,5 +111,11 @@ const styles = StyleSheet.create({
   },
   spacer: {
     flex: 1,
+  },
+  buttonSpacer: {
+    height: theme.spacing.md,
+  },
+  bottomSpacer: {
+    height: theme.spacing.xxl * 2,
   },
 });

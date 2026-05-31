@@ -178,10 +178,23 @@ export const adminEventApi = {
         finalPath = finalPath.replace(':' + k, v);
       });
     }
+    const queryParts: string[] = ['page=1', 'limit=50'];
+    if (payload.onlyAvailable !== undefined) {
+      queryParts.push('onlyAvailable=' + String(payload.onlyAvailable));
+    }
+    if (payload.searchTerm != null && payload.searchTerm !== '') {
+      queryParts.push(`searchTerm=${encodeURIComponent(payload.searchTerm)}`);
+    }
+    if (payload.organizerId != null && payload.organizerId !== '') {
+      queryParts.push(`organizerId=${encodeURIComponent(payload.organizerId)}`);
+    }
+    const query = queryParts.join('&');
+    if (query !== '') {
+      finalPath += `?${query}`;
+    }
     return apiFetch<SearchEventsResponse, SearchEventsRequest>(finalPath, {
       method: EVENT_ENDPOINTS.LIST_EVENTS.method,
       requiresAuth: EVENT_ENDPOINTS.LIST_EVENTS.requiresAuth,
-      body: EVENT_ENDPOINTS.LIST_EVENTS.method !== 'GET' ? payload : undefined,
     });
   },
 

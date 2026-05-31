@@ -7,7 +7,7 @@ import { AppInput } from '@/components/inputs/AppInput';
 import { EmailField } from '@/components/inputs/EmailField';
 import { PasswordField } from '@/components/inputs/PasswordField';
 import { theme } from '@/shared/themes/theme';
-import { authApi } from '../../api/auth/auth.api';
+import { authApi } from '@/api/auth/auth.api';
 import type { SignUpCommand } from '@volontariapp/contracts';
 import { BaseApiError } from '@volontariapp/errors';
 import { useNavigation } from '@react-navigation/native';
