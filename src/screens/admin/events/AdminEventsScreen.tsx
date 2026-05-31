@@ -7,6 +7,7 @@ import { AdminDataTable, type TableColumn } from '@/components/admin/ui/AdminDat
 import { getAdminEventsColumns } from '@/components/admin/events/admin-events.columns';
 import { AdminEventFormModal } from '@/components/admin/events/AdminEventFormModal';
 import { AdminEventEditModal } from '@/components/admin/events/AdminEventEditModal';
+import { AdminEventDetailsModal } from '@/components/admin/events/AdminEventDetailsModal';
 import type { Event, CreateEventRequest, UpdateEventRequest } from '@volontariapp/contracts';
 import {
   useAdminEventsQuery,
@@ -21,7 +22,9 @@ import {
 export default function AdminEventsScreen(): React.JSX.Element {
   const [modalVisible, setModalVisible] = useState(false);
   const [editModalVisible, setEditModalVisible] = useState(false);
+  const [detailsModalVisible, setDetailsModalVisible] = useState(false);
   const [editingEvent, setEditingEvent] = useState<Event | null>(null);
+  const [selectedEvent, setSelectedEvent] = useState<Event | null>(null);
 
   const { data, isLoading } = useAdminEventsQuery();
   const createEventMutation = useCreateEventMutation();
@@ -58,6 +61,11 @@ export default function AdminEventsScreen(): React.JSX.Element {
   const handleEditPress = useCallback((event: Event): void => {
     setEditingEvent(event);
     setEditModalVisible(true);
+  }, []);
+
+  const handleRowPress = useCallback((event: Event): void => {
+    setSelectedEvent(event);
+    setDetailsModalVisible(true);
   }, []);
 
   const handleDeletePress = useCallback(
@@ -137,6 +145,7 @@ export default function AdminEventsScreen(): React.JSX.Element {
           columns={columns}
           keyExtractor={(item) => item.id}
           isLoading={isLoading}
+          onRowPress={handleRowPress}
         />
       </View>
 
@@ -157,6 +166,14 @@ export default function AdminEventsScreen(): React.JSX.Element {
         }}
         onSubmit={handleUpdateEvent}
         isLoading={updateEventMutation.isPending}
+      />
+
+      <AdminEventDetailsModal
+        visible={detailsModalVisible}
+        event={selectedEvent}
+        onClose={() => {
+          setDetailsModalVisible(false);
+        }}
       />
     </View>
   );

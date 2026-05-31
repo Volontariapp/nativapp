@@ -5,14 +5,14 @@ import { AppText } from '@/components/typography/AppText';
 import { AppIcons } from '@/components/media/AppIcons';
 import type { Event } from '@volontariapp/contracts';
 import { EventType, EventState } from '@volontariapp/contracts';
+import type { TableColumn } from '@/components/admin/ui/AdminDataTable';
+import { formatDate } from '@/shared/lib/format-date.utils';
 
 interface AdminEventsColumnsProps {
   onEdit: (event: Event) => void;
   onDelete: (event: Event) => void;
   onToggleState: (event: Event) => void;
 }
-
-import type { TableColumn } from '@/components/admin/ui/AdminDataTable';
 
 export const getAdminEventsColumns = ({
   onEdit,
@@ -22,18 +22,47 @@ export const getAdminEventsColumns = ({
   {
     key: 'title',
     title: 'Événement',
-    flex: 1.5,
+    width: 250,
     render: (item: Event): React.ReactNode => (
       <View>
-        <AppText style={styles.eventTitle}>{item.title}</AppText>
-        <AppText style={styles.eventLocSub}>{item.localisationName}</AppText>
+        <AppText style={styles.eventTitle} numberOfLines={1}>
+          {item.title}
+        </AppText>
+        <AppText style={styles.eventLocSub} numberOfLines={1}>
+          {item.localisationName}
+        </AppText>
+      </View>
+    ),
+  },
+  {
+    key: 'dates',
+    title: 'Dates',
+    width: 200,
+    render: (item: Event): React.ReactNode => (
+      <View>
+        <AppText style={styles.dateText}>
+          Début:{' '}
+          {formatDate(item.startAt, {
+            day: '2-digit',
+            month: '2-digit',
+            year: '2-digit',
+          })}
+        </AppText>
+        <AppText style={styles.dateText}>
+          Fin:{' '}
+          {formatDate(item.endAt, {
+            day: '2-digit',
+            month: '2-digit',
+            year: '2-digit',
+          })}
+        </AppText>
       </View>
     ),
   },
   {
     key: 'type',
     title: 'Type',
-    flex: 0.8,
+    width: 150,
     render: (item: Event): React.ReactNode => {
       const isSocial =
         item.type === EventType.EVENT_TYPE_SOCIAL ||
@@ -59,7 +88,7 @@ export const getAdminEventsColumns = ({
   {
     key: 'state',
     title: 'Statut',
-    flex: 1.0,
+    width: 120,
     render: (item: Event): React.ReactNode => {
       let label = 'Draft';
       let color: string = theme.colors.grey;
@@ -85,30 +114,32 @@ export const getAdminEventsColumns = ({
   {
     key: 'actions',
     title: 'Action',
-    flex: 1.0,
+    width: 80,
     render: (item: Event): React.ReactNode => (
       <View style={styles.actionsRow}>
         <Pressable
+          hitSlop={8}
           onPress={() => {
             onEdit(item);
           }}
           style={({ pressed }: { pressed: boolean }) => [
-            styles.actionIconButton,
-            { backgroundColor: theme.colors.primaryEco + '15', opacity: pressed ? 0.6 : 1 },
+            styles.actionIconGhost,
+            { opacity: pressed ? 0.5 : 1 },
           ]}
         >
-          <AppIcons icon="edit-2" iconLibrary="Feather" size={16} color={theme.colors.primaryEco} />
+          <AppIcons icon="edit" iconLibrary="Feather" size={20} color={theme.colors.grey} />
         </Pressable>
         <Pressable
+          hitSlop={8}
           onPress={() => {
             onDelete(item);
           }}
           style={({ pressed }: { pressed: boolean }) => [
-            styles.actionIconButton,
-            { backgroundColor: theme.colors.danger + '15', opacity: pressed ? 0.6 : 1 },
+            styles.actionIconGhost,
+            { opacity: pressed ? 0.5 : 1 },
           ]}
         >
-          <AppIcons icon="trash-2" iconLibrary="Feather" size={16} color={theme.colors.danger} />
+          <AppIcons icon="trash-2" iconLibrary="Feather" size={20} color={theme.colors.danger} />
         </Pressable>
       </View>
     ),
@@ -122,6 +153,10 @@ const styles = StyleSheet.create({
     fontSize: theme.typography.fontSize.sm,
   },
   eventLocSub: { fontSize: 11, color: theme.colors.grey, marginTop: 2 },
+  dateText: {
+    fontSize: 12,
+    color: theme.colors.grey,
+  },
   typeBadge: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -142,12 +177,11 @@ const styles = StyleSheet.create({
   stateText: { fontSize: 11, fontWeight: '700' },
   actionsRow: {
     flexDirection: 'row',
-    gap: theme.spacing.sm,
+    gap: theme.spacing.md,
     alignItems: 'center',
   },
-  actionIconButton: {
-    padding: theme.spacing.sm,
-    borderRadius: theme.radius.sm,
+  actionIconGhost: {
+    padding: theme.spacing.xs,
     justifyContent: 'center',
     alignItems: 'center',
   },

@@ -15,18 +15,22 @@ export const getAdminUsersColumns = ({ onEdit, onDelete }: AdminUsersColumnsProp
   {
     key: 'pseudo',
     title: 'Pseudo',
-    flex: 1.5,
+    width: 280,
     render: (item: UserWeb): React.ReactNode => (
       <View>
-        <AppText style={styles.pseudoText}>{item.pseudo}</AppText>
-        <AppText style={styles.emailSubText}>{item.email}</AppText>
+        <AppText style={styles.pseudoText} numberOfLines={1}>
+          {item.pseudo}
+        </AppText>
+        <AppText style={styles.emailSubText} numberOfLines={1}>
+          {item.email}
+        </AppText>
       </View>
     ),
   },
   {
     key: 'role',
     title: 'Rôle',
-    flex: 1.2,
+    width: 200,
     render: (item: UserWeb): React.ReactNode => {
       const role = item.role;
       const isAdmin =
@@ -51,7 +55,7 @@ export const getAdminUsersColumns = ({ onEdit, onDelete }: AdminUsersColumnsProp
   {
     key: 'totalImpactScore',
     title: 'Impact',
-    flex: 0.8,
+    width: 120,
     render: (item: UserWeb): React.ReactNode => (
       <AppText style={styles.scoreText}>{item.totalImpactScore} pts</AppText>
     ),
@@ -59,7 +63,7 @@ export const getAdminUsersColumns = ({ onEdit, onDelete }: AdminUsersColumnsProp
   {
     key: 'actions',
     title: 'Action',
-    flex: 1.0,
+    width: 200,
     render: (item: UserWeb): React.ReactNode => (
       <View style={styles.actionsRow}>
         <Pressable

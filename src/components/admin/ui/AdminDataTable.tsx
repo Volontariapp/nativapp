@@ -1,5 +1,5 @@
 import React from 'react';
-import { View, FlatList, StyleSheet, ActivityIndicator } from 'react-native';
+import { View, FlatList, StyleSheet, ActivityIndicator, Pressable, ScrollView } from 'react-native';
 import { AppText } from '@/components/typography/AppText';
 import { theme } from '@/shared/themes/theme';
 import { AdminCard } from './AdminCard';
@@ -9,6 +9,8 @@ export interface TableColumn<T> {
   title: string;
   render?: (item: T) => React.ReactNode;
   flex?: number;
+  width?: number;
+  minWidth?: number;
 }
 
 interface AdminDataTableProps<T> {
@@ -24,7 +26,14 @@ function AdminDataTableHeader<T>({ columns }: { columns: TableColumn<T>[] }): Re
   return (
     <View style={styles.headerRow}>
       {columns.map((col) => (
-        <View key={col.key} style={[styles.headerCell, { flex: col.flex ?? 1 }]}>
+        <View
+          key={col.key}
+          style={[
+            styles.headerCell,
+            col.width !== undefined ? { width: col.width } : { flex: col.flex ?? 1 },
+            col.minWidth !== undefined ? { minWidth: col.minWidth } : undefined,
+          ]}
+        >
           <AppText style={styles.headerText}>{col.title}</AppText>
         </View>
       ))}
@@ -35,14 +44,23 @@ function AdminDataTableHeader<T>({ columns }: { columns: TableColumn<T>[] }): Re
 function AdminDataTableRow<T>({
   item,
   columns,
+  onPress,
 }: {
   item: T;
   columns: TableColumn<T>[];
+  onPress?: (item: T) => void;
 }): React.JSX.Element {
-  return (
+  const content = (
     <View style={styles.row}>
       {columns.map((col) => (
-        <View key={col.key} style={[styles.cell, { flex: col.flex ?? 1 }]}>
+        <View
+          key={col.key}
+          style={[
+            styles.cell,
+            col.width !== undefined ? { width: col.width } : { flex: col.flex ?? 1 },
+            col.minWidth !== undefined ? { minWidth: col.minWidth } : undefined,
+          ]}
+        >
           {col.render ? (
             col.render(item)
           ) : (
@@ -52,6 +70,23 @@ function AdminDataTableRow<T>({
       ))}
     </View>
   );
+
+  if (onPress) {
+    return (
+      <Pressable
+        onPress={() => {
+          onPress(item);
+        }}
+        style={({ pressed }: { pressed: boolean }) => [
+          { opacity: pressed ? 0.7 : 1, width: '100%' },
+        ]}
+      >
+        {content}
+      </Pressable>
+    );
+  }
+
+  return content;
 }
 
 export function AdminDataTable<T>({
@@ -59,30 +94,38 @@ export function AdminDataTable<T>({
   columns,
   keyExtractor,
   isLoading,
+  onRowPress,
   ListEmptyComponent,
 }: AdminDataTableProps<T>): React.JSX.Element {
   return (
     <AdminCard noPadding style={styles.container}>
-      <AdminDataTableHeader columns={columns} />
-      {isLoading === true ? (
-        <View style={styles.loadingContainer}>
-          <ActivityIndicator color={theme.colors.primarySocio} />
+      <ScrollView horizontal showsHorizontalScrollIndicator style={styles.scrollContainer}>
+        <View style={styles.tableWrapper}>
+          <AdminDataTableHeader columns={columns} />
+          {isLoading === true ? (
+            <View style={styles.loadingContainer}>
+              <ActivityIndicator color={theme.colors.primarySocio} />
+            </View>
+          ) : (
+            <FlatList
+              style={{ width: '100%' }}
+              data={data}
+              renderItem={({ item }) => (
+                <AdminDataTableRow item={item} columns={columns} onPress={onRowPress} />
+              )}
+              keyExtractor={keyExtractor}
+              ItemSeparatorComponent={() => <View style={styles.separator} />}
+              ListEmptyComponent={
+                ListEmptyComponent ?? (
+                  <View style={styles.emptyContainer}>
+                    <AppText style={styles.emptyText}>Aucune donnée</AppText>
+                  </View>
+                )
+              }
+            />
+          )}
         </View>
-      ) : (
-        <FlatList
-          data={data}
-          renderItem={({ item }) => <AdminDataTableRow item={item} columns={columns} />}
-          keyExtractor={keyExtractor}
-          ItemSeparatorComponent={() => <View style={styles.separator} />}
-          ListEmptyComponent={
-            ListEmptyComponent ?? (
-              <View style={styles.emptyContainer}>
-                <AppText style={styles.emptyText}>Aucune donnée</AppText>
-              </View>
-            )
-          }
-        />
-      )}
+      </ScrollView>
     </AdminCard>
   );
 }
@@ -90,6 +133,14 @@ export function AdminDataTable<T>({
 const styles = StyleSheet.create({
   container: {
     overflow: 'hidden',
+    flex: 1,
+  },
+  scrollContainer: {
+    flexGrow: 1,
+  },
+  tableWrapper: {
+    minWidth: 800,
+    width: '100%',
   },
   headerRow: {
     flexDirection: 'row',
@@ -98,6 +149,7 @@ const styles = StyleSheet.create({
     borderBottomColor: theme.colors.lightGrey,
     paddingVertical: theme.spacing.md,
     paddingHorizontal: theme.spacing.lg,
+    width: '100%',
   },
   headerCell: {
     justifyContent: 'center',
@@ -113,6 +165,7 @@ const styles = StyleSheet.create({
     paddingVertical: theme.spacing.md,
     paddingHorizontal: theme.spacing.lg,
     backgroundColor: theme.colors.white,
+    width: '100%',
   },
   cell: {
     justifyContent: 'center',
