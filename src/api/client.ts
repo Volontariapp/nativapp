@@ -24,6 +24,12 @@ export const apiFetch = async <TResponse, TRequest = undefined>(
     ...(options.headers ?? {}),
   };
 
+  const cfAccess = config.cloudflareAccess;
+  if (cfAccess != null && cfAccess.clientId !== '' && cfAccess.clientSecret !== '') {
+    headers['CF-Access-Client-Id'] = cfAccess.clientId;
+    headers['CF-Access-Client-Secret'] = cfAccess.clientSecret;
+  }
+
   const requiresAuth = options.requiresAuth ?? true;
   if (requiresAuth) {
     const token = await TokenService.getAccessToken();

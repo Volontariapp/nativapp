@@ -4,5 +4,9 @@
   "logger": {
     "level": "LOG_LEVEL",
     "format": "LOG_FORMAT"
+  },
+  "cloudflareAccess": {
+    "clientId": "CF_ACCESS_CLIENT_ID",
+    "clientSecret": "CF_ACCESS_CLIENT_SECRET"
   }
 }

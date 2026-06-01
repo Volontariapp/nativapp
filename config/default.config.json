@@ -4,5 +4,9 @@
   "logger": {
     "level": "info",
     "format": "text"
+  },
+  "cloudflareAccess": {
+    "clientId": "",
+    "clientSecret": ""
   }
 }

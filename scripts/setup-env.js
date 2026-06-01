@@ -2,7 +2,7 @@ const fs = require('fs');
 const os = require('os');
 const path = require('path');
 
-const envPath = path.join(__dirname, '..', '.env');
+const envPath = path.join(__dirname, '..', '.env.development');
 const gitignorePath = path.join(__dirname, '..', '.gitignore');
 
 function getLocalIp() {
@@ -34,24 +34,27 @@ if (fs.existsSync(envPath)) {
   envContent = fs.readFileSync(envPath, 'utf8');
 }
 
-if (!envContent.includes('API_GATEWAY_URL=')) {
+if (envContent.includes('API_GATEWAY_URL=')) {
+  envContent = envContent.replace(/API_GATEWAY_URL=.*/g, `API_GATEWAY_URL=${apiGatewayUrl}`);
+  fs.writeFileSync(envPath, envContent);
+  console.log(`[setup-env] Updated API_GATEWAY_URL=${apiGatewayUrl} in .env.development`);
+} else {
   const newLine = `API_GATEWAY_URL=${apiGatewayUrl}\n`;
   fs.appendFileSync(
     envPath,
     (envContent.length > 0 && !envContent.endsWith('\n') ? '\n' : '') + newLine,
   );
-  console.log(`[setup-env] Added API_GATEWAY_URL=${apiGatewayUrl} to .env`);
-} else {
-  console.log(`[setup-env] API_GATEWAY_URL already exists in .env. Skipping.`);
+  console.log(`[setup-env] Added API_GATEWAY_URL=${apiGatewayUrl} to .env.development`);
 }
 
 if (fs.existsSync(gitignorePath)) {
   let gitignoreContent = fs.readFileSync(gitignorePath, 'utf8');
-  if (!/^.env$/m.test(gitignoreContent)) {
+  if (!/^.env.development$/m.test(gitignoreContent)) {
     fs.appendFileSync(
       gitignorePath,
-      (gitignoreContent.length > 0 && !gitignoreContent.endsWith('\n') ? '\n' : '') + '.env\n',
+      (gitignoreContent.length > 0 && !gitignoreContent.endsWith('\n') ? '\n' : '') +
+        '.env.development\n',
     );
-    console.log(`[setup-env] Added .env to .gitignore`);
+    console.log(`[setup-env] Added .env.development to .gitignore`);
   }
 }

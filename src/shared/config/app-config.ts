@@ -18,6 +18,11 @@ export class AppConfig implements FrontendConfig {
   @IsNotEmpty()
   logger: LoggerConfig = undefined as unknown as LoggerConfig;
 
+  cloudflareAccess?: {
+    clientId: string;
+    clientSecret: string;
+  };
+
   getLoggerFormat(): LoggerFormat {
     return this.logger.format;
   }

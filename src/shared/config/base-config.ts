@@ -9,10 +9,20 @@ import devCfg from '../../../config/development.config.json';
 import prodCfg from '../../../config/production.config.json';
 import testCfg from '../../../config/test.config.json';
 
+const getFallback = (inlineValue: string | undefined, extraValue: unknown): string | undefined => {
+  if (inlineValue !== undefined && inlineValue !== '') {
+    return inlineValue;
+  }
+  if (typeof extraValue === 'string' && extraValue !== '') {
+    return extraValue;
+  }
+  return undefined;
+};
+
 const getRawConfig = (): Record<string, unknown> => {
   const extra = Constants.expoConfig?.extra;
 
-  const appEnv = extra?.['APP_ENV'] as string | undefined;
+  const appEnv = getFallback(process.env.EXPO_PUBLIC_APP_ENV, extra?.['APP_ENV']);
 
   const validEnvs: AppEnv[] = ['local', 'development', 'production', 'test'];
 
@@ -38,9 +48,27 @@ const getRawConfig = (): Record<string, unknown> => {
     ...selectedConfig,
   };
 
-  const apiGatewayUrlFromEnv = extra?.['API_GATEWAY_URL'] as string | undefined;
-  if (apiGatewayUrlFromEnv != null) {
+  const apiGatewayUrlFromEnv = getFallback(
+    process.env.EXPO_PUBLIC_API_GATEWAY_URL,
+    extra?.['API_GATEWAY_URL'],
+  );
+  if (apiGatewayUrlFromEnv !== undefined) {
     merged['apiGatewayUrl'] = apiGatewayUrlFromEnv;
+  }
+
+  const cfClientId = getFallback(
+    process.env.EXPO_PUBLIC_CF_ACCESS_CLIENT_ID,
+    extra?.['CF_ACCESS_CLIENT_ID'],
+  );
+  const cfClientSecret = getFallback(
+    process.env.EXPO_PUBLIC_CF_ACCESS_CLIENT_SECRET,
+    extra?.['CF_ACCESS_CLIENT_SECRET'],
+  );
+  if (cfClientId !== undefined && cfClientSecret !== undefined) {
+    merged['cloudflareAccess'] = {
+      clientId: cfClientId,
+      clientSecret: cfClientSecret,
+    };
   }
 
   return merged;

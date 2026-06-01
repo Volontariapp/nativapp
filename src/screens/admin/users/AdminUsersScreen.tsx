@@ -1,14 +1,13 @@
 import React, { useReducer, useMemo, useCallback } from 'react';
-import { View, StyleSheet, Alert } from 'react-native';
+import { View, StyleSheet, Alert, ActivityIndicator, FlatList } from 'react-native';
 import { theme } from '@/shared/themes/theme';
 import { AppText } from '@/components/typography/AppText';
 import { AppButton } from '@/components/buttons/AppButton';
-import { AdminDataTable } from '@/components/admin/ui/AdminDataTable';
 import { FilterChip } from '@/components/ui/FilterChip';
 import { SearchBar } from '@/components/ui/SearchBar';
-import { getAdminUsersColumns } from '@/components/admin/users/admin-users.columns';
 import { AdminUserFormModal } from '@/components/admin/users/AdminUserFormModal';
 import { AdminUserEditModal } from '@/components/admin/users/AdminUserEditModal';
+import { AdminUserInspectorModal } from '@/components/admin/users/inspector/AdminUserInspectorModal';
 import type { UserWeb, SignUpRequest, UpdateUserRequest } from '@volontariapp/contracts';
 import { UserRoles } from '@volontariapp/shared';
 import {
@@ -18,11 +17,14 @@ import {
   useDeleteUserMutation,
   normalizeUsersList,
 } from '@/api/admin/hooks/use-admin-users';
+import { AdminUserCard } from '@/components/admin/users/AdminUserCard';
 
 interface AdminUsersState {
   modalVisible: boolean;
   editModalVisible: boolean;
+  inspectModalVisible: boolean;
   editingUser: UserWeb | null;
+  inspectingUser: UserWeb | null;
   searchQuery: string;
   roleFilter: 'ALL' | UserRoles;
 }
@@ -33,7 +35,9 @@ export default function AdminUsersScreen(): React.JSX.Element {
     {
       modalVisible: false,
       editModalVisible: false,
+      inspectModalVisible: false,
       editingUser: null,
+      inspectingUser: null,
       searchQuery: '',
       roleFilter: 'ALL',
     },
@@ -67,6 +71,10 @@ export default function AdminUsersScreen(): React.JSX.Element {
 
   const handleEditPress = useCallback((user: UserWeb): void => {
     setState({ editingUser: user, editModalVisible: true });
+  }, []);
+
+  const handleInspectPress = useCallback((user: UserWeb): void => {
+    setState({ inspectingUser: user, inspectModalVisible: true });
   }, []);
 
   const handleDeletePress = useCallback(
@@ -118,9 +126,16 @@ export default function AdminUsersScreen(): React.JSX.Element {
     });
   }, [usersList, state.searchQuery, state.roleFilter]);
 
-  const columns = useMemo(
-    () => getAdminUsersColumns({ onEdit: handleEditPress, onDelete: handleDeletePress }),
-    [handleEditPress, handleDeletePress],
+  const renderItem = useCallback(
+    ({ item }: { item: UserWeb }) => (
+      <AdminUserCard
+        user={item}
+        onInspect={handleInspectPress}
+        onEdit={handleEditPress}
+        onDelete={handleDeletePress}
+      />
+    ),
+    [handleInspectPress, handleEditPress, handleDeletePress],
   );
 
   return (
@@ -184,13 +199,19 @@ export default function AdminUsersScreen(): React.JSX.Element {
         </View>
       </View>
 
-      <View style={styles.tableContainer}>
-        <AdminDataTable<UserWeb>
-          data={filteredUsers}
-          columns={columns}
-          keyExtractor={(item) => item.id}
-          isLoading={isLoading}
-        />
+      <View style={styles.listContainer}>
+        {isLoading ? (
+          <View style={styles.centerContainer}>
+            <ActivityIndicator size="large" color={theme.colors.primarySocio} />
+          </View>
+        ) : (
+          <FlatList
+            contentContainerStyle={styles.cardsContainer}
+            data={filteredUsers}
+            keyExtractor={(item) => item.id}
+            renderItem={renderItem}
+          />
+        )}
       </View>
 
       <AdminUserFormModal
@@ -211,6 +232,16 @@ export default function AdminUsersScreen(): React.JSX.Element {
         onSubmit={handleUpdateUser}
         isLoading={updateUserMutation.isPending}
       />
+
+      {state.inspectingUser != null && (
+        <AdminUserInspectorModal
+          visible={state.inspectModalVisible}
+          user={state.inspectingUser}
+          onClose={() => {
+            setState({ inspectModalVisible: false });
+          }}
+        />
+      )}
     </View>
   );
 }
@@ -236,7 +267,16 @@ const styles = StyleSheet.create({
     color: theme.colors.grey,
     marginTop: theme.spacing.xs,
   },
-  tableContainer: { flex: 1, padding: theme.spacing.md },
+  listContainer: { flex: 1 },
+  centerContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  cardsContainer: {
+    padding: theme.spacing.md,
+    gap: theme.spacing.md,
+  },
   searchFiltersContainer: {
     paddingHorizontal: theme.spacing.md,
     paddingTop: theme.spacing.md,

@@ -1,4 +1,4 @@
-import React, { useState, useMemo, useCallback } from 'react';
+import React, { useReducer, useMemo, useCallback } from 'react';
 import { View, StyleSheet, Alert, FlatList, ActivityIndicator } from 'react-native';
 import { theme } from '@/shared/themes/theme';
 import { AppText } from '@/components/typography/AppText';
@@ -21,14 +21,70 @@ import {
   resolveNextEventState,
 } from '@/api/admin/hooks/use-admin-events';
 
+interface AdminEventsState {
+  modalVisible: boolean;
+  editModalVisible: boolean;
+  detailsModalVisible: boolean;
+  participantsModalVisible: boolean;
+  editingEvent: Event | null;
+  selectedEvent: Event | null;
+  managingParticipantsEvent: Event | null;
+}
+
+type AdminEventsAction =
+  | { type: 'OPEN_CREATE' }
+  | { type: 'CLOSE_CREATE' }
+  | { type: 'OPEN_EDIT'; event: Event }
+  | { type: 'CLOSE_EDIT' }
+  | { type: 'OPEN_DETAILS'; event: Event }
+  | { type: 'CLOSE_DETAILS' }
+  | { type: 'OPEN_PARTICIPANTS'; event: Event }
+  | { type: 'CLOSE_PARTICIPANTS' };
+
+const initialState: AdminEventsState = {
+  modalVisible: false,
+  editModalVisible: false,
+  detailsModalVisible: false,
+  participantsModalVisible: false,
+  editingEvent: null,
+  selectedEvent: null,
+  managingParticipantsEvent: null,
+};
+
+function eventsReducer(state: AdminEventsState, action: AdminEventsAction): AdminEventsState {
+  switch (action.type) {
+    case 'OPEN_CREATE':
+      return { ...state, modalVisible: true };
+    case 'CLOSE_CREATE':
+      return { ...state, modalVisible: false };
+    case 'OPEN_EDIT':
+      return { ...state, editModalVisible: true, editingEvent: action.event };
+    case 'CLOSE_EDIT':
+      return { ...state, editModalVisible: false, editingEvent: null };
+    case 'OPEN_DETAILS':
+      return { ...state, detailsModalVisible: true, selectedEvent: action.event };
+    case 'CLOSE_DETAILS':
+      return { ...state, detailsModalVisible: false };
+    case 'OPEN_PARTICIPANTS':
+      return { ...state, participantsModalVisible: true, managingParticipantsEvent: action.event };
+    case 'CLOSE_PARTICIPANTS':
+      return { ...state, participantsModalVisible: false, managingParticipantsEvent: null };
+    default:
+      return state;
+  }
+}
+
 export default function AdminEventsScreen(): React.JSX.Element {
-  const [modalVisible, setModalVisible] = useState(false);
-  const [editModalVisible, setEditModalVisible] = useState(false);
-  const [detailsModalVisible, setDetailsModalVisible] = useState(false);
-  const [participantsModalVisible, setParticipantsModalVisible] = useState(false);
-  const [editingEvent, setEditingEvent] = useState<Event | null>(null);
-  const [selectedEvent, setSelectedEvent] = useState<Event | null>(null);
-  const [managingParticipantsEvent, setManagingParticipantsEvent] = useState<Event | null>(null);
+  const [state, dispatch] = useReducer(eventsReducer, initialState);
+  const {
+    modalVisible,
+    editModalVisible,
+    detailsModalVisible,
+    participantsModalVisible,
+    editingEvent,
+    selectedEvent,
+    managingParticipantsEvent,
+  } = state;
 
   const { data, isLoading } = useAdminEventsQuery();
   const createEventMutation = useCreateEventMutation();
@@ -40,7 +96,7 @@ export default function AdminEventsScreen(): React.JSX.Element {
     (payload: CreateEventRequest): void => {
       createEventMutation.mutate(payload, {
         onSuccess: () => {
-          setModalVisible(false);
+          dispatch({ type: 'CLOSE_CREATE' });
         },
       });
     },
@@ -64,14 +120,12 @@ export default function AdminEventsScreen(): React.JSX.Element {
                 { eventId, newState },
                 {
                   onSuccess: () => {
-                    setEditModalVisible(false);
-                    setEditingEvent(null);
+                    dispatch({ type: 'CLOSE_EDIT' });
                   },
                 },
               );
             } else {
-              setEditModalVisible(false);
-              setEditingEvent(null);
+              dispatch({ type: 'CLOSE_EDIT' });
             }
           },
         },
@@ -81,18 +135,15 @@ export default function AdminEventsScreen(): React.JSX.Element {
   );
 
   const handleEditPress = useCallback((event: Event): void => {
-    setEditingEvent(event);
-    setEditModalVisible(true);
+    dispatch({ type: 'OPEN_EDIT', event });
   }, []);
 
   const handleParticipantsPress = useCallback((event: Event): void => {
-    setManagingParticipantsEvent(event);
-    setParticipantsModalVisible(true);
+    dispatch({ type: 'OPEN_PARTICIPANTS', event });
   }, []);
 
   const handleRowPress = useCallback((event: Event): void => {
-    setSelectedEvent(event);
-    setDetailsModalVisible(true);
+    dispatch({ type: 'OPEN_DETAILS', event });
   }, []);
 
   const handleDeletePress = useCallback(
@@ -176,7 +227,7 @@ export default function AdminEventsScreen(): React.JSX.Element {
           variant="eco"
           icon="plus"
           onPress={() => {
-            setModalVisible(true);
+            dispatch({ type: 'OPEN_CREATE' });
           }}
         />
       </View>
@@ -199,7 +250,7 @@ export default function AdminEventsScreen(): React.JSX.Element {
       <AdminEventFormModal
         visible={modalVisible}
         onClose={() => {
-          setModalVisible(false);
+          dispatch({ type: 'CLOSE_CREATE' });
         }}
         onSubmit={handleCreateEvent}
         isLoading={createEventMutation.isPending}
@@ -209,7 +260,7 @@ export default function AdminEventsScreen(): React.JSX.Element {
         visible={editModalVisible}
         event={editingEvent}
         onClose={() => {
-          setEditModalVisible(false);
+          dispatch({ type: 'CLOSE_EDIT' });
         }}
         onSubmit={handleUpdateEvent}
         isLoading={updateEventMutation.isPending}
@@ -219,7 +270,7 @@ export default function AdminEventsScreen(): React.JSX.Element {
         visible={detailsModalVisible}
         event={currentSelectedEvent}
         onClose={() => {
-          setDetailsModalVisible(false);
+          dispatch({ type: 'CLOSE_DETAILS' });
         }}
       />
 
@@ -228,8 +279,7 @@ export default function AdminEventsScreen(): React.JSX.Element {
         eventId={managingParticipantsEvent?.id}
         organizerId={managingParticipantsEvent?.organizerId}
         onClose={() => {
-          setParticipantsModalVisible(false);
-          setManagingParticipantsEvent(null);
+          dispatch({ type: 'CLOSE_PARTICIPANTS' });
         }}
       />
     </View>

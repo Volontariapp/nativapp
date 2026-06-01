@@ -5,7 +5,9 @@
 // TODO: Clement
 
 export interface EventIdWebResponse {}
-export interface IdsListWebResponse {}
+export interface IdsListWebResponse {
+  ids: string[];
+}
 export interface GetUserEventsRequest {}
 export interface GetUserParticipationsRequest {}
 export interface GetUserWishesRequest {}

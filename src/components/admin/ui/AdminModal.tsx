@@ -1,5 +1,5 @@
 import React from 'react';
-import { View, StyleSheet, Modal } from 'react-native';
+import { View, StyleSheet, Modal, Pressable } from 'react-native';
 import { theme } from '@/shared/themes/theme';
 import { AppText } from '@/components/typography/AppText';
 import { AppKeyboardAvoidingView } from '@/components/layout/AppKeyboardAvoidingView';
@@ -20,20 +20,28 @@ export function AdminModal({
   scrollable = true,
   children,
 }: AdminModalProps): React.JSX.Element {
+  const content = (
+    <>
+      <View style={styles.header}>
+        <AppText style={styles.modalTitle}>{title}</AppText>
+        <Pressable onPress={onClose} style={styles.closeButton} hitSlop={8}>
+          <AppText style={styles.closeIcon}>✕</AppText>
+        </Pressable>
+      </View>
+      {children}
+    </>
+  );
+
   return (
     <Modal animationType="slide" transparent={true} visible={visible} onRequestClose={onClose}>
       <AppKeyboardAvoidingView style={styles.modalOverlay} bottomOffset={10}>
         <View style={styles.modalContent}>
           {scrollable ? (
             <AppKeyboardScrollView contentContainerStyle={styles.modalScroll} bottomOffset={40}>
-              <AppText style={styles.modalTitle}>{title}</AppText>
-              {children}
+              {content}
             </AppKeyboardScrollView>
           ) : (
-            <View style={styles.modalScroll}>
-              <AppText style={styles.modalTitle}>{title}</AppText>
-              {children}
-            </View>
+            <View style={styles.modalScroll}>{content}</View>
           )}
         </View>
       </AppKeyboardAvoidingView>
@@ -63,10 +71,31 @@ const styles = StyleSheet.create({
     paddingBottom: theme.spacing.xxl,
     gap: theme.spacing.lg,
   },
+  header: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    marginBottom: theme.spacing.sm,
+  },
   modalTitle: {
+    flex: 1,
     fontSize: theme.typography.fontSize.lg,
     fontWeight: '700',
     color: theme.colors.black,
-    marginBottom: theme.spacing.sm,
+    marginRight: theme.spacing.sm,
+  },
+  closeButton: {
+    width: 28,
+    height: 28,
+    borderRadius: 14,
+    backgroundColor: '#FF3B3020',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  closeIcon: {
+    fontSize: 13,
+    fontWeight: '700',
+    color: '#FF3B30',
+    lineHeight: 16,
   },
 });

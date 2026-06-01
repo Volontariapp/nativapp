@@ -26,13 +26,10 @@ export const AdminAppWrapper = ({ children }: AdminAppWrapperProps): React.JSX.E
   }, [logout]);
 
   useEffect(() => {
-    // Guard: run only once, even if the component re-renders
     if (setupRan.current) return;
     setupRan.current = true;
 
     let mounted = true;
-    // Copy ref value at effect-run time so the cleanup closure stays stable
-    // (avoids the "ref.current will have changed by cleanup time" lint warning)
     const doLogout = logoutRef.current;
 
     const setupAdmin = async (): Promise<void> => {
