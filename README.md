@@ -1,77 +1,84 @@
 # Volontariapp - Mobile Application (`nativapp`)
 
-[![React Native](https://img.shields.io/badge/framework-ReactNative-blue.svg)](https://reactnative.dev/)
-[![Expo](https://img.shields.io/badge/platform-Expo-black.svg)](https://expo.dev/)
-[![TypeScript](https://img.shields.io/badge/language-TypeScript-blue.svg)](https://www.typescriptlang.org/)
+[![React Native](https://img.shields.io/badge/framework-React_Native-blue.svg?logo=react)](https://reactnative.dev/)
+[![Expo](https://img.shields.io/badge/platform-Expo_54-black.svg?logo=expo)](https://expo.dev/)
+[![TypeScript](https://img.shields.io/badge/language-TypeScript_5-blue.svg?logo=typescript)](https://www.typescriptlang.org/)
 [![GitNexus](https://img.shields.io/badge/intelligence-GitNexus-orange.svg)](https://gitnexus.vercel.app/)
 
-The Nativapp is the official mobile client for Volontariapp, built with React Native and Expo. It provides users with a seamless interface to discover, join, and manage volunteering events.
+Welcome to the `nativapp` repository! This is the official mobile client for **Volontariapp**, built from the ground up using React Native and Expo SDK 54. It provides users with a seamless, native-feeling interface to discover, join, and manage volunteering events.
 
 ---
 
-## Code Intelligence with GitNexus
+## 📚 Documentation Hub
 
-This project uses GitNexus to maintain a live knowledge graph of the mobile codebase.
+To keep this repository clean and maintainable, we have separated our documentation into dedicated guides. Please refer to the following documents for deep dives into specific topics:
 
-### Visualization
+### Setup Guides
 
-To see the codebase graph:
+Whether you are building for iOS or Android, read the dedicated setup guides carefully. They contain crucial information regarding Apple Developer certificates, Xcode configurations, and Android Studio setups.
 
-1. Run `npx gitnexus serve`
-2. Visit [https://gitnexus.vercel.app/](https://gitnexus.vercel.app/)
+- 📱 [**iOS Setup Guide**](./docs/SETUP_IOS.md) - Learn how to build the Dev Client on a physical iPhone and bypass iOS 16+ Developer Mode restrictions.
+- 🤖 [**Android Setup Guide**](./docs/SETUP_ANDROID.md) - Learn how to configure `ANDROID_HOME`, set up an emulator, and build the APK.
+
+### Engineering Standards
+
+This repository adheres to strict enterprise-grade rules regarding clean code, architecture, and tool usage.
+
+- 🏛️ [**Architecture & Guidelines**](./docs/ARCHITECTURE.md) - Read this before contributing. It covers our usage of React Query, React Hook Form + Zod, strict TypeScript rules, custom styling themes, and Protobuf interoperability.
 
 ---
 
-## Getting Started
+## 🚀 Quick Start
 
-### Prerequisites
+If your local environment is already configured according to the Setup Guides above, you can quickly spin up the project.
 
-- Node.js (v18+)
-- Yarn
-- Expo Go (on your mobile device or emulator)
-
-### Installation
+### 1. Installation
 
 ```bash
 yarn install
 ```
 
-### Environment Setup
+### 2. Environment Setup
 
 Before starting the app, a local environment file (`.env`) is required to connect to the backend API.
-The `setup:env` script will automatically detect your local IP address and create the `.env` file with the `API_GATEWAY_URL`.
-
-This script runs automatically when you start the server, or you can run it manually:
+The `setup:env` script will automatically detect your local IP address and create the `.env` file with the correct `API_GATEWAY_URL`.
 
 ```bash
 yarn setup:env
 ```
 
-### Running the App
+### 3. Running the Metro Bundler
 
 ```bash
-yarn start
+yarn start:local
 ```
 
-### Running Tests
+Once the bundler is running, scan the QR code displayed in your terminal using your physical device's camera to launch the custom Dev Client.
+
+---
+
+## 🧠 Code Intelligence & Diagnostics
+
+This project leverages advanced AI and graph tools to maintain stability and prevent regressions.
+
+### GitNexus
+
+We use **GitNexus** to maintain a live knowledge graph of the mobile codebase. **Never perform major refactoring without running impact analysis first.**
+
+- Visualization: `npx gitnexus serve`
+- Impact Analysis: `npx gitnexus impact <symbolName>`
+
+### React-Doctor
+
+We enforce strict bundle sizes and linting rules using **React-Doctor**.
+Before committing your changes, always run:
 
 ```bash
-yarn run test
-
-yarn run lint
+yarn doctor
 ```
 
 ---
 
-## Architecture
-
-- **App**: Entry points and Expo Router configuration.
-- **Components**: Reusable UI elements.
-- **Hooks**: Shared state and interaction logic.
-- **Services**: Communications with the API Gateway.
-
----
-
-## License
+## 📄 License
 
 This project is [MIT licensed](LICENSE).

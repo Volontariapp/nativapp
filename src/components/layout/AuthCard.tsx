@@ -1,10 +1,11 @@
 import type { JSX } from 'react';
 import React from 'react';
-import { View, StyleSheet, KeyboardAvoidingView, Platform, ScrollView } from 'react-native';
+import { View, StyleSheet } from 'react-native';
 import { Image } from 'expo-image';
 import logo from '../../../assets/logo.jpg';
 import { AppText } from '@/components/typography/AppText';
 import { theme } from '@/shared/themes/theme';
+import { AppKeyboardScrollView } from '@/components/layout/AppKeyboardScrollView';
 
 interface AuthCardProps {
   title: string;
@@ -15,30 +16,26 @@ interface AuthCardProps {
 
 export const AuthCard = ({ title, subtitle, error, children }: AuthCardProps): JSX.Element => {
   return (
-    <KeyboardAvoidingView
+    <AppKeyboardScrollView
       style={styles.container}
-      behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+      contentContainerStyle={styles.scrollContainer}
+      bottomOffset={16}
     >
-      <ScrollView
-        contentContainerStyle={styles.scrollContainer}
-        keyboardShouldPersistTaps="handled"
-      >
-        <View style={styles.header}>
-          <Image source={logo} style={styles.logo} contentFit="contain" />
-          <AppText style={styles.title}>{title}</AppText>
-          <AppText style={styles.subtitle}>{subtitle}</AppText>
-        </View>
+      <View style={styles.header}>
+        <Image source={logo} style={styles.logo} contentFit="contain" />
+        <AppText style={styles.title}>{title}</AppText>
+        <AppText style={styles.subtitle}>{subtitle}</AppText>
+      </View>
 
-        <View style={styles.formContainer}>
-          {error !== null && (
-            <View style={styles.errorContainer}>
-              <AppText style={styles.errorText}>{error}</AppText>
-            </View>
-          )}
-          {children}
-        </View>
-      </ScrollView>
-    </KeyboardAvoidingView>
+      <View style={styles.formContainer}>
+        {error !== null && (
+          <View style={styles.errorContainer}>
+            <AppText style={styles.errorText}>{error}</AppText>
+          </View>
+        )}
+        {children}
+      </View>
+    </AppKeyboardScrollView>
   );
 };
 

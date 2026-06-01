@@ -1,14 +1,16 @@
 import React, { useState, useMemo, useCallback } from 'react';
-import { View, StyleSheet, Alert } from 'react-native';
+import { View, StyleSheet, Alert, FlatList, ActivityIndicator } from 'react-native';
 import { theme } from '@/shared/themes/theme';
 import { AppText } from '@/components/typography/AppText';
 import { AppButton } from '@/components/buttons/AppButton';
-import { AdminDataTable, type TableColumn } from '@/components/admin/ui/AdminDataTable';
-import { getAdminEventsColumns } from '@/components/admin/events/admin-events.columns';
+import { AdminEventCard } from '@/components/admin/events/AdminEventCard';
 import { AdminEventFormModal } from '@/components/admin/events/AdminEventFormModal';
 import { AdminEventEditModal } from '@/components/admin/events/AdminEventEditModal';
 import { AdminEventDetailsModal } from '@/components/admin/events/AdminEventDetailsModal';
+import { AdminEventParticipantsModal } from '@/components/admin/events/AdminEventParticipantsModal';
 import type { Event, CreateEventRequest, UpdateEventRequest } from '@volontariapp/contracts';
+import { EventState } from '@volontariapp/contracts';
+import { areProtobufEnumsDifferent } from '@/shared/lib/protobuf.utils';
 import {
   useAdminEventsQuery,
   useCreateEventMutation,
@@ -23,8 +25,10 @@ export default function AdminEventsScreen(): React.JSX.Element {
   const [modalVisible, setModalVisible] = useState(false);
   const [editModalVisible, setEditModalVisible] = useState(false);
   const [detailsModalVisible, setDetailsModalVisible] = useState(false);
+  const [participantsModalVisible, setParticipantsModalVisible] = useState(false);
   const [editingEvent, setEditingEvent] = useState<Event | null>(null);
   const [selectedEvent, setSelectedEvent] = useState<Event | null>(null);
+  const [managingParticipantsEvent, setManagingParticipantsEvent] = useState<Event | null>(null);
 
   const { data, isLoading } = useAdminEventsQuery();
   const createEventMutation = useCreateEventMutation();
@@ -44,23 +48,46 @@ export default function AdminEventsScreen(): React.JSX.Element {
   );
 
   const handleUpdateEvent = useCallback(
-    (eventId: string, payload: UpdateEventRequest): void => {
+    (eventId: string, payload: UpdateEventRequest, newState: EventState): void => {
       updateEventMutation.mutate(
         { eventId, payload },
         {
           onSuccess: () => {
-            setEditModalVisible(false);
-            setEditingEvent(null);
+            const isStateDifferent = areProtobufEnumsDifferent(
+              newState,
+              editingEvent?.state,
+              EventState,
+            );
+
+            if (isStateDifferent) {
+              changeStateMutation.mutate(
+                { eventId, newState },
+                {
+                  onSuccess: () => {
+                    setEditModalVisible(false);
+                    setEditingEvent(null);
+                  },
+                },
+              );
+            } else {
+              setEditModalVisible(false);
+              setEditingEvent(null);
+            }
           },
         },
       );
     },
-    [updateEventMutation],
+    [updateEventMutation, changeStateMutation, editingEvent],
   );
 
   const handleEditPress = useCallback((event: Event): void => {
     setEditingEvent(event);
     setEditModalVisible(true);
+  }, []);
+
+  const handleParticipantsPress = useCallback((event: Event): void => {
+    setManagingParticipantsEvent(event);
+    setParticipantsModalVisible(true);
   }, []);
 
   const handleRowPress = useCallback((event: Event): void => {
@@ -110,14 +137,29 @@ export default function AdminEventsScreen(): React.JSX.Element {
 
   const eventsList = useMemo((): Event[] => normalizeEventsList(data), [data]);
 
-  const columns = useMemo(
-    (): TableColumn<Event>[] =>
-      getAdminEventsColumns({
-        onEdit: handleEditPress,
-        onDelete: handleDeletePress,
-        onToggleState: handleToggleState,
-      }),
-    [handleEditPress, handleDeletePress, handleToggleState],
+  const currentSelectedEvent = useMemo(() => {
+    if (!selectedEvent) return null;
+    return eventsList.find((e) => e.id === selectedEvent.id) ?? selectedEvent;
+  }, [eventsList, selectedEvent]);
+
+  const renderItem = useCallback(
+    ({ item }: { item: Event }) => (
+      <AdminEventCard
+        event={item}
+        onRowPress={handleRowPress}
+        onParticipantsPress={handleParticipantsPress}
+        onEditPress={handleEditPress}
+        onDeletePress={handleDeletePress}
+        onToggleState={handleToggleState}
+      />
+    ),
+    [
+      handleRowPress,
+      handleParticipantsPress,
+      handleEditPress,
+      handleDeletePress,
+      handleToggleState,
+    ],
   );
 
   return (
@@ -139,14 +181,19 @@ export default function AdminEventsScreen(): React.JSX.Element {
         />
       </View>
 
-      <View style={styles.tableContainer}>
-        <AdminDataTable<Event>
-          data={eventsList}
-          columns={columns}
-          keyExtractor={(item) => item.id}
-          isLoading={isLoading}
-          onRowPress={handleRowPress}
-        />
+      <View style={styles.listContainer}>
+        {isLoading ? (
+          <View style={styles.centerContainer}>
+            <ActivityIndicator size="large" color={theme.colors.primarySocio} />
+          </View>
+        ) : (
+          <FlatList
+            contentContainerStyle={styles.cardsContainer}
+            data={eventsList}
+            keyExtractor={(item) => item.id}
+            renderItem={renderItem}
+          />
+        )}
       </View>
 
       <AdminEventFormModal
@@ -170,9 +217,19 @@ export default function AdminEventsScreen(): React.JSX.Element {
 
       <AdminEventDetailsModal
         visible={detailsModalVisible}
-        event={selectedEvent}
+        event={currentSelectedEvent}
         onClose={() => {
           setDetailsModalVisible(false);
+        }}
+      />
+
+      <AdminEventParticipantsModal
+        visible={participantsModalVisible}
+        eventId={managingParticipantsEvent?.id}
+        organizerId={managingParticipantsEvent?.organizerId}
+        onClose={() => {
+          setParticipantsModalVisible(false);
+          setManagingParticipantsEvent(null);
         }}
       />
     </View>
@@ -200,5 +257,14 @@ const styles = StyleSheet.create({
     color: theme.colors.grey,
     marginTop: theme.spacing.xs,
   },
-  tableContainer: { flex: 1, padding: theme.spacing.md },
+  listContainer: { flex: 1 },
+  centerContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  cardsContainer: {
+    padding: theme.spacing.md,
+    gap: theme.spacing.md,
+  },
 });

@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useCallback } from 'react';
 import { View, FlatList, StyleSheet, ActivityIndicator, Pressable, ScrollView } from 'react-native';
 import { AppText } from '@/components/typography/AppText';
 import { theme } from '@/shared/themes/theme';
@@ -97,6 +97,13 @@ export function AdminDataTable<T>({
   onRowPress,
   ListEmptyComponent,
 }: AdminDataTableProps<T>): React.JSX.Element {
+  const renderItem = useCallback(
+    ({ item }: { item: T }) => (
+      <AdminDataTableRow item={item} columns={columns} onPress={onRowPress} />
+    ),
+    [columns, onRowPress],
+  );
+
   return (
     <AdminCard noPadding style={styles.container}>
       <ScrollView horizontal showsHorizontalScrollIndicator style={styles.scrollContainer}>
@@ -110,9 +117,7 @@ export function AdminDataTable<T>({
             <FlatList
               style={{ width: '100%' }}
               data={data}
-              renderItem={({ item }) => (
-                <AdminDataTableRow item={item} columns={columns} onPress={onRowPress} />
-              )}
+              renderItem={renderItem}
               keyExtractor={keyExtractor}
               ItemSeparatorComponent={() => <View style={styles.separator} />}
               ListEmptyComponent={

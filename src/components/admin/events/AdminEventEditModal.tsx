@@ -9,7 +9,7 @@ import { AppButton } from '@/components/buttons/AppButton';
 import { AppInput } from '@/components/inputs/AppInput';
 import { FilterChip } from '@/components/ui/FilterChip';
 import { AdminModal } from '@/components/admin/ui/AdminModal';
-import { EventType } from '@volontariapp/contracts';
+import { EventType, EventState } from '@volontariapp/contracts';
 import type { Event, UpdateEventRequest } from '@volontariapp/contracts';
 
 const editEventSchema = z.object({
@@ -19,6 +19,7 @@ const editEventSchema = z.object({
   type: z.enum(EventType),
   maxParticipants: z.string().regex(/^\d+$/, 'Doit être un nombre').transform(Number),
   awardedImpactScore: z.string().regex(/^\d+$/, 'Doit être un nombre').transform(Number),
+  state: z.enum(EventState),
 });
 
 type EditEventFormData = z.infer<typeof editEventSchema>;
@@ -27,7 +28,7 @@ interface AdminEventEditModalProps {
   visible: boolean;
   event: Event | null;
   onClose: () => void;
-  onSubmit: (eventId: string, data: UpdateEventRequest) => void;
+  onSubmit: (eventId: string, data: UpdateEventRequest, newState: EventState) => void;
   isLoading?: boolean;
 }
 
@@ -50,9 +51,16 @@ export function AdminEventEditModal({
           title: event.title,
           description: event.description,
           localisationName: event.localisationName,
-          type: event.type,
+          type:
+            typeof event.type === 'string'
+              ? EventType[event.type as unknown as keyof typeof EventType]
+              : event.type,
           maxParticipants: String(event.maxParticipants),
           awardedImpactScore: String(event.awardedImpactScore),
+          state:
+            typeof event.state === 'string'
+              ? EventState[event.state as unknown as keyof typeof EventState]
+              : event.state,
         }
       : {
           title: '',
@@ -61,6 +69,7 @@ export function AdminEventEditModal({
           type: EventType.EVENT_TYPE_SOCIAL,
           maxParticipants: '10',
           awardedImpactScore: '100',
+          state: EventState.EVENT_STATE_DRAFT,
         },
   });
 
@@ -71,14 +80,18 @@ export function AdminEventEditModal({
 
   const submitForm = (data: EditEventFormData): void => {
     if (!event) return;
-    onSubmit(event.id, {
-      title: data.title,
-      description: data.description,
-      localisationName: data.localisationName,
-      type: data.type,
-      maxParticipants: data.maxParticipants,
-      awardedImpactScore: data.awardedImpactScore,
-    });
+    onSubmit(
+      event.id,
+      {
+        title: data.title,
+        description: data.description,
+        localisationName: data.localisationName,
+        type: data.type,
+        maxParticipants: data.maxParticipants,
+        awardedImpactScore: data.awardedImpactScore,
+      },
+      data.state,
+    );
   };
 
   return (
@@ -157,6 +170,51 @@ export function AdminEventEditModal({
                 color={theme.colors.primaryEco}
                 onPress={() => {
                   onChange(EventType.EVENT_TYPE_ECOLOGY);
+                }}
+              />
+            </View>
+          </View>
+        )}
+      />
+
+      <Controller
+        control={control}
+        name="state"
+        render={({ field: { onChange, value } }) => (
+          <View style={styles.inputGroup}>
+            <AppText style={styles.label}>Statut *</AppText>
+            <View style={styles.themeChips}>
+              <FilterChip
+                label="Brouillon"
+                selected={
+                  value === EventState.EVENT_STATE_DRAFT ||
+                  String(value) === EventState[EventState.EVENT_STATE_DRAFT]
+                }
+                color={theme.colors.grey}
+                onPress={() => {
+                  onChange(EventState.EVENT_STATE_DRAFT);
+                }}
+              />
+              <FilterChip
+                label="Publié"
+                selected={
+                  value === EventState.EVENT_STATE_PUBLISHED ||
+                  String(value) === EventState[EventState.EVENT_STATE_PUBLISHED]
+                }
+                color={theme.colors.primaryEco}
+                onPress={() => {
+                  onChange(EventState.EVENT_STATE_PUBLISHED);
+                }}
+              />
+              <FilterChip
+                label="Annulé"
+                selected={
+                  value === EventState.EVENT_STATE_CANCELLED ||
+                  String(value) === EventState[EventState.EVENT_STATE_CANCELLED]
+                }
+                color={theme.colors.danger}
+                onPress={() => {
+                  onChange(EventState.EVENT_STATE_CANCELLED);
                 }}
               />
             </View>

@@ -5,6 +5,8 @@ import { AppText } from '@/components/typography/AppText';
 import { AppButton } from '@/components/buttons/AppButton';
 import { AdminModal } from '@/components/admin/ui/AdminModal';
 import { EventType, EventState } from '@volontariapp/contracts';
+import { useAdminEventParticipants } from '@/api/admin/hooks/use-admin-event-participants';
+import { normalizeUsersList } from '@/api/admin/hooks/use-admin-users';
 import type { Event } from '@volontariapp/contracts';
 import { formatDate } from '@/shared/lib/format-date.utils';
 
@@ -19,7 +21,14 @@ export function AdminEventDetailsModal({
   onClose,
   event,
 }: AdminEventDetailsModalProps): React.JSX.Element | null {
+  const { data } = useAdminEventParticipants({
+    eventId: event?.id ?? '',
+    limit: 50,
+  });
+
   if (!event) return null;
+
+  const currentParticipants = normalizeUsersList(data).length;
 
   const isSocial =
     event.type === EventType.EVENT_TYPE_SOCIAL ||
@@ -30,14 +39,25 @@ export function AdminEventDetailsModal({
   const typeLabel = isSocial ? 'Social' : isEco ? 'Écologie' : 'Non défini';
 
   let stateLabel = 'Draft';
-  if (event.state === EventState.EVENT_STATE_PUBLISHED) {
+  if (
+    event.state === EventState.EVENT_STATE_PUBLISHED ||
+    String(event.state) === EventState[EventState.EVENT_STATE_PUBLISHED]
+  ) {
     stateLabel = 'Publié';
-  } else if (event.state === EventState.EVENT_STATE_CANCELLED) {
+  } else if (
+    event.state === EventState.EVENT_STATE_CANCELLED ||
+    String(event.state) === EventState[EventState.EVENT_STATE_CANCELLED]
+  ) {
     stateLabel = 'Annulé';
   }
 
   return (
-    <AdminModal visible={visible} onClose={onClose} title="Détails de l'événement">
+    <AdminModal
+      visible={visible}
+      onClose={onClose}
+      title="Détails de l'événement"
+      scrollable={false}
+    >
       <View style={styles.section}>
         <AppText style={styles.label}>Titre</AppText>
         <AppText style={styles.value}>{event.title}</AppText>
@@ -85,7 +105,7 @@ export function AdminEventDetailsModal({
         <View style={styles.flex1}>
           <AppText style={styles.label}>Participants</AppText>
           <AppText style={styles.value}>
-            {event.currentParticipants} / {event.maxParticipants}
+            {currentParticipants} / {event.maxParticipants}
           </AppText>
         </View>
         <View style={styles.flex1}>
@@ -95,7 +115,7 @@ export function AdminEventDetailsModal({
       </View>
 
       <View style={styles.modalActions}>
-        <AppButton text="Fermer" variant="eco" onPress={onClose} />
+        <AppButton text="Fermer" variant="danger" onPress={onClose} />
       </View>
     </AdminModal>
   );

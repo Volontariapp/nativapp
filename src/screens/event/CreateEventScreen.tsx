@@ -1,12 +1,6 @@
 import React from 'react';
-import {
-  View,
-  StyleSheet,
-  ScrollView,
-  TextInput,
-  KeyboardAvoidingView,
-  Platform,
-} from 'react-native';
+import { View, StyleSheet, TextInput } from 'react-native';
+import { AppKeyboardScrollView } from '@/components/layout/AppKeyboardScrollView';
 import { AppText } from '@/components/typography/AppText';
 import { AppButton } from '@/components/buttons/AppButton';
 import AppHeader from '@/components/layout/AppHeader';
@@ -57,15 +51,12 @@ export function CreateEventScreen(): React.JSX.Element {
   });
 
   return (
-    <KeyboardAvoidingView
-      style={styles.container}
-      behavior={Platform.OS === 'ios' ? 'padding' : undefined}
-    >
+    <View style={styles.container}>
       <AppHeader />
-      <ScrollView
+      <AppKeyboardScrollView
         contentContainerStyle={styles.scrollContent}
         contentInsetAdjustmentBehavior="automatic"
-        keyboardShouldPersistTaps="handled"
+        bottomOffset={16}
       >
         <AppText style={styles.title}>Créer un Évènement</AppText>
 
@@ -191,8 +182,8 @@ export function CreateEventScreen(): React.JSX.Element {
           disabled={mutation.isPending}
         />
         <View style={styles.bottomSpacer} />
-      </ScrollView>
-    </KeyboardAvoidingView>
+      </AppKeyboardScrollView>
+    </View>
   );
 }
 
