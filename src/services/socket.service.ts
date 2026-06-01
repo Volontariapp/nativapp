@@ -1,5 +1,6 @@
-import type { Socket } from 'socket.io-client';
+import type { Socket, ManagerOptions, SocketOptions } from 'socket.io-client';
 import { io } from 'socket.io-client';
+import { Platform } from 'react-native';
 import { config } from '../shared/config/base-config';
 
 class SocketService {
@@ -15,14 +16,27 @@ class SocketService {
 
     const base = config.apiGatewayUrl.replace(/\/$/, '');
 
-    this.socket = io(base, {
+    const headers: Record<string, string> = {
+      Authorization: `Bearer ${token}`,
+    };
+
+    if (Platform.OS === 'web' && config.cloudflareAccess) {
+      headers['CF-Access-Client-Id'] = config.cloudflareAccess.clientId;
+      headers['CF-Access-Client-Secret'] = config.cloudflareAccess.clientSecret;
+    }
+
+    const ioOptions: Partial<ManagerOptions & SocketOptions> = {
       path: '/api/v1/socket.io',
       query: { token },
-      extraHeaders: {
-        Authorization: `Bearer ${token}`,
-      },
+      extraHeaders: headers,
       transports: ['polling', 'websocket'],
-    });
+    };
+
+    if (Platform.OS === 'web') {
+      ioOptions.withCredentials = true;
+    }
+
+    this.socket = io(base, ioOptions);
 
     this.socket.on('connect', () => {
       console.log('Socket connected:', this.socket?.id);
