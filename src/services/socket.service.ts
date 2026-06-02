@@ -1,6 +1,5 @@
 import type { Socket, ManagerOptions, SocketOptions } from 'socket.io-client';
 import { io } from 'socket.io-client';
-import { Platform } from 'react-native';
 import { config } from '../shared/config/base-config';
 
 class SocketService {
@@ -20,7 +19,7 @@ class SocketService {
       Authorization: `Bearer ${token}`,
     };
 
-    if (Platform.OS === 'web' && config.cloudflareAccess) {
+    if (config.cloudflareAccess) {
       headers['CF-Access-Client-Id'] = config.cloudflareAccess.clientId;
       headers['CF-Access-Client-Secret'] = config.cloudflareAccess.clientSecret;
     }
@@ -29,12 +28,10 @@ class SocketService {
       path: '/api/v1/socket.io',
       query: { token },
       extraHeaders: headers,
-      transports: ['polling', 'websocket'],
+      transports: ['websocket'],
     };
 
-    if (Platform.OS === 'web') {
-      ioOptions.withCredentials = true;
-    }
+    ioOptions.withCredentials = true;
 
     this.socket = io(base, ioOptions);
 
@@ -50,6 +47,7 @@ class SocketService {
       console.error('Socket unauthorized:', error);
       this.disconnect();
     });
+    console.log(this.socket);
 
     return this.socket;
   }
