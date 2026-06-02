@@ -1,5 +1,6 @@
 import type { Socket, ManagerOptions, SocketOptions } from 'socket.io-client';
 import { io } from 'socket.io-client';
+import { Platform } from 'react-native';
 import { config } from '../shared/config/base-config';
 
 class SocketService {
@@ -28,7 +29,7 @@ class SocketService {
       path: '/api/v1/socket.io',
       query: { token },
       extraHeaders: headers,
-      transports: ['websocket'],
+      transports: Platform.OS === 'web' ? ['polling'] : ['websocket'],
     };
 
     ioOptions.withCredentials = true;

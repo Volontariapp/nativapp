@@ -5,6 +5,7 @@ import { authExpiredBus } from '../../services/event-bus.service';
 import { AuthContext } from './auth.context';
 import type { JwtPayload } from './auth.types';
 import type { UserRoles } from '@volontariapp/shared';
+import { socketService } from '../../services/socket.service';
 
 export const AuthProvider = ({ children }: { children: ReactNode }): React.JSX.Element => {
   const [userId, setUserId] = useState<string | null>(null);
@@ -54,6 +55,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }): React.JSX.E
   };
 
   const logout = async (): Promise<void> => {
+    socketService.disconnect();
     await TokenService.clearTokens();
     setUserId(null);
     setRole(null);

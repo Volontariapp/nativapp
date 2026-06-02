@@ -24,28 +24,28 @@ export const SocketProvider = ({ children }: SocketProviderProps): React.JSX.Ele
   const { isAuthenticated } = useAuth();
   const [socket, setSocket] = useState<Socket | null>(null);
   const [isConnected, setIsConnected] = useState(false);
-  // Keep a ref to always access the latest socket in the polling interval
   const socketRef = useRef<Socket | null>(null);
 
   useEffect(() => {
     let currentSocket: Socket | null = null;
+    let isMounted = true;
 
     const connectSocket = async (): Promise<void> => {
       if (isAuthenticated) {
         const token = await TokenService.getAccessToken();
-        if (token !== null) {
+        if (token !== null && isMounted) {
           currentSocket = socketService.connect(token);
           socketRef.current = currentSocket;
           setSocket(currentSocket);
 
           currentSocket.on('connect', () => {
-            setIsConnected(true);
+            if (isMounted) setIsConnected(true);
           });
           currentSocket.on('disconnect', () => {
-            setIsConnected(false);
+            if (isMounted) setIsConnected(false);
           });
           currentSocket.on('connect_error', () => {
-            setIsConnected(false);
+            if (isMounted) setIsConnected(false);
           });
 
           if (currentSocket.connected) {
@@ -53,10 +53,12 @@ export const SocketProvider = ({ children }: SocketProviderProps): React.JSX.Ele
           }
         }
       } else {
-        socketService.disconnect();
-        socketRef.current = null;
-        setSocket(null);
-        setIsConnected(false);
+        if (isMounted) {
+          socketService.disconnect();
+          socketRef.current = null;
+          setSocket(null);
+          setIsConnected(false);
+        }
       }
     };
 
@@ -70,6 +72,7 @@ export const SocketProvider = ({ children }: SocketProviderProps): React.JSX.Ele
     }, 3000);
 
     return (): void => {
+      isMounted = false;
       clearInterval(interval);
       if (currentSocket !== null) {
         currentSocket.off('connect');
