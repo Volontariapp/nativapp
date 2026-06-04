@@ -97,7 +97,9 @@ export function ProfileScreen(): React.JSX.Element {
         <AppHeader />
         <View style={styles.center}>
           <AppText style={styles.errorText}>
-            {profileError instanceof Error ? profileError.message : 'Impossible de charger le profil.'}
+            {profileError instanceof Error
+              ? profileError.message
+              : 'Impossible de charger le profil.'}
           </AppText>
         </View>
       </View>
@@ -127,10 +129,6 @@ export function ProfileScreen(): React.JSX.Element {
           <ProfileBio bio={profile.bio} />
         </ProfileSection>
 
-        <ProfileSection title="Événements à venir">
-          <ComingSoonPlaceholder />
-        </ProfileSection>
-
         <ProfileSection title="Mes Engagements">
           <View style={styles.calendarContainer}>
             <Calendar
@@ -156,6 +154,10 @@ export function ProfileScreen(): React.JSX.Element {
 
         <ProfileSection title="Mes Badges">
           <ProfileBadges badges={profile.badges} />
+        </ProfileSection>
+
+        <ProfileSection title="Événements à venir">
+          <ComingSoonPlaceholder />
         </ProfileSection>
 
         <ProfileSection title="Mentions J'aime">
