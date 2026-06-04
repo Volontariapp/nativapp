@@ -15,6 +15,7 @@ export * from './profile/ProfileSection';
 export * from './profile/ProfileStats';
 export * from './profile/ProfileBadges';
 export * from './profile/ProfileBio';
+export * from './profile/ProfileEditModal';
 export * from './inputs/AppInput';
 export * from './layout/AuthCard';
 export * from './inputs/EmailField';

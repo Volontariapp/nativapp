@@ -1,6 +1,11 @@
 import { apiFetch } from '../client';
 import { USER_ENDPOINTS } from '../endpoints';
-import type { GetUserWebResponse, BadgeWeb } from '@volontariapp/contracts';
+import type {
+  GetUserWebResponse,
+  BadgeWeb,
+  UpdateUserRequest,
+  UserWebResponse,
+} from '@volontariapp/contracts';
 
 export interface UserProfile {
   id: string;
@@ -34,5 +39,13 @@ export const userApi = {
       logoPath: response.user.logoPath,
       badges: response.user.badges,
     };
+  },
+
+  async updateMe(payload: UpdateUserRequest): Promise<void> {
+    await apiFetch<UserWebResponse, UpdateUserRequest>(USER_ENDPOINTS.UPDATE_ME.path, {
+      method: USER_ENDPOINTS.UPDATE_ME.method,
+      requiresAuth: USER_ENDPOINTS.UPDATE_ME.requiresAuth,
+      body: payload,
+    });
   },
 };

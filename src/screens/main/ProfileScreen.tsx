@@ -1,5 +1,5 @@
-import React from 'react';
-import { View, StyleSheet, ScrollView } from 'react-native';
+import React, { useState } from 'react';
+import { View, StyleSheet, ScrollView, Alert } from 'react-native';
 import { Calendar, LocaleConfig } from 'react-native-calendars';
 import {
   AppButton,
@@ -12,18 +12,18 @@ import {
   ProfileStats,
   ProfileBadges,
   ProfileBio,
+  ProfileEditModal,
+  AppIconsButton,
 } from '@/components';
 import { useAuth } from '@/context/AuthContext';
 import { theme } from '@/shared/themes/theme';
 import { useProfile } from '@/api/user/hooks/use-profile';
+import { useUpdateProfile } from '@/api/user/hooks/use-update-profile';
 import { useUserParticipations } from '@/api/social/hooks/use-user-participations';
 import { useNavigation } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import type { ProfileStackParamList } from '@/navigation/stacks/ProfileStack';
 
-/**
- * Interface pour typer correctement la configuration du calendrier.
- */
 interface CalendarLocale {
   monthNames: string[];
   monthNamesShort: string[];
@@ -73,12 +73,18 @@ TypedLocaleConfig.locales['fr'] = {
 };
 TypedLocaleConfig.defaultLocale = 'fr';
 
+const handleSettingsPress = () => {
+  Alert.alert('Paramètres', 'Coming soon ⚙️');
+};
+
 export function ProfileScreen(): React.JSX.Element {
+  const [isEditModalVisible, setIsEditModalVisible] = useState(false);
   const { logout } = useAuth();
   const { navigate } = useNavigation<NativeStackNavigationProp<ProfileStackParamList>>();
 
   const { data: profile, isLoading: isProfileLoading, error: profileError } = useProfile();
   const { data: participations, isLoading: isParticipationsLoading } = useUserParticipations();
+  const updateProfile = useUpdateProfile();
 
   const isLoading = isProfileLoading || isParticipationsLoading;
 
@@ -91,15 +97,13 @@ export function ProfileScreen(): React.JSX.Element {
     );
   }
 
-  if (profileError || !profile) {
+  if (profileError !== null || !profile) {
     return (
       <View style={styles.container}>
         <AppHeader />
         <View style={styles.center}>
           <AppText style={styles.errorText}>
-            {profileError instanceof Error
-              ? profileError.message
-              : 'Impossible de charger le profil.'}
+            {profileError instanceof Error ? profileError.message : 'Impossible de charger le profil.'}
           </AppText>
         </View>
       </View>
@@ -115,7 +119,26 @@ export function ProfileScreen(): React.JSX.Element {
         contentContainerStyle={styles.scrollContent}
         showsVerticalScrollIndicator={false}
       >
+        <View style={styles.settingsHeader}>
+          <AppIconsButton icon="settings" variant="eco" size={36} onPress={handleSettingsPress} />
+        </View>
+
         <ProfileHeader pseudo={profile.pseudo} />
+
+        <ProfileSection title="Ma Bio">
+          <ProfileBio bio={profile.bio} />
+          <View style={styles.editButtonContainer}>
+            <AppButton
+              variant="eco"
+              size="small"
+              text="Modifier"
+              icon="edit-2"
+              onPress={() => {
+                setIsEditModalVisible(true);
+              }}
+            />
+          </View>
+        </ProfileSection>
 
         <ProfileSection title="Mes Statistiques">
           <ProfileStats
@@ -123,10 +146,6 @@ export function ProfileScreen(): React.JSX.Element {
             badgesCount={profile.badges.length}
             eventsCount={participations?.length ?? 0}
           />
-        </ProfileSection>
-
-        <ProfileSection title="Ma Bio">
-          <ProfileBio bio={profile.bio} />
         </ProfileSection>
 
         <ProfileSection title="Mes Engagements">
@@ -165,6 +184,7 @@ export function ProfileScreen(): React.JSX.Element {
         </ProfileSection>
 
         <View style={styles.actions}>
+          <View style={styles.buttonSpacer} />
           <AppButton
             variant="eco"
             text="Voir mes feedbacks"
@@ -181,6 +201,22 @@ export function ProfileScreen(): React.JSX.Element {
             }}
           />
         </View>
+
+        <ProfileEditModal
+          visible={isEditModalVisible}
+          onClose={() => {
+            setIsEditModalVisible(false);
+          }}
+          profile={profile}
+          isLoading={updateProfile.isPending}
+          onSubmit={(data) => {
+            updateProfile.mutate(data, {
+              onSuccess: () => {
+                setIsEditModalVisible(false);
+              },
+            });
+          }}
+        />
       </ScrollView>
     </View>
   );
@@ -204,6 +240,17 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
     padding: theme.spacing.xl,
+  },
+  settingsHeader: {
+    flexDirection: 'row',
+    justifyContent: 'flex-end',
+    marginBottom: -20,
+    zIndex: 1,
+  },
+  editButtonContainer: {
+    flexDirection: 'row',
+    justifyContent: 'flex-end',
+    marginTop: theme.spacing.xs,
   },
   calendarContainer: {
     backgroundColor: theme.colors.white,

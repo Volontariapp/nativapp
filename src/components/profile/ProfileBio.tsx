@@ -7,9 +7,6 @@ interface ProfileBioProps {
   bio?: string;
 }
 
-/**
- * Section Bio du profil utilisateur.
- */
 export const ProfileBio = ({ bio }: ProfileBioProps): React.JSX.Element => {
   return (
     <View style={styles.bioCard}>
