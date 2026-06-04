@@ -1,6 +1,6 @@
 import { apiFetch } from '../client';
 import { USER_ENDPOINTS } from '../endpoints';
-import type { GetUserWebResponse } from '@volontariapp/contracts';
+import type { GetUserWebResponse, BadgeWeb } from '@volontariapp/contracts';
 
 export interface UserProfile {
   id: string;
@@ -10,6 +10,7 @@ export interface UserProfile {
   totalImpactScore: number;
   bio?: string;
   logoPath?: string;
+  badges: BadgeWeb[];
 }
 
 export const userApi = {
@@ -31,6 +32,7 @@ export const userApi = {
       totalImpactScore: response.user.totalImpactScore,
       bio: response.user.bio,
       logoPath: response.user.logoPath,
+      badges: response.user.badges,
     };
   },
 };
