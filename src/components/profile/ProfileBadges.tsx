@@ -1,5 +1,5 @@
-import React from 'react';
-import { ScrollView, View, StyleSheet } from 'react-native';
+import React, { useCallback } from 'react';
+import { View, StyleSheet, FlatList } from 'react-native';
 import { Image } from 'expo-image';
 import Icon from 'react-native-vector-icons/Feather';
 import { AppText } from '@/components/typography/AppText';
@@ -14,6 +14,21 @@ interface ProfileBadgesProps {
  * Liste horizontale des badges de l'utilisateur.
  */
 export const ProfileBadges = ({ badges }: ProfileBadgesProps): React.JSX.Element => {
+  const renderItem = useCallback(({ item }: { item: BadgeWeb }) => (
+    <View style={styles.badgeContainer}>
+      <View style={styles.badgeImageWrapper}>
+        {typeof item.iconPath === 'string' && item.iconPath !== '' ? (
+          <Image source={{ uri: item.iconPath }} style={styles.badgeImage} contentFit="contain" />
+        ) : (
+          <Icon name="award" size={30} color={theme.colors.lightGrey} />
+        )}
+      </View>
+      <AppText style={styles.badgeName} numberOfLines={1}>
+        {item.name}
+      </AppText>
+    </View>
+  ), []);
+
   if (badges.length === 0) {
     return (
       <View style={styles.emptyCard}>
@@ -23,26 +38,14 @@ export const ProfileBadges = ({ badges }: ProfileBadgesProps): React.JSX.Element
   }
 
   return (
-    <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.badgesRow}>
-      {badges.map((badge) => (
-        <View key={badge.id} style={styles.badgeContainer}>
-          <View style={styles.badgeImageWrapper}>
-            {typeof badge.iconPath === 'string' && badge.iconPath !== '' ? (
-              <Image
-                source={{ uri: badge.iconPath }}
-                style={styles.badgeImage}
-                contentFit="contain"
-              />
-            ) : (
-              <Icon name="award" size={30} color={theme.colors.lightGrey} />
-            )}
-          </View>
-          <AppText style={styles.badgeName} numberOfLines={1}>
-            {badge.name}
-          </AppText>
-        </View>
-      ))}
-    </ScrollView>
+    <FlatList
+      horizontal
+      showsHorizontalScrollIndicator={false}
+      style={styles.badgesRow}
+      data={badges}
+      keyExtractor={(item) => item.id}
+      renderItem={renderItem}
+    />
   );
 };
 
