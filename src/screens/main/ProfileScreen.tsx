@@ -1,6 +1,5 @@
 import React, { useState } from 'react';
 import { View, StyleSheet, ScrollView, Alert } from 'react-native';
-import { Calendar, LocaleConfig } from 'react-native-calendars';
 import {
   AppButton,
   AppText,
@@ -14,6 +13,7 @@ import {
   ProfileBio,
   ProfileEditModal,
   AppIconsButton,
+  AppCalendar,
 } from '@/components';
 import { useAuth } from '@/context/AuthContext';
 import { theme } from '@/shared/themes/theme';
@@ -23,55 +23,6 @@ import { useUserParticipations } from '@/api/social/hooks/use-user-participation
 import { useNavigation } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import type { ProfileStackParamList } from '@/navigation/stacks/ProfileStack';
-
-interface CalendarLocale {
-  monthNames: string[];
-  monthNamesShort: string[];
-  dayNames: string[];
-  dayNamesShort: string[];
-  today: string;
-}
-
-interface CalendarLocaleConfig {
-  locales: Record<string, CalendarLocale>;
-  defaultLocale: string;
-}
-
-const TypedLocaleConfig = LocaleConfig as unknown as CalendarLocaleConfig;
-TypedLocaleConfig.locales['fr'] = {
-  monthNames: [
-    'Janvier',
-    'Février',
-    'Mars',
-    'Avril',
-    'Mai',
-    'Juin',
-    'Juillet',
-    'Août',
-    'Septembre',
-    'Octobre',
-    'Novembre',
-    'Décembre',
-  ],
-  monthNamesShort: [
-    'Janv.',
-    'Févr.',
-    'Mars',
-    'Avril',
-    'Mai',
-    'Juin',
-    'Juil.',
-    'Août',
-    'Sept.',
-    'Oct.',
-    'Nov.',
-    'Déc.',
-  ],
-  dayNames: ['Dimanche', 'Lundi', 'Mardi', 'Mercredi', 'Jeudi', 'Vendredi', 'Samedi'],
-  dayNamesShort: ['Dim.', 'Lun.', 'Mar.', 'Mer.', 'Jeu.', 'Ven.', 'Sam.'],
-  today: "Aujourd'hui",
-};
-TypedLocaleConfig.defaultLocale = 'fr';
 
 const handleSettingsPress = () => {
   Alert.alert('Paramètres', 'Coming soon ⚙️');
@@ -149,26 +100,7 @@ export function ProfileScreen(): React.JSX.Element {
         </ProfileSection>
 
         <ProfileSection title="Mes Engagements">
-          <View style={styles.calendarContainer}>
-            <Calendar
-              theme={{
-                backgroundColor: theme.colors.white,
-                calendarBackground: theme.colors.white,
-                textSectionTitleColor: theme.colors.grey,
-                selectedDayBackgroundColor: theme.colors.primaryEco,
-                selectedDayTextColor: theme.colors.white,
-                todayTextColor: theme.colors.primaryEco,
-                dayTextColor: theme.colors.black,
-                arrowColor: theme.colors.primaryEco,
-                monthTextColor: theme.colors.black,
-                textDayFontSize: 16,
-                textMonthFontSize: 18,
-                textDayHeaderFontSize: 14,
-                textMonthFontWeight: 'bold',
-              }}
-              style={styles.calendar}
-            />
-          </View>
+          <AppCalendar />
         </ProfileSection>
 
         <ProfileSection title="Mes Badges">
@@ -251,15 +183,6 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'flex-end',
     marginTop: theme.spacing.xs,
-  },
-  calendarContainer: {
-    backgroundColor: theme.colors.white,
-    borderRadius: theme.radius.md,
-    overflow: 'hidden',
-    ...theme.shadows.card,
-  },
-  calendar: {
-    borderRadius: theme.radius.md,
   },
   actions: {
     marginTop: theme.spacing.md,

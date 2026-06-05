@@ -3,11 +3,13 @@ import { View, StyleSheet, Alert, ActivityIndicator, FlatList } from 'react-nati
 import { theme } from '@/shared/themes/theme';
 import { AppText } from '@/components/typography/AppText';
 import { AppButton } from '@/components/buttons/AppButton';
-import { FilterChip } from '@/components/ui/FilterChip';
-import { SearchBar } from '@/components/ui/SearchBar';
-import { AdminUserFormModal } from '@/components/admin/users/AdminUserFormModal';
-import { AdminUserEditModal } from '@/components/admin/users/AdminUserEditModal';
-import { AdminUserInspectorModal } from '@/components/admin/users/inspector/AdminUserInspectorModal';
+import { FilterChip, SearchBar } from '@/components/ui';
+import {
+  AdminUserFormModal,
+  AdminUserEditModal,
+  AdminUserCard,
+  AdminUserInspectorModal,
+} from '@/components/admin/users';
 import type { UserWeb, SignUpRequest, UpdateUserRequest } from '@volontariapp/contracts';
 import { UserRoles } from '@volontariapp/shared';
 import {
@@ -17,7 +19,6 @@ import {
   useDeleteUserMutation,
   normalizeUsersList,
 } from '@/api/admin/hooks/use-admin-users';
-import { AdminUserCard } from '@/components/admin/users/AdminUserCard';
 
 interface AdminUsersState {
   modalVisible: boolean;
