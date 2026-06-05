@@ -20,6 +20,29 @@ const profileSchema = z.object({
 
 type ProfileFormData = z.infer<typeof profileSchema>;
 
+/**
+ * Pure helper function moved outside the component to avoid re-allocation on every render.
+ * This function doesn't depend on component-local state or props.
+ */
+const handlePickImage = async () => {
+  const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
+  if (status !== ImagePicker.PermissionStatus.GRANTED) {
+    Alert.alert('Permission refusée', 'Nous avons besoin de votre permission pour accéder à vos photos.');
+    return;
+  }
+
+  const result = await ImagePicker.launchImageLibraryAsync({
+    mediaTypes: ['images'],
+    allowsEditing: true,
+    aspect: [1, 1],
+    quality: 0.8,
+  });
+
+  if (!result.canceled) {
+    Alert.alert('Coming soon', "L'upload de photo sera bientôt disponible ! 📸");
+  }
+};
+
 interface ProfileEditModalProps {
   visible: boolean;
   onClose: () => void;
@@ -49,25 +72,6 @@ export const ProfileEditModal = ({
   });
 
   if (profile === undefined) return null;
-
-  const handlePickImage = async () => {
-    const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
-    if (status !== ImagePicker.PermissionStatus.GRANTED) {
-      Alert.alert('Permission refusée', 'Nous avons besoin de votre permission pour accéder à vos photos.');
-      return;
-    }
-
-    const result = await ImagePicker.launchImageLibraryAsync({
-      mediaTypes: ['images'],
-      allowsEditing: true,
-      aspect: [1, 1],
-      quality: 0.8,
-    });
-
-    if (!result.canceled) {
-      Alert.alert('Coming soon', "L'upload de photo sera bientôt disponible ! 📸");
-    }
-  };
 
   return (
     <Modal animationType="slide" transparent visible={visible} onRequestClose={onClose}>
