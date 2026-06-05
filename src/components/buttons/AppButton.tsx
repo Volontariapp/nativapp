@@ -1,5 +1,5 @@
 import type { JSX } from 'react';
-import { Text, Pressable, StyleSheet, View } from 'react-native';
+import { Text, Pressable, StyleSheet, View, type ViewStyle } from 'react-native';
 import { BUTTON_VARIANTS } from '@/shared/themes/buttonVariants';
 import { theme } from '@/shared/themes/theme';
 import { AppIcons } from '@/components/media/AppIcons';
@@ -12,6 +12,8 @@ interface AppButtonProps {
   iconLibrary?: IconLibrary;
   onPress?: () => void;
   disabled?: boolean;
+  style?: ViewStyle;
+  size?: 'default' | 'small';
 }
 
 export const AppButton = ({
@@ -21,8 +23,11 @@ export const AppButton = ({
   iconLibrary = 'Feather',
   onPress,
   disabled = false,
+  style,
+  size = 'default',
 }: AppButtonProps): JSX.Element => {
   const stylesVariant = BUTTON_VARIANTS[variant];
+  const isSmall = size === 'small';
 
   return (
     <Pressable
@@ -30,12 +35,14 @@ export const AppButton = ({
       disabled={disabled}
       style={({ pressed }) => [
         styles.button,
+        isSmall && styles.buttonSmall,
         {
           backgroundColor: stylesVariant.backgroundColor,
           borderColor: stylesVariant.borderColor,
           borderWidth: 1,
           opacity: disabled ? 0.6 : pressed ? 0.8 : 1,
         },
+        style,
       ]}
     >
       <View style={styles.content}>
@@ -43,13 +50,14 @@ export const AppButton = ({
           <AppIcons
             icon={icon}
             iconLibrary={iconLibrary}
-            size={20}
+            size={isSmall ? 16 : 20}
             color={stylesVariant.textColor}
           />
         )}
         <Text
           style={[
             styles.text,
+            isSmall && styles.textSmall,
             {
               color: stylesVariant.textColor,
               fontFamily: theme.typography.fonts.primary,
@@ -72,6 +80,12 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
 
+  buttonSmall: {
+    paddingVertical: theme.spacing.sm,
+    paddingHorizontal: theme.spacing.md,
+    borderRadius: theme.radius.sm,
+  },
+
   content: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -81,5 +95,9 @@ const styles = StyleSheet.create({
   text: {
     fontSize: theme.typography.fontSize.sm,
     fontWeight: theme.typography.fontWeight.semibold,
+  },
+
+  textSmall: {
+    fontSize: theme.typography.fontSize.xs,
   },
 });

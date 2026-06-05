@@ -4,7 +4,7 @@ import { useQueryClient } from '@tanstack/react-query';
 import { theme } from '@/shared/themes/theme';
 import { AppText } from '@/components/typography/AppText';
 import { AppButton } from '@/components/buttons/AppButton';
-import { AdminCard } from '@/components/admin/AdminCard';
+import { AdminCard } from '@/components/admin';
 import { useAdminHealth } from '@/api/admin/hooks/use-admin-health';
 
 export default function AdminSystemScreen(): React.JSX.Element {
@@ -18,7 +18,7 @@ export default function AdminSystemScreen(): React.JSX.Element {
         <AppText style={styles.headerSubtitle}>Surveillance des services de la plateforme</AppText>
       </View>
 
-      <AdminCard style={styles.card}>
+      <AdminCard hasBorder style={styles.card}>
         <AppText style={styles.cardTitle}>Statut Général</AppText>
 
         <View style={styles.statusRow}>

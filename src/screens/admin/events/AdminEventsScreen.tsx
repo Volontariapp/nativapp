@@ -3,11 +3,13 @@ import { View, StyleSheet, Alert, FlatList, ActivityIndicator } from 'react-nati
 import { theme } from '@/shared/themes/theme';
 import { AppText } from '@/components/typography/AppText';
 import { AppButton } from '@/components/buttons/AppButton';
-import { AdminEventCard } from '@/components/admin/events/AdminEventCard';
-import { AdminEventFormModal } from '@/components/admin/events/AdminEventFormModal';
-import { AdminEventEditModal } from '@/components/admin/events/AdminEventEditModal';
-import { AdminEventDetailsModal } from '@/components/admin/events/AdminEventDetailsModal';
-import { AdminEventParticipantsModal } from '@/components/admin/events/AdminEventParticipantsModal';
+import {
+  AdminEventCard,
+  AdminEventFormModal,
+  AdminEventEditModal,
+  AdminEventDetailsModal,
+  AdminEventParticipantsModal,
+} from '@/components/admin/events';
 import type { Event, CreateEventRequest, UpdateEventRequest } from '@volontariapp/contracts';
 import { EventState } from '@volontariapp/contracts';
 import { areProtobufEnumsDifferent } from '@/shared/lib/protobuf.utils';

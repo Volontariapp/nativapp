@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useCallback } from 'react';
 import { View, StyleSheet, FlatList, ActivityIndicator, Pressable, TextInput } from 'react-native';
 import { theme } from '@/shared/themes/theme';
 import { AppText } from '@/components/typography/AppText';
@@ -63,6 +63,29 @@ export function AdminRelationPickerModal({
     }
   }, [mode, usersData, eventsData, excludeIds, searchQuery]);
 
+  const handleSelect = useCallback((id: string) => {
+    onSelect(id);
+  }, [onSelect]);
+
+  const renderItem = useCallback(({ item }: { item: PickerItem }) => (
+    <Pressable
+      style={styles.itemCard}
+      onPress={() => {
+        handleSelect(item.id);
+      }}
+    >
+      <View style={styles.itemInfo}>
+        <AppText style={styles.itemTitle}>{item.title}</AppText>
+        <AppText style={styles.itemSubtitle}>{item.subtitle}</AppText>
+      </View>
+      <AppIcons icon="chevron-right" size={20} color={theme.colors.grey} />
+    </Pressable>
+  ), [handleSelect]);
+
+  const handleClearSearch = useCallback(() => {
+    setSearchQuery('');
+  }, []);
+
   return (
     <AdminModal
       visible={visible}
@@ -81,11 +104,7 @@ export function AdminRelationPickerModal({
           autoCapitalize="none"
         />
         {searchQuery.length > 0 && (
-          <Pressable
-            onPress={() => {
-              setSearchQuery('');
-            }}
-          >
+          <Pressable onPress={handleClearSearch}>
             <AppIcons icon="x" size={20} color={theme.colors.grey} />
           </Pressable>
         )}
@@ -97,20 +116,7 @@ export function AdminRelationPickerModal({
         <FlatList
           data={filteredItems}
           keyExtractor={(item) => item.id}
-          renderItem={({ item }) => (
-            <Pressable
-              style={styles.itemCard}
-              onPress={() => {
-                onSelect(item.id);
-              }}
-            >
-              <View style={styles.itemInfo}>
-                <AppText style={styles.itemTitle}>{item.title}</AppText>
-                <AppText style={styles.itemSubtitle}>{item.subtitle}</AppText>
-              </View>
-              <AppIcons icon="chevron-right" size={20} color={theme.colors.grey} />
-            </Pressable>
-          )}
+          renderItem={renderItem}
           ListEmptyComponent={<AppText style={styles.emptyText}>Aucun résultat trouvé.</AppText>}
           style={styles.list}
           contentContainerStyle={styles.listContent}
