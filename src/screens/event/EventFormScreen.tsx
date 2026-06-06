@@ -11,10 +11,13 @@ import { EventType } from '@volontariapp/contracts';
 
 import { useForm, Controller } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
+import { ScrollView, Pressable } from 'react-native';
 import { eventSchema, type EventFormValues } from '@/api/event/event.schema';
+import { mapEventType } from '@/shared/lib/event-mappers.utils';
 import { useCreateEvent } from '@/api/event/hooks/use-create-event';
+import { AppDateTimePicker } from '@/components/inputs';
 
-export function CreateEventScreen(): React.JSX.Element {
+export function EventFormScreen(): React.JSX.Element {
   const mutation = useCreateEvent();
 
   const {
@@ -30,8 +33,8 @@ export function CreateEventScreen(): React.JSX.Element {
       type: EventType.EVENT_TYPE_ECOLOGY,
       awardedImpactScore: 100,
       maxParticipants: 50,
-      startAt: '2026-06-01T10:00:00Z',
-      endAt: '2026-06-01T18:00:00Z',
+      startAt: new Date('2026-06-01T10:00:00Z'),
+      endAt: new Date('2026-06-01T18:00:00Z'),
     },
   });
 
@@ -43,8 +46,8 @@ export function CreateEventScreen(): React.JSX.Element {
       type: data.type,
       awardedImpactScore: data.awardedImpactScore,
       maxParticipants: data.maxParticipants,
-      startAt: new Date(data.startAt),
-      endAt: new Date(data.endAt),
+      startAt: data.startAt,
+      endAt: data.endAt,
       tagIds: [],
     };
     mutation.mutate(payload);
@@ -52,7 +55,7 @@ export function CreateEventScreen(): React.JSX.Element {
 
   return (
     <View style={styles.container}>
-      <AppHeader />
+      <AppHeader showBack />
       <AppKeyboardScrollView
         contentContainerStyle={styles.scrollContent}
         contentInsetAdjustmentBehavior="automatic"
@@ -106,14 +109,63 @@ export function CreateEventScreen(): React.JSX.Element {
           ) : null}
         </View>
 
+        <View style={styles.inputGroup}>
+          <AppText style={styles.label}>Type d'évènement</AppText>
+          <Controller
+            control={control}
+            name="type"
+            render={({ field: { onChange, value } }) => (
+              <ScrollView
+                horizontal
+                showsHorizontalScrollIndicator={false}
+                style={styles.typeScroll}
+              >
+                {Object.values(EventType).reduce<React.ReactNode[]>((acc, typeVal) => {
+                  if (typeof typeVal === 'number' && typeVal !== EventType.EVENT_TYPE_UNSPECIFIED) {
+                    const isSelected = value === typeVal;
+                    acc.push(
+                      <Pressable
+                        key={typeVal}
+                        style={({ pressed }) => [
+                          styles.typeButton,
+                          isSelected && styles.typeButtonSelected,
+                          pressed && { opacity: 0.7 },
+                        ]}
+                        onPress={() => {
+                          onChange(typeVal);
+                        }}
+                      >
+                        <AppText
+                          style={[
+                            styles.typeButtonText,
+                            isSelected && styles.typeButtonTextSelected,
+                          ]}
+                        >
+                          {mapEventType(typeVal)}
+                        </AppText>
+                      </Pressable>,
+                    );
+                  }
+                  return acc;
+                }, [])}
+              </ScrollView>
+            )}
+          />
+          {errors.type ? <AppText style={styles.errorText}>{errors.type.message}</AppText> : null}
+        </View>
+
         <View style={styles.row}>
           <View style={styles.rowItem}>
-            <AppText style={styles.label}>Date de début</AppText>
             <Controller
               control={control}
               name="startAt"
               render={({ field: { onChange, value } }) => (
-                <TextInput style={styles.input} value={value} onChangeText={onChange} />
+                <AppDateTimePicker
+                  label="Début"
+                  value={value}
+                  onChange={onChange}
+                  mode="datetime"
+                />
               )}
             />
             {errors.startAt ? (
@@ -121,12 +173,11 @@ export function CreateEventScreen(): React.JSX.Element {
             ) : null}
           </View>
           <View style={styles.rowItem}>
-            <AppText style={styles.label}>Date de fin</AppText>
             <Controller
               control={control}
               name="endAt"
               render={({ field: { onChange, value } }) => (
-                <TextInput style={styles.input} value={value} onChangeText={onChange} />
+                <AppDateTimePicker label="Fin" value={value} onChange={onChange} mode="datetime" />
               )}
             />
             {errors.endAt ? (
@@ -239,5 +290,30 @@ const styles = StyleSheet.create({
   },
   bottomSpacer: {
     height: theme.spacing.xxl,
+  },
+  typeScroll: {
+    flexDirection: 'row',
+    marginTop: theme.spacing.xs,
+  },
+  typeButton: {
+    paddingHorizontal: theme.spacing.md,
+    paddingVertical: theme.spacing.sm,
+    borderRadius: theme.radius.full,
+    borderWidth: 1,
+    borderColor: theme.colors.lightGrey,
+    marginRight: theme.spacing.sm,
+    backgroundColor: theme.colors.white,
+  },
+  typeButtonSelected: {
+    backgroundColor: theme.colors.primaryEco,
+    borderColor: theme.colors.primaryEco,
+  },
+  typeButtonText: {
+    fontSize: 14,
+    color: theme.colors.black,
+    fontWeight: '500',
+  },
+  typeButtonTextSelected: {
+    color: theme.colors.white,
   },
 });

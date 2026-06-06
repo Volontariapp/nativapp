@@ -6,5 +6,7 @@ export * from './main/ProfileScreen';
 export * from './main/ExploreScreen';
 export * from './main/SwipeScreen';
 export * from './main/WsFeedbackScreen';
-export * from './event/CreateEventScreen';
+export * from './event/EventFormScreen';
+export * from './event/ManageEventsScreen';
+export * from './event/MyEventsScreen';
 export * from './misc/SandBox';

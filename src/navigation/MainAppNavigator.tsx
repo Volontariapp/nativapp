@@ -2,8 +2,9 @@ import React from 'react';
 import { createBottomTabNavigator } from '@react-navigation/native-tabs';
 
 import { HomeScreen } from '@/screens';
-import { SwipeScreen, ExploreScreen, CreateEventScreen } from '@/screens';
+import { SwipeScreen, ExploreScreen } from '@/screens';
 import ProfileStack from './stacks/ProfileStack';
+import CreateEventStack from './stacks/CreateEventStack';
 import { AppIconsButton } from '@/components/buttons/AppIconsButton';
 import { AppIcons } from '@/components/media/AppIcons';
 import { theme } from '@/shared/themes/theme';
@@ -49,7 +50,7 @@ export default function MainAppNavigator(): React.JSX.Element {
 
       <Tab.Screen
         name="create"
-        component={CreateEventScreen}
+        component={CreateEventStack}
         options={{
           title: 'Create',
           headerShown: false,

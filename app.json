@@ -32,6 +32,13 @@
     "plugins": ["expo-router", "expo-font", "expo-secure-store"],
     "experiments": {
       "typedRoutes": true
+    },
+    "extra": {
+      "APP_ENV": "development",
+      "router": {},
+      "eas": {
+        "projectId": "b1b99f13-1b65-48fa-acdb-41445b84bf8e"
+      }
     }
   }
 }

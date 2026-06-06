@@ -36,5 +36,6 @@ module.exports = ({ config }) => {
       CF_ACCESS_CLIENT_ID: cfId,
       CF_ACCESS_CLIENT_SECRET: cfSecret,
     },
+    plugins: [...(config.plugins || []), '@react-native-community/datetimepicker'],
   };
 };

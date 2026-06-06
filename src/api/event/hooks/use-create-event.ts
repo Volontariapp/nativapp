@@ -14,7 +14,8 @@ export const useCreateEvent = () => {
       void queryClient.invalidateQueries({ queryKey: EVENTS_QUERY_KEY });
       Alert.alert('Succès', `L'évènement "${newEvent.title}" a été créé avec succès !`);
     },
-    onError: () => {
+    onError: (error) => {
+      console.error('[useCreateEvent] Mutation error:', error);
       Alert.alert('Erreur', "Impossible de créer l'évènement.");
     },
   });

@@ -5,6 +5,7 @@ import type {
   EventType,
   EventState,
   CreateEventResponse,
+  SearchEventsResponse,
 } from '@volontariapp/contracts';
 
 export interface AppEvent {
@@ -19,6 +20,10 @@ export interface AppEvent {
   awardedImpactScore: number;
   maxParticipants: number;
   currentParticipants: number;
+  location?: {
+    latitude: number;
+    longitude: number;
+  };
 }
 
 interface GrpcTimestamp {
@@ -39,31 +44,87 @@ const formatTimestamp = (ts: GrpcTimestamp | string | undefined | null): string 
 
 export const eventApi = {
   async createEvent(payload: CreateEventRequest): Promise<AppEvent> {
-    const response = await apiFetch<CreateEventResponse, CreateEventRequest>(
-      EVENT_ENDPOINTS.CREATE_EVENT.path,
-      {
-        method: EVENT_ENDPOINTS.CREATE_EVENT.method,
-        requiresAuth: EVENT_ENDPOINTS.CREATE_EVENT.requiresAuth,
-        body: payload,
-      },
-    );
+    try {
+      console.log('[eventApi.createEvent] Sending payload:', payload);
+      const response = await apiFetch<CreateEventResponse, CreateEventRequest>(
+        EVENT_ENDPOINTS.CREATE_EVENT.path,
+        {
+          method: EVENT_ENDPOINTS.CREATE_EVENT.method,
+          requiresAuth: EVENT_ENDPOINTS.CREATE_EVENT.requiresAuth,
+          body: payload,
+        },
+      );
 
-    if (response.event === undefined) {
-      throw new Error('Event data not found');
+      console.log('[eventApi.createEvent] Received response:', response);
+
+      if (response.event === undefined) {
+        throw new Error('Event data not found');
+      }
+
+      return {
+        id: response.event.id,
+        title: response.event.title,
+        description: response.event.description,
+        startAt: formatTimestamp(response.event.startAt),
+        endAt: formatTimestamp(response.event.endAt),
+        localisationName: response.event.localisationName,
+        type: response.event.type,
+        state: response.event.state,
+        awardedImpactScore: response.event.awardedImpactScore,
+        maxParticipants: response.event.maxParticipants,
+        currentParticipants: response.event.currentParticipants,
+        location: response.event.location
+          ? {
+              latitude: response.event.location.latitude,
+              longitude: response.event.location.longitude,
+            }
+          : undefined,
+      };
+    } catch (error) {
+      console.error('[eventApi.createEvent] Error details:', error);
+      throw error;
     }
+  },
+
+  async getMyEvents(params: {
+    page?: number;
+    limit?: number;
+  }): Promise<{ events: AppEvent[]; totalCount: number }> {
+    const query = new URLSearchParams();
+    if (params.page !== undefined) query.append('page', params.page.toString());
+    if (params.limit !== undefined) query.append('limit', params.limit.toString());
+
+    const queryString = query.toString();
+    const path = queryString
+      ? `${EVENT_ENDPOINTS.GET_USER_CREATED_EVENTS_SELF.path}?${queryString}`
+      : EVENT_ENDPOINTS.GET_USER_CREATED_EVENTS_SELF.path;
+
+    const response = await apiFetch<SearchEventsResponse>(path, {
+      method: EVENT_ENDPOINTS.GET_USER_CREATED_EVENTS_SELF.method,
+      requiresAuth: EVENT_ENDPOINTS.GET_USER_CREATED_EVENTS_SELF.requiresAuth,
+    });
 
     return {
-      id: response.event.id,
-      title: response.event.title,
-      description: response.event.description,
-      startAt: formatTimestamp(response.event.startAt),
-      endAt: formatTimestamp(response.event.endAt),
-      localisationName: response.event.localisationName,
-      type: response.event.type,
-      state: response.event.state,
-      awardedImpactScore: response.event.awardedImpactScore,
-      maxParticipants: response.event.maxParticipants,
-      currentParticipants: response.event.currentParticipants,
+      events: response.events.map((ev) => ({
+        id: ev.id,
+        title: ev.title,
+        description: ev.description,
+        startAt: formatTimestamp(ev.startAt),
+        endAt: formatTimestamp(ev.endAt),
+        localisationName: ev.localisationName,
+        type: ev.type,
+        state: ev.state,
+        awardedImpactScore: ev.awardedImpactScore,
+        maxParticipants: ev.maxParticipants,
+        currentParticipants: ev.currentParticipants,
+        location: ev.location
+          ? {
+              latitude: ev.location.latitude,
+              longitude: ev.location.longitude,
+            }
+          : undefined,
+      })),
+      totalCount: response.totalCount,
     };
   },
 };

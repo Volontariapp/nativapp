@@ -8,7 +8,10 @@ export interface EventIdWebResponse {}
 export interface IdsListWebResponse {
   ids: string[];
 }
-export interface GetUserEventsRequest {}
+export interface GetUserEventsRequest {
+  page?: number;
+  limit?: number;
+}
 export interface GetUserParticipationsRequest {}
 export interface GetUserWishesRequest {}
 export interface ExistsWebResponse {}

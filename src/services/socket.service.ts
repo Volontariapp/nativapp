@@ -40,15 +40,13 @@ class SocketService {
       console.log('Socket connected:', this.socket?.id);
     });
 
-    this.socket.on('disconnect', (reason) => {
-      console.log('Socket disconnected:', reason);
+    this.socket.on('disconnect', () => {
+      // Intentionally left empty as requested
     });
 
-    this.socket.on('unauthorized', (error) => {
-      console.error('Socket unauthorized:', error);
+    this.socket.on('unauthorized', () => {
       this.disconnect();
     });
-    console.log(this.socket);
 
     return this.socket;
   }
