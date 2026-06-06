@@ -35,3 +35,4 @@ expo-env.d.ts
 .env
 .env.development
 .DS*
+.fallow/
