@@ -4,7 +4,7 @@ import { createBottomTabNavigator } from '@react-navigation/native-tabs';
 import { HomeScreen } from '@/screens';
 import { SwipeScreen, ExploreScreen } from '@/screens';
 import ProfileStack from './stacks/ProfileStack';
-import CreateEventStack from './stacks/CreateEventStack';
+import CreateStack from './stacks/CreateStack';
 import { AppIconsButton } from '@/components/buttons/AppIconsButton';
 import { AppIcons } from '@/components/media/AppIcons';
 import { theme } from '@/shared/themes/theme';
@@ -50,7 +50,7 @@ export default function MainAppNavigator(): React.JSX.Element {
 
       <Tab.Screen
         name="create"
-        component={CreateEventStack}
+        component={CreateStack}
         options={{
           title: 'Create',
           headerShown: false,

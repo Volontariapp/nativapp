@@ -9,33 +9,35 @@ import AppHeader from '@/components/layout/AppHeader';
 import { theme } from '@/shared/themes/theme';
 import type { CreateStackParamList } from '@/navigation/stacks/CreateStack';
 
-type ManageEventsNavigationProp = NativeStackNavigationProp<
+type CreateMenuNavigationProp = NativeStackNavigationProp<
   CreateStackParamList,
-  'ManageEvents'
+  'CreateMenu'
 >;
 
-export function ManageEventsScreen(): React.JSX.Element {
-  const navigation = useNavigation<ManageEventsNavigationProp>();
+export function CreateMenuScreen(): React.JSX.Element {
+  const navigation = useNavigation<CreateMenuNavigationProp>();
 
   return (
     <View style={styles.container}>
       <AppHeader />
       <View style={styles.content}>
-        <AppText style={styles.title}>Gestion des événements</AppText>
-        <AppText style={styles.subtitle}>Que souhaitez-vous faire ?</AppText>
+        <AppText style={styles.title}>Que souhaitez-vous créer ?</AppText>
+        <AppText style={styles.subtitle}>Choisissez le type de contenu à partager</AppText>
 
         <View style={styles.buttonContainer}>
           <AppButton
-            text="Créer un événement"
+            text="Événement"
+            icon="calendar"
             onPress={() => {
-              navigation.navigate('EventForm');
+              navigation.navigate('ManageEvents');
             }}
             style={styles.button}
           />
           <AppButton
-            text="Mes événements créés"
+            text="Post"
+            icon="edit-3"
             onPress={() => {
-              navigation.navigate('MyEvents');
+              navigation.navigate('ManagePosts');
             }}
             style={styles.button}
             variant="secondary"

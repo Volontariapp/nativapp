@@ -9,33 +9,33 @@ import AppHeader from '@/components/layout/AppHeader';
 import { theme } from '@/shared/themes/theme';
 import type { CreateStackParamList } from '@/navigation/stacks/CreateStack';
 
-type ManageEventsNavigationProp = NativeStackNavigationProp<
+type ManagePostsNavigationProp = NativeStackNavigationProp<
   CreateStackParamList,
-  'ManageEvents'
+  'ManagePosts'
 >;
 
-export function ManageEventsScreen(): React.JSX.Element {
-  const navigation = useNavigation<ManageEventsNavigationProp>();
+export function ManagePostsScreen(): React.JSX.Element {
+  const navigation = useNavigation<ManagePostsNavigationProp>();
 
   return (
     <View style={styles.container}>
       <AppHeader />
       <View style={styles.content}>
-        <AppText style={styles.title}>Gestion des événements</AppText>
+        <AppText style={styles.title}>Gestion des posts</AppText>
         <AppText style={styles.subtitle}>Que souhaitez-vous faire ?</AppText>
 
         <View style={styles.buttonContainer}>
           <AppButton
-            text="Créer un événement"
+            text="Créer un post"
             onPress={() => {
-              navigation.navigate('EventForm');
+              navigation.navigate('PostForm');
             }}
             style={styles.button}
           />
           <AppButton
-            text="Mes événements créés"
+            text="Mes posts créés"
             onPress={() => {
-              navigation.navigate('MyEvents');
+              navigation.navigate('MyPosts');
             }}
             style={styles.button}
             variant="secondary"
