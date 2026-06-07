@@ -1,4 +1,4 @@
-import type { JSX } from 'react';
+import type { ReactNode } from 'react';
 import { Image } from 'expo-image';
 import {
   StyleSheet,
@@ -23,7 +23,7 @@ export const AppImage = ({
   height,
   width,
   style,
-}: AppImageProps): JSX.Element => {
+}: AppImageProps): ReactNode => {
   const resolvedSource: ImageSourcePropType = typeof image === 'string' ? { uri: image } : image;
 
   return (

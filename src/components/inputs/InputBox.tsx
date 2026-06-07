@@ -1,4 +1,3 @@
-import type { JSX } from 'react';
 import React, { useState } from 'react';
 import { View, TextInput, StyleSheet } from 'react-native';
 import { theme } from '@/shared/themes/theme';
@@ -27,7 +26,7 @@ export const InputBox = ({
   minLength,
   disabled,
   ref,
-}: InputBoxProps): JSX.Element => {
+}: InputBoxProps): React.ReactNode => {
   const [value, setValue] = useState('');
   const [isFocused, setIsFocused] = useState(false);
 

@@ -9,17 +9,17 @@ import { ADMIN_EVENTS_COUNT_QUERY_KEY } from './use-admin-events';
 const ADMIN_HEALTH_QUERY_KEY = ['admin', 'health'] as const;
 
 export const useAdminDashboard = () => {
-  const usersQuery = useQuery<ListUsersWebResponse>({
+  const { data: usersData, error: usersError } = useQuery<ListUsersWebResponse>({
     queryKey: ADMIN_USERS_COUNT_QUERY_KEY,
     queryFn: async () => await adminUserApi.listUsers({ pagination: { page: 1, limit: 10 } }),
   });
 
-  const eventsQuery = useQuery<SearchEventsResponse>({
+  const { data: eventsData, error: eventsError } = useQuery<SearchEventsResponse>({
     queryKey: ADMIN_EVENTS_COUNT_QUERY_KEY,
     queryFn: async () => await adminEventApi.listEvents({ onlyAvailable: false }),
   });
 
-  const healthQuery = useQuery({
+  const { isSuccess: isHealthOk } = useQuery({
     queryKey: ADMIN_HEALTH_QUERY_KEY,
     queryFn: async () => {
       await adminHealthApi.checkHealth();
@@ -27,14 +27,14 @@ export const useAdminDashboard = () => {
     },
   });
 
-  const usersCount = usersQuery.data?.pagination?.total ?? usersQuery.data?.users.length ?? 0;
-  const eventsCount = eventsQuery.data?.totalCount ?? eventsQuery.data?.events.length ?? 0;
+  const usersCount = usersData?.pagination?.total ?? usersData?.users.length ?? 0;
+  const eventsCount = eventsData?.totalCount ?? eventsData?.events.length ?? 0;
 
   return {
     usersCount,
     eventsCount,
-    usersError: usersQuery.error,
-    eventsError: eventsQuery.error,
-    isHealthOk: healthQuery.isSuccess,
+    usersError,
+    eventsError,
+    isHealthOk,
   };
 };

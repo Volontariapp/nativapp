@@ -1,4 +1,4 @@
-import type { JSX } from 'react';
+import type { ReactNode } from 'react';
 import { Text, Pressable, StyleSheet, View, type ViewStyle } from 'react-native';
 import { BUTTON_VARIANTS } from '@/shared/themes/buttonVariants';
 import { theme } from '@/shared/themes/theme';
@@ -25,7 +25,7 @@ export const AppButton = ({
   disabled = false,
   style,
   size = 'default',
-}: AppButtonProps): JSX.Element => {
+}: AppButtonProps): ReactNode => {
   const stylesVariant = BUTTON_VARIANTS[variant];
   const isSmall = size === 'small';
 

@@ -1,7 +1,7 @@
-import type { JSX } from 'react';
+import type { ReactNode } from 'react';
 import { AppInput, type AppInputProps } from './AppInput';
 
-export const EmailField = (props: Omit<AppInputProps, 'label'>): JSX.Element => (
+export const EmailField = (props: Omit<AppInputProps, 'label'>): ReactNode => (
   <AppInput
     label="Adresse e-mail"
     placeholder="jean.dupont@email.com"

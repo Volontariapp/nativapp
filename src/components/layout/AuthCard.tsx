@@ -1,4 +1,3 @@
-import type { JSX } from 'react';
 import React from 'react';
 import { View, StyleSheet } from 'react-native';
 import { Image } from 'expo-image';
@@ -14,7 +13,7 @@ interface AuthCardProps {
   children: React.ReactNode;
 }
 
-export const AuthCard = ({ title, subtitle, error, children }: AuthCardProps): JSX.Element => {
+export const AuthCard = ({ title, subtitle, error, children }: AuthCardProps): React.ReactNode => {
   return (
     <AppKeyboardScrollView
       style={styles.container}
