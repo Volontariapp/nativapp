@@ -21,7 +21,7 @@ export function ManageEventsScreen(): React.JSX.Element {
     <View style={styles.container}>
       <AppHeader />
       <View style={styles.content}>
-        <AppText style={styles.title}>Gestion des événements</AppText>
+        <AppText style={styles.title}>Gestion de contenu</AppText>
         <AppText style={styles.subtitle}>Que souhaitez-vous faire ?</AppText>
 
         <View style={styles.buttonContainer}>
@@ -36,6 +36,21 @@ export function ManageEventsScreen(): React.JSX.Element {
             text="Mes événements créés"
             onPress={() => {
               navigation.navigate('MyEvents');
+            }}
+            style={styles.button}
+            variant="secondary"
+          />
+          <AppButton
+            text="Créer un post"
+            onPress={() => {
+              navigation.navigate('PostForm');
+            }}
+            style={styles.button}
+          />
+          <AppButton
+            text="Mes posts créés"
+            onPress={() => {
+              navigation.navigate('MyPosts');
             }}
             style={styles.button}
             variant="secondary"
