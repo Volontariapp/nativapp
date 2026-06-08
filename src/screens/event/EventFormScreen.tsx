@@ -15,7 +15,7 @@ import { ScrollView, Pressable } from 'react-native';
 import { eventSchema, type EventFormValues } from '@/api/event/event.schema';
 import { mapEventType } from '@/shared/lib/event-mappers.utils';
 import { useCreateEvent } from '@/api/event/hooks/use-create-event';
-import { AppDateTimePicker } from '@/components/inputs';
+import { AppDateTimePicker, EventInput } from '@/components/inputs';
 
 export function EventFormScreen(): React.JSX.Element {
   const mutation = useCreateEvent();
@@ -69,7 +69,11 @@ export function EventFormScreen(): React.JSX.Element {
             control={control}
             name="title"
             render={({ field: { onChange, value } }) => (
-              <TextInput style={styles.input} value={value} onChangeText={onChange} />
+              <EventInput
+                value={value}
+                onChangeText={onChange}
+                placeholder="Ex: Nettoyage de la plage"
+              />
             )}
           />
           {errors.title ? <AppText style={styles.errorText}>{errors.title.message}</AppText> : null}
@@ -101,7 +105,11 @@ export function EventFormScreen(): React.JSX.Element {
             control={control}
             name="localisationName"
             render={({ field: { onChange, value } }) => (
-              <TextInput style={styles.input} value={value} onChangeText={onChange} />
+              <EventInput
+                value={value}
+                onChangeText={onChange}
+                placeholder="Ex: Plage du Prado, Marseille"
+              />
             )}
           />
           {errors.localisationName ? (
