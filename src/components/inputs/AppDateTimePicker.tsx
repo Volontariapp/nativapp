@@ -73,7 +73,32 @@ export function AppDateTimePicker({
         <AppText style={styles.dateText}>{displayFormat}</AppText>
       </Pressable>
 
-      {Platform.OS === 'ios' ? (
+      {Platform.OS === 'web' ? (
+        showPicker && (
+          <input
+            type={mode === 'time' ? 'time' : mode === 'date' ? 'date' : 'datetime-local'}
+            value={
+              mode === 'time'
+                ? value.toTimeString().slice(0, 5)
+                : mode === 'date'
+                  ? value.toISOString().slice(0, 10)
+                  : value.toISOString().slice(0, 16)
+            }
+            onChange={(e) => {
+              const newDate = new Date(e.target.value);
+              if (!isNaN(newDate.getTime())) {
+                onChange(newDate);
+              }
+              setShowPicker(false);
+            }}
+            style={{ position: 'absolute', opacity: 0, width: '100%', height: '100%' }}
+            onBlur={() => {
+              setShowPicker(false);
+            }}
+            autoFocus
+          />
+        )
+      ) : Platform.OS === 'ios' ? (
         <Modal visible={showPicker} transparent={true} animationType="fade">
           <View style={styles.modalOverlay}>
             <View style={styles.modalContent}>
