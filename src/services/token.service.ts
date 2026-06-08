@@ -11,7 +11,7 @@ export const TokenService = {
         localStorage.setItem(ACCESS_TOKEN_KEY, accessToken);
         localStorage.setItem(REFRESH_TOKEN_KEY, refreshToken);
       } catch (e) {
-        console.error('Local storage is unavailable:', e);
+        console.error('Local storage is unavailable:', e instanceof Error ? e.message : String(e));
       }
       return;
     }
@@ -27,7 +27,7 @@ export const TokenService = {
       try {
         return localStorage.getItem(ACCESS_TOKEN_KEY);
       } catch (e) {
-        console.error('Local storage is unavailable:', e);
+        console.error('Local storage is unavailable:', e instanceof Error ? e.message : String(e));
         return null;
       }
     }
@@ -39,7 +39,7 @@ export const TokenService = {
       try {
         return localStorage.getItem(REFRESH_TOKEN_KEY);
       } catch (e) {
-        console.error('Local storage is unavailable:', e);
+        console.error('Local storage is unavailable:', e instanceof Error ? e.message : String(e));
         return null;
       }
     }
@@ -52,7 +52,7 @@ export const TokenService = {
         localStorage.removeItem(ACCESS_TOKEN_KEY);
         localStorage.removeItem(REFRESH_TOKEN_KEY);
       } catch (e) {
-        console.error('Local storage is unavailable:', e);
+        console.error('Local storage is unavailable:', e instanceof Error ? e.message : String(e));
       }
       return;
     }
