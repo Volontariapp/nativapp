@@ -2,6 +2,7 @@ import React from 'react';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { AuthProvider } from '@/context/AuthContext';
 import { SocketProvider } from '@/context/SocketContext';
+import { NotificationProvider } from '@/context/NotificationContext';
 import AdminNavigator from '@/navigation/AdminNavigator';
 import { KeyboardProvider } from 'react-native-keyboard-controller';
 
@@ -13,7 +14,9 @@ export default function Layout(): React.JSX.Element {
       <QueryClientProvider client={queryClient}>
         <AuthProvider>
           <SocketProvider>
-            <AdminNavigator />
+            <NotificationProvider>
+              <AdminNavigator />
+            </NotificationProvider>
           </SocketProvider>
         </AuthProvider>
       </QueryClientProvider>

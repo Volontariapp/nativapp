@@ -1,6 +1,13 @@
-import React, { useState } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import { View, StyleSheet, Pressable, Platform, Modal } from 'react-native';
-import DateTimePicker, { type DateTimePickerEvent } from '@react-native-community/datetimepicker';
+import type { DateTimePickerEvent } from '@react-native-community/datetimepicker';
+
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+let DateTimePicker: any = null;
+if (Platform.OS !== 'web') {
+  // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-require-imports
+  DateTimePicker = require('@react-native-community/datetimepicker').default;
+}
 import Icon from 'react-native-vector-icons/Feather';
 import { AppText } from '@/components/typography/AppText';
 import { theme } from '@/shared/themes/theme';
@@ -22,6 +29,18 @@ export function AppDateTimePicker({
   const [pickerMode, setPickerMode] = useState<'date' | 'time' | 'datetime'>(
     mode === 'datetime' ? 'date' : mode,
   );
+  const webInputRef = useRef<HTMLInputElement>(null);
+
+  useEffect(() => {
+    if (showPicker && Platform.OS === 'web' && webInputRef.current) {
+      try {
+        // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition
+        (webInputRef.current as HTMLInputElement & { showPicker?: () => void }).showPicker?.();
+      } catch {
+        webInputRef.current.click();
+      }
+    }
+  }, [showPicker]);
 
   const handlePress = () => {
     if (mode === 'datetime') {
@@ -73,7 +92,35 @@ export function AppDateTimePicker({
         <AppText style={styles.dateText}>{displayFormat}</AppText>
       </Pressable>
 
-      {Platform.OS === 'ios' ? (
+      {Platform.OS === 'web' ? (
+        showPicker && (
+          <input
+            ref={webInputRef}
+            aria-label={
+              label ?? (mode === 'time' ? 'Heure' : mode === 'date' ? 'Date' : 'Date et heure')
+            }
+            type={mode === 'time' ? 'time' : mode === 'date' ? 'date' : 'datetime-local'}
+            value={
+              mode === 'time'
+                ? value.toTimeString().slice(0, 5)
+                : mode === 'date'
+                  ? value.toISOString().slice(0, 10)
+                  : value.toISOString().slice(0, 16)
+            }
+            onChange={(e) => {
+              const newDate = new Date(e.target.value);
+              if (!isNaN(newDate.getTime())) {
+                onChange(newDate);
+              }
+              setShowPicker(false);
+            }}
+            style={{ position: 'absolute', opacity: 0, width: '100%', height: '100%' }}
+            onBlur={() => {
+              setShowPicker(false);
+            }}
+          />
+        )
+      ) : Platform.OS === 'ios' ? (
         <Modal visible={showPicker} transparent={true} animationType="fade">
           <View style={styles.modalOverlay}>
             <View style={styles.modalContent}>

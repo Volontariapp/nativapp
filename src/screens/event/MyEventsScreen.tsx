@@ -21,7 +21,10 @@ export function MyEventsScreen(): React.JSX.Element {
       `[MyEventsScreen] State updated. isLoading: ${String(isLoading)}, isError: ${String(isError)}, events loaded: ${String(events.length)}`,
     );
     if (isError) {
-      console.error('[MyEventsScreen] Details erreur :', error);
+      console.error(
+        '[MyEventsScreen] Details erreur :',
+        error instanceof Error ? error.message : String(error),
+      );
     }
   }, [isLoading, isError, error, events.length]);
 

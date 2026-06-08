@@ -51,7 +51,7 @@ export const AdminAppWrapper = ({ children }: AdminAppWrapperProps): React.JSX.E
           setLoading(false);
         }
       } catch (err) {
-        console.error('Admin Setup Error:', err);
+        console.error('Admin Setup Error:', err instanceof Error ? err.message : String(err));
         if (mounted) setLoading(false);
       }
     };

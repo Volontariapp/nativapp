@@ -7,10 +7,6 @@ import type {
   PostWebResponse,
   ListPostsWebResponse,
   CreatePostWebResponse,
-  CreateCommentRequest,
-  ListCommentsRequest,
-  CommentWebResponse,
-  ListCommentsWebResponse,
   ActionSuccessWebResponse,
 } from '@volontariapp/contracts';
 
@@ -47,23 +43,23 @@ export const POST_ENDPOINTS = {
   } as EndpointDefinition<void, PostWebResponse>,
 } as const;
 
-export const COMMENT_ENDPOINTS = {
-  CREATE_COMMENT: {
-    path: '/posts/:postId/comments',
-    method: 'POST',
-    requiresAuth: true,
-    roles: [UserRoles.ORGANIZATION, UserRoles.VOLUNTEER, UserRoles.ADMIN],
-  } as EndpointDefinition<CreateCommentRequest, CommentWebResponse>,
-  DELETE_COMMENT: {
-    path: '/posts/:postId/comments/:id',
-    method: 'DELETE',
-    requiresAuth: true,
-    roles: [UserRoles.ORGANIZATION, UserRoles.VOLUNTEER, UserRoles.ADMIN],
-  } as EndpointDefinition<void, ActionSuccessWebResponse>,
-  LIST_COMMENTS: {
-    path: '/posts/:postId/comments',
-    method: 'GET',
-    requiresAuth: true,
-    roles: [UserRoles.ORGANIZATION, UserRoles.VOLUNTEER, UserRoles.ADMIN],
-  } as EndpointDefinition<ListCommentsRequest, ListCommentsWebResponse>,
-} as const;
+// const COMMENT_ENDPOINTS = {
+//   CREATE_COMMENT: {
+//     path: '/posts/:postId/comments',
+//     method: 'POST',
+//     requiresAuth: true,
+//     roles: [UserRoles.ORGANIZATION, UserRoles.VOLUNTEER, UserRoles.ADMIN],
+//   } as EndpointDefinition<CreateCommentRequest, CommentWebResponse>,
+//   DELETE_COMMENT: {
+//     path: '/posts/:postId/comments/:id',
+//     method: 'DELETE',
+//     requiresAuth: true,
+//     roles: [UserRoles.ORGANIZATION, UserRoles.VOLUNTEER, UserRoles.ADMIN],
+//   } as EndpointDefinition<void, ActionSuccessWebResponse>,
+//   LIST_COMMENTS: {
+//     path: '/posts/:postId/comments',
+//     method: 'GET',
+//     requiresAuth: true,
+//     roles: [UserRoles.ORGANIZATION, UserRoles.VOLUNTEER, UserRoles.ADMIN],
+//   } as EndpointDefinition<ListCommentsRequest, ListCommentsWebResponse>,
+// } as const;
