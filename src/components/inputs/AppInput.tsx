@@ -1,4 +1,4 @@
-import type { JSX } from 'react';
+import type { ReactNode } from 'react';
 import { useState, useRef } from 'react';
 import {
   View,
@@ -29,7 +29,7 @@ export const AppInput = ({
   onChangeText,
   style,
   ...props
-}: AppInputProps): JSX.Element => {
+}: AppInputProps): ReactNode => {
   const [internalError, setInternalError] = useState<string | null>(null);
   const [isFocused, setIsFocused] = useState(false);
   const hasBlurred = useRef(false);

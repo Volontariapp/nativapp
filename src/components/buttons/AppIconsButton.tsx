@@ -1,4 +1,4 @@
-import type { JSX } from 'react';
+import type { ReactNode } from 'react';
 import { Pressable, StyleSheet } from 'react-native';
 
 import { ICONS_BUTTON_VARIANTS } from '@/shared/themes/buttonVariants';
@@ -25,7 +25,7 @@ export const AppIconsButton = ({
   top = 0,
   onPress,
   size = 24,
-}: AppIconsButtonProps): JSX.Element => {
+}: AppIconsButtonProps): ReactNode => {
   const stylesVariant = ICONS_BUTTON_VARIANTS[variant];
 
   const backgroundColor =

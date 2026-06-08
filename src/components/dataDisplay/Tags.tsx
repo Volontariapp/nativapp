@@ -1,4 +1,4 @@
-import type { JSX } from 'react';
+import type { ReactNode } from 'react';
 import { Text, View, StyleSheet } from 'react-native';
 import type { TagsNames } from '@volontariapp/shared';
 import { TAGS_CONFIG } from '@/shared/types/tagsTypes';
@@ -9,7 +9,7 @@ interface TagProps {
   type: TagsNames;
 }
 
-export const TagComponent = ({ type }: TagProps): JSX.Element => {
+export const TagComponent = ({ type }: TagProps): ReactNode => {
   const tag = TAGS_CONFIG[type];
 
   return (

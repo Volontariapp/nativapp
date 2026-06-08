@@ -1,4 +1,3 @@
-import type { JSX } from 'react';
 import React from 'react';
 import type { TextProps } from 'react-native';
 import { Text, StyleSheet } from 'react-native';
@@ -17,7 +16,7 @@ export const AppText = ({
   font = 'primary',
   style,
   ...props
-}: AppTextProps): JSX.Element => {
+}: AppTextProps): React.ReactNode => {
   return (
     <Text
       style={[styles.base, styles[variant], { fontFamily: theme.typography.fonts[font] }, style]}

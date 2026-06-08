@@ -1,4 +1,4 @@
-import type { JSX } from 'react';
+import type { ReactNode } from 'react';
 import Feather from 'react-native-vector-icons/Feather';
 import FontAwesome from 'react-native-vector-icons/FontAwesome';
 import FontAwesome5 from 'react-native-vector-icons/FontAwesome5';
@@ -22,7 +22,7 @@ export const AppIcons = ({
   iconLibrary = 'Feather',
   color = theme.colors.white,
   size,
-}: AppIconsProps): JSX.Element => {
+}: AppIconsProps): ReactNode => {
   let IconComponent;
   if (iconLibrary === 'FontAwesome5') IconComponent = FontAwesome5;
   else if (iconLibrary === 'FontAwesome') IconComponent = FontAwesome;

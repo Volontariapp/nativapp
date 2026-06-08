@@ -1,8 +1,7 @@
-import type { JSX } from 'react';
 import React from 'react';
 import { AppInput, type AppInputProps } from './AppInput';
 
-export const PasswordField = (props: Omit<AppInputProps, 'label'>): JSX.Element => (
+export const PasswordField = (props: Omit<AppInputProps, 'label'>): React.ReactNode => (
   <AppInput
     label="Mot de passe"
     placeholder="••••••••"
