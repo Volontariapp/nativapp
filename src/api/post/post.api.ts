@@ -56,7 +56,7 @@ export const postApi = {
       const query = new URLSearchParams();
       if (params.page !== undefined) query.append('page', params.page.toString());
       if (params.limit !== undefined) query.append('limit', params.limit.toString());
-      query.append('authorId', params.authorId);
+      if (params.authorId) query.append('authorId', params.authorId);
 
       const queryString = query.toString();
       const path = queryString

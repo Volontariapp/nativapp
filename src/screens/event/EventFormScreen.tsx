@@ -1,5 +1,5 @@
 import React from 'react';
-import { View, StyleSheet, TextInput } from 'react-native';
+import { View, StyleSheet, TextInput, Alert } from 'react-native';
 import { AppKeyboardScrollView } from '@/components/layout/AppKeyboardScrollView';
 import { AppText } from '@/components/typography/AppText';
 import { AppButton } from '@/components/buttons/AppButton';
@@ -15,10 +15,14 @@ import { ScrollView, Pressable } from 'react-native';
 import { eventSchema, type EventFormValues } from '@/api/event/event.schema';
 import { mapEventType } from '@/shared/lib/event-mappers.utils';
 import { useCreateEvent } from '@/api/event/hooks/use-create-event';
-import { AppDateTimePicker } from '@/components/inputs';
+import { eventApi } from '@/api/event/event.api';
+import { useQueryClient } from '@tanstack/react-query';
+import { AppDateTimePicker } from '../../components';
 
 export function EventFormScreen(): React.JSX.Element {
   const mutation = useCreateEvent();
+  const queryClient = useQueryClient();
+  const [isBatching, setIsBatching] = React.useState(false);
 
   const {
     control,
@@ -52,6 +56,42 @@ export function EventFormScreen(): React.JSX.Element {
     };
     mutation.mutate(payload);
   });
+
+  const handleCreate10Events = React.useCallback(async (): Promise<void> => {
+    setIsBatching(true);
+    try {
+      const payload: CreateEventRequest = {
+        title: 'Batch Event',
+        description: 'Created 10 times via batch button',
+        localisationName: 'Paris, France',
+        type: EventType.EVENT_TYPE_SOCIAL,
+        maxParticipants: 10,
+        awardedImpactScore: 100,
+        tagIds: [],
+        startAt: new Date(),
+        endAt: new Date(Date.now() + 86400000 * 2),
+      };
+
+      const batchId = Date.now().toString().slice(-4);
+      const promises = [];
+      for (let i = 0; i < 10; i++) {
+        promises.push(
+          eventApi.createEvent({
+            ...payload,
+            title: `Event Batch ${batchId} #${String(i + 1)}`,
+          }),
+        );
+      }
+
+      await Promise.all(promises);
+      void queryClient.invalidateQueries({ queryKey: ['events'] });
+      Alert.alert('Succès', 'Les 10 événements ont été créés avec succès !');
+    } catch {
+      Alert.alert('Erreur', 'Impossible de créer les événements.');
+    } finally {
+      setIsBatching(false);
+    }
+  }, [queryClient]);
 
   return (
     <View style={styles.container}>
@@ -225,13 +265,27 @@ export function EventFormScreen(): React.JSX.Element {
           </View>
         </View>
 
-        <AppButton
-          text={mutation.isPending ? 'Création en cours...' : "Créer l'évènement"}
-          onPress={() => {
-            void onSubmit();
-          }}
-          disabled={mutation.isPending}
-        />
+        <View style={styles.buttonRow}>
+          <View style={styles.flex1}>
+            <AppButton
+              text={mutation.isPending || isBatching ? 'Création...' : "Créer l'évènement"}
+              onPress={() => {
+                void onSubmit();
+              }}
+              disabled={mutation.isPending || isBatching}
+            />
+          </View>
+          <View style={styles.flex1}>
+            <AppButton
+              text={isBatching ? 'Patientez...' : 'Création x10'}
+              variant="socio"
+              onPress={() => {
+                void handleCreate10Events();
+              }}
+              disabled={mutation.isPending || isBatching}
+            />
+          </View>
+        </View>
         <View style={styles.bottomSpacer} />
       </AppKeyboardScrollView>
     </View>
@@ -315,5 +369,12 @@ const styles = StyleSheet.create({
   },
   typeButtonTextSelected: {
     color: theme.colors.white,
+  },
+  buttonRow: {
+    flexDirection: 'row',
+    gap: theme.spacing.md,
+  },
+  flex1: {
+    flex: 1,
   },
 });
