@@ -6,12 +6,10 @@ import type {
   GetMyFollowersWebRequest,
   GetMyBlocksWebRequest,
   GetUserPostsWebRequest,
-} from '@volontariapp/contracts';
-import type {
   IdsListWebResponse,
   GetUserParticipationsRequest,
   GetUserWishesRequest,
-} from '../endpoints/types/missing-types';
+} from '@volontariapp/contracts';
 
 export const adminSocialApi = {
   async participate(pathParams?: Record<string, string>): Promise<ActionSuccessWebResponse> {

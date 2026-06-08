@@ -1,7 +1,6 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { adminSocialApi } from '../admin.social.api';
-import type { ActionSuccessWebResponse } from '@volontariapp/contracts';
-import type { IdsListWebResponse } from '../../endpoints';
+import type { ActionSuccessWebResponse, IdsListWebResponse } from '@volontariapp/contracts';
 
 interface ParticipateParams {
   userId: string;

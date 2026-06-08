@@ -12,15 +12,13 @@ import type {
   GetMyBlocksWebRequest,
   GetWhoBlockedMeWebRequest,
   ListUsersWebResponse,
-} from '@volontariapp/contracts';
-import type {
   EventIdWebResponse,
   IdsListWebResponse,
-  GetUserEventsRequest,
-  GetUserParticipationsRequest,
-  GetUserWishesRequest,
   ExistsWebResponse,
-} from './types/missing-types';
+  GetUserEventsRequest,
+  GetUserWishesRequest,
+  GetUserParticipationsRequest,
+} from '@volontariapp/contracts';
 
 export const SOCIAL_ENDPOINTS = {
   LINK_POST_TO_EVENT: {
