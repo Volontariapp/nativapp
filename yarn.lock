@@ -1962,6 +1962,7 @@ __metadata:
     "@volontariapp/contracts": "npm:4.2.3"
     "@volontariapp/errors": "npm:0.6.0"
     "@volontariapp/logger": "npm:0.2.5"
+    "@volontariapp/messaging": "npm:^2.7.6"
     "@volontariapp/shared": "npm:0.6.4"
     axios: "npm:^1.16.1"
     class-validator: "npm:^0.15.1"
@@ -3905,6 +3906,16 @@ __metadata:
   version: 0.2.5
   resolution: "@volontariapp/logger@npm:0.2.5"
   checksum: 10c0/de60d3e26e5048ba9a08f24c02059365d63fc18da870bda61c2ef10350ea2a484860b009ec6812914b8b4699a4f2b27002308da19c15ba82dc967cc4954378b0
+  languageName: node
+  linkType: hard
+
+"@volontariapp/messaging@npm:^2.7.6":
+  version: 2.7.6
+  resolution: "@volontariapp/messaging@npm:2.7.6"
+  dependencies:
+    "@volontariapp/contracts": "npm:4.2.3"
+    "@volontariapp/shared": "npm:0.6.4"
+  checksum: 10c0/997ff4ddb0a455c4c9c15d8186e3e506005f46b81b5d5b760a4efc5a2a29bd642f315001d3d8dbf2274c122d6339aad03a318226cc85ee78312e34084bc5c1d5
   languageName: node
   linkType: hard
 
