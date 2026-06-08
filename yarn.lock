@@ -1962,7 +1962,7 @@ __metadata:
     "@volontariapp/contracts": "npm:4.2.3"
     "@volontariapp/errors": "npm:0.6.0"
     "@volontariapp/logger": "npm:0.2.5"
-    "@volontariapp/messaging": "npm:^2.7.6"
+    "@volontariapp/messaging": "npm:2.7.6"
     "@volontariapp/shared": "npm:0.6.4"
     axios: "npm:^1.16.1"
     class-validator: "npm:^0.15.1"
@@ -3909,7 +3909,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@volontariapp/messaging@npm:^2.7.6":
+"@volontariapp/messaging@npm:2.7.6":
   version: 2.7.6
   resolution: "@volontariapp/messaging@npm:2.7.6"
   dependencies:
