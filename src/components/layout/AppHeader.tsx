@@ -6,15 +6,30 @@ import { useSocket } from '@/context/SocketContext';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import Feather from 'react-native-vector-icons/Feather';
 import { useNavigation } from '@react-navigation/native';
+import { AppCloseButton } from '@/components/buttons/AppCloseButton';
 
 export interface AppHeaderProps {
   showBack?: boolean;
+  showClose?: boolean;
+  onClose?: () => void;
 }
 
-export default function AppHeader({ showBack = false }: AppHeaderProps): React.JSX.Element {
+export default function AppHeader({
+  showBack = false,
+  showClose = false,
+  onClose,
+}: AppHeaderProps): React.JSX.Element {
   const { isConnected } = useSocket();
   const insets = useSafeAreaInsets();
   const navigation = useNavigation();
+
+  const handleClose = (): void => {
+    if (onClose) {
+      onClose();
+    } else {
+      navigation.goBack();
+    }
+  };
 
   return (
     <View style={[styles.container, { paddingTop: insets.top }]}>
@@ -32,12 +47,15 @@ export default function AppHeader({ showBack = false }: AppHeaderProps): React.J
         )}
         <AppText style={styles.title}>VolontariApp</AppText>
       </View>
-      <View
-        style={[
-          styles.statusDot,
-          { backgroundColor: isConnected ? theme.colors.success : theme.colors.danger },
-        ]}
-      />
+      <View style={styles.rightContainer}>
+        {showClose && <AppCloseButton onPress={handleClose} size={20} />}
+        <View
+          style={[
+            styles.statusDot,
+            { backgroundColor: isConnected ? theme.colors.success : theme.colors.danger },
+          ]}
+        />
+      </View>
     </View>
   );
 }
@@ -46,7 +64,7 @@ const styles = StyleSheet.create({
   container: {
     backgroundColor: theme.colors.background,
     justifyContent: 'space-between',
-    alignItems: 'flex-end',
+    alignItems: 'center',
     flexDirection: 'row',
     paddingHorizontal: theme.spacing.lg,
     paddingBottom: theme.spacing.sm,
@@ -54,6 +72,11 @@ const styles = StyleSheet.create({
   leftContainer: {
     flexDirection: 'row',
     alignItems: 'center',
+  },
+  rightContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: theme.spacing.sm,
   },
   backIcon: {
     marginRight: theme.spacing.md,
@@ -67,6 +90,5 @@ const styles = StyleSheet.create({
     width: 10,
     height: 10,
     borderRadius: 5,
-    marginBottom: 6,
   },
 });

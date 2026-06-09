@@ -1,24 +1,23 @@
 import React from 'react';
-import { View, StyleSheet, TextInput, Alert } from 'react-native';
+import { View, StyleSheet, TextInput, Alert, ScrollView, Pressable } from 'react-native';
 import { AppKeyboardScrollView } from '@/components/layout/AppKeyboardScrollView';
 import { AppText } from '@/components/typography/AppText';
 import { AppButton } from '@/components/buttons/AppButton';
 import AppHeader from '@/components/layout/AppHeader';
 import { theme } from '@/shared/themes/theme';
+import Feather from 'react-native-vector-icons/Feather';
 
 import type { CreateEventRequest } from '@volontariapp/contracts';
 import { EventType } from '@volontariapp/contracts';
 
 import { useForm, Controller } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { ScrollView, Pressable } from 'react-native';
 import { eventSchema, type EventFormValues } from '@/api/event/event.schema';
 import { mapEventType } from '@/shared/lib/event-mappers.utils';
 import { useCreateEvent } from '@/api/event/hooks/use-create-event';
 import { AppDateTimePicker, EventInput } from '@/components/inputs';
 import { eventApi } from '@/api/event/event.api';
 import { useQueryClient } from '@tanstack/react-query';
-import { AppDateTimePicker } from '../../components/inputs/AppDateTimePicker';
 
 export function EventFormScreen(): React.JSX.Element {
   const mutation = useCreateEvent();
@@ -35,7 +34,7 @@ export function EventFormScreen(): React.JSX.Element {
       title: 'Nettoyage de la plage',
       description: 'Rejoignez-nous pour nettoyer la plage et protéger notre environnement !',
       localisationName: 'Plage du Prado, Marseille',
-      type: EventType.EVENT_TYPE_ECOLOGY,
+      type: EventType.EVENT_TYPE_UNSPECIFIED,
       awardedImpactScore: 100,
       maxParticipants: 50,
       startAt: new Date('2026-06-01T10:00:00Z'),
@@ -96,12 +95,22 @@ export function EventFormScreen(): React.JSX.Element {
 
   return (
     <View style={styles.container}>
-      <AppHeader showBack />
+      <AppHeader showBack showClose />
       <AppKeyboardScrollView
         contentContainerStyle={styles.scrollContent}
         contentInsetAdjustmentBehavior="automatic"
         bottomOffset={16}
       >
+        <Pressable
+          style={styles.imagePlaceholder}
+          onPress={() => {
+            Alert.alert('Info', 'L\'ajout d\'image n\'est pas encore disponible.');
+          }}
+        >
+          <Feather name="plus" size={32} color={theme.colors.grey} />
+          <AppText style={styles.imagePlaceholderText}>Ajouter une image</AppText>
+        </Pressable>
+
         <AppText style={styles.title}>Créer un Évènement</AppText>
 
         <View style={styles.inputGroup}>
@@ -169,34 +178,37 @@ export function EventFormScreen(): React.JSX.Element {
                 showsHorizontalScrollIndicator={false}
                 style={styles.typeScroll}
               >
-                {Object.values(EventType).reduce<React.ReactNode[]>((acc, typeVal) => {
-                  if (typeof typeVal === 'number' && typeVal !== EventType.EVENT_TYPE_UNSPECIFIED) {
-                    const isSelected = value === typeVal;
-                    acc.push(
-                      <Pressable
-                        key={typeVal}
-                        style={({ pressed }) => [
-                          styles.typeButton,
-                          isSelected && styles.typeButtonSelected,
-                          pressed && { opacity: 0.7 },
+                {[EventType.EVENT_TYPE_ECOLOGY, EventType.EVENT_TYPE_SOCIAL].map((typeVal) => {
+                  const isSelected = value === typeVal;
+                  const isEcology = typeVal === EventType.EVENT_TYPE_ECOLOGY;
+                  const primaryColor = isEcology
+                    ? theme.colors.primaryEco
+                    : theme.colors.primarySocio;
+
+                  return (
+                    <Pressable
+                      key={typeVal}
+                      style={({ pressed }) => [
+                        styles.typeButton,
+                        { borderColor: primaryColor },
+                        isSelected && { backgroundColor: primaryColor },
+                        pressed && { opacity: 0.7 },
+                      ]}
+                      onPress={() => {
+                        onChange(typeVal);
+                      }}
+                    >
+                      <AppText
+                        style={[
+                          styles.typeButtonText,
+                          isSelected && styles.typeButtonTextSelected,
                         ]}
-                        onPress={() => {
-                          onChange(typeVal);
-                        }}
                       >
-                        <AppText
-                          style={[
-                            styles.typeButtonText,
-                            isSelected && styles.typeButtonTextSelected,
-                          ]}
-                        >
-                          {mapEventType(typeVal)}
-                        </AppText>
-                      </Pressable>,
-                    );
-                  }
-                  return acc;
-                }, [])}
+                        {mapEventType(typeVal)}
+                      </AppText>
+                    </Pressable>
+                  );
+                })}
               </ScrollView>
             )}
           />
@@ -274,27 +286,31 @@ export function EventFormScreen(): React.JSX.Element {
           </View>
         </View>
 
-        <View style={styles.buttonRow}>
-          <View style={styles.flex1}>
-            <AppButton
-              text={mutation.isPending || isBatching ? 'Création...' : "Créer l'évènement"}
-              onPress={() => {
-                void onSubmit();
-              }}
-              disabled={mutation.isPending || isBatching}
-            />
-          </View>
-          <View style={styles.flex1}>
-            <AppButton
-              text={isBatching ? 'Patientez...' : 'Création x10'}
-              variant="socio"
-              onPress={() => {
-                void handleCreate10Events();
-              }}
-              disabled={mutation.isPending || isBatching}
-            />
-          </View>
+        <View style={styles.publishContainer}>
+          <AppButton
+            text={mutation.isPending || isBatching ? 'Publication...' : "Publier l'évènement"}
+            icon="target"
+            onPress={() => {
+              void onSubmit();
+            }}
+            disabled={mutation.isPending || isBatching}
+            style={styles.publishButton}
+            textStyle={styles.publishButtonText}
+          />
         </View>
+
+        <View style={styles.testSection}>
+          <AppText style={styles.testTitle}>Test (à supprimer)</AppText>
+          <AppButton
+            text={isBatching ? 'Patientez...' : 'Création x10'}
+            variant="socio"
+            onPress={() => {
+              void handleCreate10Events();
+            }}
+            disabled={mutation.isPending || isBatching}
+          />
+        </View>
+
         <View style={styles.bottomSpacer} />
       </AppKeyboardScrollView>
     </View>
@@ -308,6 +324,24 @@ const styles = StyleSheet.create({
   },
   scrollContent: {
     padding: theme.spacing.xl,
+  },
+  imagePlaceholder: {
+    width: '100%',
+    height: 180,
+    borderRadius: theme.radius.md,
+    borderWidth: 2,
+    borderColor: theme.colors.lightGrey,
+    borderStyle: 'dashed',
+    justifyContent: 'center',
+    alignItems: 'center',
+    backgroundColor: theme.colors.white,
+    marginBottom: theme.spacing.xl,
+  },
+  imagePlaceholderText: {
+    marginTop: theme.spacing.sm,
+    color: theme.colors.grey,
+    fontSize: 14,
+    fontWeight: '500',
   },
   title: {
     fontSize: 28,
@@ -362,14 +396,10 @@ const styles = StyleSheet.create({
     paddingHorizontal: theme.spacing.md,
     paddingVertical: theme.spacing.sm,
     borderRadius: theme.radius.full,
-    borderWidth: 1,
+    borderWidth: 2,
     borderColor: theme.colors.lightGrey,
     marginRight: theme.spacing.sm,
     backgroundColor: theme.colors.white,
-  },
-  typeButtonSelected: {
-    backgroundColor: theme.colors.primaryEco,
-    borderColor: theme.colors.primaryEco,
   },
   typeButtonText: {
     fontSize: 14,
@@ -379,11 +409,32 @@ const styles = StyleSheet.create({
   typeButtonTextSelected: {
     color: theme.colors.white,
   },
-  buttonRow: {
-    flexDirection: 'row',
-    gap: theme.spacing.md,
+  publishContainer: {
+    marginTop: theme.spacing.xl,
+    alignItems: 'center',
+    width: '100%',
   },
-  flex1: {
-    flex: 1,
+  publishButton: {
+    width: '100%',
+  },
+  publishButtonText: {
+    fontWeight: 'bold',
+    fontSize: 16,
+  },
+  testSection: {
+    marginTop: theme.spacing.xxl,
+    padding: theme.spacing.md,
+    backgroundColor: theme.colors.white,
+    borderRadius: theme.radius.md,
+    borderWidth: 1,
+    borderColor: theme.colors.lightGrey,
+    borderStyle: 'dashed',
+  },
+  testTitle: {
+    fontSize: 12,
+    color: theme.colors.grey,
+    marginBottom: theme.spacing.sm,
+    fontWeight: 'bold',
+    textTransform: 'uppercase',
   },
 });

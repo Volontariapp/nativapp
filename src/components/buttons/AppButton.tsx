@@ -1,5 +1,5 @@
 import type { ReactNode } from 'react';
-import { Text, Pressable, StyleSheet, View, type ViewStyle } from 'react-native';
+import { Text, Pressable, StyleSheet, View, type ViewStyle, type TextStyle } from 'react-native';
 import { BUTTON_VARIANTS } from '@/shared/themes/buttonVariants';
 import { theme } from '@/shared/themes/theme';
 import { AppIcons } from '@/components/media/AppIcons';
@@ -13,6 +13,7 @@ interface AppButtonProps {
   onPress?: () => void;
   disabled?: boolean;
   style?: ViewStyle;
+  textStyle?: TextStyle;
   size?: 'default' | 'small';
 }
 
@@ -24,6 +25,7 @@ export const AppButton = ({
   onPress,
   disabled = false,
   style,
+  textStyle,
   size = 'default',
 }: AppButtonProps): ReactNode => {
   const stylesVariant = BUTTON_VARIANTS[variant];
@@ -62,6 +64,7 @@ export const AppButton = ({
               color: stylesVariant.textColor,
               fontFamily: theme.typography.fonts.primary,
             },
+            textStyle,
           ]}
         >
           {text}
