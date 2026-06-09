@@ -33,7 +33,7 @@ export function EventPreviewModal({
   return (
     <Modal visible={visible} transparent animationType="fade">
       <View style={styles.overlay}>
-        <Pressable style={styles.overlay} onPress={onClose} />
+        <Pressable style={StyleSheet.absoluteFillObject} onPress={onClose} />
         <View style={styles.modalContent}>
           <View style={styles.header}>
             <AppText style={styles.title}>{event.title}</AppText>
@@ -93,6 +93,7 @@ const styles = StyleSheet.create({
     padding: theme.spacing.lg,
     maxHeight: '80%',
     width: '90%',
+    alignSelf: 'center',
   },
   header: {
     flexDirection: 'row',

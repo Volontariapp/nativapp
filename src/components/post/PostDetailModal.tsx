@@ -1,5 +1,12 @@
 import React from 'react';
-import { View, StyleSheet, Modal, Pressable, ScrollView } from 'react-native';
+import {
+  View,
+  StyleSheet,
+  Modal,
+  Pressable,
+  ScrollView,
+  StyleSheet as RNStyleSheet,
+} from 'react-native';
 import { theme } from '@/shared/themes/theme';
 import { AppText } from '@/components/typography/AppText';
 import { AppButton } from '@/components/buttons/AppButton';
@@ -39,62 +46,60 @@ export function PostDetailModal({
   };
 
   return (
-    <>
-      <Modal visible={visible} transparent animationType="fade">
-        <View style={styles.overlay}>
-          <Pressable style={styles.overlay} onPress={onClose} />
-          <View style={styles.modalContent}>
-            <ScrollView showsVerticalScrollIndicator={false}>
-              <View style={styles.header}>
-                <AppText style={styles.title}>{post.title}</AppText>
-                <Pressable onPress={onClose} style={styles.closeButton}>
-                  <AppText style={styles.closeText}>✕</AppText>
+    <Modal visible={visible} transparent animationType="fade">
+      <View style={styles.overlay}>
+        <Pressable style={RNStyleSheet.absoluteFillObject} onPress={onClose} />
+        <View style={styles.modalContent}>
+          <ScrollView showsVerticalScrollIndicator={false}>
+            <View style={styles.header}>
+              <AppText style={styles.title}>{post.title}</AppText>
+              <Pressable onPress={onClose} style={styles.closeButton}>
+                <AppText style={styles.closeText}>✕</AppText>
+              </Pressable>
+            </View>
+
+            <View style={styles.section}>
+              <AppText style={styles.label}>Contenu</AppText>
+              <AppText style={styles.value}>{post.content}</AppText>
+            </View>
+
+            <View style={styles.row}>
+              <View style={styles.flex1}>
+                <AppText style={styles.label}>Auteur</AppText>
+                <AppText style={styles.value}>{post.authorId}</AppText>
+              </View>
+              <View style={styles.flex1}>
+                <AppText style={styles.label}>Créé le</AppText>
+                <AppText style={styles.value}>
+                  {new Date(post.createdAt).toLocaleDateString('fr-FR')}
+                </AppText>
+              </View>
+            </View>
+
+            {post.event && (
+              <View style={styles.eventSection}>
+                <AppText style={styles.sectionTitle}>Événement lié</AppText>
+                <Pressable style={styles.eventCard} onPress={handleEventPress}>
+                  <View style={styles.eventContent}>
+                    <AppText style={styles.eventTitle}>{post.event.title}</AppText>
+                    <AppText style={styles.eventDescription} numberOfLines={2}>
+                      {post.event.description}
+                    </AppText>
+                    <AppText style={styles.eventMeta}>
+                      {post.event.startAt
+                        ? new Date(post.event.startAt).toLocaleDateString('fr-FR')
+                        : 'Date non définie'}
+                    </AppText>
+                  </View>
+                  <AppText style={styles.eventArrow}>→</AppText>
                 </Pressable>
               </View>
+            )}
 
-              <View style={styles.section}>
-                <AppText style={styles.label}>Contenu</AppText>
-                <AppText style={styles.value}>{post.content}</AppText>
-              </View>
-
-              <View style={styles.row}>
-                <View style={styles.flex1}>
-                  <AppText style={styles.label}>Auteur</AppText>
-                  <AppText style={styles.value}>{post.authorId}</AppText>
-                </View>
-                <View style={styles.flex1}>
-                  <AppText style={styles.label}>Créé le</AppText>
-                  <AppText style={styles.value}>
-                    {new Date(post.createdAt).toLocaleDateString('fr-FR')}
-                  </AppText>
-                </View>
-              </View>
-
-              {post.event && (
-                <View style={styles.eventSection}>
-                  <AppText style={styles.sectionTitle}>Événement lié</AppText>
-                  <Pressable style={styles.eventCard} onPress={handleEventPress}>
-                    <View style={styles.eventContent}>
-                      <AppText style={styles.eventTitle}>{post.event.title}</AppText>
-                      <AppText style={styles.eventDescription} numberOfLines={2}>
-                        {post.event.description}
-                      </AppText>
-                      <AppText style={styles.eventMeta}>
-                        {post.event.startAt
-                          ? new Date(post.event.startAt).toLocaleDateString('fr-FR')
-                          : 'Date non définie'}
-                      </AppText>
-                    </View>
-                    <AppText style={styles.eventArrow}>→</AppText>
-                  </Pressable>
-                </View>
-              )}
-
-              <AppButton text="Fermer" onPress={onClose} style={styles.closeButtonAction} />
-            </ScrollView>
-          </View>
+            <AppButton text="Fermer" onPress={onClose} style={styles.closeButtonAction} />
+          </ScrollView>
         </View>
-      </Modal>
+      </View>
 
       {selectedEvent && (
         <EventPreviewModal
@@ -106,7 +111,7 @@ export function PostDetailModal({
           }}
         />
       )}
-    </>
+    </Modal>
   );
 }
 
