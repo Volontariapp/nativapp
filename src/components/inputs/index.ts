@@ -5,3 +5,4 @@ export * from './PasswordField';
 export * from './AppDateTimePicker';
 export * from './EventInput';
 export * from './AppInfoCard';
+export * from './AppChipSelector';

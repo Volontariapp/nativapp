@@ -15,11 +15,17 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { eventSchema, type EventFormValues } from '@/api/event/event.schema';
 import { mapEventType } from '@/shared/lib/event-mappers.utils';
 import { useCreateEvent } from '@/api/event/hooks/use-create-event';
-import { EventInput } from '@/components/inputs';
-import { AppFormController, EventInfoGrid } from '@/components/forms';
+import { EventInput, AppChipSelector, type AppChipOption } from '@/components/inputs';
+import { AppFormController, EventInfoGrid, EventRequirementItem } from '@/components/forms';
 import { eventApi } from '@/api/event/event.api';
 import { useQueryClient } from '@tanstack/react-query';
 import { useNavigation } from '@react-navigation/native';
+
+const EVENT_TYPE_OPTIONS: AppChipOption<EventType>[] = [
+  { value: EventType.EVENT_TYPE_UNSPECIFIED, label: mapEventType(EventType.EVENT_TYPE_UNSPECIFIED), color: theme.colors.grey },
+  { value: EventType.EVENT_TYPE_ECOLOGY, label: mapEventType(EventType.EVENT_TYPE_ECOLOGY), color: theme.colors.primaryEco },
+  { value: EventType.EVENT_TYPE_SOCIAL, label: mapEventType(EventType.EVENT_TYPE_SOCIAL), color: theme.colors.primarySocio },
+];
 
 export function EventFormScreen(): React.JSX.Element {
   const mutation = useCreateEvent();
@@ -167,43 +173,11 @@ export function EventFormScreen(): React.JSX.Element {
           label="Type d'évènement"
           errors={errors}
           render={({ field: { onChange, value } }) => (
-            <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.typeScroll}>
-              {[
-                EventType.EVENT_TYPE_UNSPECIFIED,
-                EventType.EVENT_TYPE_ECOLOGY,
-                EventType.EVENT_TYPE_SOCIAL,
-              ].map((typeVal) => {
-                const isSelected = value === typeVal;
-
-                let primaryColor = theme.colors.grey;
-                if (typeVal === EventType.EVENT_TYPE_ECOLOGY) {
-                  primaryColor = theme.colors.primaryEco;
-                } else if (typeVal === EventType.EVENT_TYPE_SOCIAL) {
-                  primaryColor = theme.colors.primarySocio;
-                }
-
-                return (
-                  <Pressable
-                    key={typeVal}
-                    style={({ pressed }) => [
-                      styles.typeButton,
-                      { borderColor: primaryColor },
-                      isSelected && { backgroundColor: primaryColor },
-                      pressed && { opacity: 0.7 },
-                    ]}
-                    onPress={() => {
-                      onChange(typeVal);
-                    }}
-                  >
-                    <AppText
-                      style={[styles.typeButtonText, isSelected && styles.typeButtonTextSelected]}
-                    >
-                      {mapEventType(typeVal)}
-                    </AppText>
-                  </Pressable>
-                );
-              })}
-            </ScrollView>
+            <AppChipSelector
+              options={EVENT_TYPE_OPTIONS}
+              value={value}
+              onChange={onChange}
+            />
           )}
         />
 
@@ -229,67 +203,13 @@ export function EventFormScreen(): React.JSX.Element {
             </AppText>
           ) : (
             fields.map((field, index) => (
-              <View key={field.id} style={styles.requirementCard}>
-                <View style={styles.requirementHeaderRow}>
-                  <AppText style={styles.requirementIndex}>Matériel #{index + 1}</AppText>
-                  <Pressable
-                    onPress={() => {
-                      remove(index);
-                    }}
-                    style={styles.removeButton}
-                  >
-                    <Feather name="trash-2" size={16} color={theme.colors.danger} />
-                  </Pressable>
-                </View>
-
-                <AppFormController
-                  control={control}
-                  name={`requirements.${index}.name`}
-                  label="Nom de l'objet"
-                  errors={errors}
-                  render={({ field: { onChange, value } }) => (
-                    <EventInput
-                      value={value}
-                      onChangeText={onChange}
-                      placeholder="Ex: Gants de protection"
-                    />
-                  )}
-                />
-
-                <AppFormController
-                  control={control}
-                  name={`requirements.${index}.description`}
-                  label="Description"
-                  errors={errors}
-                  render={({ field: { onChange, value } }) => (
-                    <TextInput
-                      style={[styles.input, styles.reqTextArea]}
-                      value={value}
-                      onChangeText={onChange}
-                      placeholder="À quoi ça va servir ?"
-                      multiline
-                    />
-                  )}
-                />
-
-                <AppFormController
-                  control={control}
-                  name={`requirements.${index}.neededQuantity`}
-                  label="Quantité requise"
-                  errors={errors}
-                  render={({ field: { onChange, value } }) => (
-                    <TextInput
-                      style={styles.input}
-                      value={value ? String(value) : ''}
-                      keyboardType="numeric"
-                      onChangeText={(v) => {
-                        onChange(Number(v) || 0);
-                      }}
-                      placeholder="1"
-                    />
-                  )}
-                />
-              </View>
+              <EventRequirementItem
+                key={field.id}
+                control={control}
+                errors={errors}
+                index={index}
+                onRemove={remove}
+              />
             ))
           )}
         </View>
@@ -379,33 +299,8 @@ const styles = StyleSheet.create({
     height: 100,
     textAlignVertical: 'top',
   },
-  reqTextArea: {
-    height: 60,
-    textAlignVertical: 'top',
-  },
   bottomSpacer: {
     height: theme.spacing.xxl,
-  },
-  typeScroll: {
-    flexDirection: 'row',
-    marginTop: theme.spacing.xs,
-  },
-  typeButton: {
-    paddingHorizontal: theme.spacing.md,
-    paddingVertical: theme.spacing.sm,
-    borderRadius: theme.radius.full,
-    borderWidth: 2,
-    borderColor: theme.colors.lightGrey,
-    marginRight: theme.spacing.sm,
-    backgroundColor: theme.colors.white,
-  },
-  typeButtonText: {
-    fontSize: 14,
-    color: theme.colors.black,
-    fontWeight: '500',
-  },
-  typeButtonTextSelected: {
-    color: theme.colors.white,
   },
   requirementsSection: {
     marginTop: theme.spacing.lg,
@@ -427,28 +322,6 @@ const styles = StyleSheet.create({
     fontStyle: 'italic',
     textAlign: 'center',
     paddingVertical: theme.spacing.md,
-  },
-  requirementCard: {
-    backgroundColor: theme.colors.white,
-    padding: theme.spacing.md,
-    borderRadius: theme.radius.md,
-    borderWidth: 1,
-    borderColor: theme.colors.lightGrey,
-    marginBottom: theme.spacing.md,
-  },
-  requirementHeaderRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    marginBottom: theme.spacing.sm,
-  },
-  requirementIndex: {
-    fontSize: 14,
-    fontWeight: 'bold',
-    color: theme.colors.primarySocio,
-  },
-  removeButton: {
-    padding: theme.spacing.xs,
   },
   publishContainer: {
     marginTop: theme.spacing.md,
