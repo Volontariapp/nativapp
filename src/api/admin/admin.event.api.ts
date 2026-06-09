@@ -17,12 +17,10 @@ import type {
   ListRequirementsWebResponse,
   GetTagsRequest,
   GetTagsResponse,
-} from '@volontariapp/contracts';
-import type {
   GetUserEventsRequest,
   GetUserParticipationsRequest,
   GetUserWishesRequest,
-} from '../endpoints/types/missing-types';
+} from '@volontariapp/contracts';
 
 export const adminEventApi = {
   async createEvent(

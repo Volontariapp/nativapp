@@ -1,6 +1,6 @@
 import { apiFetch } from '../client';
 import { SOCIAL_ENDPOINTS } from '../endpoints/social.endpoints';
-import type { IdsListWebResponse } from '../endpoints/types/missing-types';
+import type { IdsListWebResponse } from '@volontariapp/contracts';
 
 /**
  * Service API pour les interactions sociales (participations, likes, follows, etc.)
