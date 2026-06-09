@@ -3,58 +3,77 @@ import { View, StyleSheet } from 'react-native';
 import { AppText } from '@/components/typography/AppText';
 import { theme } from '@/shared/themes/theme';
 import type { AppEvent } from '@/api/event/event.api';
-import { mapEventType, mapEventState } from '@/shared/lib/event-mappers.utils';
+import { mapEventType } from '@/shared/lib/event-mappers.utils';
+import { EventType } from '@volontariapp/contracts';
+import Feather from 'react-native-vector-icons/Feather';
 
 export interface EventCardProps {
   event: AppEvent;
 }
 
 export function EventCard({ event }: EventCardProps): React.JSX.Element {
+  const isEcology =
+    event.type === EventType.EVENT_TYPE_ECOLOGY ||
+    String(event.type) === EventType[EventType.EVENT_TYPE_ECOLOGY];
+  const isSocial =
+    event.type === EventType.EVENT_TYPE_SOCIAL ||
+    String(event.type) === EventType[EventType.EVENT_TYPE_SOCIAL];
+
+  const typeColor = isEcology
+    ? theme.colors.primaryEco
+    : isSocial
+      ? theme.colors.primarySocio
+      : theme.colors.grey;
+
+  const typeBg = isEcology
+    ? `${theme.colors.primaryEco}20`
+    : isSocial
+      ? `${theme.colors.primarySocio}20`
+      : `${theme.colors.grey}20`;
+
+  const date = new Date(event.startAt);
+  const formattedDate = date.toLocaleDateString('fr-FR', {
+    day: 'numeric',
+    month: 'long',
+    year: 'numeric',
+  });
+  const formattedTime = date.toLocaleTimeString('fr-FR', {
+    hour: '2-digit',
+    minute: '2-digit',
+  });
+
   return (
     <View style={styles.card}>
-      <AppText style={styles.cardTitle}>{event.title}</AppText>
-      <View style={styles.badgeContainer}>
-        <View style={[styles.badge, styles.typeBadge]}>
-          <AppText style={styles.badgeText}>{mapEventType(event.type)}</AppText>
-        </View>
-        <View style={[styles.badge, styles.stateBadge]}>
-          <AppText style={styles.badgeText}>{mapEventState(event.state)}</AppText>
-        </View>
+      <View style={[styles.imageContainer, { backgroundColor: typeBg }]}>
+        <Feather
+          name={isEcology ? 'leaf' : isSocial ? 'users' : 'help-circle'}
+          size={32}
+          color={typeColor}
+        />
       </View>
 
-      <AppText style={styles.cardDescription}>{event.description}</AppText>
+      <View style={styles.content}>
+        <View style={[styles.tag, { backgroundColor: typeBg }]}>
+          <AppText style={[styles.tagText, { color: typeColor }]}>{mapEventType(event.type)}</AppText>
+        </View>
 
-      <View style={styles.infoRow}>
-        <AppText style={styles.infoLabel}>Lieu:</AppText>
-        <AppText style={styles.infoValue}>{event.localisationName}</AppText>
-      </View>
-      {event.location && (
-        <View style={styles.infoRow}>
-          <AppText style={styles.infoLabel}>Coordonnées:</AppText>
-          <AppText style={styles.infoValue}>
-            {event.location.latitude.toFixed(4)}, {event.location.longitude.toFixed(4)}
+        <AppText style={styles.title} numberOfLines={1}>
+          {event.title}
+        </AppText>
+
+        <View style={styles.detailRow}>
+          <Feather name="map-pin" size={14} color={theme.colors.grey} />
+          <AppText style={styles.detailText} numberOfLines={1}>
+            {event.localisationName}
           </AppText>
         </View>
-      )}
-      <View style={styles.infoRow}>
-        <AppText style={styles.infoLabel}>Début:</AppText>
-        <AppText style={styles.infoValue}>
-          {new Date(event.startAt).toLocaleString('fr-FR')}
-        </AppText>
-      </View>
-      <View style={styles.infoRow}>
-        <AppText style={styles.infoLabel}>Fin:</AppText>
-        <AppText style={styles.infoValue}>{new Date(event.endAt).toLocaleString('fr-FR')}</AppText>
-      </View>
-      <View style={styles.infoRow}>
-        <AppText style={styles.infoLabel}>Participants:</AppText>
-        <AppText style={styles.infoValue}>
-          {event.currentParticipants} / {event.maxParticipants}
-        </AppText>
-      </View>
-      <View style={styles.infoRow}>
-        <AppText style={styles.infoLabel}>Impact Score:</AppText>
-        <AppText style={styles.infoValue}>{event.awardedImpactScore}</AppText>
+
+        <View style={styles.detailRow}>
+          <Feather name="calendar" size={14} color={theme.colors.grey} />
+          <AppText style={styles.detailText}>
+            {formattedDate} - {formattedTime}
+          </AppText>
+        </View>
       </View>
     </View>
   );
@@ -63,56 +82,60 @@ export function EventCard({ event }: EventCardProps): React.JSX.Element {
 const styles = StyleSheet.create({
   card: {
     backgroundColor: theme.colors.white,
-    borderRadius: theme.radius.md,
+    borderRadius: theme.radius.full / 4, // More rounded but not pill if content is large
+    // Actually, looking at the image, it's very rounded
     padding: theme.spacing.md,
     marginBottom: theme.spacing.md,
-    borderWidth: 1,
-    borderColor: theme.colors.lightGrey,
-  },
-  cardTitle: {
-    fontSize: 18,
-    fontWeight: 'bold',
-    color: theme.colors.black,
-    marginBottom: theme.spacing.xs,
-  },
-  badgeContainer: {
     flexDirection: 'row',
-    gap: theme.spacing.sm,
-    marginBottom: theme.spacing.sm,
+    alignItems: 'center',
+    ...theme.shadows.card,
+    // Adjusting radius to match image pill shape
+    borderRadius: 40,
   },
-  badge: {
+  imageContainer: {
+    width: 70,
+    height: 70,
+    borderRadius: 15,
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginRight: theme.spacing.md,
+    overflow: 'hidden',
+  },
+  image: {
+    width: '100%',
+    height: '100%',
+    resizeMode: 'cover',
+  },
+  content: {
+    flex: 1,
+  },
+  tag: {
+    alignSelf: 'flex-start',
     paddingHorizontal: theme.spacing.sm,
     paddingVertical: 2,
-    borderRadius: theme.radius.sm,
+    borderRadius: 10,
+    marginBottom: 4,
   },
-  typeBadge: {
-    backgroundColor: `${theme.colors.primaryEco}20`, // 20% opacity
+  tagText: {
+    fontSize: 10,
+    fontWeight: 'bold',
   },
-  stateBadge: {
-    backgroundColor: `${theme.colors.grey}20`,
-  },
-  badgeText: {
-    fontSize: 12,
+  title: {
+    fontSize: 16,
+    fontWeight: 'bold',
     color: theme.colors.black,
-    fontWeight: '600',
+    marginBottom: 4,
+    // Add underline if desired, but image doesn't strictly require it
   },
-  cardDescription: {
-    fontSize: 14,
-    color: theme.colors.grey,
-    marginBottom: theme.spacing.md,
-  },
-  infoRow: {
+  detailRow: {
     flexDirection: 'row',
-    justifyContent: 'space-between',
-    marginBottom: theme.spacing.xs,
+    alignItems: 'center',
+    marginBottom: 2,
   },
-  infoLabel: {
-    fontSize: 14,
+  detailText: {
+    fontSize: 12,
     color: theme.colors.grey,
-    fontWeight: '600',
-  },
-  infoValue: {
-    fontSize: 14,
-    color: theme.colors.black,
+    marginLeft: 6,
+    flex: 1,
   },
 });

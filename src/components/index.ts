@@ -7,4 +7,4 @@ export * from './media';
 export * from './dataDisplay';
 export * from './profile';
 export * from './ui';
-export * from './dataDisplay';
+export * from './forms';

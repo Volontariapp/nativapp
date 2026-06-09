@@ -1,5 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { View, StyleSheet, Pressable, Platform, Modal } from 'react-native';
+import { View, StyleSheet, Pressable, Platform, Modal, type ViewStyle } from 'react-native';
 import type { DateTimePickerEvent } from '@react-native-community/datetimepicker';
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -17,6 +17,8 @@ export interface AppDateTimePickerProps {
   onChange: (date: Date) => void;
   label?: string;
   mode?: 'date' | 'time' | 'datetime';
+  inputStyle?: ViewStyle | ViewStyle[];
+  hideIcon?: boolean;
 }
 
 export function AppDateTimePicker({
@@ -24,6 +26,8 @@ export function AppDateTimePicker({
   onChange,
   label,
   mode = 'datetime',
+  inputStyle,
+  hideIcon = false,
 }: AppDateTimePickerProps): React.JSX.Element {
   const [showPicker, setShowPicker] = useState(false);
   const [pickerMode, setPickerMode] = useState<'date' | 'time' | 'datetime'>(
@@ -85,11 +89,11 @@ export function AppDateTimePicker({
       ) : null}
 
       <Pressable
-        style={({ pressed }) => [styles.inputWrapper, pressed && { opacity: 0.7 }]}
+        style={({ pressed }) => [styles.inputWrapper, inputStyle, pressed && { opacity: 0.7 }]}
         onPress={handlePress}
       >
-        <Icon name={mode === 'time' ? 'clock' : 'calendar'} size={16} color={theme.colors.grey} />
-        <AppText style={styles.dateText}>{displayFormat}</AppText>
+        {!hideIcon && <Icon name={mode === 'time' ? 'clock' : 'calendar'} size={16} color={theme.colors.grey} />}
+        <AppText style={[styles.dateText, hideIcon && { paddingLeft: 0 }]}>{displayFormat}</AppText>
       </Pressable>
 
       {Platform.OS === 'web' ? (

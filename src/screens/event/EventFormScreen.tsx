@@ -10,18 +10,21 @@ import Feather from 'react-native-vector-icons/Feather';
 import type { CreateEventRequest } from '@volontariapp/contracts';
 import { EventType } from '@volontariapp/contracts';
 
-import { useForm, Controller } from 'react-hook-form';
+import { useForm, useFieldArray } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { eventSchema, type EventFormValues } from '@/api/event/event.schema';
 import { mapEventType } from '@/shared/lib/event-mappers.utils';
 import { useCreateEvent } from '@/api/event/hooks/use-create-event';
-import { AppDateTimePicker, EventInput } from '@/components/inputs';
+import { EventInput } from '@/components/inputs';
+import { AppFormController, EventInfoGrid } from '@/components/forms';
 import { eventApi } from '@/api/event/event.api';
 import { useQueryClient } from '@tanstack/react-query';
+import { useNavigation } from '@react-navigation/native';
 
 export function EventFormScreen(): React.JSX.Element {
   const mutation = useCreateEvent();
   const queryClient = useQueryClient();
+  const navigation = useNavigation();
   const [isBatching, setIsBatching] = React.useState(false);
 
   const {
@@ -39,22 +42,21 @@ export function EventFormScreen(): React.JSX.Element {
       maxParticipants: 50,
       startAt: new Date('2026-06-01T10:00:00Z'),
       endAt: new Date('2026-06-01T18:00:00Z'),
+      requirements: [],
     },
   });
 
+  const { fields, append, remove } = useFieldArray({
+    control,
+    name: 'requirements',
+  });
+
   const onSubmit = handleSubmit((data) => {
-    const payload: CreateEventRequest = {
-      title: data.title,
-      description: data.description,
-      localisationName: data.localisationName,
-      type: data.type,
-      awardedImpactScore: data.awardedImpactScore,
-      maxParticipants: data.maxParticipants,
-      startAt: data.startAt,
-      endAt: data.endAt,
-      tagIds: [],
-    };
-    mutation.mutate(payload);
+    mutation.mutate(data, {
+      onSuccess: () => {
+        navigation.goBack();
+      },
+    });
   });
 
   const handleCreate10Events = React.useCallback(async (): Promise<void> => {
@@ -64,7 +66,7 @@ export function EventFormScreen(): React.JSX.Element {
         title: 'Batch Event',
         description: 'Created 10 times via batch button',
         localisationName: 'Paris, France',
-        type: EventType.EVENT_TYPE_SOCIAL,
+        type: EventType.EVENT_TYPE_UNSPECIFIED,
         maxParticipants: 10,
         awardedImpactScore: 100,
         tagIds: [],
@@ -85,13 +87,15 @@ export function EventFormScreen(): React.JSX.Element {
 
       await Promise.all(promises);
       void queryClient.invalidateQueries({ queryKey: ['events'] });
-      Alert.alert('Succès', 'Les 10 événements ont été créés avec succès !');
+      Alert.alert('Succès', 'Les 10 événements ont été créés avec succès !', [
+        { text: 'OK', onPress: () => navigation.goBack() }
+      ]);
     } catch {
       Alert.alert('Erreur', 'Impossible de créer les événements.');
     } finally {
       setIsBatching(false);
     }
-  }, [queryClient]);
+  }, [queryClient, navigation]);
 
   return (
     <View style={styles.container}>
@@ -104,7 +108,7 @@ export function EventFormScreen(): React.JSX.Element {
         <Pressable
           style={styles.imagePlaceholder}
           onPress={() => {
-            Alert.alert('Info', 'L\'ajout d\'image n\'est pas encore disponible.');
+            Alert.alert('Info', "L'ajout d'image n'est pas encore disponible.");
           }}
         >
           <Feather name="plus" size={32} color={theme.colors.grey} />
@@ -113,183 +117,187 @@ export function EventFormScreen(): React.JSX.Element {
 
         <AppText style={styles.title}>Créer un Évènement</AppText>
 
-        <View style={styles.inputGroup}>
-          <AppText style={styles.label}>Titre de l'évènement</AppText>
-          <Controller
-            control={control}
-            name="title"
-            render={({ field: { onChange, value } }) => (
-              <EventInput
-                value={value}
-                onChangeText={onChange}
-                placeholder="Ex: Nettoyage de la plage"
-              />
-            )}
-          />
-          {errors.title ? <AppText style={styles.errorText}>{errors.title.message}</AppText> : null}
-        </View>
+        <AppFormController
+          control={control}
+          name="title"
+          label="Titre de l'évènement"
+          errors={errors}
+          render={({ field: { onChange, value } }) => (
+            <EventInput
+              value={value}
+              onChangeText={onChange}
+              placeholder="Ex: Nettoyage de la plage"
+            />
+          )}
+        />
 
-        <View style={styles.inputGroup}>
-          <AppText style={styles.label}>Description</AppText>
-          <Controller
-            control={control}
-            name="description"
-            render={({ field: { onChange, value } }) => (
-              <TextInput
-                style={[styles.input, styles.textArea]}
-                value={value}
-                onChangeText={onChange}
-                multiline
-                numberOfLines={4}
-              />
-            )}
-          />
-          {errors.description ? (
-            <AppText style={styles.errorText}>{errors.description.message}</AppText>
-          ) : null}
-        </View>
+        <AppFormController
+          control={control}
+          name="description"
+          label="Description"
+          errors={errors}
+          render={({ field: { onChange, value } }) => (
+            <TextInput
+              style={[styles.input, styles.textArea]}
+              value={value}
+              onChangeText={onChange}
+              multiline
+              numberOfLines={4}
+            />
+          )}
+        />
 
-        <View style={styles.inputGroup}>
-          <AppText style={styles.label}>Lieu</AppText>
-          <Controller
-            control={control}
-            name="localisationName"
-            render={({ field: { onChange, value } }) => (
-              <EventInput
-                value={value}
-                onChangeText={onChange}
-                placeholder="Ex: Plage du Prado, Marseille"
-              />
-            )}
-          />
-          {errors.localisationName ? (
-            <AppText style={styles.errorText}>{errors.localisationName.message}</AppText>
-          ) : null}
-        </View>
+        <AppFormController
+          control={control}
+          name="localisationName"
+          label="Lieu"
+          errors={errors}
+          render={({ field: { onChange, value } }) => (
+            <EventInput
+              value={value}
+              onChangeText={onChange}
+              placeholder="Ex: Plage du Prado, Marseille"
+            />
+          )}
+        />
 
-        <View style={styles.inputGroup}>
-          <AppText style={styles.label}>Type d'évènement</AppText>
-          <Controller
-            control={control}
-            name="type"
-            render={({ field: { onChange, value } }) => (
-              <ScrollView
-                horizontal
-                showsHorizontalScrollIndicator={false}
-                style={styles.typeScroll}
-              >
-                {[EventType.EVENT_TYPE_ECOLOGY, EventType.EVENT_TYPE_SOCIAL].map((typeVal) => {
-                  const isSelected = value === typeVal;
-                  const isEcology = typeVal === EventType.EVENT_TYPE_ECOLOGY;
-                  const primaryColor = isEcology
-                    ? theme.colors.primaryEco
-                    : theme.colors.primarySocio;
+        <AppFormController
+          control={control}
+          name="type"
+          label="Type d'évènement"
+          errors={errors}
+          render={({ field: { onChange, value } }) => (
+            <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.typeScroll}>
+              {[
+                EventType.EVENT_TYPE_UNSPECIFIED,
+                EventType.EVENT_TYPE_ECOLOGY,
+                EventType.EVENT_TYPE_SOCIAL,
+              ].map((typeVal) => {
+                const isSelected = value === typeVal;
 
-                  return (
-                    <Pressable
-                      key={typeVal}
-                      style={({ pressed }) => [
-                        styles.typeButton,
-                        { borderColor: primaryColor },
-                        isSelected && { backgroundColor: primaryColor },
-                        pressed && { opacity: 0.7 },
-                      ]}
-                      onPress={() => {
-                        onChange(typeVal);
-                      }}
+                let primaryColor = theme.colors.grey;
+                if (typeVal === EventType.EVENT_TYPE_ECOLOGY) {
+                  primaryColor = theme.colors.primaryEco;
+                } else if (typeVal === EventType.EVENT_TYPE_SOCIAL) {
+                  primaryColor = theme.colors.primarySocio;
+                }
+
+                return (
+                  <Pressable
+                    key={typeVal}
+                    style={({ pressed }) => [
+                      styles.typeButton,
+                      { borderColor: primaryColor },
+                      isSelected && { backgroundColor: primaryColor },
+                      pressed && { opacity: 0.7 },
+                    ]}
+                    onPress={() => {
+                      onChange(typeVal);
+                    }}
+                  >
+                    <AppText
+                      style={[styles.typeButtonText, isSelected && styles.typeButtonTextSelected]}
                     >
-                      <AppText
-                        style={[
-                          styles.typeButtonText,
-                          isSelected && styles.typeButtonTextSelected,
-                        ]}
-                      >
-                        {mapEventType(typeVal)}
-                      </AppText>
-                    </Pressable>
-                  );
-                })}
-              </ScrollView>
-            )}
-          />
-          {errors.type ? <AppText style={styles.errorText}>{errors.type.message}</AppText> : null}
-        </View>
+                      {mapEventType(typeVal)}
+                    </AppText>
+                  </Pressable>
+                );
+              })}
+            </ScrollView>
+          )}
+        />
 
-        <View style={styles.row}>
-          <View style={styles.rowItem}>
-            <Controller
-              control={control}
-              name="startAt"
-              render={({ field: { onChange, value } }) => (
-                <AppDateTimePicker
-                  label="Début"
-                  value={value}
-                  onChange={onChange}
-                  mode="datetime"
-                />
-              )}
-            />
-            {errors.startAt ? (
-              <AppText style={styles.errorText}>{errors.startAt.message}</AppText>
-            ) : null}
-          </View>
-          <View style={styles.rowItem}>
-            <Controller
-              control={control}
-              name="endAt"
-              render={({ field: { onChange, value } }) => (
-                <AppDateTimePicker label="Fin" value={value} onChange={onChange} mode="datetime" />
-              )}
-            />
-            {errors.endAt ? (
-              <AppText style={styles.errorText}>{errors.endAt.message}</AppText>
-            ) : null}
-          </View>
-        </View>
+        <EventInfoGrid control={control} errors={errors} />
 
-        <View style={styles.row}>
-          <View style={styles.rowItem}>
-            <AppText style={styles.label}>Participants Max</AppText>
-            <Controller
-              control={control}
-              name="maxParticipants"
-              render={({ field: { onChange, value } }) => (
-                <TextInput
-                  style={styles.input}
-                  value={String(value)}
-                  keyboardType="numeric"
-                  onChangeText={onChange}
-                />
-              )}
+        <View style={styles.requirementsSection}>
+          <View style={styles.requirementsHeader}>
+            <AppText style={styles.requirementsTitle}>Matériels Requis</AppText>
+            <AppButton
+              variant="secondary"
+              size="small"
+              text="Ajouter"
+              icon="plus"
+              onPress={() => {
+                append({ name: '', description: '', neededQuantity: 1 });
+              }}
             />
-            {errors.maxParticipants ? (
-              <AppText style={styles.errorText}>{errors.maxParticipants.message}</AppText>
-            ) : null}
           </View>
-          <View style={styles.rowItem}>
-            <AppText style={styles.label}>Score d'impact</AppText>
-            <Controller
-              control={control}
-              name="awardedImpactScore"
-              render={({ field: { onChange, value } }) => (
-                <TextInput
-                  style={styles.input}
-                  value={String(value)}
-                  keyboardType="numeric"
-                  onChangeText={onChange}
+
+          {fields.length === 0 ? (
+            <AppText style={styles.noRequirementsText}>
+              Aucun besoin matériel spécifié pour cet événement.
+            </AppText>
+          ) : (
+            fields.map((field, index) => (
+              <View key={field.id} style={styles.requirementCard}>
+                <View style={styles.requirementHeaderRow}>
+                  <AppText style={styles.requirementIndex}>Matériel #{index + 1}</AppText>
+                  <Pressable
+                    onPress={() => {
+                      remove(index);
+                    }}
+                    style={styles.removeButton}
+                  >
+                    <Feather name="trash-2" size={16} color={theme.colors.danger} />
+                  </Pressable>
+                </View>
+
+                <AppFormController
+                  control={control}
+                  name={`requirements.${index}.name`}
+                  label="Nom de l'objet"
+                  errors={errors}
+                  render={({ field: { onChange, value } }) => (
+                    <EventInput
+                      value={value}
+                      onChangeText={onChange}
+                      placeholder="Ex: Gants de protection"
+                    />
+                  )}
                 />
-              )}
-            />
-            {errors.awardedImpactScore ? (
-              <AppText style={styles.errorText}>{errors.awardedImpactScore.message}</AppText>
-            ) : null}
-          </View>
+
+                <AppFormController
+                  control={control}
+                  name={`requirements.${index}.description`}
+                  label="Description"
+                  errors={errors}
+                  render={({ field: { onChange, value } }) => (
+                    <TextInput
+                      style={[styles.input, styles.reqTextArea]}
+                      value={value}
+                      onChangeText={onChange}
+                      placeholder="À quoi ça va servir ?"
+                      multiline
+                    />
+                  )}
+                />
+
+                <AppFormController
+                  control={control}
+                  name={`requirements.${index}.neededQuantity`}
+                  label="Quantité requise"
+                  errors={errors}
+                  render={({ field: { onChange, value } }) => (
+                    <TextInput
+                      style={styles.input}
+                      value={value ? String(value) : ''}
+                      keyboardType="numeric"
+                      onChangeText={(v) => {
+                        onChange(Number(v) || 0);
+                      }}
+                      placeholder="1"
+                    />
+                  )}
+                />
+              </View>
+            ))
+          )}
         </View>
 
         <View style={styles.publishContainer}>
           <AppButton
             text={mutation.isPending || isBatching ? 'Publication...' : "Publier l'évènement"}
-            icon="target"
+            icon="send"
             onPress={() => {
               void onSubmit();
             }}
@@ -371,19 +379,9 @@ const styles = StyleSheet.create({
     height: 100,
     textAlignVertical: 'top',
   },
-  row: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    gap: theme.spacing.sm,
-  },
-  rowItem: {
-    flex: 1,
-    marginBottom: theme.spacing.lg,
-  },
-  errorText: {
-    color: theme.colors.danger,
-    fontSize: 12,
-    marginTop: 4,
+  reqTextArea: {
+    height: 60,
+    textAlignVertical: 'top',
   },
   bottomSpacer: {
     height: theme.spacing.xxl,
@@ -409,8 +407,51 @@ const styles = StyleSheet.create({
   typeButtonTextSelected: {
     color: theme.colors.white,
   },
+  requirementsSection: {
+    marginTop: theme.spacing.lg,
+    marginBottom: theme.spacing.xl,
+  },
+  requirementsHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: theme.spacing.md,
+  },
+  requirementsTitle: {
+    fontSize: 18,
+    fontWeight: 'bold',
+    color: theme.colors.black,
+  },
+  noRequirementsText: {
+    color: theme.colors.grey,
+    fontStyle: 'italic',
+    textAlign: 'center',
+    paddingVertical: theme.spacing.md,
+  },
+  requirementCard: {
+    backgroundColor: theme.colors.white,
+    padding: theme.spacing.md,
+    borderRadius: theme.radius.md,
+    borderWidth: 1,
+    borderColor: theme.colors.lightGrey,
+    marginBottom: theme.spacing.md,
+  },
+  requirementHeaderRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: theme.spacing.sm,
+  },
+  requirementIndex: {
+    fontSize: 14,
+    fontWeight: 'bold',
+    color: theme.colors.primarySocio,
+  },
+  removeButton: {
+    padding: theme.spacing.xs,
+  },
   publishContainer: {
-    marginTop: theme.spacing.xl,
+    marginTop: theme.spacing.md,
     alignItems: 'center',
     width: '100%',
   },

@@ -6,6 +6,8 @@ import type {
   EventState,
   CreateEventResponse,
   SearchEventsResponse,
+  AddRequirementRequest,
+  ManageRequirementsResponse,
 } from '@volontariapp/contracts';
 
 export interface AppEvent {
@@ -84,6 +86,15 @@ export const eventApi = {
       console.error('[eventApi.createEvent] Error details:', error);
       throw error;
     }
+  },
+
+  async addRequirement(eventId: string, payload: AddRequirementRequest): Promise<ManageRequirementsResponse> {
+    const path = EVENT_ENDPOINTS.ADD_REQUIREMENT.path.replace(':id', eventId);
+    return await apiFetch<ManageRequirementsResponse, AddRequirementRequest>(path, {
+      method: EVENT_ENDPOINTS.ADD_REQUIREMENT.method,
+      requiresAuth: EVENT_ENDPOINTS.ADD_REQUIREMENT.requiresAuth,
+      body: payload,
+    });
   },
 
   async getMyEvents(params: {

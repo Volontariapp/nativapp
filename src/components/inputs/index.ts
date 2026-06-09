@@ -4,3 +4,4 @@ export * from './InputBox';
 export * from './PasswordField';
 export * from './AppDateTimePicker';
 export * from './EventInput';
+export * from './AppInfoCard';
