@@ -6,6 +6,7 @@ import type {
   EventState,
   CreateEventResponse,
   SearchEventsResponse,
+  EventDTO,
 } from '@volontariapp/contracts';
 
 export interface AppEvent {
@@ -32,14 +33,37 @@ interface GrpcTimestamp {
 }
 
 // TODO: doit être fait dans le backend dans l'apigateway
-const formatTimestamp = (ts: GrpcTimestamp | string | undefined | null): string => {
+const formatTimestamp = (ts: GrpcTimestamp | string | Date | undefined | null): string => {
   if (ts === null || ts === undefined) return new Date().toISOString();
   if (typeof ts === 'string') return ts;
+  if (ts instanceof Date) return ts.toISOString();
   if (typeof ts === 'object' && 'seconds' in ts) {
     const seconds = Number(ts.seconds);
     return new Date(seconds * 1000).toISOString();
   }
   return new Date(ts).toISOString();
+};
+
+export const convertEventDtoToAppEvent = (event: EventDTO): AppEvent => {
+  return {
+    id: event.id,
+    title: event.title,
+    description: event.description,
+    startAt: formatTimestamp(event.startAt),
+    endAt: formatTimestamp(event.endAt),
+    localisationName: event.localisationName,
+    type: event.type,
+    state: event.state,
+    awardedImpactScore: event.awardedImpactScore,
+    maxParticipants: event.maxParticipants,
+    currentParticipants: event.currentParticipants,
+    location: event.location
+      ? {
+          latitude: event.location.latitude,
+          longitude: event.location.longitude,
+        }
+      : undefined,
+  };
 };
 
 export const eventApi = {

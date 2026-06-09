@@ -1959,10 +1959,10 @@ __metadata:
     "@types/react": "npm:~19.1.0"
     "@types/react-native-vector-icons": "npm:^6.4.18"
     "@volontariapp/config": "npm:^3.2.0"
-    "@volontariapp/contracts": "npm:^4.2.5"
+    "@volontariapp/contracts": "npm:^4.2.6"
     "@volontariapp/errors": "npm:^0.6.0"
     "@volontariapp/logger": "npm:^0.2.5"
-    "@volontariapp/messaging": "npm:^2.8.0"
+    "@volontariapp/messaging": "npm:^2.8.1"
     "@volontariapp/shared": "npm:^0.7.0"
     axios: "npm:^1.16.1"
     class-validator: "npm:^0.15.1"
@@ -3883,13 +3883,13 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@volontariapp/contracts@npm:4.2.5, @volontariapp/contracts@npm:^4.2.5":
-  version: 4.2.5
-  resolution: "@volontariapp/contracts@npm:4.2.5"
+"@volontariapp/contracts@npm:4.2.6, @volontariapp/contracts@npm:^4.2.6":
+  version: 4.2.6
+  resolution: "@volontariapp/contracts@npm:4.2.6"
   dependencies:
     "@volontariapp/logger": "npm:0.2.5"
     protobufjs: "npm:^7.5.8"
-  checksum: 10c0/d97eef26ee9db6e3d46498b08791add85708a970e1d2c55d4aea349adffbe2e0245a3ebd1494e9620bb359e9bc0624d9c6cb9c652db93cd403bcfd2a15ab9cbe
+  checksum: 10c0/f57dc760879f854add2840154a8f644285521add12ec63aaab7862c3d2d0d71f59dc571a3f03d0b91929e9026f179945887bd8106530937d1f9888fe4fb3f8b4
   languageName: node
   linkType: hard
 
@@ -3909,13 +3909,13 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@volontariapp/messaging@npm:^2.8.0":
-  version: 2.8.0
-  resolution: "@volontariapp/messaging@npm:2.8.0"
+"@volontariapp/messaging@npm:^2.8.1":
+  version: 2.8.1
+  resolution: "@volontariapp/messaging@npm:2.8.1"
   dependencies:
-    "@volontariapp/contracts": "npm:4.2.5"
+    "@volontariapp/contracts": "npm:4.2.6"
     "@volontariapp/shared": "npm:0.7.0"
-  checksum: 10c0/f0a6f4eafbef1bb9f59d55c790a12b44770ddea3866085b2cf3f9e7bdc2dd8ee20cc9302c91b1a9d625c8cdc15aad66e9e5f17718ee58b2cab64aeb5e71cbe02
+  checksum: 10c0/f717a3e5830581eb58bb17b09a8e567a0b74ae095f31fba31d87b8bb789e35f2335fb8c8efe49f3110823824fa47fb7e5129dacde7956cfb8311b512d81b87ac
   languageName: node
   linkType: hard
 
