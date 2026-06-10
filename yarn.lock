@@ -1451,6 +1451,21 @@ __metadata:
   languageName: node
   linkType: hard
 
+"@expo/image-utils@npm:^0.10.1":
+  version: 0.10.1
+  resolution: "@expo/image-utils@npm:0.10.1"
+  dependencies:
+    "@expo/require-utils": "npm:^56.1.3"
+    "@expo/spawn-async": "npm:^1.8.0"
+    chalk: "npm:^4.0.0"
+    getenv: "npm:^2.0.0"
+    jimp-compact: "npm:0.16.1"
+    parse-png: "npm:^2.1.0"
+    semver: "npm:^7.6.0"
+  checksum: 10c0/3e6a71c370a1dda958599dacdf0406c1f849a21c80c713c3e6b5c11928a7e95b0317828eee3d70990add7f91e8bf33c20c2bc117cf9acf579ed5405c80bea482
+  languageName: node
+  linkType: hard
+
 "@expo/image-utils@npm:^0.8.8":
   version: 0.8.14
   resolution: "@expo/image-utils@npm:0.8.14"
@@ -1629,6 +1644,22 @@ __metadata:
     typescript:
       optional: true
   checksum: 10c0/5d6828a77a693f0e7c7ccdfff7da8c2fe05045fa21831966e92879f0946e4e3beddabe3f3bfab8e2d4ea27b8c324167aa8e167d8e6842a2cebebd67a59bebab1
+  languageName: node
+  linkType: hard
+
+"@expo/require-utils@npm:^56.1.3":
+  version: 56.1.3
+  resolution: "@expo/require-utils@npm:56.1.3"
+  dependencies:
+    "@babel/code-frame": "npm:^7.20.0"
+    "@babel/core": "npm:^7.25.2"
+    "@babel/plugin-transform-modules-commonjs": "npm:^7.24.8"
+  peerDependencies:
+    typescript: ^5.0.0 || ^5.0.0-0 || ^6.0.0
+  peerDependenciesMeta:
+    typescript:
+      optional: true
+  checksum: 10c0/b0fc61db4e45507508bf01524f42770a5bf1f53fab9b244a7dc6c9d8acce0e912940d9945716b8f0c747a07262d34128150c78d00bbe996b2efc5d522c45d874
   languageName: node
   linkType: hard
 
@@ -1974,6 +2005,7 @@ __metadata:
     expo-image: "npm:~3.0.11"
     expo-image-picker: "npm:~17.0.11"
     expo-linking: "npm:~8.0.12"
+    expo-location: "npm:^56.0.16"
     expo-router: "npm:~6.0.24"
     expo-secure-store: "npm:~15.0.8"
     expo-splash-screen: "npm:~31.0.13"
@@ -1992,6 +2024,7 @@ __metadata:
     react-native-calendars: "npm:^1.1314.0"
     react-native-gesture-handler: "npm:~2.28.0"
     react-native-keyboard-controller: "npm:1.18.5"
+    react-native-maps: "npm:^1.27.2"
     react-native-reanimated: "npm:~4.1.1"
     react-native-safe-area-context: "npm:~5.6.0"
     react-native-screens: "npm:~4.16.0"
@@ -3568,6 +3601,13 @@ __metadata:
   version: 1.0.9
   resolution: "@types/estree@npm:1.0.9"
   checksum: 10c0/3ad3286ca2988cd550dafb8f2ad599c8474868e954fa601a36655bdfefd8039f7c714b8c1c7f2ae219ffbd58bd4660e66fa7479a0120fc02d4777057d4865387
+  languageName: node
+  linkType: hard
+
+"@types/geojson@npm:^7946.0.13":
+  version: 7946.0.16
+  resolution: "@types/geojson@npm:7946.0.16"
+  checksum: 10c0/1ff24a288bd5860b766b073ead337d31d73bdc715e5b50a2cee5cb0af57a1ed02cc04ef295f5fa68dc40fe3e4f104dd31282b2b818a5ba3231bc1001ba084e3c
   languageName: node
   linkType: hard
 
@@ -5876,6 +5916,17 @@ __metadata:
     react: "*"
     react-native: "*"
   checksum: 10c0/56894fc1b53f3e21c197b547615395a2aec75535128db231abcce6356e5c28a3eaeca130816ee77c9bb74fa8f2ac01c996b4219d6bb0641d74bc9eb6eb1fe3e1
+  languageName: node
+  linkType: hard
+
+"expo-location@npm:^56.0.16":
+  version: 56.0.16
+  resolution: "expo-location@npm:56.0.16"
+  dependencies:
+    "@expo/image-utils": "npm:^0.10.1"
+  peerDependencies:
+    expo: "*"
+  checksum: 10c0/e3756ad521be586a53a20d41cf96dd93bca3bb5aac649290c3431d8167bcef0f2baadfbe28cbf9ec7525998ad53a2b8130476be3a5e72152953c59d0e729efd3
   languageName: node
   linkType: hard
 
@@ -9447,6 +9498,22 @@ __metadata:
     react-native: "*"
     react-native-reanimated: ">=3.0.0"
   checksum: 10c0/708b8c299fdfc11749db4d84238330a2f04a07a92f40a5f0aa2870ffedb9e47c05455d50c3441a321f5cd5cacf7c936d5706e74cfb234a132e6c6c9ebb0d5e57
+  languageName: node
+  linkType: hard
+
+"react-native-maps@npm:^1.27.2":
+  version: 1.27.2
+  resolution: "react-native-maps@npm:1.27.2"
+  dependencies:
+    "@types/geojson": "npm:^7946.0.13"
+  peerDependencies:
+    react: ">= 18.3.1"
+    react-native: ">= 0.76.0"
+    react-native-web: ">= 0.11"
+  peerDependenciesMeta:
+    react-native-web:
+      optional: true
+  checksum: 10c0/cde71f62c5cc1dee7f1a158d354ddb0a3295b1be589e98991510cbd4586b8eaa1ea6cfe68f6fbb25a87a4c9bb6be4a5aa93b410053f120bc34adfb526a4ca671
   languageName: node
   linkType: hard
 
