@@ -1,5 +1,5 @@
 import React, { type ReactNode } from 'react';
-import { View, StyleSheet, ViewStyle } from 'react-native';
+import { View, StyleSheet, type ViewStyle } from 'react-native';
 import { AppText } from '@/components/typography/AppText';
 import Feather from 'react-native-vector-icons/Feather';
 import { theme } from '@/shared/themes/theme';

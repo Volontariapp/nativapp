@@ -1,5 +1,5 @@
 import React from 'react';
-import { View, StyleSheet, TextInput, Alert, ScrollView, Pressable } from 'react-native';
+import { View, StyleSheet, TextInput, Alert, Pressable } from 'react-native';
 import { AppKeyboardScrollView } from '@/components/layout/AppKeyboardScrollView';
 import { AppText } from '@/components/typography/AppText';
 import { AppButton } from '@/components/buttons/AppButton';
@@ -94,7 +94,12 @@ export function EventFormScreen(): React.JSX.Element {
       await Promise.all(promises);
       void queryClient.invalidateQueries({ queryKey: ['events'] });
       Alert.alert('Succès', 'Les 10 événements ont été créés avec succès !', [
-        { text: 'OK', onPress: () => navigation.goBack() }
+        {
+          text: 'OK',
+          onPress: () => {
+            navigation.goBack();
+          },
+        },
       ]);
     } catch {
       Alert.alert('Erreur', 'Impossible de créer les événements.');

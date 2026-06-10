@@ -25,7 +25,7 @@ export const useCreateEvent = () => {
 
       const newEvent = await eventApi.createEvent(payload);
 
-      if (data.requirements && data.requirements.length > 0) {
+      if (data.requirements.length > 0) {
         console.log(`[useCreateEvent] Adding ${String(data.requirements.length)} requirements to event ${newEvent.id}`);
         await Promise.all(
           data.requirements.map((req) =>

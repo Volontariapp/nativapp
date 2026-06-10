@@ -13,13 +13,13 @@ import type {
   UpdateTagRequest,
   UpdateTagResponse,
   SearchEventsRequest,
-  SearchEventsResponse,
+  ListEventsWebResponse,
   ListRequirementsWebResponse,
   GetTagsRequest,
   GetTagsResponse,
-  GetUserEventsRequest,
-  GetUserParticipationsRequest,
-  GetUserWishesRequest,
+  GetUserEventWebRequest,
+  GetUserParticipateEventWebRequest,
+  GetUserWishEventWebRequest,
 } from '@volontariapp/contracts';
 
 export const EVENT_ENDPOINTS = {
@@ -82,7 +82,7 @@ export const EVENT_ENDPOINTS = {
     method: 'GET',
     requiresAuth: true,
     roles: [UserRoles.ORGANIZATION, UserRoles.VOLUNTEER, UserRoles.ADMIN],
-  } as EndpointDefinition<SearchEventsRequest, SearchEventsResponse>,
+  } as EndpointDefinition<SearchEventsRequest, ListEventsWebResponse>,
   GET_EVENT: {
     path: '/events/:id',
     method: 'GET',
@@ -100,19 +100,19 @@ export const EVENT_ENDPOINTS = {
     method: 'GET',
     requiresAuth: true,
     roles: [UserRoles.ORGANIZATION, UserRoles.VOLUNTEER, UserRoles.ADMIN],
-  } as EndpointDefinition<GetUserEventsRequest, SearchEventsResponse>,
+  } as EndpointDefinition<GetUserEventWebRequest, ListEventsWebResponse>,
   GET_USER_PARTICIPATED_EVENTS_SELF: {
     path: '/events/participated/me',
     method: 'GET',
     requiresAuth: true,
     roles: [UserRoles.ORGANIZATION, UserRoles.VOLUNTEER, UserRoles.ADMIN],
-  } as EndpointDefinition<GetUserParticipationsRequest, SearchEventsResponse>,
+  } as EndpointDefinition<GetUserParticipateEventWebRequest, ListEventsWebResponse>,
   GET_USER_WISHED_EVENTS_SELF: {
     path: '/events/wished/me',
     method: 'GET',
     requiresAuth: true,
     roles: [UserRoles.ORGANIZATION, UserRoles.VOLUNTEER, UserRoles.ADMIN],
-  } as EndpointDefinition<GetUserWishesRequest, SearchEventsResponse>,
+  } as EndpointDefinition<GetUserWishEventWebRequest, ListEventsWebResponse>,
   LIST_TAGS: {
     path: '/tags',
     method: 'GET',

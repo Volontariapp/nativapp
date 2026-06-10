@@ -62,7 +62,9 @@ export function AppChipSelector<T>({
 
   return (
     <View style={containerStyle}>
-      {label ? <AppText style={styles.label}>{label}</AppText> : null}
+      {label !== undefined && label !== '' ? (
+        <AppText style={styles.label}>{label}</AppText>
+      ) : null}
       
       <FlatList
         data={options}

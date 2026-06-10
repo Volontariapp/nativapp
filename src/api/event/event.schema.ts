@@ -19,7 +19,7 @@ export const eventSchema = z
     maxParticipants: z.number().min(1, 'Au moins 1 participant'),
     startAt: z.date({ message: 'Date requise' }),
     endAt: z.date({ message: 'Date requise' }),
-    requirements: z.array(requirementSchema).default([]),
+    requirements: z.array(requirementSchema),
   })
   .refine((data) => data.endAt > data.startAt, {
     message: 'La date de fin doit être après le début',

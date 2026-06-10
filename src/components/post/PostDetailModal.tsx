@@ -12,8 +12,12 @@ import { AppText } from '@/components/typography/AppText';
 import { AppButton } from '@/components/buttons/AppButton';
 import { EventPreviewModal } from './event-preview-modal';
 import { convertEventDtoToAppEvent } from '@/api/event/event.api';
-import type { PostWeb } from '@volontariapp/contracts';
+import type { PostWeb, EventDTO } from '@volontariapp/contracts';
 import type { AppEvent } from '@/api/event/event.api';
+
+interface PostWithEvent extends PostWeb {
+  event?: EventDTO;
+}
 
 interface PostDetailModalProps {
   visible: boolean;
@@ -37,9 +41,11 @@ export function PostDetailModal({
     );
   }
 
+  const postWithEvent = post as PostWithEvent;
+
   const handleEventPress = () => {
-    if (post.event) {
-      const appEvent = convertEventDtoToAppEvent(post.event);
+    if (postWithEvent.event !== undefined) {
+      const appEvent = convertEventDtoToAppEvent(postWithEvent.event);
       setSelectedEvent(appEvent);
       setEventModalVisible(true);
     }
@@ -76,18 +82,18 @@ export function PostDetailModal({
               </View>
             </View>
 
-            {post.event && (
+            {postWithEvent.event !== undefined && (
               <View style={styles.eventSection}>
                 <AppText style={styles.sectionTitle}>Événement lié</AppText>
                 <Pressable style={styles.eventCard} onPress={handleEventPress}>
                   <View style={styles.eventContent}>
-                    <AppText style={styles.eventTitle}>{post.event.title}</AppText>
+                    <AppText style={styles.eventTitle}>{postWithEvent.event.title}</AppText>
                     <AppText style={styles.eventDescription} numberOfLines={2}>
-                      {post.event.description}
+                      {postWithEvent.event.description}
                     </AppText>
                     <AppText style={styles.eventMeta}>
-                      {post.event.startAt
-                        ? new Date(post.event.startAt).toLocaleDateString('fr-FR')
+                      {postWithEvent.event.startAt !== undefined
+                        ? new Date(postWithEvent.event.startAt).toLocaleDateString('fr-FR')
                         : 'Date non définie'}
                     </AppText>
                   </View>

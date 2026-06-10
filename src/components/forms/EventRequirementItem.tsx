@@ -1,6 +1,6 @@
 import React from 'react';
 import { View, StyleSheet, TextInput, Pressable } from 'react-native';
-import { Control, FieldErrors } from 'react-hook-form';
+import type { Control, FieldErrors, Path } from 'react-hook-form';
 import Feather from 'react-native-vector-icons/Feather';
 import { AppText } from '@/components/typography/AppText';
 import { EventInput } from '@/components/inputs';
@@ -24,31 +24,40 @@ export function EventRequirementItem({
   return (
     <View style={styles.requirementCard}>
       <View style={styles.requirementHeaderRow}>
-        <AppText style={styles.requirementIndex}>Matériel #{index + 1}</AppText>
-        <Pressable onPress={() => onRemove(index)} style={styles.removeButton}>
+        <AppText style={styles.requirementIndex}>Matériel #{String(index + 1)}</AppText>
+        <Pressable
+          onPress={() => {
+            onRemove(index);
+          }}
+          style={styles.removeButton}
+        >
           <Feather name="trash-2" size={16} color={theme.colors.danger} />
         </Pressable>
       </View>
 
       <AppFormController
         control={control}
-        name={`requirements.${index}.name`}
+        name={`requirements.${String(index)}.name` as Path<EventFormValues>}
         label="Nom de l'objet"
         errors={errors}
         render={({ field: { onChange, value } }) => (
-          <EventInput value={value} onChangeText={onChange} placeholder="Ex: Gants de protection" />
+          <EventInput
+            value={typeof value === 'string' ? value : ''}
+            onChangeText={onChange}
+            placeholder="Ex: Gants de protection"
+          />
         )}
       />
 
       <AppFormController
         control={control}
-        name={`requirements.${index}.description`}
+        name={`requirements.${String(index)}.description` as Path<EventFormValues>}
         label="Description"
         errors={errors}
         render={({ field: { onChange, value } }) => (
           <TextInput
             style={[styles.input, styles.reqTextArea]}
-            value={value}
+            value={typeof value === 'string' ? value : ''}
             onChangeText={onChange}
             placeholder="À quoi ça va servir ?"
             multiline
@@ -58,13 +67,13 @@ export function EventRequirementItem({
 
       <AppFormController
         control={control}
-        name={`requirements.${index}.neededQuantity`}
+        name={`requirements.${String(index)}.neededQuantity` as Path<EventFormValues>}
         label="Quantité requise"
         errors={errors}
         render={({ field: { onChange, value } }) => (
           <TextInput
             style={styles.input}
-            value={value ? String(value) : ''}
+            value={typeof value === 'number' || typeof value === 'string' ? String(value) : ''}
             keyboardType="numeric"
             onChangeText={(v) => {
               onChange(Number(v) || 0);

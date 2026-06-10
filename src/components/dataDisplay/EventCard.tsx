@@ -82,14 +82,11 @@ export function EventCard({ event }: EventCardProps): React.JSX.Element {
 const styles = StyleSheet.create({
   card: {
     backgroundColor: theme.colors.white,
-    borderRadius: theme.radius.full / 4, // More rounded but not pill if content is large
-    // Actually, looking at the image, it's very rounded
     padding: theme.spacing.md,
     marginBottom: theme.spacing.md,
     flexDirection: 'row',
     alignItems: 'center',
     ...theme.shadows.card,
-    // Adjusting radius to match image pill shape
     borderRadius: 40,
   },
   imageContainer: {

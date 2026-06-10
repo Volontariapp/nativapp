@@ -1,6 +1,7 @@
 import React from 'react';
 import { View, StyleSheet, TextInput } from 'react-native';
-import { Control, Controller, FieldErrors } from 'react-hook-form';
+import { Controller } from 'react-hook-form';
+import type { Control, FieldErrors } from 'react-hook-form';
 import { AppText } from '@/components/typography/AppText';
 import { AppDateTimePicker, AppInfoCard } from '@/components/inputs';
 import { theme } from '@/shared/themes/theme';
