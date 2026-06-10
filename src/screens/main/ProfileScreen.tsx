@@ -22,6 +22,7 @@ import { useProfile } from '@/api/user/hooks/use-profile';
 import { useUpdateProfile } from '@/api/user/hooks/use-update-profile';
 import { useUserParticipations } from '@/api/social/hooks/use-user-participations';
 import { useGetMyEvents } from '@/api/event/hooks/use-get-my-events';
+import { useGetParticipatedEvents } from '@/api/event/hooks/use-get-participated-events';
 import { useNavigation } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import type { ProfileStackParamList } from '@/navigation/stacks/ProfileStack';
@@ -40,10 +41,18 @@ export function ProfileScreen(): React.JSX.Element {
   const {
     data: myEventsData,
     isLoading: isMyEventsLoading,
-    hasNextPage,
-    fetchNextPage,
-    isFetchingNextPage,
+    hasNextPage: hasNextMyEvents,
+    fetchNextPage: fetchNextMyEvents,
+    isFetchingNextPage: isFetchingNextMyEvents,
   } = useGetMyEvents(2);
+
+  const {
+    data: participatedEventsData,
+    isLoading: isParticipatedEventsLoading,
+    hasNextPage: hasNextParticipatedEvents,
+    fetchNextPage: fetchNextParticipatedEvents,
+    isFetchingNextPage: isFetchingNextParticipatedEvents,
+  } = useGetParticipatedEvents(2);
 
   const updateProfile = useUpdateProfile();
 
@@ -72,6 +81,7 @@ export function ProfileScreen(): React.JSX.Element {
   }
 
   const allMyEvents = myEventsData?.pages.flatMap((page) => page.events) ?? [];
+  const allParticipatedEvents = participatedEventsData?.pages.flatMap((page) => page.events) ?? [];
 
   return (
     <View style={styles.container}>
@@ -120,6 +130,33 @@ export function ProfileScreen(): React.JSX.Element {
         </ProfileSection>
 
         <ProfileSection title="Événements à venir">
+          {isParticipatedEventsLoading ? (
+            <ActivityIndicator color={theme.colors.primaryEco} />
+          ) : allParticipatedEvents.length > 0 ? (
+            <View>
+              {allParticipatedEvents.map((event) => (
+                <EventCard key={event.id} event={event} />
+              ))}
+              {hasNextParticipatedEvents && (
+                <View style={styles.seeMoreContainer}>
+                  <AppButton
+                    variant="eco"
+                    size="small"
+                    text={isFetchingNextParticipatedEvents ? 'Chargement...' : 'Voir plus'}
+                    onPress={() => {
+                      void fetchNextParticipatedEvents();
+                    }}
+                    disabled={isFetchingNextParticipatedEvents}
+                  />
+                </View>
+              )}
+            </View>
+          ) : (
+            <AppText style={styles.emptyText}>Aucun événement à venir pour le moment.</AppText>
+          )}
+        </ProfileSection>
+
+        <ProfileSection title="Mes événements créés">
           {isMyEventsLoading ? (
             <ActivityIndicator color={theme.colors.primaryEco} />
           ) : allMyEvents.length > 0 ? (
@@ -127,16 +164,16 @@ export function ProfileScreen(): React.JSX.Element {
               {allMyEvents.map((event) => (
                 <EventCard key={event.id} event={event} />
               ))}
-              {hasNextPage && (
+              {hasNextMyEvents && (
                 <View style={styles.seeMoreContainer}>
                   <AppButton
                     variant="eco"
                     size="small"
-                    text={isFetchingNextPage ? 'Chargement...' : 'Voir plus'}
+                    text={isFetchingNextMyEvents ? 'Chargement...' : 'Voir plus'}
                     onPress={() => {
-                      void fetchNextPage();
+                      void fetchNextMyEvents();
                     }}
-                    disabled={isFetchingNextPage}
+                    disabled={isFetchingNextMyEvents}
                   />
                 </View>
               )}
