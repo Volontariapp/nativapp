@@ -1,5 +1,5 @@
 import React, { memo, useCallback, useState } from 'react';
-import { View, StyleSheet, Pressable, ActivityIndicator, FlatList } from 'react-native';
+import { View, StyleSheet, Pressable, ActivityIndicator, ScrollView } from 'react-native';
 import { theme } from '@/shared/themes/theme';
 import { AppText } from '@/components/typography/AppText';
 import type { AppEvent } from '@/api/event/event.api';
@@ -19,7 +19,9 @@ const EventItem = memo(function EventItem({
   onSelect,
   onPreview,
 }: EventItemProps) {
-  const handleSelect = useCallback(() => { onSelect(event.id); }, [event.id, onSelect]);
+  const handleSelect = useCallback(() => {
+    onSelect(event.id);
+  }, [event.id, onSelect]);
   const handlePreview = useCallback(
     (e: { stopPropagation: () => void }) => {
       e.stopPropagation();
@@ -79,20 +81,6 @@ export function EventSelector({
     setPreviewEvent(event);
   }, []);
 
-  const keyExtractor = useCallback((event: AppEvent) => event.id, []);
-
-  const renderItem = useCallback(
-    ({ item }: { item: AppEvent }) => (
-      <EventItem
-        event={item}
-        isSelected={selectedEventId === item.id}
-        onSelect={handleSelectEvent}
-        onPreview={handlePreviewEvent}
-      />
-    ),
-    [selectedEventId, handleSelectEvent, handlePreviewEvent],
-  );
-
   return (
     <>
       <View style={styles.container}>
@@ -129,13 +117,17 @@ export function EventSelector({
             {allEvents.length === 0 ? (
               <AppText style={styles.emptyText}>Aucun événement disponible</AppText>
             ) : (
-              <FlatList
-                style={styles.eventsList}
-                nestedScrollEnabled
-                data={allEvents}
-                keyExtractor={keyExtractor}
-                renderItem={renderItem}
-              />
+              <ScrollView style={styles.eventsList} nestedScrollEnabled>
+                {allEvents.map((item) => (
+                  <EventItem
+                    key={item.id}
+                    event={item}
+                    isSelected={selectedEventId === item.id}
+                    onSelect={handleSelectEvent}
+                    onPreview={handlePreviewEvent}
+                  />
+                ))}
+              </ScrollView>
             )}
           </View>
         )}

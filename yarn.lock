@@ -1962,8 +1962,8 @@ __metadata:
     "@volontariapp/contracts": "npm:^4.2.6"
     "@volontariapp/errors": "npm:^0.6.0"
     "@volontariapp/logger": "npm:^0.2.5"
-    "@volontariapp/messaging": "npm:^2.8.1"
-    "@volontariapp/shared": "npm:^0.7.0"
+    "@volontariapp/messaging": "npm:^2.8.2"
+    "@volontariapp/shared": "npm:^0.7.1"
     axios: "npm:^1.16.1"
     class-validator: "npm:^0.15.1"
     eslint: "npm:~9.18.0"
@@ -3909,20 +3909,20 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@volontariapp/messaging@npm:^2.8.1":
-  version: 2.8.1
-  resolution: "@volontariapp/messaging@npm:2.8.1"
+"@volontariapp/messaging@npm:^2.8.2":
+  version: 2.8.2
+  resolution: "@volontariapp/messaging@npm:2.8.2"
   dependencies:
     "@volontariapp/contracts": "npm:4.2.6"
-    "@volontariapp/shared": "npm:0.7.0"
-  checksum: 10c0/f717a3e5830581eb58bb17b09a8e567a0b74ae095f31fba31d87b8bb789e35f2335fb8c8efe49f3110823824fa47fb7e5129dacde7956cfb8311b512d81b87ac
+    "@volontariapp/shared": "npm:0.7.1"
+  checksum: 10c0/477373f2af7527b32ff8f3fa8aeb1224f14991f7f7e12d722ccd1d13a597dfedc9edd5e9ec0dc57e3983dca2349d1e1c37b7349f013899b85464e7c57622e0c3
   languageName: node
   linkType: hard
 
-"@volontariapp/shared@npm:0.7.0, @volontariapp/shared@npm:^0.7.0":
-  version: 0.7.0
-  resolution: "@volontariapp/shared@npm:0.7.0"
-  checksum: 10c0/ee998bd879c9a38be813d3dbb5a0cae688e5291bdd1b2bb1743be5b8c6ee1d78c93da84a7211e7ca5da44a560bcbe462c3efa578e69cac3ff4a28a7e60b8a7a1
+"@volontariapp/shared@npm:0.7.1, @volontariapp/shared@npm:^0.7.1":
+  version: 0.7.1
+  resolution: "@volontariapp/shared@npm:0.7.1"
+  checksum: 10c0/1c62f9224dbf9d38f8922071b6a40b370f9b0d3509a287f8a5d3aec7eaee76a16cc402d7f4d34be7e3838f90db219af84fe27f6b3ee9de3886b5d355d0276d56
   languageName: node
   linkType: hard
 

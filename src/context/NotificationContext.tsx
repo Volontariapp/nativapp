@@ -13,11 +13,11 @@ import { AppText } from '@/components/typography/AppText';
 import { theme } from '@/shared/themes/theme';
 import { useSocket } from './SocketContext';
 import {
-  WebsocketEventMessagingType,
   type IPostCreatedWebsocketPayload,
   type IPostDeletedWebsocketPayload,
   type IEventCreatedWebsocketPayload,
   type IUserCreatedWebsocketPayload,
+  WebsocketMessagingType,
 } from '@volontariapp/messaging';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
@@ -64,7 +64,7 @@ export const NotificationProvider: React.FC<{ children: React.ReactNode }> = ({ 
   useEffect(() => {
     if (!socket) return;
 
-    const handlePostCreated = (data: IPostCreatedWebsocketPayload & { isEmitter?: boolean }) => {
+    const handlePostCreated = (data: IPostCreatedWebsocketPayload) => {
       const msg =
         data.isEmitter === true
           ? 'Votre post a été créé avec succès !'
@@ -72,7 +72,7 @@ export const NotificationProvider: React.FC<{ children: React.ReactNode }> = ({ 
       notifyRef.current(msg);
     };
 
-    const handlePostDeleted = (data: IPostDeletedWebsocketPayload & { isEmitter?: boolean }) => {
+    const handlePostDeleted = (data: IPostDeletedWebsocketPayload) => {
       const msg =
         data.isEmitter === true ? 'Votre post a bien été supprimé.' : 'Un post a été supprimé.';
       notifyRef.current(msg);
@@ -86,7 +86,7 @@ export const NotificationProvider: React.FC<{ children: React.ReactNode }> = ({ 
       notifyRef.current('La suppression du post a échoué.');
     };
 
-    const handleEventCreated = (data: IEventCreatedWebsocketPayload & { isEmitter?: boolean }) => {
+    const handleEventCreated = (data: IEventCreatedWebsocketPayload) => {
       const msg =
         data.isEmitter === true
           ? 'Votre évènement a été créé avec succès !'
@@ -94,7 +94,7 @@ export const NotificationProvider: React.FC<{ children: React.ReactNode }> = ({ 
       notifyRef.current(msg);
     };
 
-    const handleUserCreated = (data: IUserCreatedWebsocketPayload & { isEmitter?: boolean }) => {
+    const handleUserCreated = (data: IUserCreatedWebsocketPayload) => {
       const msg =
         data.isEmitter === true
           ? 'Votre compte a été créé avec succès !'
@@ -102,20 +102,20 @@ export const NotificationProvider: React.FC<{ children: React.ReactNode }> = ({ 
       notifyRef.current(msg);
     };
 
-    socket.on(WebsocketEventMessagingType.WS_POST_CREATED, handlePostCreated);
-    socket.on(WebsocketEventMessagingType.WS_POST_DELETED, handlePostDeleted);
-    socket.on(WebsocketEventMessagingType.WS_POST_CREATION_FAILED, handlePostFailed);
-    socket.on(WebsocketEventMessagingType.WS_POST_DELETION_FAILED, handlePostDeletionFailed);
-    socket.on(WebsocketEventMessagingType.WS_EVENT_CREATED, handleEventCreated);
-    socket.on(WebsocketEventMessagingType.WS_USER_CREATED, handleUserCreated);
+    socket.on(WebsocketMessagingType.POST_CREATED, handlePostCreated);
+    socket.on(WebsocketMessagingType.POST_DELETED, handlePostDeleted);
+    socket.on(WebsocketMessagingType.POST_CREATION_FAILED, handlePostFailed);
+    socket.on(WebsocketMessagingType.POST_DELETION_FAILED, handlePostDeletionFailed);
+    socket.on(WebsocketMessagingType.EVENT_CREATED, handleEventCreated);
+    socket.on(WebsocketMessagingType.USER_CREATED, handleUserCreated);
 
     return () => {
-      socket.off(WebsocketEventMessagingType.WS_POST_CREATED, handlePostCreated);
-      socket.off(WebsocketEventMessagingType.WS_POST_DELETED, handlePostDeleted);
-      socket.off(WebsocketEventMessagingType.WS_POST_CREATION_FAILED, handlePostFailed);
-      socket.off(WebsocketEventMessagingType.WS_POST_DELETION_FAILED, handlePostDeletionFailed);
-      socket.off(WebsocketEventMessagingType.WS_EVENT_CREATED, handleEventCreated);
-      socket.off(WebsocketEventMessagingType.WS_USER_CREATED, handleUserCreated);
+      socket.off(WebsocketMessagingType.POST_CREATED, handlePostCreated);
+      socket.off(WebsocketMessagingType.POST_DELETED, handlePostDeleted);
+      socket.off(WebsocketMessagingType.POST_CREATION_FAILED, handlePostFailed);
+      socket.off(WebsocketMessagingType.POST_DELETION_FAILED, handlePostDeletionFailed);
+      socket.off(WebsocketMessagingType.EVENT_CREATED, handleEventCreated);
+      socket.off(WebsocketMessagingType.USER_CREATED, handleUserCreated);
     };
   }, [socket]);
 
