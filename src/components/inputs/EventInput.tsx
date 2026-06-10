@@ -1,4 +1,3 @@
-import type { JSX } from 'react';
 import React from 'react';
 import { View, TextInput, StyleSheet, type TextInputProps } from 'react-native';
 import { theme } from '@/shared/themes/theme';
@@ -15,7 +14,7 @@ export const EventInput = ({
   style,
   containerStyle,
   ...props
-}: EventInputProps): JSX.Element => {
+}: EventInputProps): React.ReactNode => {
   return (
     <View style={[styles.container, containerStyle]}>
       <TextInput

@@ -1,5 +1,5 @@
 import React from 'react';
-import { View, ScrollView, Pressable, StyleSheet, type ViewStyle } from 'react-native';
+import { View, FlatList, Pressable, StyleSheet, type ViewStyle } from 'react-native';
 import { AppText } from '@/components/typography/AppText';
 import { theme } from '@/shared/themes/theme';
 
@@ -30,46 +30,49 @@ export function AppChipSelector<T>({
   containerStyle,
   scrollStyle,
 }: AppChipSelectorProps<T>): React.JSX.Element {
+  const renderItem = ({ item, index }: { item: AppChipOption<T>; index: number }) => {
+    const isSelected = value === item.value;
+    const primaryColor = item.color ?? theme.colors.grey;
+    const isLast = index === options.length - 1;
+
+    return (
+      <Pressable
+        style={({ pressed }) => [
+          styles.chipButton,
+          { borderColor: primaryColor },
+          isSelected && { backgroundColor: primaryColor },
+          pressed && { opacity: 0.7 },
+          isLast && { marginRight: 0 },
+        ]}
+        onPress={() => {
+          onChange(item.value);
+        }}
+      >
+        <AppText
+          style={[
+            styles.chipText,
+            isSelected && styles.chipTextSelected,
+          ]}
+        >
+          {item.label}
+        </AppText>
+      </Pressable>
+    );
+  };
+
   return (
     <View style={containerStyle}>
       {label ? <AppText style={styles.label}>{label}</AppText> : null}
       
-      <ScrollView
+      <FlatList
+        data={options}
+        renderItem={renderItem}
+        keyExtractor={(item) => String(item.value)}
         horizontal
         showsHorizontalScrollIndicator={false}
         style={[styles.scroll, scrollStyle]}
-      >
-        {options.map((option, index) => {
-          const isSelected = value === option.value;
-          const primaryColor = option.color ?? theme.colors.grey;
-          const isLast = index === options.length - 1;
-
-          return (
-            <Pressable
-              key={String(option.value)}
-              style={({ pressed }) => [
-                styles.chipButton,
-                { borderColor: primaryColor },
-                isSelected && { backgroundColor: primaryColor },
-                pressed && { opacity: 0.7 },
-                isLast && { marginRight: 0 },
-              ]}
-              onPress={() => {
-                onChange(option.value);
-              }}
-            >
-              <AppText
-                style={[
-                  styles.chipText,
-                  isSelected && styles.chipTextSelected,
-                ]}
-              >
-                {option.label}
-              </AppText>
-            </Pressable>
-          );
-        })}
-      </ScrollView>
+        contentContainerStyle={styles.scrollContent}
+      />
     </View>
   );
 }
@@ -82,8 +85,10 @@ const styles = StyleSheet.create({
     fontWeight: '600',
   },
   scroll: {
-    flexDirection: 'row',
     marginTop: theme.spacing.xs,
+  },
+  scrollContent: {
+    flexDirection: 'row',
   },
   chipButton: {
     paddingHorizontal: theme.spacing.md,

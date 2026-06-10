@@ -27,13 +27,15 @@ export const useCreateEvent = () => {
 
       if (data.requirements && data.requirements.length > 0) {
         console.log(`[useCreateEvent] Adding ${String(data.requirements.length)} requirements to event ${newEvent.id}`);
-        for (const req of data.requirements) {
-          await eventApi.addRequirement(newEvent.id, {
-            name: req.name,
-            description: req.description,
-            neededQuantity: req.neededQuantity,
-          });
-        }
+        await Promise.all(
+          data.requirements.map((req) =>
+            eventApi.addRequirement(newEvent.id, {
+              name: req.name,
+              description: req.description,
+              neededQuantity: req.neededQuantity,
+            })
+          )
+        );
       }
 
       return newEvent;
