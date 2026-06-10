@@ -1,12 +1,5 @@
 import React from 'react';
-import {
-  View,
-  StyleSheet,
-  Modal,
-  Pressable,
-  ScrollView,
-  StyleSheet as RNStyleSheet,
-} from 'react-native';
+import { View, StyleSheet, Modal, Pressable, ScrollView } from 'react-native';
 import { theme } from '@/shared/themes/theme';
 import { AppText } from '@/components/typography/AppText';
 import { AppButton } from '@/components/buttons/AppButton';
@@ -41,7 +34,7 @@ export function PostDetailModal({
     );
   }
 
-  const postWithEvent = post as PostWithEvent;
+  const postWithEvent: PostWithEvent = post;
 
   const handleEventPress = () => {
     if (postWithEvent.event !== undefined) {
@@ -54,7 +47,7 @@ export function PostDetailModal({
   return (
     <Modal visible={visible} transparent animationType="fade">
       <View style={styles.overlay}>
-        <Pressable style={RNStyleSheet.absoluteFillObject} onPress={onClose} />
+        <Pressable style={StyleSheet.absoluteFillObject} onPress={onClose} />
         <View style={styles.modalContent}>
           <ScrollView showsVerticalScrollIndicator={false}>
             <View style={styles.header}>
