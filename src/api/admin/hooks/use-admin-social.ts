@@ -1,6 +1,11 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { adminSocialApi } from '../admin.social.api';
-import type { ActionSuccessWebResponse, IdsListWebResponse } from '@volontariapp/contracts';
+import type {
+  ActionSuccessWebResponse,
+  GetUserEventWebResponse,
+  GetUserParticipateEventWebResponse,
+  GetUserWishEventWebResponse,
+} from '@volontariapp/contracts';
 
 interface ParticipateParams {
   userId: string;
@@ -148,7 +153,7 @@ export function useAdminUnblockUser() {
 }
 
 export function useAdminUserParticipatedEvents(userId: string) {
-  return useQuery<IdsListWebResponse>({
+  return useQuery<GetUserParticipateEventWebResponse>({
     queryKey: ['admin-social-participations', userId],
     queryFn: () => adminSocialApi.getUserParticipatedEvents({}, { userId }),
     enabled: !!userId,
@@ -156,7 +161,7 @@ export function useAdminUserParticipatedEvents(userId: string) {
 }
 
 export function useAdminUserWishedEvents(userId: string) {
-  return useQuery<IdsListWebResponse>({
+  return useQuery<GetUserWishEventWebResponse>({
     queryKey: ['admin-social-wishes', userId],
     queryFn: () => adminSocialApi.getUserWishedEvents({}, { userId }),
     enabled: !!userId,
@@ -164,7 +169,7 @@ export function useAdminUserWishedEvents(userId: string) {
 }
 
 export function useAdminUserFollowers(userId: string) {
-  return useQuery<IdsListWebResponse>({
+  return useQuery<GetUserEventWebResponse>({
     queryKey: ['admin-social-followers', userId],
     queryFn: () => adminSocialApi.getFollowers({}, { userId }),
     enabled: !!userId,
@@ -172,7 +177,7 @@ export function useAdminUserFollowers(userId: string) {
 }
 
 export function useAdminUserFollows(userId: string) {
-  return useQuery<IdsListWebResponse>({
+  return useQuery<GetUserEventWebResponse>({
     queryKey: ['admin-social-follows', userId],
     queryFn: () => adminSocialApi.getFollows({}, { userId }),
     enabled: !!userId,
@@ -180,7 +185,7 @@ export function useAdminUserFollows(userId: string) {
 }
 
 export function useAdminUserBlocks(userId: string) {
-  return useQuery<IdsListWebResponse>({
+  return useQuery<GetUserEventWebResponse>({
     queryKey: ['admin-social-blocks', userId],
     queryFn: () => adminSocialApi.getBlocks({}, { userId }),
     enabled: !!userId,
@@ -188,7 +193,7 @@ export function useAdminUserBlocks(userId: string) {
 }
 
 export function useAdminUserPosts(userId: string) {
-  return useQuery<IdsListWebResponse>({
+  return useQuery<GetUserEventWebResponse>({
     queryKey: ['admin-social-posts', userId],
     queryFn: () => adminSocialApi.getUserPosts({}, { userId }),
     enabled: !!userId,

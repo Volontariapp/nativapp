@@ -1,27 +1,36 @@
 import React from 'react';
-import { View, StyleSheet, TextInput, Alert } from 'react-native';
+import { View, StyleSheet, TextInput, Alert, Pressable } from 'react-native';
 import { AppKeyboardScrollView } from '@/components/layout/AppKeyboardScrollView';
 import { AppText } from '@/components/typography/AppText';
 import { AppButton } from '@/components/buttons/AppButton';
 import AppHeader from '@/components/layout/AppHeader';
 import { theme } from '@/shared/themes/theme';
+import Feather from 'react-native-vector-icons/Feather';
 
 import type { CreateEventRequest } from '@volontariapp/contracts';
 import { EventType } from '@volontariapp/contracts';
 
-import { useForm, Controller } from 'react-hook-form';
+import { useForm, useFieldArray } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { ScrollView, Pressable } from 'react-native';
 import { eventSchema, type EventFormValues } from '@/api/event/event.schema';
 import { mapEventType } from '@/shared/lib/event-mappers.utils';
 import { useCreateEvent } from '@/api/event/hooks/use-create-event';
+import { EventInput, AppChipSelector, type AppChipOption } from '@/components/inputs';
+import { AppFormController, EventInfoGrid, EventRequirementItem } from '@/components/forms';
 import { eventApi } from '@/api/event/event.api';
 import { useQueryClient } from '@tanstack/react-query';
-import { AppDateTimePicker } from '../../components/inputs/AppDateTimePicker';
+import { useNavigation } from '@react-navigation/native';
+
+const EVENT_TYPE_OPTIONS: AppChipOption<EventType>[] = [
+  { value: EventType.EVENT_TYPE_UNSPECIFIED, label: mapEventType(EventType.EVENT_TYPE_UNSPECIFIED), color: theme.colors.grey },
+  { value: EventType.EVENT_TYPE_ECOLOGY, label: mapEventType(EventType.EVENT_TYPE_ECOLOGY), color: theme.colors.primaryEco },
+  { value: EventType.EVENT_TYPE_SOCIAL, label: mapEventType(EventType.EVENT_TYPE_SOCIAL), color: theme.colors.primarySocio },
+];
 
 export function EventFormScreen(): React.JSX.Element {
   const mutation = useCreateEvent();
   const queryClient = useQueryClient();
+  const navigation = useNavigation();
   const [isBatching, setIsBatching] = React.useState(false);
 
   const {
@@ -34,27 +43,26 @@ export function EventFormScreen(): React.JSX.Element {
       title: 'Nettoyage de la plage',
       description: 'Rejoignez-nous pour nettoyer la plage et protéger notre environnement !',
       localisationName: 'Plage du Prado, Marseille',
-      type: EventType.EVENT_TYPE_ECOLOGY,
+      type: EventType.EVENT_TYPE_UNSPECIFIED,
       awardedImpactScore: 100,
       maxParticipants: 50,
       startAt: new Date('2026-06-01T10:00:00Z'),
       endAt: new Date('2026-06-01T18:00:00Z'),
+      requirements: [],
     },
   });
 
+  const { fields, append, remove } = useFieldArray({
+    control,
+    name: 'requirements',
+  });
+
   const onSubmit = handleSubmit((data) => {
-    const payload: CreateEventRequest = {
-      title: data.title,
-      description: data.description,
-      localisationName: data.localisationName,
-      type: data.type,
-      awardedImpactScore: data.awardedImpactScore,
-      maxParticipants: data.maxParticipants,
-      startAt: data.startAt,
-      endAt: data.endAt,
-      tagIds: [],
-    };
-    mutation.mutate(payload);
+    mutation.mutate(data, {
+      onSuccess: () => {
+        navigation.goBack();
+      },
+    });
   });
 
   const handleCreate10Events = React.useCallback(async (): Promise<void> => {
@@ -64,7 +72,7 @@ export function EventFormScreen(): React.JSX.Element {
         title: 'Batch Event',
         description: 'Created 10 times via batch button',
         localisationName: 'Paris, France',
-        type: EventType.EVENT_TYPE_SOCIAL,
+        type: EventType.EVENT_TYPE_UNSPECIFIED,
         maxParticipants: 10,
         awardedImpactScore: 100,
         tagIds: [],
@@ -85,13 +93,20 @@ export function EventFormScreen(): React.JSX.Element {
 
       await Promise.all(promises);
       void queryClient.invalidateQueries({ queryKey: ['events'] });
-      Alert.alert('Succès', 'Les 10 événements ont été créés avec succès !');
+      Alert.alert('Succès', 'Les 10 événements ont été créés avec succès !', [
+        {
+          text: 'OK',
+          onPress: () => {
+            navigation.goBack();
+          },
+        },
+      ]);
     } catch {
       Alert.alert('Erreur', 'Impossible de créer les événements.');
     } finally {
       setIsBatching(false);
     }
-  }, [queryClient]);
+  }, [queryClient, navigation]);
 
   return (
     <View style={styles.container}>
@@ -101,191 +116,134 @@ export function EventFormScreen(): React.JSX.Element {
         contentInsetAdjustmentBehavior="automatic"
         bottomOffset={16}
       >
+        <Pressable
+          style={styles.imagePlaceholder}
+          onPress={() => {
+            Alert.alert('Info', "L'ajout d'image n'est pas encore disponible.");
+          }}
+        >
+          <Feather name="plus" size={32} color={theme.colors.grey} />
+          <AppText style={styles.imagePlaceholderText}>Ajouter une image</AppText>
+        </Pressable>
+
         <AppText style={styles.title}>Créer un Évènement</AppText>
 
-        <View style={styles.inputGroup}>
-          <AppText style={styles.label}>Titre de l'évènement</AppText>
-          <Controller
-            control={control}
-            name="title"
-            render={({ field: { onChange, value } }) => (
-              <TextInput style={styles.input} value={value} onChangeText={onChange} />
-            )}
-          />
-          {errors.title ? <AppText style={styles.errorText}>{errors.title.message}</AppText> : null}
-        </View>
+        <AppFormController
+          control={control}
+          name="title"
+          label="Titre de l'évènement"
+          errors={errors}
+          render={({ field: { onChange, value } }) => (
+            <EventInput
+              value={value}
+              onChangeText={onChange}
+              placeholder="Ex: Nettoyage de la plage"
+            />
+          )}
+        />
 
-        <View style={styles.inputGroup}>
-          <AppText style={styles.label}>Description</AppText>
-          <Controller
-            control={control}
-            name="description"
-            render={({ field: { onChange, value } }) => (
-              <TextInput
-                style={[styles.input, styles.textArea]}
-                value={value}
-                onChangeText={onChange}
-                multiline
-                numberOfLines={4}
+        <AppFormController
+          control={control}
+          name="description"
+          label="Description"
+          errors={errors}
+          render={({ field: { onChange, value } }) => (
+            <TextInput
+              style={[styles.input, styles.textArea]}
+              value={value}
+              onChangeText={onChange}
+              multiline
+              numberOfLines={4}
+            />
+          )}
+        />
+
+        <AppFormController
+          control={control}
+          name="localisationName"
+          label="Lieu"
+          errors={errors}
+          render={({ field: { onChange, value } }) => (
+            <EventInput
+              value={value}
+              onChangeText={onChange}
+              placeholder="Ex: Plage du Prado, Marseille"
+            />
+          )}
+        />
+
+        <AppFormController
+          control={control}
+          name="type"
+          label="Type d'évènement"
+          errors={errors}
+          render={({ field: { onChange, value } }) => (
+            <AppChipSelector
+              options={EVENT_TYPE_OPTIONS}
+              value={value}
+              onChange={onChange}
+            />
+          )}
+        />
+
+        <EventInfoGrid control={control} errors={errors} />
+
+        <View style={styles.requirementsSection}>
+          <View style={styles.requirementsHeader}>
+            <AppText style={styles.requirementsTitle}>Matériels Requis</AppText>
+            <AppButton
+              variant="secondary"
+              size="small"
+              text="Ajouter"
+              icon="plus"
+              onPress={() => {
+                append({ name: '', description: '', neededQuantity: 1 });
+              }}
+            />
+          </View>
+
+          {fields.length === 0 ? (
+            <AppText style={styles.noRequirementsText}>
+              Aucun besoin matériel spécifié pour cet événement.
+            </AppText>
+          ) : (
+            fields.map((field, index) => (
+              <EventRequirementItem
+                key={field.id}
+                control={control}
+                errors={errors}
+                index={index}
+                onRemove={remove}
               />
-            )}
+            ))
+          )}
+        </View>
+
+        <View style={styles.publishContainer}>
+          <AppButton
+            text={mutation.isPending || isBatching ? 'Publication...' : "Publier l'évènement"}
+            icon="send"
+            onPress={() => {
+              void onSubmit();
+            }}
+            disabled={mutation.isPending || isBatching}
+            style={styles.publishButton}
+            textStyle={styles.publishButtonText}
           />
-          {errors.description ? (
-            <AppText style={styles.errorText}>{errors.description.message}</AppText>
-          ) : null}
         </View>
 
-        <View style={styles.inputGroup}>
-          <AppText style={styles.label}>Lieu</AppText>
-          <Controller
-            control={control}
-            name="localisationName"
-            render={({ field: { onChange, value } }) => (
-              <TextInput style={styles.input} value={value} onChangeText={onChange} />
-            )}
+        <View style={styles.testSection}>
+          <AppText style={styles.testTitle}>Test (à supprimer)</AppText>
+          <AppButton
+            text={isBatching ? 'Patientez...' : 'Création x10'}
+            variant="socio"
+            onPress={() => {
+              void handleCreate10Events();
+            }}
+            disabled={mutation.isPending || isBatching}
           />
-          {errors.localisationName ? (
-            <AppText style={styles.errorText}>{errors.localisationName.message}</AppText>
-          ) : null}
         </View>
 
-        <View style={styles.inputGroup}>
-          <AppText style={styles.label}>Type d'évènement</AppText>
-          <Controller
-            control={control}
-            name="type"
-            render={({ field: { onChange, value } }) => (
-              <ScrollView
-                horizontal
-                showsHorizontalScrollIndicator={false}
-                style={styles.typeScroll}
-              >
-                {Object.values(EventType).reduce<React.ReactNode[]>((acc, typeVal) => {
-                  if (typeof typeVal === 'number' && typeVal !== EventType.EVENT_TYPE_UNSPECIFIED) {
-                    const isSelected = value === typeVal;
-                    acc.push(
-                      <Pressable
-                        key={typeVal}
-                        style={({ pressed }) => [
-                          styles.typeButton,
-                          isSelected && styles.typeButtonSelected,
-                          pressed && { opacity: 0.7 },
-                        ]}
-                        onPress={() => {
-                          onChange(typeVal);
-                        }}
-                      >
-                        <AppText
-                          style={[
-                            styles.typeButtonText,
-                            isSelected && styles.typeButtonTextSelected,
-                          ]}
-                        >
-                          {mapEventType(typeVal)}
-                        </AppText>
-                      </Pressable>,
-                    );
-                  }
-                  return acc;
-                }, [])}
-              </ScrollView>
-            )}
-          />
-          {errors.type ? <AppText style={styles.errorText}>{errors.type.message}</AppText> : null}
-        </View>
-
-        <View style={styles.row}>
-          <View style={styles.rowItem}>
-            <Controller
-              control={control}
-              name="startAt"
-              render={({ field: { onChange, value } }) => (
-                <AppDateTimePicker
-                  label="Début"
-                  value={value}
-                  onChange={onChange}
-                  mode="datetime"
-                />
-              )}
-            />
-            {errors.startAt ? (
-              <AppText style={styles.errorText}>{errors.startAt.message}</AppText>
-            ) : null}
-          </View>
-          <View style={styles.rowItem}>
-            <Controller
-              control={control}
-              name="endAt"
-              render={({ field: { onChange, value } }) => (
-                <AppDateTimePicker label="Fin" value={value} onChange={onChange} mode="datetime" />
-              )}
-            />
-            {errors.endAt ? (
-              <AppText style={styles.errorText}>{errors.endAt.message}</AppText>
-            ) : null}
-          </View>
-        </View>
-
-        <View style={styles.row}>
-          <View style={styles.rowItem}>
-            <AppText style={styles.label}>Participants Max</AppText>
-            <Controller
-              control={control}
-              name="maxParticipants"
-              render={({ field: { onChange, value } }) => (
-                <TextInput
-                  style={styles.input}
-                  value={String(value)}
-                  keyboardType="numeric"
-                  onChangeText={onChange}
-                />
-              )}
-            />
-            {errors.maxParticipants ? (
-              <AppText style={styles.errorText}>{errors.maxParticipants.message}</AppText>
-            ) : null}
-          </View>
-          <View style={styles.rowItem}>
-            <AppText style={styles.label}>Score d'impact</AppText>
-            <Controller
-              control={control}
-              name="awardedImpactScore"
-              render={({ field: { onChange, value } }) => (
-                <TextInput
-                  style={styles.input}
-                  value={String(value)}
-                  keyboardType="numeric"
-                  onChangeText={onChange}
-                />
-              )}
-            />
-            {errors.awardedImpactScore ? (
-              <AppText style={styles.errorText}>{errors.awardedImpactScore.message}</AppText>
-            ) : null}
-          </View>
-        </View>
-
-        <View style={styles.buttonRow}>
-          <View style={styles.flex1}>
-            <AppButton
-              text={mutation.isPending || isBatching ? 'Création...' : "Créer l'évènement"}
-              onPress={() => {
-                void onSubmit();
-              }}
-              disabled={mutation.isPending || isBatching}
-            />
-          </View>
-          <View style={styles.flex1}>
-            <AppButton
-              text={isBatching ? 'Patientez...' : 'Création x10'}
-              variant="socio"
-              onPress={() => {
-                void handleCreate10Events();
-              }}
-              disabled={mutation.isPending || isBatching}
-            />
-          </View>
-        </View>
         <View style={styles.bottomSpacer} />
       </AppKeyboardScrollView>
     </View>
@@ -299,6 +257,24 @@ const styles = StyleSheet.create({
   },
   scrollContent: {
     padding: theme.spacing.xl,
+  },
+  imagePlaceholder: {
+    width: '100%',
+    height: 180,
+    borderRadius: theme.radius.md,
+    borderWidth: 2,
+    borderColor: theme.colors.lightGrey,
+    borderStyle: 'dashed',
+    justifyContent: 'center',
+    alignItems: 'center',
+    backgroundColor: theme.colors.white,
+    marginBottom: theme.spacing.xl,
+  },
+  imagePlaceholderText: {
+    marginTop: theme.spacing.sm,
+    color: theme.colors.grey,
+    fontSize: 14,
+    fontWeight: '500',
   },
   title: {
     fontSize: 28,
@@ -328,53 +304,56 @@ const styles = StyleSheet.create({
     height: 100,
     textAlignVertical: 'top',
   },
-  row: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    gap: theme.spacing.sm,
-  },
-  rowItem: {
-    flex: 1,
-    marginBottom: theme.spacing.lg,
-  },
-  errorText: {
-    color: theme.colors.danger,
-    fontSize: 12,
-    marginTop: 4,
-  },
   bottomSpacer: {
     height: theme.spacing.xxl,
   },
-  typeScroll: {
-    flexDirection: 'row',
-    marginTop: theme.spacing.xs,
+  requirementsSection: {
+    marginTop: theme.spacing.lg,
+    marginBottom: theme.spacing.xl,
   },
-  typeButton: {
-    paddingHorizontal: theme.spacing.md,
-    paddingVertical: theme.spacing.sm,
-    borderRadius: theme.radius.full,
+  requirementsHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: theme.spacing.md,
+  },
+  requirementsTitle: {
+    fontSize: 18,
+    fontWeight: 'bold',
+    color: theme.colors.black,
+  },
+  noRequirementsText: {
+    color: theme.colors.grey,
+    fontStyle: 'italic',
+    textAlign: 'center',
+    paddingVertical: theme.spacing.md,
+  },
+  publishContainer: {
+    marginTop: theme.spacing.md,
+    alignItems: 'center',
+    width: '100%',
+  },
+  publishButton: {
+    width: '100%',
+  },
+  publishButtonText: {
+    fontWeight: 'bold',
+    fontSize: 16,
+  },
+  testSection: {
+    marginTop: theme.spacing.xxl,
+    padding: theme.spacing.md,
+    backgroundColor: theme.colors.white,
+    borderRadius: theme.radius.md,
     borderWidth: 1,
     borderColor: theme.colors.lightGrey,
-    marginRight: theme.spacing.sm,
-    backgroundColor: theme.colors.white,
+    borderStyle: 'dashed',
   },
-  typeButtonSelected: {
-    backgroundColor: theme.colors.primaryEco,
-    borderColor: theme.colors.primaryEco,
-  },
-  typeButtonText: {
-    fontSize: 14,
-    color: theme.colors.black,
-    fontWeight: '500',
-  },
-  typeButtonTextSelected: {
-    color: theme.colors.white,
-  },
-  buttonRow: {
-    flexDirection: 'row',
-    gap: theme.spacing.md,
-  },
-  flex1: {
-    flex: 1,
+  testTitle: {
+    fontSize: 12,
+    color: theme.colors.grey,
+    marginBottom: theme.spacing.sm,
+    fontWeight: 'bold',
+    textTransform: 'uppercase',
   },
 });

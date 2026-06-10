@@ -17,9 +17,9 @@ import type {
   ListRequirementsWebResponse,
   GetTagsRequest,
   GetTagsResponse,
-  GetUserEventsRequest,
-  GetUserParticipationsRequest,
-  GetUserWishesRequest,
+  GetUserEventWebRequest,
+  GetUserParticipateEventWebRequest,
+  GetUserWishEventWebRequest,
 } from '@volontariapp/contracts';
 
 export const adminEventApi = {
@@ -226,7 +226,7 @@ export const adminEventApi = {
   },
 
   async getUserCreatedEventsSelf(
-    payload: GetUserEventsRequest,
+    payload: GetUserEventWebRequest,
     pathParams?: Record<string, string>,
   ): Promise<SearchEventsResponse> {
     let finalPath: string = EVENT_ENDPOINTS.GET_USER_CREATED_EVENTS_SELF.path;
@@ -235,7 +235,7 @@ export const adminEventApi = {
         finalPath = finalPath.replace(':' + k, v);
       });
     }
-    return apiFetch<SearchEventsResponse, GetUserEventsRequest>(finalPath, {
+    return apiFetch<SearchEventsResponse, GetUserEventWebRequest>(finalPath, {
       method: EVENT_ENDPOINTS.GET_USER_CREATED_EVENTS_SELF.method,
       requiresAuth: EVENT_ENDPOINTS.GET_USER_CREATED_EVENTS_SELF.requiresAuth,
       body: EVENT_ENDPOINTS.GET_USER_CREATED_EVENTS_SELF.method !== 'GET' ? payload : undefined,
@@ -243,7 +243,7 @@ export const adminEventApi = {
   },
 
   async getUserParticipatedEventsSelf(
-    payload: GetUserParticipationsRequest,
+    payload: GetUserParticipateEventWebRequest,
     pathParams?: Record<string, string>,
   ): Promise<SearchEventsResponse> {
     let finalPath: string = EVENT_ENDPOINTS.GET_USER_PARTICIPATED_EVENTS_SELF.path;
@@ -252,7 +252,7 @@ export const adminEventApi = {
         finalPath = finalPath.replace(':' + k, v);
       });
     }
-    return apiFetch<SearchEventsResponse, GetUserParticipationsRequest>(finalPath, {
+    return apiFetch<SearchEventsResponse, GetUserParticipateEventWebRequest>(finalPath, {
       method: EVENT_ENDPOINTS.GET_USER_PARTICIPATED_EVENTS_SELF.method,
       requiresAuth: EVENT_ENDPOINTS.GET_USER_PARTICIPATED_EVENTS_SELF.requiresAuth,
       body:
@@ -261,7 +261,7 @@ export const adminEventApi = {
   },
 
   async getUserWishedEventsSelf(
-    payload: GetUserWishesRequest,
+    payload: GetUserWishEventWebRequest,
     pathParams?: Record<string, string>,
   ): Promise<SearchEventsResponse> {
     let finalPath: string = EVENT_ENDPOINTS.GET_USER_WISHED_EVENTS_SELF.path;
@@ -270,7 +270,7 @@ export const adminEventApi = {
         finalPath = finalPath.replace(':' + k, v);
       });
     }
-    return apiFetch<SearchEventsResponse, GetUserWishesRequest>(finalPath, {
+    return apiFetch<SearchEventsResponse, GetUserWishEventWebRequest>(finalPath, {
       method: EVENT_ENDPOINTS.GET_USER_WISHED_EVENTS_SELF.method,
       requiresAuth: EVENT_ENDPOINTS.GET_USER_WISHED_EVENTS_SELF.requiresAuth,
       body: EVENT_ENDPOINTS.GET_USER_WISHED_EVENTS_SELF.method !== 'GET' ? payload : undefined,

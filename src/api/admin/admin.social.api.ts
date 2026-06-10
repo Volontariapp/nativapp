@@ -6,9 +6,11 @@ import type {
   GetMyFollowersWebRequest,
   GetMyBlocksWebRequest,
   GetUserPostsWebRequest,
-  IdsListWebResponse,
-  GetUserParticipationsRequest,
-  GetUserWishesRequest,
+  GetUserEventWebResponse,
+  GetUserParticipateEventWebResponse,
+  GetUserWishEventWebResponse,
+  GetUserParticipateEventWebRequest,
+  GetUserWishEventWebRequest,
 } from '@volontariapp/contracts';
 
 export const adminSocialApi = {
@@ -124,9 +126,9 @@ export const adminSocialApi = {
   },
 
   async getUserParticipatedEvents(
-    payload: GetUserParticipationsRequest,
+    payload: GetUserParticipateEventWebRequest,
     pathParams?: Record<string, string>,
-  ): Promise<IdsListWebResponse> {
+  ): Promise<GetUserParticipateEventWebResponse> {
     let finalPath: string = SOCIAL_ENDPOINTS.GET_USER_PARTICIPATED_EVENTS.path;
     if (pathParams != null) {
       Object.entries(pathParams).forEach(([k, v]) => {
@@ -139,16 +141,19 @@ export const adminSocialApi = {
       'params:',
       pathParams,
     );
-    return apiFetch<IdsListWebResponse, GetUserParticipationsRequest>(finalPath, {
-      method: SOCIAL_ENDPOINTS.GET_USER_PARTICIPATED_EVENTS.method,
-      requiresAuth: SOCIAL_ENDPOINTS.GET_USER_PARTICIPATED_EVENTS.requiresAuth,
-    });
+    return apiFetch<GetUserParticipateEventWebResponse, GetUserParticipateEventWebRequest>(
+      finalPath,
+      {
+        method: SOCIAL_ENDPOINTS.GET_USER_PARTICIPATED_EVENTS.method,
+        requiresAuth: SOCIAL_ENDPOINTS.GET_USER_PARTICIPATED_EVENTS.requiresAuth,
+      },
+    );
   },
 
   async getUserWishedEvents(
-    payload: GetUserWishesRequest,
+    payload: GetUserWishEventWebRequest,
     pathParams?: Record<string, string>,
-  ): Promise<IdsListWebResponse> {
+  ): Promise<GetUserWishEventWebResponse> {
     let finalPath: string = SOCIAL_ENDPOINTS.GET_USER_WISHED_EVENTS.path;
     if (pathParams != null) {
       Object.entries(pathParams).forEach(([k, v]) => {
@@ -161,7 +166,7 @@ export const adminSocialApi = {
       'params:',
       pathParams,
     );
-    return apiFetch<IdsListWebResponse, GetUserWishesRequest>(finalPath, {
+    return apiFetch<GetUserWishEventWebResponse, GetUserWishEventWebRequest>(finalPath, {
       method: SOCIAL_ENDPOINTS.GET_USER_WISHED_EVENTS.method,
       requiresAuth: SOCIAL_ENDPOINTS.GET_USER_WISHED_EVENTS.requiresAuth,
     });
@@ -170,7 +175,7 @@ export const adminSocialApi = {
   async getFollowers(
     payload: GetMyFollowersWebRequest,
     pathParams?: Record<string, string>,
-  ): Promise<IdsListWebResponse> {
+  ): Promise<GetUserEventWebResponse> {
     let finalPath: string = SOCIAL_ENDPOINTS.GET_FOLLOWERS.path;
     if (pathParams != null) {
       Object.entries(pathParams).forEach(([k, v]) => {
@@ -178,7 +183,7 @@ export const adminSocialApi = {
       });
     }
     console.log('[adminSocialApi.getFollowers] sending to:', finalPath, 'params:', pathParams);
-    return apiFetch<IdsListWebResponse, GetMyFollowersWebRequest>(finalPath, {
+    return apiFetch<GetUserEventWebResponse, GetMyFollowersWebRequest>(finalPath, {
       method: SOCIAL_ENDPOINTS.GET_FOLLOWERS.method,
       requiresAuth: SOCIAL_ENDPOINTS.GET_FOLLOWERS.requiresAuth,
     });
@@ -187,7 +192,7 @@ export const adminSocialApi = {
   async getFollows(
     payload: GetMyFollowsWebRequest,
     pathParams?: Record<string, string>,
-  ): Promise<IdsListWebResponse> {
+  ): Promise<GetUserEventWebResponse> {
     let finalPath: string = SOCIAL_ENDPOINTS.GET_FOLLOWS.path;
     if (pathParams != null) {
       Object.entries(pathParams).forEach(([k, v]) => {
@@ -195,7 +200,7 @@ export const adminSocialApi = {
       });
     }
     console.log('[adminSocialApi.getFollows] sending to:', finalPath, 'params:', pathParams);
-    return apiFetch<IdsListWebResponse, GetMyFollowsWebRequest>(finalPath, {
+    return apiFetch<GetUserEventWebResponse, GetMyFollowsWebRequest>(finalPath, {
       method: SOCIAL_ENDPOINTS.GET_FOLLOWS.method,
       requiresAuth: SOCIAL_ENDPOINTS.GET_FOLLOWS.requiresAuth,
     });
@@ -204,7 +209,7 @@ export const adminSocialApi = {
   async getBlocks(
     payload: GetMyBlocksWebRequest,
     pathParams?: Record<string, string>,
-  ): Promise<IdsListWebResponse> {
+  ): Promise<GetUserEventWebResponse> {
     let finalPath: string = SOCIAL_ENDPOINTS.GET_BLOCKS.path;
     if (pathParams != null) {
       Object.entries(pathParams).forEach(([k, v]) => {
@@ -212,7 +217,7 @@ export const adminSocialApi = {
       });
     }
     console.log('[adminSocialApi.getBlocks] sending to:', finalPath, 'params:', pathParams);
-    return apiFetch<IdsListWebResponse, GetMyBlocksWebRequest>(finalPath, {
+    return apiFetch<GetUserEventWebResponse, GetMyBlocksWebRequest>(finalPath, {
       method: SOCIAL_ENDPOINTS.GET_BLOCKS.method,
       requiresAuth: SOCIAL_ENDPOINTS.GET_BLOCKS.requiresAuth,
     });
@@ -221,7 +226,7 @@ export const adminSocialApi = {
   async getUserPosts(
     payload: GetUserPostsWebRequest,
     pathParams?: Record<string, string>,
-  ): Promise<IdsListWebResponse> {
+  ): Promise<GetUserEventWebResponse> {
     let finalPath: string = SOCIAL_ENDPOINTS.GET_USER_POSTS.path;
     if (pathParams != null) {
       Object.entries(pathParams).forEach(([k, v]) => {
@@ -229,7 +234,7 @@ export const adminSocialApi = {
       });
     }
     console.log('[adminSocialApi.getUserPosts] sending to:', finalPath, 'params:', pathParams);
-    return apiFetch<IdsListWebResponse, GetUserPostsWebRequest>(finalPath, {
+    return apiFetch<GetUserEventWebResponse, GetUserPostsWebRequest>(finalPath, {
       method: SOCIAL_ENDPOINTS.GET_USER_POSTS.method,
       requiresAuth: SOCIAL_ENDPOINTS.GET_USER_POSTS.requiresAuth,
     });

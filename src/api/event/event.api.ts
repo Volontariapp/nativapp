@@ -6,6 +6,8 @@ import type {
   EventState,
   CreateEventResponse,
   SearchEventsResponse,
+  AddRequirementRequest,
+  ManageRequirementsResponse,
   EventDTO,
 } from '@volontariapp/contracts';
 
@@ -110,6 +112,18 @@ export const eventApi = {
     }
   },
 
+  async addRequirement(
+    eventId: string,
+    payload: AddRequirementRequest,
+  ): Promise<ManageRequirementsResponse> {
+    const path = EVENT_ENDPOINTS.ADD_REQUIREMENT.path.replace(':id', eventId);
+    return await apiFetch<ManageRequirementsResponse, AddRequirementRequest>(path, {
+      method: EVENT_ENDPOINTS.ADD_REQUIREMENT.method,
+      requiresAuth: EVENT_ENDPOINTS.ADD_REQUIREMENT.requiresAuth,
+      body: payload,
+    });
+  },
+
   async getMyEvents(params: {
     page?: number;
     limit?: number;
@@ -126,6 +140,48 @@ export const eventApi = {
     const response = await apiFetch<SearchEventsResponse>(path, {
       method: EVENT_ENDPOINTS.GET_USER_CREATED_EVENTS_SELF.method,
       requiresAuth: EVENT_ENDPOINTS.GET_USER_CREATED_EVENTS_SELF.requiresAuth,
+    });
+
+    return {
+      events: response.events.map((ev) => ({
+        id: ev.id,
+        title: ev.title,
+        description: ev.description,
+        startAt: formatTimestamp(ev.startAt),
+        endAt: formatTimestamp(ev.endAt),
+        localisationName: ev.localisationName,
+        type: ev.type,
+        state: ev.state,
+        awardedImpactScore: ev.awardedImpactScore,
+        maxParticipants: ev.maxParticipants,
+        currentParticipants: ev.currentParticipants,
+        location: ev.location
+          ? {
+              latitude: ev.location.latitude,
+              longitude: ev.location.longitude,
+            }
+          : undefined,
+      })),
+      totalCount: response.totalCount,
+    };
+  },
+
+  async getParticipatedEvents(params: {
+    page?: number;
+    limit?: number;
+  }): Promise<{ events: AppEvent[]; totalCount: number }> {
+    const query = new URLSearchParams();
+    if (params.page !== undefined) query.append('page', params.page.toString());
+    if (params.limit !== undefined) query.append('limit', params.limit.toString());
+
+    const queryString = query.toString();
+    const path = queryString
+      ? `${EVENT_ENDPOINTS.GET_USER_PARTICIPATED_EVENTS_SELF.path}?${queryString}`
+      : EVENT_ENDPOINTS.GET_USER_PARTICIPATED_EVENTS_SELF.path;
+
+    const response = await apiFetch<SearchEventsResponse>(path, {
+      method: EVENT_ENDPOINTS.GET_USER_PARTICIPATED_EVENTS_SELF.method,
+      requiresAuth: EVENT_ENDPOINTS.GET_USER_PARTICIPATED_EVENTS_SELF.requiresAuth,
     });
 
     return {

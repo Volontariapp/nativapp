@@ -11,7 +11,9 @@ export interface AppHeaderProps {
   showBack?: boolean;
 }
 
-export default function AppHeader({ showBack = false }: AppHeaderProps): React.JSX.Element {
+export default function AppHeader({
+  showBack = false,
+}: AppHeaderProps): React.JSX.Element {
   const { isConnected } = useSocket();
   const insets = useSafeAreaInsets();
   const navigation = useNavigation();
@@ -32,12 +34,14 @@ export default function AppHeader({ showBack = false }: AppHeaderProps): React.J
         )}
         <AppText style={styles.title}>VolontariApp</AppText>
       </View>
-      <View
-        style={[
-          styles.statusDot,
-          { backgroundColor: isConnected ? theme.colors.success : theme.colors.danger },
-        ]}
-      />
+      <View style={styles.rightContainer}>
+        <View
+          style={[
+            styles.statusDot,
+            { backgroundColor: isConnected ? theme.colors.success : theme.colors.danger },
+          ]}
+        />
+      </View>
     </View>
   );
 }
@@ -46,7 +50,7 @@ const styles = StyleSheet.create({
   container: {
     backgroundColor: theme.colors.background,
     justifyContent: 'space-between',
-    alignItems: 'flex-end',
+    alignItems: 'center',
     flexDirection: 'row',
     paddingHorizontal: theme.spacing.lg,
     paddingBottom: theme.spacing.sm,
@@ -54,6 +58,11 @@ const styles = StyleSheet.create({
   leftContainer: {
     flexDirection: 'row',
     alignItems: 'center',
+  },
+  rightContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: theme.spacing.sm,
   },
   backIcon: {
     marginRight: theme.spacing.md,
@@ -67,6 +76,5 @@ const styles = StyleSheet.create({
     width: 10,
     height: 10,
     borderRadius: 5,
-    marginBottom: 6,
   },
 });

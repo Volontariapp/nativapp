@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { View, StyleSheet, ScrollView, Alert } from 'react-native';
+import { View, StyleSheet, ScrollView, Alert, ActivityIndicator } from 'react-native';
 import {
   AppButton,
   AppText,
@@ -14,12 +14,15 @@ import {
   ProfileEditModal,
   AppIconsButton,
   AppCalendar,
+  EventCard,
 } from '@/components';
 import { useAuth } from '@/context/AuthContext';
 import { theme } from '@/shared/themes/theme';
 import { useProfile } from '@/api/user/hooks/use-profile';
 import { useUpdateProfile } from '@/api/user/hooks/use-update-profile';
 import { useUserParticipations } from '@/api/social/hooks/use-user-participations';
+import { useGetMyEvents } from '@/api/event/hooks/use-get-my-events';
+import { useGetParticipatedEvents } from '@/api/event/hooks/use-get-participated-events';
 import { useNavigation } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import type { ProfileStackParamList } from '@/navigation/stacks/ProfileStack';
@@ -35,6 +38,22 @@ export function ProfileScreen(): React.JSX.Element {
 
   const { data: profile, isLoading: isProfileLoading, error: profileError } = useProfile();
   const { data: participations, isLoading: isParticipationsLoading } = useUserParticipations();
+  const {
+    data: myEventsData,
+    isLoading: isMyEventsLoading,
+    hasNextPage: hasNextMyEvents,
+    fetchNextPage: fetchNextMyEvents,
+    isFetchingNextPage: isFetchingNextMyEvents,
+  } = useGetMyEvents(2);
+
+  const {
+    data: participatedEventsData,
+    isLoading: isParticipatedEventsLoading,
+    hasNextPage: hasNextParticipatedEvents,
+    fetchNextPage: fetchNextParticipatedEvents,
+    isFetchingNextPage: isFetchingNextParticipatedEvents,
+  } = useGetParticipatedEvents(2);
+
   const updateProfile = useUpdateProfile();
 
   const isLoading = isProfileLoading || isParticipationsLoading;
@@ -60,6 +79,9 @@ export function ProfileScreen(): React.JSX.Element {
       </View>
     );
   }
+
+  const allMyEvents = myEventsData?.pages.flatMap((page) => page.events) ?? [];
+  const allParticipatedEvents = participatedEventsData?.pages.flatMap((page) => page.events) ?? [];
 
   return (
     <View style={styles.container}>
@@ -108,7 +130,57 @@ export function ProfileScreen(): React.JSX.Element {
         </ProfileSection>
 
         <ProfileSection title="Événements à venir">
-          <ComingSoonPlaceholder />
+          {isParticipatedEventsLoading ? (
+            <ActivityIndicator color={theme.colors.primaryEco} />
+          ) : allParticipatedEvents.length > 0 ? (
+            <View>
+              {allParticipatedEvents.map((event) => (
+                <EventCard key={event.id} event={event} />
+              ))}
+              {hasNextParticipatedEvents && (
+                <View style={styles.seeMoreContainer}>
+                  <AppButton
+                    variant="eco"
+                    size="small"
+                    text={isFetchingNextParticipatedEvents ? 'Chargement...' : 'Voir plus'}
+                    onPress={() => {
+                      void fetchNextParticipatedEvents();
+                    }}
+                    disabled={isFetchingNextParticipatedEvents}
+                  />
+                </View>
+              )}
+            </View>
+          ) : (
+            <AppText style={styles.emptyText}>Aucun événement à venir pour le moment.</AppText>
+          )}
+        </ProfileSection>
+
+        <ProfileSection title="Mes événements créés">
+          {isMyEventsLoading ? (
+            <ActivityIndicator color={theme.colors.primaryEco} />
+          ) : allMyEvents.length > 0 ? (
+            <View>
+              {allMyEvents.map((event) => (
+                <EventCard key={event.id} event={event} />
+              ))}
+              {hasNextMyEvents && (
+                <View style={styles.seeMoreContainer}>
+                  <AppButton
+                    variant="eco"
+                    size="small"
+                    text={isFetchingNextMyEvents ? 'Chargement...' : 'Voir plus'}
+                    onPress={() => {
+                      void fetchNextMyEvents();
+                    }}
+                    disabled={isFetchingNextMyEvents}
+                  />
+                </View>
+              )}
+            </View>
+          ) : (
+            <AppText style={styles.emptyText}>Aucun événement créé pour le moment.</AppText>
+          )}
         </ProfileSection>
 
         <ProfileSection title="Mentions J'aime">
@@ -194,5 +266,15 @@ const styles = StyleSheet.create({
     color: theme.colors.danger,
     fontSize: 16,
     textAlign: 'center',
+  },
+  emptyText: {
+    color: theme.colors.grey,
+    fontStyle: 'italic',
+    textAlign: 'center',
+    marginTop: theme.spacing.sm,
+  },
+  seeMoreContainer: {
+    alignItems: 'center',
+    marginTop: theme.spacing.sm,
   },
 });
