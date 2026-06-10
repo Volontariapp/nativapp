@@ -30,6 +30,11 @@ process.env.EXPO_PUBLIC_CF_ACCESS_CLIENT_SECRET = cfSecret;
 module.exports = ({ config }) => {
   return {
     ...config,
+    ios: {
+      ...(config.ios || {}),
+      bundleIdentifier: 'com.volontariapp.mobile',
+      appleTeamId: 'QTLG22TJ29',
+    },
     extra: {
       APP_ENV: process.env.APP_ENV || process.env.NODE_ENV || 'development',
       API_GATEWAY_URL: apiGatewayUrl,
