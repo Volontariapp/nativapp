@@ -36,9 +36,9 @@ export function EventInfoGrid({ control, errors }: EventInfoGridProps): React.JS
                 />
               )}
             />
-            {errors.startAt ? (
+            {errors.startAt && (
               <AppText style={styles.errorText}>{errors.startAt.message}</AppText>
-            ) : null}
+            )}
           </AppInfoCard>
         </View>
         <View style={styles.infoCol}>
@@ -61,9 +61,9 @@ export function EventInfoGrid({ control, errors }: EventInfoGridProps): React.JS
                 />
               )}
             />
-            {errors.endAt ? (
+            {errors.endAt && (
               <AppText style={styles.errorText}>{errors.endAt.message}</AppText>
-            ) : null}
+            )}
           </AppInfoCard>
         </View>
       </View>
@@ -82,17 +82,19 @@ export function EventInfoGrid({ control, errors }: EventInfoGridProps): React.JS
               render={({ field: { onChange, value } }) => (
                 <TextInput
                   style={styles.cleanNumberInput}
-                  value={value ? String(value) : ''}
+                  value={value !== undefined ? String(value) : ''}
                   keyboardType="numeric"
-                  onChangeText={onChange}
+                  onChangeText={(val) => {
+                    onChange(val ? Number(val.replace(/[^0-9]/g, '')) : 0);
+                  }}
                   placeholder="0"
                   placeholderTextColor={theme.colors.lightGrey}
                 />
               )}
             />
-            {errors.maxParticipants ? (
+            {errors.maxParticipants && (
               <AppText style={styles.errorText}>{errors.maxParticipants.message}</AppText>
-            ) : null}
+            )}
           </AppInfoCard>
         </View>
         <View style={styles.infoCol}>
@@ -108,17 +110,19 @@ export function EventInfoGrid({ control, errors }: EventInfoGridProps): React.JS
               render={({ field: { onChange, value } }) => (
                 <TextInput
                   style={styles.cleanNumberInput}
-                  value={value ? String(value) : ''}
+                  value={value !== undefined ? String(value) : ''}
                   keyboardType="numeric"
-                  onChangeText={onChange}
+                  onChangeText={(val) => {
+                    onChange(val ? Number(val.replace(/[^0-9]/g, '')) : 0);
+                  }}
                   placeholder="0"
                   placeholderTextColor={theme.colors.lightGrey}
                 />
               )}
             />
-            {errors.awardedImpactScore ? (
+            {errors.awardedImpactScore && (
               <AppText style={styles.errorText}>{errors.awardedImpactScore.message}</AppText>
-            ) : null}
+            )}
           </AppInfoCard>
         </View>
       </View>
