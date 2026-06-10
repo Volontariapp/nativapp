@@ -82,7 +82,7 @@ export function EventInfoGrid({ control, errors }: EventInfoGridProps): React.JS
               render={({ field: { onChange, value } }) => (
                 <TextInput
                   style={styles.cleanNumberInput}
-                  value={value !== undefined ? String(value) : ''}
+                  value={String(value)}
                   keyboardType="numeric"
                   onChangeText={(val) => {
                     onChange(val ? Number(val.replace(/[^0-9]/g, '')) : 0);
@@ -92,9 +92,7 @@ export function EventInfoGrid({ control, errors }: EventInfoGridProps): React.JS
                 />
               )}
             />
-            {errors.maxParticipants && (
-              <AppText style={styles.errorText}>{errors.maxParticipants.message}</AppText>
-            )}
+            <AppText style={styles.errorText}>{errors.maxParticipants?.message}</AppText>
           </AppInfoCard>
         </View>
         <View style={styles.infoCol}>
@@ -110,7 +108,7 @@ export function EventInfoGrid({ control, errors }: EventInfoGridProps): React.JS
               render={({ field: { onChange, value } }) => (
                 <TextInput
                   style={styles.cleanNumberInput}
-                  value={value !== undefined ? String(value) : ''}
+                  value={String(value)}
                   keyboardType="numeric"
                   onChangeText={(val) => {
                     onChange(val ? Number(val.replace(/[^0-9]/g, '')) : 0);
@@ -120,9 +118,7 @@ export function EventInfoGrid({ control, errors }: EventInfoGridProps): React.JS
                 />
               )}
             />
-            {errors.awardedImpactScore && (
-              <AppText style={styles.errorText}>{errors.awardedImpactScore.message}</AppText>
-            )}
+            <AppText style={styles.errorText}>{errors.awardedImpactScore?.message}</AppText>
           </AppInfoCard>
         </View>
       </View>
