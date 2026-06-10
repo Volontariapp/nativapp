@@ -6,30 +6,17 @@ import { useSocket } from '@/context/SocketContext';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import Feather from 'react-native-vector-icons/Feather';
 import { useNavigation } from '@react-navigation/native';
-import { AppCloseButton } from '@/components/buttons/AppCloseButton';
 
 export interface AppHeaderProps {
   showBack?: boolean;
-  showClose?: boolean;
-  onClose?: () => void;
 }
 
 export default function AppHeader({
   showBack = false,
-  showClose = false,
-  onClose,
 }: AppHeaderProps): React.JSX.Element {
   const { isConnected } = useSocket();
   const insets = useSafeAreaInsets();
   const navigation = useNavigation();
-
-  const handleClose = (): void => {
-    if (onClose) {
-      onClose();
-    } else {
-      navigation.goBack();
-    }
-  };
 
   return (
     <View style={[styles.container, { paddingTop: insets.top }]}>
@@ -48,7 +35,6 @@ export default function AppHeader({
         <AppText style={styles.title}>VolontariApp</AppText>
       </View>
       <View style={styles.rightContainer}>
-        {showClose && <AppCloseButton onPress={handleClose} size={20} />}
         <View
           style={[
             styles.statusDot,

@@ -105,7 +105,7 @@ export function EventFormScreen(): React.JSX.Element {
 
   return (
     <View style={styles.container}>
-      <AppHeader showBack showClose />
+      <AppHeader showBack />
       <AppKeyboardScrollView
         contentContainerStyle={styles.scrollContent}
         contentInsetAdjustmentBehavior="automatic"
