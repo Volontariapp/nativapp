@@ -5,11 +5,14 @@ import axios, { type AxiosError } from 'axios';
 import { createApiError } from './core/api-error.factory';
 import type { FetchOptions } from './core/api.types';
 import { InternalServerError } from '@volontariapp/errors';
+import type { LoginWebResponse } from '@volontariapp/contracts';
 
 const getApiBaseUrl = (): string => {
   const base = config.apiGatewayUrl.replace(/\/$/, '');
   return `${base}/api/v1`;
 };
+
+let refreshPromise: Promise<string | null> | null = null;
 
 export const apiFetch = async <TResponse, TRequest = undefined>(
   endpoint: string,
@@ -39,6 +42,8 @@ export const apiFetch = async <TResponse, TRequest = undefined>(
   }
 
   try {
+    console.log(`[apiFetch] Requesting URL: ${url}`);
+
     const response = await axios({
       url,
       method: options.method ?? 'GET',
@@ -54,7 +59,55 @@ export const apiFetch = async <TResponse, TRequest = undefined>(
       const data = axiosError.response?.data ?? {};
       const message = typeof data.message === 'string' ? data.message : axiosError.message;
 
-      if (status === 401) {
+      // Handle token refresh logic
+      const isTokenRelated403 =
+        status === 403 && typeof message === 'string' && message.toLowerCase().includes('token');
+      if ((status === 401 || isTokenRelated403) && !endpoint.includes('/users/refresh')) {
+        const refreshToken = await TokenService.getRefreshToken();
+        if (refreshToken !== null) {
+          try {
+            refreshPromise ??= (async () => {
+              const refreshUrl = `${baseUrl}/users/refresh`;
+              const refreshHeaders = { ...headers };
+              delete refreshHeaders['Authorization'];
+
+              const refreshRes = await axios.post(
+                refreshUrl,
+                { refreshToken },
+                { headers: refreshHeaders },
+              );
+              const authData = (refreshRes.data as LoginWebResponse).auth;
+
+              if (
+                typeof authData?.accessToken === 'string' &&
+                typeof authData.refreshToken === 'string'
+              ) {
+                await TokenService.saveTokens(authData.accessToken, authData.refreshToken);
+                return authData.accessToken;
+              }
+              return null;
+            })().finally(() => {
+              refreshPromise = null;
+            });
+
+            const newAccessToken = await refreshPromise;
+
+            if (newAccessToken !== null) {
+              headers['Authorization'] = `Bearer ${newAccessToken}`;
+              const retryRes = await axios({
+                url,
+                method: options.method ?? 'GET',
+                headers,
+                data: options.body,
+              });
+              return retryRes.data as TResponse;
+            }
+          } catch (refreshErr) {
+            console.error('Failed to refresh token:', refreshErr);
+          }
+        }
+
+        // If refresh failed or no refresh token, emit auth expired
         authExpiredBus.emit();
       }
 

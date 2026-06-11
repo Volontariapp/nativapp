@@ -4,6 +4,7 @@ import {
   StyleSheet,
   FlatList,
   ActivityIndicator,
+  Alert,
   Pressable,
   type GestureResponderEvent,
 } from 'react-native';
@@ -28,7 +29,9 @@ export function MyPostsScreen(): React.JSX.Element {
       await deletePost(id);
       setDetailModalVisible(false);
     } catch (err) {
-      console.error('Failed to delete post:', err instanceof Error ? err.message : String(err));
+      const message = err instanceof Error ? err.message : String(err);
+      console.error('Failed to delete post:', message);
+      Alert.alert('Erreur', message);
     }
   };
 

@@ -66,7 +66,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }): React.JSX.E
 
       if (activeAccessToken !== null) {
         const decoded = jwtDecode<JwtPayload>(activeAccessToken);
-        setUserId(decoded.sub);
+        setUserId(decoded.id);
         setRole(decoded.role ?? null);
       } else {
         throw new Error('No active token');
@@ -94,7 +94,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }): React.JSX.E
   const login = async (accessToken: string, refreshToken: string): Promise<void> => {
     await TokenService.saveTokens(accessToken, refreshToken);
     const decoded = jwtDecode<JwtPayload>(accessToken);
-    setUserId(decoded.sub);
+    setUserId(decoded.id);
     setRole(decoded.role ?? null);
   };
 

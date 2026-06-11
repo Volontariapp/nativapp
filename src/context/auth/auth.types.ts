@@ -1,7 +1,7 @@
 import type { UserRoles } from '@volontariapp/shared';
 
 export interface JwtPayload {
-  sub: string;
+  id: string;
   role?: UserRoles;
   exp?: number;
   iat?: number;

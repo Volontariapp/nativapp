@@ -1,3 +1,4 @@
+import { Alert } from 'react-native';
 import { useInfiniteQuery } from '@tanstack/react-query';
 import { postApi } from '../post.api';
 import { useAuth } from '@/context/AuthContext';
@@ -23,7 +24,12 @@ export const useGetMyPosts = (limit = 10) => {
           '[useGetMyPosts] Erreur de récupération des posts :',
           err instanceof Error ? err.message : String(err),
         );
-        throw err;
+        Alert.alert('Erreur', err instanceof Error ? err.message : String(err));
+        return {
+          posts: [],
+          pagination: { page: pageParam, limit, total: 0, totalPages: 0 },
+          totalCount: 0,
+        };
       }
     },
     initialPageParam: 1,

@@ -11,6 +11,7 @@ export const postApi = {
   async createPost(payload: CreatePostRequest): Promise<CreatePostWebResponse> {
     try {
       console.log('[postApi.createPost] Sending payload:', payload);
+
       const response = await apiFetch<CreatePostWebResponse, CreatePostRequest>(
         POST_ENDPOINTS.CREATE_POST.path,
         {
@@ -33,6 +34,7 @@ export const postApi = {
   async deletePost(id: string): Promise<ActionSuccessWebResponse> {
     try {
       const path = POST_ENDPOINTS.DELETE_POST.path.replace(':id', id);
+
       const response = await apiFetch<ActionSuccessWebResponse>(path, {
         method: POST_ENDPOINTS.DELETE_POST.method,
         requiresAuth: POST_ENDPOINTS.DELETE_POST.requiresAuth,
@@ -62,6 +64,10 @@ export const postApi = {
       const path = queryString
         ? `${POST_ENDPOINTS.LIST_POSTS.path}?${queryString}`
         : POST_ENDPOINTS.LIST_POSTS.path;
+
+      console.log(`[FRONTEND_DEBUG] getMyPosts params:`, params);
+      console.log(`[FRONTEND_DEBUG] getMyPosts query toString:`, query.toString());
+      console.log(`[FRONTEND_DEBUG] getMyPosts final path:`, path);
 
       const response = await apiFetch<ListPostsWebResponse>(path, {
         method: POST_ENDPOINTS.LIST_POSTS.method,
