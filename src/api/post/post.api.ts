@@ -4,7 +4,7 @@ import type {
   CreatePostRequest,
   CreatePostWebResponse,
   ListPostsWebResponse,
-  ActionSuccessWebResponse,
+  ActionSuccessWebResponse, ListPostsResponse,
 } from '@volontariapp/contracts';
 
 export const postApi = {
@@ -47,6 +47,29 @@ export const postApi = {
       );
       throw error;
     }
+  },
+
+  async listPosts(params: {
+    authorId?: string;
+    page?: number;
+    limit?: number;
+  }): Promise<ListPostsWebResponse> {
+    const query = new URLSearchParams();
+    if (params.authorId !== undefined) query.append('authorId', params.authorId);
+    if (params.page !== undefined) query.append('page', params.page.toString());
+    if (params.limit !== undefined) query.append('limit', params.limit.toString());
+
+    const queryString = query.toString();
+    const path = queryString
+      ? `${POST_ENDPOINTS.LIST_POSTS.path}?${queryString}`
+      : POST_ENDPOINTS.LIST_POSTS.path;
+
+    const response = await apiFetch<ListPostsWebResponse>(path, {
+      method: POST_ENDPOINTS.LIST_POSTS.method,
+      requiresAuth: POST_ENDPOINTS.LIST_POSTS.requiresAuth,
+    });
+
+    return response;
   },
 
   async getMyPosts(params: {
