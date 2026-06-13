@@ -69,7 +69,7 @@ export const convertEventDtoToAppEvent = (event: EventDTO): AppEvent => {
 };
 
 export const eventApi = {
-  async createEvent(payload: CreateEventRequest): Promise<AppEvent> {
+  async createEvent(payload: CreateEventRequest): Promise<AppEvent | null> {
     try {
       console.log('[eventApi.createEvent] Sending payload:', payload);
       const response = await apiFetch<CreateEventResponse, CreateEventRequest>(
@@ -84,7 +84,8 @@ export const eventApi = {
       console.log('[eventApi.createEvent] Received response:', response);
 
       if (response.event === undefined) {
-        throw new Error('Event data not found');
+        console.log('[eventApi.createEvent] Event data not found, assuming 206 Fallback');
+        return null;
       }
 
       return {

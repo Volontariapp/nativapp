@@ -1,4 +1,4 @@
-import React, { createContext, useState, useEffect, useMemo, useCallback, useRef } from 'react';
+import React, { createContext, useState, useMemo, useCallback } from 'react';
 import { StyleSheet, Platform } from 'react-native';
 import Animated, {
   useAnimatedStyle,
@@ -12,14 +12,10 @@ import { Worklets } from '@/utils/worklets';
 import { AppText } from '@/components/typography/AppText';
 import { theme } from '@/shared/themes/theme';
 import { useSocket } from './SocketContext';
-import {
-  type IPostCreatedWebsocketPayload,
-  type IPostDeletedWebsocketPayload,
-  type IEventCreatedWebsocketPayload,
-  type IUserCreatedWebsocketPayload,
-  WebsocketMessagingType,
-} from '@volontariapp/messaging';
+import { useNotificationHandlers } from '../hooks/useNotificationHandlers';
+import { syncPendingBus } from '../services/event-bus.service';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { ActivityIndicator } from 'react-native';
 
 interface NotificationContextType {
   showNotification: (message: string) => void;
@@ -31,9 +27,17 @@ const NotificationContext = createContext<NotificationContextType>({
 
 export const NotificationProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [message, setMessage] = useState<string | null>(null);
+  const [isSyncing, setIsSyncing] = useState<boolean>(false);
   const translateY = useSharedValue(-150);
   const { socket } = useSocket();
   const insets = useSafeAreaInsets();
+
+  React.useEffect(() => {
+    const unsubscribe = syncPendingBus.subscribe((status) => {
+      setIsSyncing(status);
+    });
+    return unsubscribe;
+  }, []);
 
   const showNotification = useCallback(
     (msg: string) => {
@@ -56,68 +60,7 @@ export const NotificationProvider: React.FC<{ children: React.ReactNode }> = ({ 
     [insets.top, translateY],
   );
 
-  const notifyRef = useRef(showNotification);
-  useEffect(() => {
-    notifyRef.current = showNotification;
-  }, [showNotification]);
-
-  useEffect(() => {
-    if (!socket) return;
-
-    const handlePostCreated = (data: IPostCreatedWebsocketPayload) => {
-      const msg =
-        data.isEmitter === true
-          ? 'Votre post a été créé avec succès !'
-          : "Un nouveau post vient d'être publié !";
-      notifyRef.current(msg);
-    };
-
-    const handlePostDeleted = (data: IPostDeletedWebsocketPayload) => {
-      const msg =
-        data.isEmitter === true ? 'Votre post a bien été supprimé.' : 'Un post a été supprimé.';
-      notifyRef.current(msg);
-    };
-
-    const handlePostFailed = () => {
-      notifyRef.current('La création de votre post a échoué.');
-    };
-
-    const handlePostDeletionFailed = () => {
-      notifyRef.current('La suppression du post a échoué.');
-    };
-
-    const handleEventCreated = (data: IEventCreatedWebsocketPayload) => {
-      const msg =
-        data.isEmitter === true
-          ? 'Votre évènement a été créé avec succès !'
-          : "Un nouvel évènement vient d'être publié !";
-      notifyRef.current(msg);
-    };
-
-    const handleUserCreated = (data: IUserCreatedWebsocketPayload) => {
-      const msg =
-        data.isEmitter === true
-          ? 'Votre compte a été créé avec succès !'
-          : "Un nouvel utilisateur vient de s'inscrire !";
-      notifyRef.current(msg);
-    };
-
-    socket.on(WebsocketMessagingType.POST_CREATED, handlePostCreated);
-    socket.on(WebsocketMessagingType.POST_DELETED, handlePostDeleted);
-    socket.on(WebsocketMessagingType.POST_CREATION_FAILED, handlePostFailed);
-    socket.on(WebsocketMessagingType.POST_DELETION_FAILED, handlePostDeletionFailed);
-    socket.on(WebsocketMessagingType.EVENT_CREATED, handleEventCreated);
-    socket.on(WebsocketMessagingType.USER_CREATED, handleUserCreated);
-
-    return () => {
-      socket.off(WebsocketMessagingType.POST_CREATED, handlePostCreated);
-      socket.off(WebsocketMessagingType.POST_DELETED, handlePostDeleted);
-      socket.off(WebsocketMessagingType.POST_CREATION_FAILED, handlePostFailed);
-      socket.off(WebsocketMessagingType.POST_DELETION_FAILED, handlePostDeletionFailed);
-      socket.off(WebsocketMessagingType.EVENT_CREATED, handleEventCreated);
-      socket.off(WebsocketMessagingType.USER_CREATED, handleUserCreated);
-    };
-  }, [socket]);
+  useNotificationHandlers(socket, showNotification);
 
   const animatedStyle = useAnimatedStyle(() => {
     return {
@@ -133,6 +76,12 @@ export const NotificationProvider: React.FC<{ children: React.ReactNode }> = ({ 
       {message != null && (
         <Animated.View style={[styles.notificationContainer, animatedStyle]}>
           <AppText style={styles.notificationText}>{message}</AppText>
+        </Animated.View>
+      )}
+      {isSyncing && (
+        <Animated.View style={styles.syncOverlay}>
+          <ActivityIndicator size="small" color={theme.colors.white} />
+          <AppText style={styles.syncText}>Synchronisation en cours...</AppText>
         </Animated.View>
       )}
     </NotificationContext.Provider>
@@ -154,5 +103,23 @@ const styles = StyleSheet.create({
     color: theme.colors.white,
     fontWeight: 'bold',
     textAlign: 'center',
+  },
+  syncOverlay: {
+    position: 'absolute',
+    top: Platform.OS === 'web' ? 20 : 50,
+    alignSelf: 'center',
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: theme.colors.primaryEco,
+    paddingVertical: theme.spacing.sm,
+    paddingHorizontal: theme.spacing.md,
+    borderRadius: 20,
+    boxShadow: '0 2px 8px rgba(0,0,0,0.25)',
+    zIndex: 9999,
+  },
+  syncText: {
+    color: theme.colors.white,
+    fontWeight: 'bold',
+    marginLeft: theme.spacing.sm,
   },
 });

@@ -1,5 +1,5 @@
 import { TokenService } from '../services/token.service';
-import { authExpiredBus } from '../services/event-bus.service';
+import { authExpiredBus, syncPendingBus } from '../services/event-bus.service';
 import { config } from '../shared/config/base-config';
 import axios, { type AxiosError } from 'axios';
 import { createApiError } from './core/api-error.factory';
@@ -51,6 +51,10 @@ export const apiFetch = async <TResponse, TRequest = undefined>(
       data: options.body,
     });
 
+    if (response.status === 206) {
+      syncPendingBus.emit(true);
+    }
+
     return response.data as TResponse;
   } catch (error) {
     if (axios.isAxiosError(error)) {
@@ -59,10 +63,18 @@ export const apiFetch = async <TResponse, TRequest = undefined>(
       const data = axiosError.response?.data ?? {};
       const message = typeof data.message === 'string' ? data.message : axiosError.message;
 
+      const errorString = JSON.stringify(data);
+      const isTokenExpiredError =
+        errorString.includes('UnauthorizedError') ||
+        errorString.includes('"exp" claim timestamp check failed');
+
       // Handle token refresh logic
       const isTokenRelated403 =
         status === 403 && typeof message === 'string' && message.toLowerCase().includes('token');
-      if ((status === 401 || isTokenRelated403) && !endpoint.includes('/users/refresh')) {
+      if (
+        (status === 401 || isTokenRelated403 || isTokenExpiredError) &&
+        !endpoint.includes('/users/refresh')
+      ) {
         const refreshToken = await TokenService.getRefreshToken();
         if (refreshToken !== null) {
           try {

@@ -25,24 +25,28 @@ export const useCreateEvent = () => {
 
       const newEvent = await eventApi.createEvent(payload);
 
-      if (data.requirements.length > 0) {
-        console.log(`[useCreateEvent] Adding ${String(data.requirements.length)} requirements to event ${newEvent.id}`);
+      if (newEvent !== null && data.requirements.length > 0) {
+        console.log(
+          `[useCreateEvent] Adding ${String(data.requirements.length)} requirements to event ${newEvent.id}`,
+        );
         await Promise.all(
           data.requirements.map((req) =>
             eventApi.addRequirement(newEvent.id, {
               name: req.name,
               description: req.description,
               neededQuantity: req.neededQuantity,
-            })
-          )
+            }),
+          ),
         );
       }
 
       return newEvent;
     },
     onSuccess: (newEvent) => {
-      void queryClient.invalidateQueries({ queryKey: EVENTS_QUERY_KEY });
-      Alert.alert('Succès', `L'évènement "${newEvent.title}" a été créé avec succès !`);
+      if (newEvent !== null) {
+        void queryClient.invalidateQueries({ queryKey: EVENTS_QUERY_KEY });
+        Alert.alert('Succès', `L'évènement "${newEvent.title}" a été créé avec succès !`);
+      }
     },
     onError: (error) => {
       console.error('[useCreateEvent] Mutation error:', error);
@@ -50,4 +54,3 @@ export const useCreateEvent = () => {
     },
   });
 };
-
