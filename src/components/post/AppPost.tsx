@@ -2,16 +2,19 @@ import React from 'react';
 import { View, Text, StyleSheet } from 'react-native';
 import { theme } from '@/shared/themes/theme';
 import type {PostWeb} from '@volontariapp/contracts';
+import {useGetPublicUser} from "@/api/user/hooks/use-get-public-user";
 
 interface PostCardProps {
   post: PostWeb;
 }
 
 export default function AppPost({ post }: PostCardProps) {
+  const { data: author } = useGetPublicUser(post.authorId);
+
   return (
     <View style={styles.card}>
       <View style={styles.header}>
-        <Text style={styles.author}>Auteur : {post.authorId}</Text>
+        <Text style={styles.author}>Auteur : {author?.pseudo ?? '...'}</Text>
       </View>
 
       <View style={styles.content}>

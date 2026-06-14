@@ -129,6 +129,12 @@ export const USER_ENDPOINTS = {
     requiresAuth: true,
     roles: [UserRoles.ADMIN],
   } as EndpointDefinition<void, UserWebResponse>,
+  GET_PUBLIC_USER: {
+    path: '/users/:id/public',
+    method: 'GET',
+    requiresAuth: true,
+    roles: [UserRoles.ORGANIZATION, UserRoles.VOLUNTEER, UserRoles.ADMIN],
+  } as EndpointDefinition<void, UserWebResponse>,
   GET_ME: {
     path: '/users/me',
     method: 'GET',
