@@ -4,7 +4,7 @@ import type {
   CreatePostRequest,
   CreatePostWebResponse,
   ListPostsWebResponse,
-  ActionSuccessWebResponse, ListPostsResponse,
+  ActionSuccessWebResponse,
 } from '@volontariapp/contracts';
 
 export const postApi = {
