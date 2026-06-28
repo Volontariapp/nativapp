@@ -1,16 +1,16 @@
 import { useInfiniteQuery } from '@tanstack/react-query';
 import { socialApi } from '../social.api';
 
-export const WISHES_QUERY_KEY = ['wishes', 'me'] as const;
+export const EVENT_PARTICIPANTS_QUERY_KEY = ['event-participants'] as const;
 
 /**
- * Hook pour récupérer la liste des IDs d'événements dans les souhaits de l'utilisateur avec pagination.
+ * Hook pour récupérer la liste des participants d'un événement avec pagination.
  */
-export const useUserWishes = (limit = 10) => {
+export const useEventParticipants = (eventId: string, limit = 10) => {
   return useInfiniteQuery({
-    queryKey: WISHES_QUERY_KEY,
+    queryKey: [...EVENT_PARTICIPANTS_QUERY_KEY, eventId],
     queryFn: async ({ pageParam }) => {
-      return await socialApi.getMyWishes({ page: pageParam, limit });
+      return await socialApi.getEventParticipants(eventId, { page: pageParam, limit });
     },
     initialPageParam: 1,
     getNextPageParam: (lastPage, allPages) => {
@@ -20,5 +20,6 @@ export const useUserWishes = (limit = 10) => {
       }
       return undefined;
     },
+    enabled: !!eventId,
   });
 };

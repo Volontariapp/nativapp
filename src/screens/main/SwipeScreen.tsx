@@ -1,5 +1,5 @@
 import React, { useCallback, useMemo, useRef, useState } from 'react';
-import { View, StyleSheet, ActivityIndicator } from 'react-native';
+import {View, StyleSheet, ActivityIndicator } from 'react-native';
 
 import Swiper from 'react-native-deck-swiper';
 
@@ -11,6 +11,7 @@ import { useGetMyEvents } from '@/api/event/hooks/use-get-my-events';
 import { theme } from '@/shared/themes/theme';
 import { AppIconsButton } from '@/components';
 import type {AppEvent} from "@/api/event/event.api";
+import {useUserSocialActions} from "@/api/social/hooks/use-user-social-actions";
 
 enum SwipeDirection {
   LEFT = 'left',
@@ -26,6 +27,8 @@ export function SwipeScreen(): React.JSX.Element {
     fetchNextPage,
     isFetchingNextPage,
   } = useGetMyEvents(10);
+
+  const { wish } = useUserSocialActions();
 
   const swiperRef = useRef<Swiper<AppEvent>>(null);
 
@@ -52,6 +55,10 @@ export function SwipeScreen(): React.JSX.Element {
         events[cardIndex]?.title,
       );
 
+      if (direction === SwipeDirection.RIGHT && cardIndex < events.length) {
+        void wish(events[cardIndex].id);
+      }
+
       setCurrentIndex(nextIndex);
 
       if (
@@ -67,6 +74,7 @@ export function SwipeScreen(): React.JSX.Element {
       hasNextPage,
       isFetchingNextPage,
       fetchNextPage,
+      wish,
     ],
   );
 
@@ -156,7 +164,7 @@ export function SwipeScreen(): React.JSX.Element {
           cards={events}
           cardIndex={currentIndex}
           renderCard={(event) => <EventCard event={event} />}
-          stackSize={4}
+          stackSize={5}
           stackScale={4}
           stackSeparation={14}
           backgroundColor="transparent"
@@ -164,12 +172,13 @@ export function SwipeScreen(): React.JSX.Element {
           animateCardOpacity
           disableTopSwipe
           disableBottomSwipe
-          onSwipedLeft={(index) =>
-            { handleSwipe(SwipeDirection.LEFT, index); }
-          }
-          onSwipedRight={(index) =>
-            { handleSwipe(SwipeDirection.RIGHT, index); }
-          }
+          cardHorizontalMargin={10}
+          onSwipedLeft={(index) => {
+            handleSwipe(SwipeDirection.LEFT, index);
+          }}
+          onSwipedRight={(index) => {
+            handleSwipe(SwipeDirection.RIGHT, index);
+          }}
           overlayLabels={{
             left: {
               title: 'PASS',
@@ -229,12 +238,12 @@ const styles = StyleSheet.create({
   },
 
   buttons: {
-    flex: 1,
+    paddingVertical: theme.spacing.lg,
     flexDirection: 'row',
     justifyContent: 'space-evenly',
     alignItems: 'center',
     paddingHorizontal: 50,
-    marginTop: 100,
+    bottom: 50,
   },
 
   message: {

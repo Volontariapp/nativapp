@@ -14,6 +14,7 @@ export const useUserSocialActions = () => {
     mutationFn: (eventId: string) => socialApi.participate(eventId),
     onSuccess: () => {
       void queryClient.invalidateQueries({ queryKey: PARTICIPATIONS_QUERY_KEY });
+      void queryClient.invalidateQueries({ queryKey: ['participated-events'] });
     },
   });
 
@@ -21,6 +22,7 @@ export const useUserSocialActions = () => {
     mutationFn: (eventId: string) => socialApi.unparticipate(eventId),
     onSuccess: () => {
       void queryClient.invalidateQueries({ queryKey: PARTICIPATIONS_QUERY_KEY });
+      void queryClient.invalidateQueries({ queryKey: ['participated-events'] });
     },
   });
 
@@ -28,6 +30,7 @@ export const useUserSocialActions = () => {
     mutationFn: (eventId: string) => socialApi.wishEvent(eventId),
     onSuccess: () => {
       void queryClient.invalidateQueries({ queryKey: WISHES_QUERY_KEY });
+      void queryClient.invalidateQueries({ queryKey: ['wished-events'] });
     },
   });
 
@@ -35,6 +38,7 @@ export const useUserSocialActions = () => {
     mutationFn: (eventId: string) => socialApi.unwishEvent(eventId),
     onSuccess: () => {
       void queryClient.invalidateQueries({ queryKey: WISHES_QUERY_KEY });
+      void queryClient.invalidateQueries({ queryKey: ['wished-events'] });
     },
   });
 
