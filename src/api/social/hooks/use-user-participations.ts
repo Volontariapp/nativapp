@@ -1,7 +1,7 @@
 import { useQuery } from '@tanstack/react-query';
 import { socialApi } from '../social.api';
 
-const PARTICIPATIONS_QUERY_KEY = ['participations', 'me'] as const;
+export const PARTICIPATIONS_QUERY_KEY = ['participations', 'me'] as const;
 
 /**
  * Hook pour récupérer le nombre d'événements auxquels l'utilisateur participe.
