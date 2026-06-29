@@ -1,8 +1,15 @@
-import React from 'react';
-import { View, Text, StyleSheet } from 'react-native';
+import React, { useState } from 'react';
+import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
+import Icon from 'react-native-vector-icons/Feather';
 import { theme } from '@/shared/themes/theme';
-import type {PostWeb} from '@volontariapp/contracts';
-import {useGetPublicUser} from "@/api/user/hooks/use-get-public-user";
+import type { PostWeb } from '@volontariapp/contracts';
+import { useGetPublicUser } from '@/api/user/hooks/use-get-public-user';
+import { useListComments } from '@/api/post/hooks/use-list-comments';
+import { PostAuthorHeader } from './PostAuthorHeader';
+import { PostImagePlaceholder } from './PostImagePlaceholder';
+import { PostActions } from './PostActions';
+import { PostCommentsModal } from './PostCommentsModal';
+import { PostCommentPreview } from './PostCommentPreview';
 
 interface PostCardProps {
   post: PostWeb;
@@ -10,60 +17,111 @@ interface PostCardProps {
 
 export default function AppPost({ post }: PostCardProps) {
   const { data: author } = useGetPublicUser(post.authorId);
+  const { data: commentsData } = useListComments(post.id);
+  const [isCommentsVisible, setIsCommentsVisible] = useState(false);
+
+  const pseudo = author?.pseudo ?? 'Auteur inconnu';
+  const topComments = commentsData?.comments.slice(0, 3) ?? [];
 
   return (
     <View style={styles.card}>
-      <View style={styles.header}>
-        <Text style={styles.author}>Auteur : {author?.pseudo ?? '...'}</Text>
-      </View>
+      <PostAuthorHeader pseudo={author?.pseudo} authorId={post.authorId} />
+
+      <PostImagePlaceholder postId={post.id} />
+
+      {post.title ? (
+        <View style={styles.titleContainer}>
+          <Text style={styles.title}>{post.title}</Text>
+        </View>
+      ) : null}
+
+      <PostActions
+        commentCount={commentsData?.comments.length ?? 0}
+        onCommentPress={() => {
+          setIsCommentsVisible(true);
+        }}
+      />
 
       <View style={styles.content}>
-        <Text style={styles.title}>{post.title}</Text>
-        <Text style={styles.description}>{post.content}</Text>
+        <Text style={styles.description}>
+          <Text style={styles.authorPseudo}>@{pseudo} </Text>
+          {post.content}
+        </Text>
+
+        {post.event && (
+          <TouchableOpacity
+            style={styles.eventLink}
+            activeOpacity={0.7}
+            onPress={() => {
+              console.log('Ouvrir la carte event');
+            }}
+          >
+            <Icon name="search" size={14} color={theme.colors.primarySocio} />
+            <Text style={styles.eventText}>{post.event.title}</Text>
+          </TouchableOpacity>
+        )}
+
+        {topComments.length > 0 && (
+          <View style={styles.commentsSection}>
+            {topComments.map((comment) => (
+              <PostCommentPreview key={comment.id} comment={comment} />
+            ))}
+          </View>
+        )}
       </View>
+
+      <PostCommentsModal
+        postId={post.id}
+        visible={isCommentsVisible}
+        onClose={() => {
+          setIsCommentsVisible(false);
+        }}
+      />
     </View>
   );
 }
 
 const styles = StyleSheet.create({
   card: {
-    backgroundColor: theme.colors.background,
-    borderRadius: theme.radius.lg,
-    overflow: 'hidden',
-    marginVertical: theme.spacing.sm,
-    ...theme.shadows.card,
+    backgroundColor: theme.colors.white,
   },
-
-  header: {
+  titleContainer: {
     paddingHorizontal: theme.spacing.lg,
-    paddingVertical: theme.spacing.md,
-    borderBottomWidth: 1,
-    borderBottomColor: theme.colors.lightGrey,
+    paddingTop: theme.spacing.sm,
   },
-
-  author: {
-    fontSize: theme.typography.fontSize.sm,
-    fontWeight: theme.typography.fontWeight.medium,
-    color: theme.colors.grey,
-    fontFamily: theme.typography.fonts.primary,
-  },
-
-  content: {
-    padding: theme.spacing.lg,
-  },
-
   title: {
-    fontSize: theme.typography.fontSize.xl,
+    fontSize: theme.typography.fontSize.md,
     fontWeight: theme.typography.fontWeight.bold,
     color: theme.colors.black,
-    marginBottom: theme.spacing.md,
     fontFamily: theme.typography.fonts.primary,
   },
-
+  content: {
+    paddingHorizontal: theme.spacing.lg,
+    paddingBottom: theme.spacing.md,
+  },
   description: {
-    fontSize: theme.typography.fontSize.md,
-    lineHeight: 24,
-    color: theme.colors.grey,
+    fontSize: theme.typography.fontSize.sm,
+    lineHeight: 20,
+    color: theme.colors.black,
+    fontFamily: theme.typography.fonts.primary,
+    marginBottom: theme.spacing.sm,
+  },
+  authorPseudo: {
+    fontWeight: theme.typography.fontWeight.bold,
+  },
+  commentsSection: {
+    marginTop: theme.spacing.xs,
+  },
+  eventLink: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: theme.spacing.sm,
+    gap: theme.spacing.xs,
+  },
+  eventText: {
+    fontSize: theme.typography.fontSize.xs,
+    color: theme.colors.primarySocio,
+    fontWeight: theme.typography.fontWeight.semibold,
     fontFamily: theme.typography.fonts.primary,
   },
 });
