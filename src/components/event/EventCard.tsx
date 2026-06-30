@@ -16,10 +16,6 @@ interface EventCardProps {
 }
 
 export default function EventCard({ event }: EventCardProps) {
-  if (!event) {
-    return null;
-  }
-
   const date = new Date(event.startAt);
 
   const formattedDate = date.toLocaleDateString('fr-FR', {

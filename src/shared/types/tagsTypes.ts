@@ -1,6 +1,5 @@
 import { theme } from '@/shared/themes/theme';
 import { TagsNames } from '@volontariapp/shared';
-import {EventType} from "@volontariapp/contracts";
 
 export interface Tag {
   icon?: string;
