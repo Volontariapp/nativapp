@@ -9,7 +9,7 @@ export const useGetMyPosts = (limit = 10) => {
   const { userId } = useAuth();
 
   return useInfiniteQuery({
-    queryKey: [...MY_POSTS_QUERY_KEY, userId],
+    queryKey: [...MY_POSTS_QUERY_KEY, userId, { limit }],
     queryFn: async ({ pageParam }) => {
       if (userId === null) throw new Error('Not authenticated');
       console.log('[useGetMyPosts] Fetching page:', pageParam, 'with limit:', limit);

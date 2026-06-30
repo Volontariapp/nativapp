@@ -208,4 +208,46 @@ export const eventApi = {
       totalCount: response.totalCount,
     };
   },
+
+  async getWishedEvents(params: {
+    page?: number;
+    limit?: number;
+  }): Promise<{ events: AppEvent[]; totalCount: number }> {
+    const query = new URLSearchParams();
+    if (params.page !== undefined) query.append('page', params.page.toString());
+    if (params.limit !== undefined) query.append('limit', params.limit.toString());
+
+    const queryString = query.toString();
+    const path = queryString
+      ? `${EVENT_ENDPOINTS.GET_USER_WISHED_EVENTS_SELF.path}?${queryString}`
+      : EVENT_ENDPOINTS.GET_USER_WISHED_EVENTS_SELF.path;
+
+    const response = await apiFetch<SearchEventsResponse>(path, {
+      method: EVENT_ENDPOINTS.GET_USER_WISHED_EVENTS_SELF.method,
+      requiresAuth: EVENT_ENDPOINTS.GET_USER_WISHED_EVENTS_SELF.requiresAuth,
+    });
+
+    return {
+      events: response.events.map((ev) => ({
+        id: ev.id,
+        title: ev.title,
+        description: ev.description,
+        startAt: formatTimestamp(ev.startAt),
+        endAt: formatTimestamp(ev.endAt),
+        localisationName: ev.localisationName,
+        type: ev.type,
+        state: ev.state,
+        awardedImpactScore: ev.awardedImpactScore,
+        maxParticipants: ev.maxParticipants,
+        currentParticipants: ev.currentParticipants,
+        location: ev.location
+          ? {
+              latitude: ev.location.latitude,
+              longitude: ev.location.longitude,
+            }
+          : undefined,
+      })),
+      totalCount: response.totalCount,
+    };
+  },
 };

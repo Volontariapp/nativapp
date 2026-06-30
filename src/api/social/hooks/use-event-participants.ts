@@ -1,16 +1,16 @@
 import { useInfiniteQuery } from '@tanstack/react-query';
 import { socialApi } from '../social.api';
 
-export const PARTICIPATIONS_QUERY_KEY = ['participations', 'me'] as const;
+export const EVENT_PARTICIPANTS_QUERY_KEY = ['event-participants'] as const;
 
 /**
- * Hook pour récupérer les événements auxquels l'utilisateur participe avec pagination.
+ * Hook pour récupérer la liste des participants d'un événement avec pagination.
  */
-export const useUserParticipations = (limit = 10) => {
+export const useEventParticipants = (eventId: string, limit = 10) => {
   return useInfiniteQuery({
-    queryKey: [...PARTICIPATIONS_QUERY_KEY, { limit }],
+    queryKey: [...EVENT_PARTICIPANTS_QUERY_KEY, eventId, { limit }],
     queryFn: async ({ pageParam }) => {
-      return await socialApi.getMyParticipations({ page: pageParam, limit });
+      return await socialApi.getEventParticipants(eventId, { page: pageParam, limit });
     },
     initialPageParam: 1,
     getNextPageParam: (lastPage, allPages) => {
@@ -20,5 +20,6 @@ export const useUserParticipations = (limit = 10) => {
       }
       return undefined;
     },
+    enabled: !!eventId,
   });
 };

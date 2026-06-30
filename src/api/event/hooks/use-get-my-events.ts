@@ -5,7 +5,7 @@ const MY_EVENTS_QUERY_KEY = ['my-events'] as const;
 
 export const useGetMyEvents = (limit = 10) => {
   return useInfiniteQuery({
-    queryKey: MY_EVENTS_QUERY_KEY,
+    queryKey: [...MY_EVENTS_QUERY_KEY, { limit }],
     queryFn: async ({ pageParam }) => {
       console.log('[useGetMyEvents] Fetching page:', pageParam, 'with limit:', limit);
       try {

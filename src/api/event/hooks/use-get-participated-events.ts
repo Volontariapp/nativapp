@@ -5,7 +5,7 @@ const PARTICIPATED_EVENTS_QUERY_KEY = ['participated-events'] as const;
 
 export const useGetParticipatedEvents = (limit = 10) => {
   return useInfiniteQuery({
-    queryKey: PARTICIPATED_EVENTS_QUERY_KEY,
+    queryKey: [...PARTICIPATED_EVENTS_QUERY_KEY, { limit }],
     queryFn: async ({ pageParam }) => {
       console.log('[useGetParticipatedEvents] Fetching page:', pageParam, 'with limit:', limit);
       try {

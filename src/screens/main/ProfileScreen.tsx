@@ -23,9 +23,11 @@ import { useUpdateProfile } from '@/api/user/hooks/use-update-profile';
 import { useUserParticipations } from '@/api/social/hooks/use-user-participations';
 import { useGetMyEvents } from '@/api/event/hooks/use-get-my-events';
 import { useGetParticipatedEvents } from '@/api/event/hooks/use-get-participated-events';
+import { useGetWishedEvents } from '@/api/event/hooks/use-get-wished-events';
 import { useNavigation } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import type { ProfileStackParamList } from '@/navigation/stacks/ProfileStack';
+import {WishedEventCard} from "@/components/dataDisplay/WishedEventCard";
 
 const handleSettingsPress = () => {
   Alert.alert('Paramètres', 'Coming soon ⚙️');
@@ -53,6 +55,14 @@ export function ProfileScreen(): React.JSX.Element {
     fetchNextPage: fetchNextParticipatedEvents,
     isFetchingNextPage: isFetchingNextParticipatedEvents,
   } = useGetParticipatedEvents(2);
+
+  const {
+    data: wishedEventsData,
+    isLoading: isWishedEventsLoading,
+    hasNextPage: hasNextWishedEvents,
+    fetchNextPage: fetchNextWishedEvents,
+    isFetchingNextPage: isFetchingNextWishedEvents,
+  } = useGetWishedEvents(2);
 
   const updateProfile = useUpdateProfile();
 
@@ -82,6 +92,7 @@ export function ProfileScreen(): React.JSX.Element {
 
   const allMyEvents = myEventsData?.pages.flatMap((page) => page.events) ?? [];
   const allParticipatedEvents = participatedEventsData?.pages.flatMap((page) => page.events) ?? [];
+  const allWishedEvents = wishedEventsData?.pages.flatMap((page) => page.events) ?? [];
 
   return (
     <View style={styles.container}>
@@ -117,7 +128,7 @@ export function ProfileScreen(): React.JSX.Element {
           <ProfileStats
             impactScore={profile.totalImpactScore}
             badgesCount={profile.badges.length}
-            eventsCount={participations?.length ?? 0}
+            eventsCount={participations?.pages[0]?.totalCount ?? 0}
           />
         </ProfileSection>
 
@@ -185,6 +196,33 @@ export function ProfileScreen(): React.JSX.Element {
 
         <ProfileSection title="Mentions J'aime">
           <ComingSoonPlaceholder />
+        </ProfileSection>
+
+        <ProfileSection title="Wishlist">
+          {isWishedEventsLoading ? (
+            <ActivityIndicator color={theme.colors.primaryEco} />
+          ) : allWishedEvents.length > 0 ? (
+            <View>
+              {allWishedEvents.map((event) => (
+                <WishedEventCard key={event.id} event={event} />
+              ))}
+              {hasNextWishedEvents && (
+                <View style={styles.seeMoreContainer}>
+                  <AppButton
+                    variant="eco"
+                    size="small"
+                    text={isFetchingNextWishedEvents ? 'Chargement...' : 'Voir plus'}
+                    onPress={() => {
+                      void fetchNextWishedEvents();
+                    }}
+                    disabled={isFetchingNextWishedEvents}
+                  />
+                </View>
+              )}
+            </View>
+          ) : (
+            <AppText style={styles.emptyText}>Aucun événement dans votre wishlist.</AppText>
+          )}
         </ProfileSection>
 
         <View style={styles.actions}>
