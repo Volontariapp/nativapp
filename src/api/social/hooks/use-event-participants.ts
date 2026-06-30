@@ -8,7 +8,7 @@ export const EVENT_PARTICIPANTS_QUERY_KEY = ['event-participants'] as const;
  */
 export const useEventParticipants = (eventId: string, limit = 10) => {
   return useInfiniteQuery({
-    queryKey: [...EVENT_PARTICIPANTS_QUERY_KEY, eventId],
+    queryKey: [...EVENT_PARTICIPANTS_QUERY_KEY, eventId, { limit }],
     queryFn: async ({ pageParam }) => {
       return await socialApi.getEventParticipants(eventId, { page: pageParam, limit });
     },

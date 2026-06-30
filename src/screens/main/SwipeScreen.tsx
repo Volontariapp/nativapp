@@ -235,6 +235,7 @@ const styles = StyleSheet.create({
 
   swiperContainer: {
     flex: 1,
+    marginTop: -50,
   },
 
   buttons: {
@@ -243,7 +244,7 @@ const styles = StyleSheet.create({
     justifyContent: 'space-evenly',
     alignItems: 'center',
     paddingHorizontal: 50,
-    bottom: 50,
+    bottom: 20,
   },
 
   message: {

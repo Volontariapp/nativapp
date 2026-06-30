@@ -16,6 +16,10 @@ interface EventCardProps {
 }
 
 export default function EventCard({ event }: EventCardProps) {
+  if (!event) {
+    return null;
+  }
+
   const date = new Date(event.startAt);
 
   const formattedDate = date.toLocaleDateString('fr-FR', {
@@ -88,7 +92,7 @@ export default function EventCard({ event }: EventCardProps) {
   );
 }
 
-const IMAGE_HEIGHT = 250;
+const IMAGE_HEIGHT = 400;
 
 const styles = StyleSheet.create({
   card: {
@@ -97,6 +101,8 @@ const styles = StyleSheet.create({
     overflow: 'hidden',
     marginVertical: theme.spacing.md,
     ...theme.shadows.card,
+    //minHeight: 500,
+    minHeight: 580,
   },
 
   image: {
@@ -134,7 +140,9 @@ const styles = StyleSheet.create({
   },
 
   content: {
-    padding: theme.spacing.lg,
+    padding: theme.spacing.xl,
+    flex: 1,
+    justifyContent: 'space-between',
   },
 
   title: {

@@ -12,6 +12,10 @@ export interface EventCardProps {
 }
 
 export function EventCard({ event }: EventCardProps): React.JSX.Element {
+  if (!event) {
+    return <></>;
+  }
+
   const isEcology =
     event.type === EventType.EVENT_TYPE_ECOLOGY ||
     String(event.type) === EventType[EventType.EVENT_TYPE_ECOLOGY];

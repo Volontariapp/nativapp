@@ -5,7 +5,7 @@ const WISHED_EVENTS_QUERY_KEY = ['wished-events'] as const;
 
 export const useGetWishedEvents = (limit = 10) => {
   return useInfiniteQuery({
-    queryKey: WISHED_EVENTS_QUERY_KEY,
+    queryKey: [...WISHED_EVENTS_QUERY_KEY, { limit }],
     queryFn: async ({ pageParam }) => {
       console.log('[useGetWishedEvents] Fetching page:', pageParam, 'with limit:', limit);
       try {

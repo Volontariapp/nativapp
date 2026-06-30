@@ -8,7 +8,7 @@ export const WISHES_QUERY_KEY = ['wishes', 'me'] as const;
  */
 export const useUserWishes = (limit = 10) => {
   return useInfiniteQuery({
-    queryKey: WISHES_QUERY_KEY,
+    queryKey: [...WISHES_QUERY_KEY, { limit }],
     queryFn: async ({ pageParam }) => {
       return await socialApi.getMyWishes({ page: pageParam, limit });
     },

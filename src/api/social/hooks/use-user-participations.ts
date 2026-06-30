@@ -8,7 +8,7 @@ export const PARTICIPATIONS_QUERY_KEY = ['participations', 'me'] as const;
  */
 export const useUserParticipations = (limit = 10) => {
   return useInfiniteQuery({
-    queryKey: PARTICIPATIONS_QUERY_KEY,
+    queryKey: [...PARTICIPATIONS_QUERY_KEY, { limit }],
     queryFn: async ({ pageParam }) => {
       return await socialApi.getMyParticipations({ page: pageParam, limit });
     },
