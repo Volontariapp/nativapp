@@ -1,9 +1,8 @@
 import React from 'react';
 import { Dimensions } from 'react-native';
 import { Gesture, GestureDetector } from 'react-native-gesture-handler';
-import Animated, {
+import { scheduleOnRN } from 'react-native-worklets';import Animated, {
   interpolate,
-  runOnJS,
   useAnimatedStyle,
   useSharedValue,
   withSpring,
@@ -45,7 +44,7 @@ export default function SwipeableCard({
             : -SCREEN_WIDTH * 1.5,
           { duration: 220 },
           () => {
-            runOnJS(onSwipe)(direction);
+            scheduleOnRN(onSwipe, direction);
           },
         );
 
