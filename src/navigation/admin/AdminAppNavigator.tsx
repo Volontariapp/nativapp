@@ -1,6 +1,7 @@
 import React from 'react';
 import { createBottomTabNavigator } from '@react-navigation/native-tabs';
 import Icon from 'react-native-vector-icons/Feather';
+import { theme } from '@/shared/themes/theme';
 
 import AdminDashboardScreen from '../../screens/admin/dashboard/AdminDashboardScreen';
 import AdminUsersScreen from '../../screens/admin/users/AdminUsersScreen';
@@ -16,11 +17,11 @@ export default function AdminAppNavigator(): React.JSX.Element {
       <Tab.Navigator
         screenOptions={{
           headerShown: true,
-          tabBarActiveTintColor: '#1a73e8',
-          tabBarInactiveTintColor: '#5f6368',
+          tabBarActiveTintColor: theme.colors.adminActive,
+          tabBarInactiveTintColor: theme.colors.adminInactive,
           tabBarStyle: {
             borderTopWidth: 1,
-            borderTopColor: '#f0f0f0',
+            borderTopColor: theme.colors.separator,
             elevation: 8,
             shadowOpacity: 0.1,
             shadowRadius: 10,

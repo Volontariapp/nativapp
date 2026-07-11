@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
+import { View, Text, StyleSheet, Pressable } from 'react-native';
 import Icon from 'react-native-vector-icons/Feather';
 import { theme } from '@/shared/themes/theme';
 import type { PostWeb } from '@volontariapp/contracts';
@@ -54,9 +54,8 @@ export default function AppPost({ post }: PostCardProps) {
         </Text>
 
         {post.event && (
-          <TouchableOpacity
+          <Pressable
             style={styles.eventLink}
-            activeOpacity={0.7}
             onPress={() => {
               if (post.event) {
                 const appEvent = convertEventDtoToAppEvent(post.event);
@@ -66,7 +65,7 @@ export default function AppPost({ post }: PostCardProps) {
           >
             <Icon name="search" size={14} color={theme.colors.primarySocio} />
             <Text style={styles.eventText}>{post.event.title}</Text>
-          </TouchableOpacity>
+          </Pressable>
         )}
 
         {topComments.length > 0 && (

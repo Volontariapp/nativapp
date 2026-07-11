@@ -1,5 +1,6 @@
 import React from 'react';
-import { View, StyleSheet, Image } from 'react-native';
+import { View, StyleSheet } from 'react-native';
+import { Image } from 'expo-image';
 import { AppText } from '@/components/typography/AppText';
 import { theme } from '@/shared/themes/theme';
 import { EventState } from '@volontariapp/contracts';
@@ -32,7 +33,7 @@ export function EventCover({ event }: EventCoverProps) {
 
   return (
     <View style={styles.container}>
-      <Image source={{ uri: placeholderUrl }} style={styles.coverImage} resizeMode="cover" />
+      <Image source={{ uri: placeholderUrl }} style={styles.coverImage} contentFit="cover" />
       <View style={[styles.badge, { backgroundColor: status.color }]}>
         <AppText style={styles.badgeText}>{status.label}</AppText>
       </View>

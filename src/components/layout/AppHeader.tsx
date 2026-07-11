@@ -6,7 +6,7 @@ import { useSocket } from '@/context/SocketContext';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import Feather from 'react-native-vector-icons/Feather';
 import { useNavigation } from '@react-navigation/native';
-import { TouchableOpacity } from 'react-native';
+import { Pressable } from 'react-native';
 import { AppIcons } from '@/components/media/AppIcons';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import type { MainStackParamList } from '@/navigation/stacks/MainStack';
@@ -44,7 +44,7 @@ export default function AppHeader({
       </View>
       <View style={styles.rightContainer}>
         {showSettings && (
-          <TouchableOpacity
+          <Pressable
             onPress={() => {
               navigation.navigate('Settings');
             }}
@@ -52,7 +52,7 @@ export default function AppHeader({
             hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
           >
             <AppIcons icon="settings" size={24} color={theme.colors.black} />
-          </TouchableOpacity>
+          </Pressable>
         )}
         <View
           style={[

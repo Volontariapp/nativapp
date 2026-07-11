@@ -1,5 +1,5 @@
 import React from 'react';
-import { View, StyleSheet, TouchableOpacity, Linking, Platform } from 'react-native';
+import { View, StyleSheet, Pressable, Linking, Platform } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useNavigation } from '@react-navigation/native';
 
@@ -7,28 +7,28 @@ import { AppText } from '@/components/typography/AppText';
 import { AppIcons } from '@/components/media/AppIcons';
 import { theme } from '@/shared/themes/theme';
 
+const handleOpenLocationSettings = () => {
+  if (Platform.OS === 'ios') {
+    void Linking.openURL('app-settings:');
+  } else {
+    void Linking.openSettings();
+  }
+};
+
 export function SettingsScreen() {
   const navigation = useNavigation();
-
-  const handleOpenLocationSettings = () => {
-    if (Platform.OS === 'ios') {
-      void Linking.openURL('app-settings:');
-    } else {
-      void Linking.openSettings();
-    }
-  };
 
   return (
     <View style={styles.container}>
       <SafeAreaView edges={['top']} style={styles.topBar}>
-        <TouchableOpacity
+        <Pressable
           style={styles.backButton}
           onPress={() => {
             navigation.goBack();
           }}
         >
           <AppIcons icon="arrow-left" size={24} color={theme.colors.black} />
-        </TouchableOpacity>
+        </Pressable>
         <AppText style={styles.topBarTitle}>Paramètres</AppText>
         <View style={{ width: 40 }} />
       </SafeAreaView>
@@ -46,9 +46,9 @@ export function SettingsScreen() {
               </AppText>
             </View>
           </View>
-          <TouchableOpacity style={styles.actionButton} onPress={handleOpenLocationSettings}>
+          <Pressable style={styles.actionButton} onPress={handleOpenLocationSettings}>
             <AppText style={styles.actionText}>Modifier</AppText>
-          </TouchableOpacity>
+          </Pressable>
         </View>
       </View>
     </View>

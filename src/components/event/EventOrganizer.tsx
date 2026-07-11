@@ -1,5 +1,6 @@
 import React from 'react';
-import { View, StyleSheet, Image, ActivityIndicator } from 'react-native';
+import { View, StyleSheet, ActivityIndicator } from 'react-native';
+import { Image } from 'expo-image';
 import { AppText } from '@/components/typography/AppText';
 import { theme } from '@/shared/themes/theme';
 import { useGetPublicUser } from '@/api/user/hooks/use-get-public-user';

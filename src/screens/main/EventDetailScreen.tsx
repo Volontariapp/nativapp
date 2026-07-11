@@ -3,10 +3,10 @@ import {
   View,
   StyleSheet,
   ScrollView,
-  TouchableOpacity,
   Alert,
   ActivityIndicator,
   Share,
+  Pressable,
 } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -20,14 +20,14 @@ import { EventState } from '@volontariapp/contracts';
 import type { AppEvent } from '@/api/event/event.api';
 import { mapEventType } from '@/shared/lib/event-mappers.utils';
 
-import { EventCover } from '../../components/event';
-import { EventInfoCards } from '../../components/event';
-import { EventTags } from '../../components/event';
-import { EventParticipants } from '../../components/event';
-import { EventRequirements } from '../../components/event';
-import { EventOrganizer } from '../../components/event';
-import { ImpactScoreBadge } from '../../components/event';
-import { AppMap } from '@/components/map';
+import { EventCover } from '../../components/event/EventCover';
+import { EventInfoCards } from '../../components/event/EventInfoCards';
+import { EventTags } from '../../components/event/EventTags';
+import { EventParticipants } from '../../components/event/EventParticipants';
+import { EventRequirements } from '../../components/event/EventRequirements';
+import { EventOrganizer } from '../../components/event/EventOrganizer';
+import { ImpactScoreBadge } from '../../components/event/ImpactScoreBadge';
+import AppMap from '@/components/map/AppMap';
 
 type Props = NativeStackScreenProps<MainStackParamList, 'EventDetail'>;
 
@@ -39,33 +39,32 @@ export function EventDetailScreen({ route }: Props) {
     event.state === EventState.EVENT_STATE_PUBLISHED ||
     event.state === EventState.EVENT_STATE_DRAFT;
   const [isJoined, setIsJoined] = React.useState(false);
-  const [isLoading, setIsLoading] = React.useState(false);
+  const [isPending, startTransition] = React.useTransition();
 
   const handleJoin = () => {
-    setIsLoading(true);
-    setTimeout(() => {
+    startTransition(async () => {
+      await new Promise((resolve) => setTimeout(resolve, 1000));
       setIsJoined(true);
-      setIsLoading(false);
       Alert.alert('Succès', 'Vous participez maintenant à cet événement !');
-    }, 1000);
+    });
   };
 
   return (
     <View style={styles.container}>
       {/* Custom Top Bar */}
       <SafeAreaView edges={['top']} style={styles.topBar}>
-        <TouchableOpacity
+        <Pressable
           style={styles.backButton}
           onPress={() => {
             navigation.goBack();
           }}
         >
           <AppIcons icon="arrow-left" size={24} color={theme.colors.black} />
-        </TouchableOpacity>
+        </Pressable>
         <AppText style={styles.topBarTitle} numberOfLines={1}>
           {event.title}
         </AppText>
-        <TouchableOpacity
+        <Pressable
           style={styles.backButton}
           onPress={() => {
             void Share.share({
@@ -74,7 +73,7 @@ export function EventDetailScreen({ route }: Props) {
           }}
         >
           <AppIcons icon="share-2" iconLibrary="Feather" size={24} color={theme.colors.black} />
-        </TouchableOpacity>
+        </Pressable>
       </SafeAreaView>
 
       <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
@@ -122,8 +121,8 @@ export function EventDetailScreen({ route }: Props) {
 
       {isJoinable && !isJoined && (
         <View style={styles.bottomBar}>
-          <TouchableOpacity style={styles.joinButton} onPress={handleJoin} disabled={isLoading}>
-            {isLoading ? (
+          <Pressable style={styles.joinButton} onPress={handleJoin} disabled={isPending}>
+            {isPending ? (
               <ActivityIndicator color={theme.colors.white} />
             ) : (
               <>
@@ -136,7 +135,7 @@ export function EventDetailScreen({ route }: Props) {
                 <AppText style={styles.joinButtonText}>JOIN</AppText>
               </>
             )}
-          </TouchableOpacity>
+          </Pressable>
         </View>
       )}
 

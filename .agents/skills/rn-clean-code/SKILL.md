@@ -33,6 +33,7 @@ TypeScript is used to guarantee safety. You are explicitly forbidden to use esca
 - ❌ **NO `any`**: Never use `any`.
 - ❌ **NO `unknown`**: Avoid `unknown` unless dealing with a generic `catch (error)` block, but cast it using Zod or error guards immediately.
 - ❌ **NO `never`**: Avoid assigning `never` manually.
+- ❌ **NO `@ts-expect-error` or `@ts-ignore`**: You are forbidden to bypass the compiler, especially for nested navigation props.
 - **Action**: Always take the time to write precise, strict types or interfaces. Use generics if a type is dynamic.
 
 ## 📐 Architecture Coherence

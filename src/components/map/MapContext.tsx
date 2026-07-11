@@ -1,5 +1,5 @@
 import type { ReactNode } from 'react';
-import { createContext, useContext, useState, useCallback } from 'react';
+import { createContext, useState, useCallback, useMemo } from 'react';
 import type { AppEvent } from '@/api/event/event.api';
 
 interface MapContextValue {
@@ -10,14 +10,6 @@ interface MapContextValue {
 }
 
 const MapContext = createContext<MapContextValue | undefined>(undefined);
-
-export function useMapContext(): MapContextValue {
-  const context = useContext(MapContext);
-  if (!context) {
-    throw new Error('useMapContext must be used within a MapProvider');
-  }
-  return context;
-}
 
 interface MapProviderProps {
   children: ReactNode;
@@ -34,16 +26,15 @@ export function MapProvider({ children }: MapProviderProps) {
     setSelectedEvent(event);
   }, []);
 
-  return (
-    <MapContext.Provider
-      value={{
-        selectedEvent,
-        selectEvent,
-        centerCoordinates,
-        setCenterCoordinates,
-      }}
-    >
-      {children}
-    </MapContext.Provider>
+  const value = useMemo(
+    () => ({
+      selectedEvent,
+      selectEvent,
+      centerCoordinates,
+      setCenterCoordinates,
+    }),
+    [selectedEvent, selectEvent, centerCoordinates, setCenterCoordinates],
   );
+
+  return <MapContext.Provider value={value}>{children}</MapContext.Provider>;
 }

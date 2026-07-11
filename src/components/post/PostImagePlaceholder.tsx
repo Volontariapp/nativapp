@@ -1,5 +1,6 @@
 import React from 'react';
-import { View, Image, StyleSheet } from 'react-native';
+import { View, StyleSheet } from 'react-native';
+import { Image } from 'expo-image';
 import { theme } from '@/shared/themes/theme';
 import { getFakeEcologyImage } from '@/utils/fake-images.util';
 
@@ -12,7 +13,7 @@ export function PostImagePlaceholder({ postId }: PostImagePlaceholderProps) {
 
   return (
     <View style={styles.container}>
-      <Image source={{ uri: imageUrl }} style={styles.image} resizeMode="cover" />
+      <Image source={{ uri: imageUrl }} style={styles.image} contentFit="cover" />
     </View>
   );
 }

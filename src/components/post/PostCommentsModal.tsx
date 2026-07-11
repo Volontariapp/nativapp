@@ -24,6 +24,8 @@ interface PostCommentsModalProps {
   onClose: () => void;
 }
 
+const renderComment = ({ item }: { item: CommentWebResponse }) => <CommentItem comment={item} />;
+
 export const PostCommentsModal = ({ postId, visible, onClose }: PostCommentsModalProps) => {
   const [commentText, setCommentText] = useState('');
   const { data, isLoading } = useListComments(postId);
@@ -44,8 +46,6 @@ export const PostCommentsModal = ({ postId, visible, onClose }: PostCommentsModa
       },
     );
   };
-
-  const renderComment = ({ item }: { item: CommentWebResponse }) => <CommentItem comment={item} />;
 
   return (
     <Modal animationType="slide" transparent visible={visible} onRequestClose={onClose}>

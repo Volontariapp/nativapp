@@ -56,14 +56,8 @@ const getRawConfig = (): Record<string, unknown> => {
     merged['apiGatewayUrl'] = apiGatewayUrlFromEnv;
   }
 
-  const cfClientId = getFallback(
-    process.env.EXPO_PUBLIC_CF_ACCESS_CLIENT_ID,
-    extra?.['CF_ACCESS_CLIENT_ID'],
-  );
-  const cfClientSecret = getFallback(
-    process.env.EXPO_PUBLIC_CF_ACCESS_CLIENT_SECRET,
-    extra?.['CF_ACCESS_CLIENT_SECRET'],
-  );
+  const cfClientId = extra?.['CF_ACCESS_CLIENT_ID'] as string | undefined;
+  const cfClientSecret = extra?.['CF_ACCESS_CLIENT_SECRET'] as string | undefined;
   if (cfClientId !== undefined && cfClientSecret !== undefined) {
     merged['cloudflareAccess'] = {
       clientId: cfClientId,

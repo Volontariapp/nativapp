@@ -13,7 +13,7 @@ export interface AppMapProps {
   zoomEnabled?: boolean;
 }
 
-export function AppMap({
+export default function AppMap({
   userLocation,
   events,
   onMarkerPress,

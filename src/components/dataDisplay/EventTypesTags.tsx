@@ -12,6 +12,8 @@ interface TagProps {
 export const EventTypeTagComponent = ({ type }: TagProps): ReactNode => {
   const tagConfig = EVENT_TYPE_CONFIG[type];
 
+  if (tagConfig === undefined) return null;
+
   return (
     <View style={[styles.container, { backgroundColor: tagConfig.backgroundColor }]}>
       {tagConfig.icon != null && <AppIcons icon={tagConfig.icon} size={12} />}

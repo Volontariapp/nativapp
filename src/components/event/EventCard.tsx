@@ -1,13 +1,16 @@
-import { View, Text, StyleSheet, ImageBackground, Image, TouchableOpacity } from 'react-native';
+import React, { useMemo } from 'react';
+import { View, Text, StyleSheet, Pressable } from 'react-native';
+import { Image } from 'expo-image';
+import { LinearGradient } from 'expo-linear-gradient';
+import { Ionicons } from '@expo/vector-icons';
+import type { LocationObject } from 'expo-location';
+
 import { theme } from '@/shared/themes/theme';
 import type { AppEvent as Event } from '@/api/event/event.api';
-import { Ionicons } from '@expo/vector-icons';
 import { EventTypeTagComponent } from '@/components/dataDisplay/EventTypesTags';
-import { getFakeEcologyImage } from '@/utils/fake-images.util';
-import { LinearGradient } from 'expo-linear-gradient';
 import { ImpactScoreBadge } from '@/components/event/ImpactScoreBadge';
+import { getFakeEcologyImage } from '@/utils/fake-images.util';
 import { calculateDistanceInKm, formatDistance } from '@/shared/lib/location.utils';
-import type { LocationObject } from 'expo-location';
 
 interface EventCardProps {
   event: Event;
@@ -15,76 +18,104 @@ interface EventCardProps {
   onLocationPress?: () => void;
 }
 
-export default function EventCard({ event, userLocation, onLocationPress }: EventCardProps) {
-  const date = new Date(event.startAt);
+export const EventCard = React.memo(function EventCard({
+  event,
+  userLocation,
+  onLocationPress,
+}: EventCardProps): React.JSX.Element {
+  const formattedDate = useMemo(() => {
+    const date = new Date(event.startAt);
+    return date
+      .toLocaleDateString('fr-FR', {
+        day: '2-digit',
+        month: 'short',
+      })
+      .toUpperCase();
+  }, [event.startAt]);
 
-  const formattedDate = date.toLocaleDateString('fr-FR', {
-    day: '2-digit',
-    month: 'short',
-  });
+  const formattedTime = useMemo(() => {
+    const date = new Date(event.startAt);
+    return date.toLocaleTimeString('fr-FR', {
+      hour: '2-digit',
+      minute: '2-digit',
+    });
+  }, [event.startAt]);
 
-  const formattedTime = date.toLocaleTimeString('fr-FR', {
-    hour: '2-digit',
-    minute: '2-digit',
-  });
-
-  const currentPart = Math.max(1, event.currentParticipants);
-  const displayCount = Math.min(currentPart, 3);
-  const avatars = Array.from({ length: displayCount }).map(
-    (_, i) => `https://i.pravatar.cc/150?u=${event.id}-${String(i)}`,
-  );
-  const remaining = currentPart - displayCount;
-
-  const fakeImageUrl = getFakeEcologyImage(event.id);
-
-  let distanceValue = '';
-  if (userLocation && event.location) {
+  const distanceValue = useMemo(() => {
+    if (!userLocation || !event.location) return '';
     const distance = calculateDistanceInKm(
       userLocation.coords.latitude,
       userLocation.coords.longitude,
       event.location.latitude,
       event.location.longitude,
     );
-    distanceValue = `à ${formatDistance(distance)}`;
-  }
+    return `à ${formatDistance(distance)}`;
+  }, [userLocation, event.location]);
+
+  const { avatars, remaining } = useMemo(() => {
+    const currentPart = Math.max(1, event.currentParticipants);
+    const displayCount = Math.min(currentPart, 3);
+    const generatedAvatars = Array.from({ length: displayCount }).map(
+      (_, i) => `https://i.pravatar.cc/150?u=${event.id}-${String(i)}`,
+    );
+    return {
+      avatars: generatedAvatars,
+      remaining: currentPart - displayCount,
+    };
+  }, [event.currentParticipants, event.id]);
+
+  const fakeImageUrl = useMemo(() => getFakeEcologyImage(event.id), [event.id]);
 
   return (
     <View style={styles.card}>
-      <ImageBackground
-        source={{ uri: fakeImageUrl }}
-        style={styles.imageBackground}
-        imageStyle={styles.imageStyle}
-      >
+      <View style={styles.imageContainer}>
+        <Image
+          source={{ uri: fakeImageUrl }}
+          style={StyleSheet.absoluteFillObject}
+          contentFit="cover"
+          cachePolicy="memory-disk"
+          accessibilityIgnoresInvertColors
+        />
         <LinearGradient
           colors={['transparent', 'rgba(0,0,0,0.9)']}
           locations={[0.4, 1]}
-          style={styles.gradient}
+          style={StyleSheet.absoluteFillObject}
         />
+      </View>
 
+      <View style={styles.contentOverlay}>
         <View style={styles.topContainer}>
           <View style={styles.tagsContainer}>
             <EventTypeTagComponent type={event.type} />
             {event.awardedImpactScore > 0 && <ImpactScoreBadge score={event.awardedImpactScore} />}
           </View>
+        </View>
 
+        <View style={styles.content}>
           <View style={styles.dateAndDistanceContainer}>
             <View style={styles.dateBadge}>
-              <Ionicons name="calendar-outline" size={16} color={theme.colors.black} />
+              <Ionicons
+                name="calendar-outline"
+                size={theme.typography.fontSize.md}
+                color={theme.colors.black}
+              />
               <Text style={styles.dateText}>
-                {formattedDate.toUpperCase()}, {formattedTime}
+                {formattedDate}, {formattedTime}
               </Text>
             </View>
 
             {!!distanceValue && (
               <View style={styles.distanceChip}>
-                <Ionicons name="location-outline" size={16} color={theme.colors.white} />
+                <Ionicons
+                  name="location-outline"
+                  size={theme.typography.fontSize.md}
+                  color={theme.colors.white}
+                />
                 <Text style={styles.distanceChipText}>{distanceValue}</Text>
               </View>
             )}
           </View>
-        </View>
 
-        <View style={styles.content}>
           <Text style={styles.title}>{event.title}</Text>
 
           <Text style={styles.description} numberOfLines={2}>
@@ -95,169 +126,151 @@ export default function EventCard({ event, userLocation, onLocationPress }: Even
             <View style={styles.participants}>
               {avatars.map((url, i) => (
                 <Image
-                  key={i}
+                  key={`${url}-${String(i)}`}
                   source={{ uri: url }}
-                  style={[
-                    styles.avatar,
-                    i > 0 && styles.avatarOverlap,
-                    { zIndex: displayCount - i },
-                  ]}
+                  style={[styles.avatar, i > 0 && styles.avatarOverlap, { zIndex: 10 - i }]}
+                  contentFit="cover"
+                  cachePolicy="memory-disk"
                 />
               ))}
               {remaining > 0 ? <Text style={styles.participantsText}>+{remaining}</Text> : null}
             </View>
 
-            <TouchableOpacity style={styles.location} onPress={onLocationPress} activeOpacity={0.7}>
-              <Ionicons name="location-outline" size={14} color={theme.colors.white} />
+            <Pressable
+              style={({ pressed }) => [styles.location, pressed && styles.locationPressed]}
+              onPress={onLocationPress}
+              hitSlop={{ top: 15, bottom: 15, left: 15, right: 15 }}
+              accessibilityRole="button"
+              accessibilityLabel={`Voir le lieu de l'événement : ${event.localisationName}`}
+            >
+              <Ionicons
+                name="location-outline"
+                size={theme.typography.fontSize.sm}
+                color={theme.colors.white}
+              />
               <Text style={styles.locationText} numberOfLines={1}>
                 {event.localisationName}
               </Text>
-            </TouchableOpacity>
+            </Pressable>
           </View>
         </View>
-      </ImageBackground>
+      </View>
     </View>
   );
-}
+});
 
 const styles = StyleSheet.create({
   card: {
+    flex: 1,
     overflow: 'hidden',
     ...theme.shadows.card,
-    flex: 1,
-  },
-
-  imageBackground: {
-    flex: 1,
-    justifyContent: 'space-between',
-  },
-
-  imageStyle: {
     borderRadius: 0,
+    backgroundColor: theme.colors.background,
   },
-
-  gradient: {
+  imageContainer: {
     ...StyleSheet.absoluteFillObject,
   },
-
+  contentOverlay: {
+    flex: 1,
+    justifyContent: 'space-between',
+  },
   topContainer: {
     padding: theme.spacing.md,
-    justifyContent: 'space-between',
-    flex: 1,
+    gap: theme.spacing.sm,
   },
-
   tagsContainer: {
     flexDirection: 'row',
     gap: theme.spacing.sm,
   },
-
   dateAndDistanceContainer: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: theme.spacing.sm,
+    marginBottom: theme.spacing.md,
   },
-
   dateBadge: {
-    alignSelf: 'flex-start',
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 6,
-    backgroundColor: 'white',
-    paddingHorizontal: 14,
-    paddingVertical: 10,
-    borderRadius: 999,
+    gap: theme.spacing.xs,
+    backgroundColor: theme.colors.white,
+    paddingHorizontal: theme.spacing.md,
+    paddingVertical: theme.spacing.sm,
+    borderRadius: theme.radius.full,
   },
-
   dateText: {
     color: theme.colors.black,
     fontSize: theme.typography.fontSize.sm,
     fontWeight: theme.typography.fontWeight.medium,
     fontFamily: theme.typography.fonts.primary,
   },
-
   distanceChip: {
-    alignSelf: 'flex-start',
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 6,
-    backgroundColor: 'rgba(255, 255, 255, 0.2)',
-    paddingHorizontal: 14,
-    paddingVertical: 10,
-    borderRadius: 999,
+    gap: theme.spacing.xs,
+    backgroundColor: theme.colors.whiteOverlay,
+    paddingHorizontal: theme.spacing.md,
+    paddingVertical: theme.spacing.sm,
+    borderRadius: theme.radius.full,
   },
-
   distanceChipText: {
     color: theme.colors.white,
     fontSize: theme.typography.fontSize.sm,
     fontWeight: theme.typography.fontWeight.medium,
     fontFamily: theme.typography.fonts.primary,
   },
-
   content: {
-    padding: theme.spacing.xl,
+    padding: theme.spacing.lg,
   },
-
   title: {
-    fontSize: 28,
-    lineHeight: 32,
+    fontSize: theme.typography.fontSize.xl,
     color: theme.colors.white,
     fontWeight: theme.typography.fontWeight.bold,
     fontFamily: theme.typography.fonts.primary,
-    marginBottom: theme.spacing.sm,
+    marginBottom: theme.spacing.xs,
   },
-
   description: {
-    color: '#E0E0E0',
+    color: theme.colors.lightGrey,
     fontSize: theme.typography.fontSize.md,
-    lineHeight: 22,
     fontFamily: theme.typography.fonts.primary,
     marginBottom: theme.spacing.lg,
+    lineHeight: 22,
   },
-
   footer: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
   },
-
   participants: {
     flexDirection: 'row',
     alignItems: 'center',
   },
-
   avatar: {
-    width: 26,
-    height: 26,
-    borderRadius: 13,
-    backgroundColor: '#D9D9D9',
+    width: theme.spacing.xl,
+    height: theme.spacing.xl,
+    borderRadius: theme.radius.full,
+    backgroundColor: theme.colors.skeletonGrey,
     borderWidth: 2,
-    borderColor: 'white',
+    borderColor: theme.colors.white,
   },
-
   avatarOverlap: {
-    marginLeft: -8,
+    marginLeft: -theme.spacing.sm,
   },
-
   participantsText: {
-    marginLeft: 6,
+    marginLeft: theme.spacing.xs,
     color: theme.colors.white,
     fontSize: theme.typography.fontSize.sm,
     fontFamily: theme.typography.fonts.primary,
+    fontWeight: theme.typography.fontWeight.medium,
   },
-
-  footerRight: {
-    flexDirection: 'column',
-    alignItems: 'flex-end',
-    gap: 4,
-    maxWidth: '55%',
-  },
-
   location: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 4,
+    gap: theme.spacing.xs,
+    maxWidth: '55%',
   },
-
+  locationPressed: {
+    opacity: 0.7,
+  },
   locationText: {
     color: theme.colors.white,
     fontSize: theme.typography.fontSize.sm,

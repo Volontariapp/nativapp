@@ -1,5 +1,6 @@
-import React from 'react';
-import { View, StyleSheet, Image } from 'react-native';
+import React, { useMemo } from 'react';
+import { View, StyleSheet, Pressable } from 'react-native';
+import { Image } from 'expo-image';
 import type { DimensionValue } from 'react-native';
 import { AppText } from '@/components/typography/AppText';
 import { theme } from '@/shared/themes/theme';
@@ -7,39 +8,67 @@ import type { AppEvent } from '@/api/event/event.api';
 
 interface EventParticipantsProps {
   event: AppEvent;
+  onSeeMorePress?: () => void;
 }
 
-export function EventParticipants({ event }: EventParticipantsProps) {
-  const currentPart = Math.max(1, event.currentParticipants);
-  const maxPart = event.maxParticipants;
+export const EventParticipants = React.memo(function EventParticipants({
+  event,
+  onSeeMorePress,
+}: EventParticipantsProps): React.JSX.Element {
+  const { currentPart, maxPart, fillPercentage } = useMemo(() => {
+    const current = Math.max(1, event.currentParticipants);
+    const max = event.maxParticipants;
+    const percentage = max > 0 ? Math.min(100, Math.max(0, (current / max) * 100)) : 0;
 
-  const displayCount = Math.min(currentPart, 5);
-  const avatars = Array.from({ length: displayCount }).map(
-    (_, i) => `https://i.pravatar.cc/150?u=${event.id}-${String(i)}`,
-  );
-  const remaining = currentPart - displayCount;
+    return {
+      currentPart: current,
+      maxPart: max,
+      fillPercentage: percentage,
+    };
+  }, [event.currentParticipants, event.maxParticipants]);
 
-  const fillPercentage =
-    maxPart > 0 ? Math.min(100, Math.max(0, (currentPart / maxPart) * 100)) : 0;
+  const { avatars, remaining } = useMemo(() => {
+    const displayCount = Math.min(currentPart, 5);
+    const generatedAvatars = Array.from({ length: displayCount }).map((_, i) => {
+      const url = `https://i.pravatar.cc/150?u=${event.id}-${i.toString()}`;
+      return url;
+    });
+    return {
+      avatars: generatedAvatars,
+      remaining: currentPart - displayCount,
+    };
+  }, [currentPart, event.id]);
 
   return (
     <View style={styles.section}>
       <View style={styles.header}>
         <AppText style={styles.title}>Participants</AppText>
-        <AppText style={styles.link}>voir plus</AppText>
+
+        <Pressable
+          onPress={onSeeMorePress}
+          hitSlop={{ top: 15, bottom: 15, left: 15, right: 15 }}
+          accessibilityRole="button"
+          accessibilityLabel="Voir tous les participants"
+          style={({ pressed }) => [pressed && styles.linkPressed]}
+        >
+          <AppText style={styles.link}>voir plus</AppText>
+        </Pressable>
       </View>
 
       <View style={styles.contentRow}>
         <View style={styles.avatarsContainer}>
           {avatars.map((url, i) => (
             <Image
-              key={i}
+              key={`${url}-${i.toString()}`}
               source={{ uri: url }}
-              style={[styles.avatar, { left: i * 20, zIndex: displayCount - i }]}
+              style={[styles.avatar, i > 0 && styles.avatarOverlap, { zIndex: 10 - i }]}
+              contentFit="cover"
+              cachePolicy="memory-disk"
+              accessibilityIgnoresInvertColors
             />
           ))}
           {remaining > 0 && (
-            <View style={[styles.remainingBadge, { left: displayCount * 20 }]}>
+            <View style={[styles.remainingBadge, styles.avatarOverlap, { zIndex: 0 }]}>
               <AppText style={styles.remainingText}>+{remaining}</AppText>
             </View>
           )}
@@ -57,13 +86,13 @@ export function EventParticipants({ event }: EventParticipantsProps) {
         <View
           style={[
             styles.progressBarFill,
-            { width: (fillPercentage.toString() + '%') as DimensionValue },
+            { width: `${String(fillPercentage)}%` as DimensionValue },
           ]}
         />
       </View>
     </View>
   );
-}
+});
 
 const styles = StyleSheet.create({
   section: {
@@ -87,69 +116,73 @@ const styles = StyleSheet.create({
     letterSpacing: 0,
   },
   link: {
-    fontSize: 12,
+    fontSize: theme.typography.fontSize.xs,
     fontWeight: theme.typography.fontWeight.bold,
-    color: '#0066cc',
+    color: theme.colors.info,
+  },
+  linkPressed: {
+    opacity: 0.7,
   },
   contentRow: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
     marginBottom: theme.spacing.lg,
-    height: 40,
+    minHeight: theme.components.avatar.md, // Sécurise la hauteur au lieu du height 40px brut
   },
   avatarsContainer: {
     flexDirection: 'row',
-    position: 'relative',
-    height: 40,
-    width: 150,
+    alignItems: 'center',
+    // Suppression complète des bidouilles en position absolute et width magique
   },
   avatar: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
+    width: theme.components.avatar.md,
+    height: theme.components.avatar.md,
+    borderRadius: theme.radius.full,
     borderWidth: 2,
     borderColor: theme.colors.white,
-    position: 'absolute',
+    backgroundColor: theme.colors.skeletonGrey, // skeleton en attente du load expo-image
+  },
+  avatarOverlap: {
+    marginLeft: -theme.spacing.md, // Token flexbox propre au lieu du calcul left: i * 20
   },
   remainingBadge: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
+    width: theme.components.avatar.md,
+    height: theme.components.avatar.md,
+    borderRadius: theme.radius.full,
     borderWidth: 2,
     borderColor: theme.colors.white,
-    backgroundColor: '#0066cc',
-    position: 'absolute',
+    backgroundColor: theme.colors.info,
     justifyContent: 'center',
     alignItems: 'center',
   },
   remainingText: {
     color: theme.colors.white,
-    fontSize: 12,
+    fontSize: theme.typography.fontSize.xs,
     fontWeight: theme.typography.fontWeight.bold,
   },
   statsContainer: {
     alignItems: 'flex-end',
   },
   statsText: {
-    fontSize: 16,
+    fontSize: theme.typography.fontSize.md,
     fontWeight: theme.typography.fontWeight.bold,
     color: theme.colors.black,
   },
   statsSubtext: {
-    fontSize: 12,
+    fontSize: theme.typography.fontSize.xs,
     color: theme.colors.grey,
   },
   progressBarBg: {
-    height: 6,
+    height: theme.components.progressBar.height,
     backgroundColor: theme.colors.background,
-    borderRadius: 3,
+    borderRadius: theme.radius.sm,
     width: '100%',
     overflow: 'hidden',
   },
   progressBarFill: {
     height: '100%',
-    backgroundColor: '#0066cc',
-    borderRadius: 3,
+    backgroundColor: theme.colors.info,
+    borderRadius: theme.radius.sm,
   },
 });

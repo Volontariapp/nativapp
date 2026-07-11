@@ -1,10 +1,9 @@
-import React, { useEffect } from 'react';
+import { useEffect } from 'react';
 import { StyleSheet, View } from 'react-native';
 import { MapContainer, TileLayer, Marker, Popup } from 'react-leaflet';
 import L from 'leaflet';
 import { theme } from '@/shared/themes/theme';
 import type { AppMapProps } from './AppMap';
-
 const customMarkerIcon = L.divIcon({
   className: 'custom-leaflet-marker',
   html: `<div style="background-color: ${theme.colors.primaryEco}; width: 16px; height: 16px; border-radius: 8px; border: 2px solid white; box-shadow: 0 0 4px rgba(0,0,0,0.4);"></div>`,
@@ -28,7 +27,6 @@ export default function LeafletMap({
   zoomEnabled = true,
 }: AppMapProps) {
   useEffect(() => {
-    // Inject Leaflet CSS dynamically to avoid Metro CSS parsing issues with local images
     if (typeof window !== 'undefined' && !document.getElementById('leaflet-css')) {
       const link = document.createElement('link');
       link.id = 'leaflet-css';

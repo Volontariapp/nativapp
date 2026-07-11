@@ -1,5 +1,6 @@
 import React from 'react';
-import { View, StyleSheet, Image, TouchableOpacity, Alert } from 'react-native';
+import { View, StyleSheet, Pressable, Alert } from 'react-native';
+import { Image } from 'expo-image';
 import Icon from 'react-native-vector-icons/Feather';
 import { AppText } from '@/components/typography/AppText';
 import { theme } from '@/shared/themes/theme';
@@ -46,13 +47,9 @@ export function CommentItem({ comment }: CommentItemProps) {
         <View style={styles.actionsContainer}>
           <AppText style={styles.date}>{date}</AppText>
           {isMine && (
-            <TouchableOpacity
-              onPress={handleDelete}
-              disabled={isPending}
-              style={styles.deleteButton}
-            >
+            <Pressable onPress={handleDelete} disabled={isPending} style={styles.deleteButton}>
               <Icon name="trash-2" size={16} color={theme.colors.danger} />
-            </TouchableOpacity>
+            </Pressable>
           )}
         </View>
       </View>

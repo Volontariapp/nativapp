@@ -35,7 +35,8 @@ const styles = StyleSheet.create({
 });
 ```
 
-Do not hardcode hex codes or pixel padding (except for 1px borders sometimes). Always search the `theme` object first.
+> [!WARNING]
+> **FATAL RULE: NEVER HARDCODE COLORS OR HEX CODES (`#FFF`, `rgba`).** This is considered amateur "vibe coding" and is strictly forbidden. If a color is missing from the theme, you MUST add it to `src/shared/themes/theme.ts` instead of hardcoding it in the component.
 
 ## 🔤 Typography
 

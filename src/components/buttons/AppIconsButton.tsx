@@ -1,20 +1,19 @@
 import type { ReactNode } from 'react';
 import { Pressable, StyleSheet } from 'react-native';
+import type { PressableProps } from 'react-native';
 
 import { ICONS_BUTTON_VARIANTS } from '@/shared/themes/buttonVariants';
 import { theme } from '@/shared/themes/theme';
 import { AppIcons } from '@/components/media/AppIcons';
-import type { GestureResponderEvent } from 'react-native';
 import type { IconLibrary, IconButtonVariant } from '@/shared/types/components';
 
-interface AppIconsButtonProps {
+interface AppIconsButtonProps extends Omit<PressableProps, 'style'> {
   variant?: IconButtonVariant;
   icon?: string;
   size?: number;
   iconLibrary?: IconLibrary;
   iconColor?: string;
   top?: number;
-  onPress?: (event: GestureResponderEvent) => void;
 }
 
 export const AppIconsButton = ({
@@ -23,8 +22,8 @@ export const AppIconsButton = ({
   iconLibrary = 'Feather',
   iconColor = theme.colors.white,
   top = 0,
-  onPress,
   size = 24,
+  ...pressableProps
 }: AppIconsButtonProps): ReactNode => {
   const stylesVariant = ICONS_BUTTON_VARIANTS[variant];
 
@@ -35,7 +34,7 @@ export const AppIconsButton = ({
 
   return (
     <Pressable
-      onPress={onPress}
+      {...pressableProps}
       style={({ pressed }) => [
         styles.button,
         {

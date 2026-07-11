@@ -1,5 +1,5 @@
 import React from 'react';
-import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
+import { View, Text, StyleSheet, Pressable } from 'react-native';
 import { theme } from '@/shared/themes/theme';
 import Icon from 'react-native-vector-icons/Feather';
 
@@ -12,18 +12,18 @@ export function PostActions({ onCommentPress, commentCount = 0 }: PostActionsPro
   return (
     <View style={styles.container}>
       <View style={styles.leftActions}>
-        <TouchableOpacity style={styles.iconButton} activeOpacity={0.7}>
+        <Pressable style={styles.iconButton}>
           <Icon name="heart" size={20} color={theme.colors.black} />
-        </TouchableOpacity>
+        </Pressable>
 
-        <TouchableOpacity style={styles.iconButton} onPress={onCommentPress} activeOpacity={0.7}>
+        <Pressable style={styles.iconButton} onPress={onCommentPress}>
           <Icon name="message-square" size={20} color={theme.colors.black} />
           {commentCount > 0 && <Text style={styles.actionText}>{commentCount}</Text>}
-        </TouchableOpacity>
+        </Pressable>
 
-        <TouchableOpacity style={styles.iconButton} activeOpacity={0.7}>
+        <Pressable style={styles.iconButton}>
           <Icon name="share-2" size={20} color={theme.colors.black} />
-        </TouchableOpacity>
+        </Pressable>
       </View>
     </View>
   );

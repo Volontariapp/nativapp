@@ -15,5 +15,5 @@ export function getFakeEcologyImage(seed: string): string {
     hash = seed.charCodeAt(i) + ((hash << 5) - hash);
   }
   const index = Math.abs(hash) % ECOLOGY_IMAGES.length;
-  return ECOLOGY_IMAGES[index];
+  return ECOLOGY_IMAGES[index] ?? ECOLOGY_IMAGES[0] ?? '';
 }

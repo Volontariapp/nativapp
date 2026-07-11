@@ -1,7 +1,7 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { socialApi } from '../social.api';
 import { PARTICIPATIONS_QUERY_KEY } from './use-user-participations';
-import { WISHES_QUERY_KEY } from './use-user-wishes';
+const WISHES_QUERY_KEY = ['user-wishes'];
 
 /**
  * Hook regroupant les mutations pour les interactions sociales de l'utilisateur connecté.

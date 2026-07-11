@@ -14,7 +14,7 @@ export function ImpactScoreBadge({ score, style }: ImpactScoreBadgeProps) {
 
   return (
     <View style={[styles.container, style]}>
-      <AppIcons icon="star" size={14} color="#D4AF37" />
+      <AppIcons icon="star" size={14} color={theme.colors.gold} />
       <AppText style={styles.text}>+{score} points d'impact</AppText>
     </View>
   );
@@ -24,17 +24,17 @@ const styles = StyleSheet.create({
   container: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#F9F5EB',
-    paddingHorizontal: 10,
-    paddingVertical: 6,
-    borderRadius: 999,
+    backgroundColor: theme.colors.goldBackground,
+    paddingHorizontal: theme.spacing.sm,
+    paddingVertical: theme.spacing.xs + 2,
+    borderRadius: theme.radius.full,
     borderWidth: 1,
-    borderColor: '#E6D3A3',
-    gap: 4,
+    borderColor: theme.colors.goldBorder,
+    gap: theme.spacing.xs,
     alignSelf: 'flex-start',
   },
   text: {
-    color: '#B8860B', // Dark goldenrod for text
+    color: theme.colors.goldText,
     fontSize: 12,
     fontWeight: theme.typography.fontWeight.bold,
     fontFamily: theme.typography.fonts.primary,

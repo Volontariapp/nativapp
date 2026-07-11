@@ -12,6 +12,17 @@ export const theme = {
     grey: '#6b7280',
     lightGrey: '#e0e0e0',
     black: '#000000',
+    info: '#0066cc',
+    gold: '#D4AF37',
+    goldText: '#B8860B',
+    goldBackground: '#F9F5EB',
+    goldBorder: '#E6D3A3',
+    skeletonGrey: '#D9D9D9',
+    whiteOverlay: 'rgba(255, 255, 255, 0.2)',
+    adminActive: '#1a73e8',
+    adminInactive: '#5f6368',
+    separator: '#f0f0f0',
+    blackOverlay: 'rgba(0, 0, 0, 0.4)',
   },
   section: {
     gap: 12,
@@ -64,6 +75,15 @@ export const theme = {
       shadowOpacity: 0.1,
       shadowRadius: 6,
       elevation: 3,
+    },
+  },
+  components: {
+    avatar: {
+      sm: 24,
+      md: 40,
+    },
+    progressBar: {
+      height: 6,
     },
   },
 } as const;

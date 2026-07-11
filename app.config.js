@@ -24,8 +24,6 @@ if (process.env.APP_ENV === 'production') {
 
 process.env.EXPO_PUBLIC_APP_ENV = process.env.APP_ENV || process.env.NODE_ENV || 'development';
 process.env.EXPO_PUBLIC_API_GATEWAY_URL = apiGatewayUrl;
-process.env.EXPO_PUBLIC_CF_ACCESS_CLIENT_ID = cfId;
-process.env.EXPO_PUBLIC_CF_ACCESS_CLIENT_SECRET = cfSecret;
 
 module.exports = ({ config }) => {
   return {

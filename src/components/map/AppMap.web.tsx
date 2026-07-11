@@ -1,18 +1,15 @@
-import React, { useState, useEffect, Suspense } from 'react';
+import React, { useSyncExternalStore, Suspense } from 'react';
 import { View, Text, StyleSheet } from 'react-native';
 import { theme } from '@/shared/themes/theme';
 import type { AppMapProps } from './AppMap';
-
-// Dynamically import LeafletMap to avoid Server-Side Rendering (SSR) crashes
-// and "window is not defined" errors during Expo Static Web Builds.
 const LeafletMap = React.lazy(() => import('./LeafletMap.web'));
 
-export function AppMap(props: AppMapProps) {
-  const [isMounted, setIsMounted] = useState(false);
+const subscribe = () => () => {};
+const getSnapshot = () => true;
+const getServerSnapshot = () => false;
 
-  useEffect(() => {
-    setIsMounted(true);
-  }, []);
+export default function AppMap(props: AppMapProps) {
+  const isMounted = useSyncExternalStore(subscribe, getSnapshot, getServerSnapshot);
 
   if (!isMounted || typeof window === 'undefined') {
     return (

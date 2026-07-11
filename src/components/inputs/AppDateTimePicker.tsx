@@ -1,14 +1,8 @@
-import React, { useState, useRef, useEffect } from 'react';
+import React, { useState, useRef, useEffect, useCallback, useMemo } from 'react';
 import { View, StyleSheet, Pressable, Platform, Modal, type ViewStyle } from 'react-native';
-import type { DateTimePickerEvent } from '@react-native-community/datetimepicker';
-
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-let DateTimePicker: any = null;
-if (Platform.OS !== 'web') {
-  // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-require-imports
-  DateTimePicker = require('@react-native-community/datetimepicker').default;
-}
+import RNDateTimePicker, { type DateTimePickerEvent } from '@react-native-community/datetimepicker';
 import Icon from 'react-native-vector-icons/Feather';
+
 import { AppText } from '@/components/typography/AppText';
 import { theme } from '@/shared/themes/theme';
 
@@ -21,7 +15,7 @@ export interface AppDateTimePickerProps {
   hideIcon?: boolean;
 }
 
-export function AppDateTimePicker({
+export const AppDateTimePicker = React.memo(function AppDateTimePicker({
   value,
   onChange,
   label,
@@ -46,41 +40,70 @@ export function AppDateTimePicker({
     }
   }, [showPicker]);
 
-  const handlePress = () => {
+  const handlePress = useCallback(() => {
     if (mode === 'datetime') {
       setPickerMode(Platform.OS === 'ios' ? 'datetime' : 'date');
     }
     setShowPicker(true);
-  };
+  }, [mode]);
 
-  const handleChange = (event: DateTimePickerEvent, selectedDate?: Date) => {
-    if (Platform.OS === 'android') {
-      setShowPicker(false);
-    }
-
-    if (selectedDate) {
-      if (mode === 'datetime' && pickerMode === 'date' && Platform.OS === 'android') {
-        onChange(selectedDate);
-        setPickerMode('time');
-        setShowPicker(true);
-      } else {
-        onChange(selectedDate);
+  const handleChange = useCallback(
+    (_event: DateTimePickerEvent, selectedDate?: Date) => {
+      if (Platform.OS === 'android') {
+        setShowPicker(false);
       }
-    }
-  };
 
-  const displayFormat =
-    mode === 'date'
-      ? value.toLocaleDateString('fr-FR')
-      : mode === 'time'
-        ? value.toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' })
-        : value.toLocaleString('fr-FR', {
-            day: '2-digit',
-            month: '2-digit',
-            year: 'numeric',
-            hour: '2-digit',
-            minute: '2-digit',
-          });
+      if (selectedDate) {
+        if (mode === 'datetime' && pickerMode === 'date' && Platform.OS === 'android') {
+          onChange(selectedDate);
+          setPickerMode('time');
+          setShowPicker(true);
+        } else {
+          onChange(selectedDate);
+        }
+      }
+    },
+    [mode, pickerMode, onChange],
+  );
+
+  const closePicker = useCallback(() => {
+    setShowPicker(false);
+  }, []);
+
+  const handleWebChange = useCallback(
+    (e: React.ChangeEvent<HTMLInputElement>) => {
+      const newDate = new Date(e.target.value);
+      if (!isNaN(newDate.getTime())) {
+        onChange(newDate);
+      }
+      setShowPicker(false);
+    },
+    [onChange],
+  );
+
+  // Mémoïsation du formatage pour ne pas recalculer à chaque interaction UI
+  const displayFormat = useMemo(() => {
+    if (mode === 'date') return value.toLocaleDateString('fr-FR');
+    if (mode === 'time')
+      return value.toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' });
+    return value.toLocaleString('fr-FR', {
+      day: '2-digit',
+      month: '2-digit',
+      year: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit',
+    });
+  }, [value, mode]);
+
+  const webInputValue = useMemo(() => {
+    if (mode === 'time') return value.toTimeString().slice(0, 5);
+    if (mode === 'date') return value.toISOString().slice(0, 10);
+    return value.toISOString().slice(0, 16);
+  }, [value, mode]);
+
+  const webAriaLabel =
+    label ?? (mode === 'time' ? 'Heure' : mode === 'date' ? 'Date' : 'Date et heure');
+  const webInputType = mode === 'time' ? 'time' : mode === 'date' ? 'date' : 'datetime-local';
 
   return (
     <View style={styles.container}>
@@ -89,39 +112,32 @@ export function AppDateTimePicker({
       ) : null}
 
       <Pressable
-        style={({ pressed }) => [styles.inputWrapper, inputStyle, pressed && { opacity: 0.7 }]}
+        style={({ pressed }) => [styles.inputWrapper, inputStyle, pressed && styles.pressed]}
         onPress={handlePress}
+        accessibilityRole="button"
+        accessibilityLabel={`Ouvrir le sélecteur de ${webAriaLabel}`}
+        hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
       >
-        {!hideIcon && <Icon name={mode === 'time' ? 'clock' : 'calendar'} size={16} color={theme.colors.grey} />}
-        <AppText style={[styles.dateText, hideIcon && { paddingLeft: 0 }]}>{displayFormat}</AppText>
+        {!hideIcon && (
+          <Icon
+            name={mode === 'time' ? 'clock' : 'calendar'}
+            size={theme.typography.fontSize.md}
+            color={theme.colors.grey}
+          />
+        )}
+        <AppText style={[styles.dateText, hideIcon && styles.noPadding]}>{displayFormat}</AppText>
       </Pressable>
 
       {Platform.OS === 'web' ? (
         showPicker && (
           <input
             ref={webInputRef}
-            aria-label={
-              label ?? (mode === 'time' ? 'Heure' : mode === 'date' ? 'Date' : 'Date et heure')
-            }
-            type={mode === 'time' ? 'time' : mode === 'date' ? 'date' : 'datetime-local'}
-            value={
-              mode === 'time'
-                ? value.toTimeString().slice(0, 5)
-                : mode === 'date'
-                  ? value.toISOString().slice(0, 10)
-                  : value.toISOString().slice(0, 16)
-            }
-            onChange={(e) => {
-              const newDate = new Date(e.target.value);
-              if (!isNaN(newDate.getTime())) {
-                onChange(newDate);
-              }
-              setShowPicker(false);
-            }}
+            aria-label={webAriaLabel}
+            type={webInputType}
+            value={webInputValue}
+            onChange={handleWebChange}
             style={{ position: 'absolute', opacity: 0, width: '100%', height: '100%' }}
-            onBlur={() => {
-              setShowPicker(false);
-            }}
+            onBlur={closePicker}
           />
         )
       ) : Platform.OS === 'ios' ? (
@@ -130,22 +146,23 @@ export function AppDateTimePicker({
             <View style={styles.modalContent}>
               <View style={styles.modalHeader}>
                 <Pressable
-                  style={({ pressed }) => [pressed && { opacity: 0.7 }]}
-                  onPress={() => {
-                    setShowPicker(false);
-                  }}
+                  style={({ pressed }) => [pressed && styles.pressed]}
+                  onPress={closePicker}
+                  accessibilityRole="button"
+                  accessibilityLabel="Valider la sélection"
+                  hitSlop={{ top: 15, bottom: 15, left: 15, right: 15 }}
                 >
                   <AppText style={styles.doneText}>Valider</AppText>
                 </Pressable>
               </View>
-              <DateTimePicker
+              <RNDateTimePicker
                 value={value}
                 mode={pickerMode}
                 locale="fr-FR"
                 display="spinner"
                 themeVariant="light"
                 textColor={theme.colors.black}
-                style={{ height: 216, width: '100%' }}
+                style={styles.iosPicker}
                 onChange={handleChange}
               />
             </View>
@@ -153,7 +170,7 @@ export function AppDateTimePicker({
         </Modal>
       ) : (
         showPicker && (
-          <DateTimePicker
+          <RNDateTimePicker
             value={value}
             mode={pickerMode}
             locale="fr-FR"
@@ -164,17 +181,17 @@ export function AppDateTimePicker({
       )}
     </View>
   );
-}
+});
 
 const styles = StyleSheet.create({
   container: {
     width: '100%',
   },
   label: {
-    fontSize: 14,
+    fontSize: theme.typography.fontSize.sm,
     color: theme.colors.grey,
     marginBottom: theme.spacing.xs,
-    fontWeight: '600',
+    fontWeight: theme.typography.fontWeight.semibold,
   },
   inputWrapper: {
     flexDirection: 'row',
@@ -185,22 +202,28 @@ const styles = StyleSheet.create({
     borderRadius: theme.radius.md,
     paddingHorizontal: theme.spacing.sm,
     paddingVertical: theme.spacing.md,
-    height: 48,
+    minHeight: 48,
+  },
+  pressed: {
+    opacity: 0.7,
   },
   dateText: {
     flex: 1,
     paddingLeft: theme.spacing.sm,
-    fontSize: 14,
+    fontSize: theme.typography.fontSize.sm,
     color: theme.colors.black,
+  },
+  noPadding: {
+    paddingLeft: 0,
   },
   modalOverlay: {
     flex: 1,
-    backgroundColor: 'rgba(0, 0, 0, 0.4)',
+    backgroundColor: theme.colors.blackOverlay,
     justifyContent: 'flex-end',
   },
   modalContent: {
     backgroundColor: theme.colors.white,
-    paddingBottom: Platform.OS === 'ios' ? 20 : 0,
+    paddingBottom: Platform.OS === 'ios' ? theme.spacing.xl : 0,
     borderTopLeftRadius: theme.radius.lg,
     borderTopRightRadius: theme.radius.lg,
   },
@@ -213,7 +236,11 @@ const styles = StyleSheet.create({
   },
   doneText: {
     color: theme.colors.primaryEco,
-    fontWeight: 'bold',
-    fontSize: 16,
+    fontWeight: theme.typography.fontWeight.bold,
+    fontSize: theme.typography.fontSize.md,
+  },
+  iosPicker: {
+    height: 216,
+    width: '100%',
   },
 });

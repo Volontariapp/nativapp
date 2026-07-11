@@ -36,10 +36,11 @@ export function AdminRelationPickerModal({
   const isLoading = mode === 'users' ? usersLoading : eventsLoading;
 
   const filteredItems: PickerItem[] = useMemo(() => {
+    const excludeSet = new Set(excludeIds);
     if (mode === 'users') {
       const users = normalizeUsersList(usersData);
       return users.reduce<PickerItem[]>((acc, u) => {
-        if (excludeIds.includes(u.id)) return acc;
+        if (excludeSet.has(u.id)) return acc;
         const query = searchQuery.toLowerCase();
         if (
           u.pseudo.toLowerCase().includes(query) ||
@@ -53,7 +54,7 @@ export function AdminRelationPickerModal({
     } else {
       const events = normalizeEventsList(eventsData);
       return events.reduce<PickerItem[]>((acc, e) => {
-        if (excludeIds.includes(e.id)) return acc;
+        if (excludeSet.has(e.id)) return acc;
         const query = searchQuery.toLowerCase();
         if (e.title.toLowerCase().includes(query) || e.id.includes(query)) {
           acc.push({ id: e.id, title: e.title, subtitle: e.id });
@@ -63,24 +64,30 @@ export function AdminRelationPickerModal({
     }
   }, [mode, usersData, eventsData, excludeIds, searchQuery]);
 
-  const handleSelect = useCallback((id: string) => {
-    onSelect(id);
-  }, [onSelect]);
+  const handleSelect = useCallback(
+    (id: string) => {
+      onSelect(id);
+    },
+    [onSelect],
+  );
 
-  const renderItem = useCallback(({ item }: { item: PickerItem }) => (
-    <Pressable
-      style={styles.itemCard}
-      onPress={() => {
-        handleSelect(item.id);
-      }}
-    >
-      <View style={styles.itemInfo}>
-        <AppText style={styles.itemTitle}>{item.title}</AppText>
-        <AppText style={styles.itemSubtitle}>{item.subtitle}</AppText>
-      </View>
-      <AppIcons icon="chevron-right" size={20} color={theme.colors.grey} />
-    </Pressable>
-  ), [handleSelect]);
+  const renderItem = useCallback(
+    ({ item }: { item: PickerItem }) => (
+      <Pressable
+        style={styles.itemCard}
+        onPress={() => {
+          handleSelect(item.id);
+        }}
+      >
+        <View style={styles.itemInfo}>
+          <AppText style={styles.itemTitle}>{item.title}</AppText>
+          <AppText style={styles.itemSubtitle}>{item.subtitle}</AppText>
+        </View>
+        <AppIcons icon="chevron-right" size={20} color={theme.colors.grey} />
+      </Pressable>
+    ),
+    [handleSelect],
+  );
 
   const handleClearSearch = useCallback(() => {
     setSearchQuery('');

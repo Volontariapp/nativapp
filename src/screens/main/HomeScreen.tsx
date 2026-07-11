@@ -26,11 +26,15 @@ export function HomeScreen(): React.JSX.Element {
   }, [refetch]);
 
   const posts = useMemo(() => {
+    // Read refreshCount to force dependency re-evaluation
+    void refreshCount;
     const allPosts = data?.pages.flatMap((page) => page.posts) ?? [];
     allPosts.forEach((post) => {
       randomSortMap.current[post.id] ??= Math.random();
     });
-    return [...allPosts].sort((a, b) => randomSortMap.current[a.id] - randomSortMap.current[b.id]);
+    return [...allPosts].sort(
+      (a, b) => (randomSortMap.current[a.id] ?? 0) - (randomSortMap.current[b.id] ?? 0),
+    );
   }, [data, refreshCount]);
 
   type PostItem = React.ComponentProps<typeof AppPost>['post'];
