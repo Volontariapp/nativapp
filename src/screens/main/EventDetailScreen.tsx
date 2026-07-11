@@ -6,6 +6,7 @@ import {
   TouchableOpacity,
   Alert,
   ActivityIndicator,
+  Share,
 } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -24,6 +25,9 @@ import { EventInfoCards } from '../../components/event';
 import { EventTags } from '../../components/event';
 import { EventParticipants } from '../../components/event';
 import { EventRequirements } from '../../components/event';
+import { EventOrganizer } from '../../components/event';
+import { ImpactScoreBadge } from '../../components/event';
+import { AppMap } from '@/components/map';
 
 type Props = NativeStackScreenProps<MainStackParamList, 'EventDetail'>;
 
@@ -31,17 +35,14 @@ export function EventDetailScreen({ route }: Props) {
   const event: AppEvent = route.params.event;
   const navigation = useNavigation();
 
-  // Determine if the event is joinable
   const isJoinable =
     event.state === EventState.EVENT_STATE_PUBLISHED ||
     event.state === EventState.EVENT_STATE_DRAFT;
-  // For the purpose of the template, we just simulate participation state here
   const [isJoined, setIsJoined] = React.useState(false);
   const [isLoading, setIsLoading] = React.useState(false);
 
   const handleJoin = () => {
     setIsLoading(true);
-    // Simulate API call
     setTimeout(() => {
       setIsJoined(true);
       setIsLoading(false);
@@ -64,7 +65,16 @@ export function EventDetailScreen({ route }: Props) {
         <AppText style={styles.topBarTitle} numberOfLines={1}>
           {event.title}
         </AppText>
-        <View style={styles.placeholderAvatar} />
+        <TouchableOpacity
+          style={styles.backButton}
+          onPress={() => {
+            void Share.share({
+              message: `Rejoins-moi pour l'événement "${event.title}" sur Volontariapp !`,
+            });
+          }}
+        >
+          <AppIcons icon="share-2" iconLibrary="Feather" size={24} color={theme.colors.black} />
+        </TouchableOpacity>
       </SafeAreaView>
 
       <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
@@ -73,6 +83,11 @@ export function EventDetailScreen({ route }: Props) {
         <View style={styles.content}>
           <AppText style={styles.categoryTitle}>{mapEventType(event.type)}</AppText>
           <AppText style={styles.title}>{event.title}</AppText>
+          {event.awardedImpactScore > 0 && (
+            <ImpactScoreBadge score={event.awardedImpactScore} style={{ marginBottom: 16 }} />
+          )}
+
+          <EventOrganizer organizerId={event.organizerId} />
 
           <EventInfoCards event={event} />
 
@@ -87,6 +102,20 @@ export function EventDetailScreen({ route }: Props) {
 
           {event.requirements && event.requirements.length > 0 && (
             <EventRequirements requirements={event.requirements} />
+          )}
+
+          {event.location && (
+            <View style={styles.mapSection}>
+              <AppText style={styles.sectionTitle}>Lieu</AppText>
+              <View style={styles.mapContainer}>
+                <AppMap
+                  events={[event]}
+                  initialCenter={event.location}
+                  scrollEnabled={false}
+                  zoomEnabled={false}
+                />
+              </View>
+            </View>
           )}
         </View>
       </ScrollView>
@@ -224,5 +253,14 @@ const styles = StyleSheet.create({
     fontWeight: theme.typography.fontWeight.bold,
     fontSize: 16,
     marginLeft: theme.spacing.sm,
+  },
+  mapSection: {
+    marginTop: theme.spacing.lg,
+  },
+  mapContainer: {
+    height: 200,
+    borderRadius: theme.radius.lg,
+    overflow: 'hidden',
+    ...theme.shadows.card,
   },
 });

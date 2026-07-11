@@ -20,7 +20,8 @@ export const ADMIN_EVENTS_COUNT_QUERY_KEY = ['admin', 'events', 'count'] as cons
 export const useAdminEventsQuery = () => {
   return useQuery<SearchEventsResponse>({
     queryKey: ADMIN_EVENTS_QUERY_KEY,
-    queryFn: async () => await adminEventApi.listEvents({ onlyAvailable: false }),
+    queryFn: async () =>
+      await adminEventApi.listEvents({ onlyAvailable: false, page: 1, limit: 100 }),
   });
 };
 

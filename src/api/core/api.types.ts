@@ -3,4 +3,5 @@ export interface FetchOptions<TRequest> {
   headers?: Record<string, string>;
   body?: TRequest;
   requiresAuth?: boolean;
+  params?: Record<string, unknown>;
 }

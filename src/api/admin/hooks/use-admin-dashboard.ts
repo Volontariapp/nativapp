@@ -16,7 +16,8 @@ export const useAdminDashboard = () => {
 
   const { data: eventsData, error: eventsError } = useQuery<SearchEventsResponse>({
     queryKey: ADMIN_EVENTS_COUNT_QUERY_KEY,
-    queryFn: async () => await adminEventApi.listEvents({ onlyAvailable: false }),
+    queryFn: async () =>
+      await adminEventApi.listEvents({ onlyAvailable: false, page: 1, limit: 100 }),
   });
 
   const { isSuccess: isHealthOk } = useQuery({

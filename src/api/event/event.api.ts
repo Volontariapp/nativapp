@@ -11,6 +11,7 @@ import type {
   Tag,
   Requirement,
   ManageRequirementsResponse,
+  SearchEventsRequest,
 } from '@volontariapp/contracts';
 
 export interface AppEvent {
@@ -29,6 +30,7 @@ export interface AppEvent {
     latitude: number;
     longitude: number;
   };
+  organizerId?: string;
   tags?: Tag[];
   requirements?: Requirement[];
 }
@@ -63,6 +65,7 @@ export const convertEventDtoToAppEvent = (event: EventDTO): AppEvent => {
     awardedImpactScore: event.awardedImpactScore,
     maxParticipants: event.maxParticipants,
     currentParticipants: event.currentParticipants,
+    organizerId: event.organizerId,
     location: event.location
       ? {
           latitude: event.location.latitude,
@@ -231,6 +234,39 @@ export const eventApi = {
     const response = await apiFetch<SearchEventsResponse>(path, {
       method: EVENT_ENDPOINTS.GET_USER_WISHED_EVENTS_SELF.method,
       requiresAuth: EVENT_ENDPOINTS.GET_USER_WISHED_EVENTS_SELF.requiresAuth,
+    });
+
+    return {
+      events: response.events.map((ev) => ({
+        id: ev.id,
+        title: ev.title,
+        description: ev.description,
+        startAt: formatTimestamp(ev.startAt),
+        endAt: formatTimestamp(ev.endAt),
+        localisationName: ev.localisationName,
+        type: ev.type,
+        state: ev.state,
+        awardedImpactScore: ev.awardedImpactScore,
+        maxParticipants: ev.maxParticipants,
+        currentParticipants: ev.currentParticipants,
+        location: ev.location
+          ? {
+              latitude: ev.location.latitude,
+              longitude: ev.location.longitude,
+            }
+          : undefined,
+      })),
+      totalCount: response.totalCount,
+    };
+  },
+
+  async getEvents(
+    params: Partial<SearchEventsRequest>,
+  ): Promise<{ events: AppEvent[]; totalCount: number }> {
+    const response = await apiFetch<SearchEventsResponse>(EVENT_ENDPOINTS.LIST_EVENTS.path, {
+      method: EVENT_ENDPOINTS.LIST_EVENTS.method,
+      requiresAuth: EVENT_ENDPOINTS.LIST_EVENTS.requiresAuth,
+      params,
     });
 
     return {

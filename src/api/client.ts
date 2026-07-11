@@ -49,6 +49,7 @@ export const apiFetch = async <TResponse, TRequest = undefined>(
       method: options.method ?? 'GET',
       headers,
       data: options.body,
+      params: options.params,
     });
 
     if (response.status === 206) {
@@ -111,6 +112,7 @@ export const apiFetch = async <TResponse, TRequest = undefined>(
                 method: options.method ?? 'GET',
                 headers,
                 data: options.body,
+                params: options.params,
               });
               return retryRes.data as TResponse;
             }

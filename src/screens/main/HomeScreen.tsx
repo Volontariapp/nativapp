@@ -41,7 +41,7 @@ export function HomeScreen(): React.JSX.Element {
 
   return (
     <View style={styles.container}>
-      <AppHeader />
+      <AppHeader showSettings />
       <View style={styles.content}>
         {isLoading ? (
           <View style={styles.center}>

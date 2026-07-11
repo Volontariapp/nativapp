@@ -29,7 +29,18 @@
       "output": "static",
       "favicon": "./assets/logo.jpg"
     },
-    "plugins": ["expo-router", "expo-font", "expo-secure-store"],
+    "plugins": [
+      "expo-router",
+      "expo-font",
+      "expo-secure-store",
+      [
+        "expo-location",
+        {
+          "locationAlwaysAndWhenInUsePermission": "Nous avons besoin de votre position pour vous montrer les événements à proximité.",
+          "locationWhenInUsePermission": "Nous avons besoin de votre position pour vous montrer les événements à proximité."
+        }
+      ]
+    ],
     "experiments": {
       "typedRoutes": true
     },

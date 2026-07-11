@@ -167,7 +167,7 @@ export const adminEventApi = {
   },
 
   async listEvents(
-    payload: SearchEventsRequest,
+    payload: SearchEventsRequest & { organizerId?: string },
     pathParams?: Record<string, string>,
   ): Promise<SearchEventsResponse> {
     let finalPath: string = EVENT_ENDPOINTS.LIST_EVENTS.path;

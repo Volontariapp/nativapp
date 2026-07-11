@@ -4,6 +4,7 @@ export * from './onboarding/OnboardingScreen';
 export * from './main/HomeScreen';
 export * from './main/ProfileScreen';
 export * from './main/ExploreScreen';
+export * from './main/SettingsScreen';
 export * from './main/SwipeScreen';
 export * from './main/WsFeedbackScreen';
 export * from './event/EventFormScreen';

@@ -37,6 +37,7 @@ export default function MainAppNavigator(): React.JSX.Element {
         component={SwipeScreen}
         options={{
           title: 'Swipe',
+          headerShown: false,
           tabBarIcon: () => (
             <AppIcons
               icon="cards"
@@ -74,6 +75,7 @@ export default function MainAppNavigator(): React.JSX.Element {
         component={ExploreScreen}
         options={{
           title: 'Explorer',
+          headerShown: false,
           tabBarIcon: () => <AppIcons icon="map" size={30} color={theme.colors.grey} />,
         }}
       />

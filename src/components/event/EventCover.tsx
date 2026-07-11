@@ -4,17 +4,14 @@ import { AppText } from '@/components/typography/AppText';
 import { theme } from '@/shared/themes/theme';
 import { EventState } from '@volontariapp/contracts';
 import type { AppEvent } from '@/api/event/event.api';
-
-import { mapEventType } from '@/shared/lib/event-mappers.utils';
+import { getFakeEcologyImage } from '@/utils/fake-images.util';
 
 interface EventCoverProps {
   event: AppEvent;
 }
 
 export function EventCover({ event }: EventCoverProps) {
-  // Generic placeholder based on event type string
-  const typeString = mapEventType(event.type).toLowerCase();
-  const placeholderUrl = `https://picsum.photos/seed/${typeString}/600/300`;
+  const placeholderUrl = getFakeEcologyImage(event.id);
 
   const getStatusConfig = () => {
     switch (event.state) {

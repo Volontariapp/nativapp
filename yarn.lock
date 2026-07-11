@@ -2123,15 +2123,16 @@ __metadata:
     "@tanstack/react-query": "npm:^5.100.14"
     "@testing-library/react-native": "npm:12.5.3"
     "@types/jest": "npm:29.5.14"
+    "@types/leaflet": "npm:^1.9.21"
     "@types/react": "npm:~19.1.0"
     "@types/react-native-vector-icons": "npm:^6.4.18"
     "@types/react-test-renderer": "npm:^19.1.0"
-    "@volontariapp/config": "npm:3.2.0"
-    "@volontariapp/contracts": "npm:^4.3.0"
-    "@volontariapp/errors": "npm:0.6.0"
-    "@volontariapp/logger": "npm:0.2.5"
-    "@volontariapp/messaging": "npm:2.9.2"
-    "@volontariapp/shared": "npm:0.8.0"
+    "@volontariapp/config": "npm:^3.2.2"
+    "@volontariapp/contracts": "npm:^4.3.4"
+    "@volontariapp/errors": "npm:^0.6.2"
+    "@volontariapp/logger": "npm:^0.2.7"
+    "@volontariapp/messaging": "npm:^2.10.3"
+    "@volontariapp/shared": "npm:^0.8.1"
     axios: "npm:^1.16.1"
     class-validator: "npm:^0.15.1"
     eslint: "npm:~9.18.0"
@@ -2141,7 +2142,9 @@ __metadata:
     expo-font: "npm:~14.0.12"
     expo-image: "npm:~3.0.11"
     expo-image-picker: "npm:~17.0.11"
+    expo-linear-gradient: "npm:~15.0.8"
     expo-linking: "npm:~8.0.12"
+    expo-location: "npm:~19.0.8"
     expo-router: "npm:~6.0.24"
     expo-secure-store: "npm:~15.0.8"
     expo-splash-screen: "npm:~31.0.13"
@@ -2151,18 +2154,21 @@ __metadata:
     jest: "npm:^29.7.0"
     jest-expo: "npm:~54.0.17"
     jwt-decode: "npm:^4.0.0"
+    leaflet: "npm:^1.9.4"
     lint-staged: "npm:^15.4.3"
     prettier: "npm:^3.5.2"
     react: "npm:19.1.0"
     react-doctor: "npm:^0.4.0"
     react-dom: "npm:19.1.0"
     react-hook-form: "npm:^7.76.1"
+    react-leaflet: "npm:^5.0.0"
     react-native: "npm:0.81.5"
     react-native-bottom-tabs: "npm:^1.2.0"
     react-native-calendars: "npm:^1.1314.0"
     react-native-deck-swiper: "npm:^2.0.19"
     react-native-gesture-handler: "npm:~2.28.0"
     react-native-keyboard-controller: "npm:1.18.5"
+    react-native-maps: "npm:1.20.1"
     react-native-reanimated: "npm:~4.1.1"
     react-native-safe-area-context: "npm:~5.6.0"
     react-native-screens: "npm:~4.16.0"
@@ -3229,6 +3235,17 @@ __metadata:
   languageName: node
   linkType: hard
 
+"@react-leaflet/core@npm:^3.0.0":
+  version: 3.0.0
+  resolution: "@react-leaflet/core@npm:3.0.0"
+  peerDependencies:
+    leaflet: ^1.9.0
+    react: ^19.0.0
+    react-dom: ^19.0.0
+  checksum: 10c0/1e20f92ea99d378121d7ba57b9571ca3a67a86247729d8cd5726ded26105fcbffbbdf727da34b2ad5976438979819a38c93b94389313abb3ff80ca81632609a6
+  languageName: node
+  linkType: hard
+
 "@react-native-community/datetimepicker@npm:8.4.4":
   version: 8.4.4
   resolution: "@react-native-community/datetimepicker@npm:8.4.4"
@@ -3770,6 +3787,13 @@ __metadata:
   languageName: node
   linkType: hard
 
+"@types/geojson@npm:*, @types/geojson@npm:^7946.0.13":
+  version: 7946.0.16
+  resolution: "@types/geojson@npm:7946.0.16"
+  checksum: 10c0/1ff24a288bd5860b766b073ead337d31d73bdc715e5b50a2cee5cb0af57a1ed02cc04ef295f5fa68dc40fe3e4f104dd31282b2b818a5ba3231bc1001ba084e3c
+  languageName: node
+  linkType: hard
+
 "@types/graceful-fs@npm:^4.1.3":
   version: 4.1.9
   resolution: "@types/graceful-fs@npm:4.1.9"
@@ -3836,6 +3860,15 @@ __metadata:
   version: 7.0.15
   resolution: "@types/json-schema@npm:7.0.15"
   checksum: 10c0/a996a745e6c5d60292f36731dd41341339d4eeed8180bb09226e5c8d23759067692b1d88e5d91d72ee83dfc00d3aca8e7bd43ea120516c17922cbcb7c3e252db
+  languageName: node
+  linkType: hard
+
+"@types/leaflet@npm:^1.9.21":
+  version: 1.9.21
+  resolution: "@types/leaflet@npm:1.9.21"
+  dependencies:
+    "@types/geojson": "npm:*"
+  checksum: 10c0/96a86bdeff7bf56104242e97536f39005a53dd857853aa0c5de127ce2c72f3f36638f2a5b8d23e2e825a2bfe32113be731ab26634a3143413b891299c29621ce
   languageName: node
   linkType: hard
 
@@ -4104,71 +4137,61 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@volontariapp/config@npm:3.2.0":
-  version: 3.2.0
-  resolution: "@volontariapp/config@npm:3.2.0"
+"@volontariapp/config@npm:^3.2.2":
+  version: 3.2.2
+  resolution: "@volontariapp/config@npm:3.2.2"
   dependencies:
-    "@volontariapp/logger": "npm:0.2.5"
+    "@volontariapp/logger": "npm:0.2.7"
     class-transformer: "npm:^0.5.1"
     class-validator: "npm:^0.15.1"
     ioredis: "npm:^5.10.1"
     neo4j-driver: "npm:^6.0.1"
     reflect-metadata: "npm:^0.2.2"
     typeorm: "npm:^0.3.28"
-  checksum: 10c0/c22eabf9cf90d08e1444ac1f439193fac9387bb37d3d557b39ab9c2eb3a821a8c7f744d31bec713d2e08c36e5989650ef80b6c4eac93f7d34c4bbf9a809471e1
+  checksum: 10c0/6f9c8507b278599dd97891ee842eaef24f4e5f953afe4b89b4658d3d1d2ab608dc78c40fa8b114308692a216ea4f71a5cc03e8710f1c9cff9bf88f26a5c5062e
   languageName: node
   linkType: hard
 
-"@volontariapp/contracts@npm:4.2.7":
-  version: 4.2.7
-  resolution: "@volontariapp/contracts@npm:4.2.7"
+"@volontariapp/contracts@npm:4.3.4, @volontariapp/contracts@npm:^4.3.4":
+  version: 4.3.4
+  resolution: "@volontariapp/contracts@npm:4.3.4"
   dependencies:
-    "@volontariapp/logger": "npm:0.2.5"
+    "@volontariapp/logger": "npm:0.2.7"
     protobufjs: "npm:^7.5.8"
-  checksum: 10c0/bd53f393414b8623f61e851e9e001eb355b81b663948b1c6d9a541b3319679e1df009c21eb45915f266a07340be7e079ec4f8dad8fb2872c7aa54115d99aa84f
+  checksum: 10c0/bb7ea292a216035382ef8d77eb9e68d812e96345dad610a49a03857239ffd74fd5d3c39a8cbb39464ddaa614b58ffb369c06384d0485fbf5d898fb12e329074f
   languageName: node
   linkType: hard
 
-"@volontariapp/contracts@npm:^4.3.0":
-  version: 4.3.0
-  resolution: "@volontariapp/contracts@npm:4.3.0"
+"@volontariapp/errors@npm:^0.6.2":
+  version: 0.6.2
+  resolution: "@volontariapp/errors@npm:0.6.2"
   dependencies:
-    "@volontariapp/logger": "npm:0.2.5"
-    protobufjs: "npm:^7.5.8"
-  checksum: 10c0/eaccb4a4b93970d21ee0ba058b8e26d03b0f6d063230b5cf4c642c1ee3b1fb40a35da58ea3692ac6ac37038daf104a379c176f04200185c89e79d139bc1fa735
+    "@volontariapp/logger": "npm:0.2.7"
+  checksum: 10c0/22d6a17fdb866900f1b00e0eb4803773b1c996af8a229af5e163c579a535af817e8bfcc39ac125929cad52fb26c2317e2600df30899f9cf7423b6d27723a7327
   languageName: node
   linkType: hard
 
-"@volontariapp/errors@npm:0.6.0":
-  version: 0.6.0
-  resolution: "@volontariapp/errors@npm:0.6.0"
+"@volontariapp/logger@npm:0.2.7, @volontariapp/logger@npm:^0.2.7":
+  version: 0.2.7
+  resolution: "@volontariapp/logger@npm:0.2.7"
+  checksum: 10c0/d92d26aa670a309e75a8dc6200ff42e78303fc29d5ddf38f78b3649fa7254d05a4f5c9b8cb68c24249c33323644ec8cedaa61f88a9ea27dc9c8851932fbe5173
+  languageName: node
+  linkType: hard
+
+"@volontariapp/messaging@npm:^2.10.3":
+  version: 2.10.3
+  resolution: "@volontariapp/messaging@npm:2.10.3"
   dependencies:
-    "@volontariapp/logger": "npm:0.2.5"
-  checksum: 10c0/72204efe6925f1547e1054730746e8d0d36d4e80382d4ff76d611a2c88aaec563a48bb66afb3722f81698bf1cebd4d81255896f281ccab095a8de7ed72d71519
+    "@volontariapp/contracts": "npm:4.3.4"
+    "@volontariapp/shared": "npm:0.8.1"
+  checksum: 10c0/2107d118495f12626f31c661e489b076783c5a230fe3f07673f2eb55b0c4ad05fb4eba0e1a8710f16d9f72be80fc16bcef9b530161bf16b67b7cfbc40f79634f
   languageName: node
   linkType: hard
 
-"@volontariapp/logger@npm:0.2.5":
-  version: 0.2.5
-  resolution: "@volontariapp/logger@npm:0.2.5"
-  checksum: 10c0/de60d3e26e5048ba9a08f24c02059365d63fc18da870bda61c2ef10350ea2a484860b009ec6812914b8b4699a4f2b27002308da19c15ba82dc967cc4954378b0
-  languageName: node
-  linkType: hard
-
-"@volontariapp/messaging@npm:2.9.2":
-  version: 2.9.2
-  resolution: "@volontariapp/messaging@npm:2.9.2"
-  dependencies:
-    "@volontariapp/contracts": "npm:4.2.7"
-    "@volontariapp/shared": "npm:0.8.0"
-  checksum: 10c0/029a3578e7f193f7252f557062b67b0ac8eeebacd85a740784698d97e430dff0f64ab7e41a2b889cd87e26f25ced8d6bfce5c0798e61e130e8e07833e0aa0704
-  languageName: node
-  linkType: hard
-
-"@volontariapp/shared@npm:0.8.0":
-  version: 0.8.0
-  resolution: "@volontariapp/shared@npm:0.8.0"
-  checksum: 10c0/99af145a3647a8c2708077a378af4f4c385e99c4e1f5baf97c55cfa2abab8d0a1c6f53ffe0f8f4b95268412f5d9329620b0377e5460663cb63149cc25d390f34
+"@volontariapp/shared@npm:0.8.1, @volontariapp/shared@npm:^0.8.1":
+  version: 0.8.1
+  resolution: "@volontariapp/shared@npm:0.8.1"
+  checksum: 10c0/2acb433b695912c8a41119b2308b64c8e4172270cea55357fc15f0002368b7a27df5a118af9f9b29499cf21b96fb3bcbbfe52bdd42dc49bae325e105cac7c554
   languageName: node
   linkType: hard
 
@@ -6365,6 +6388,17 @@ __metadata:
   languageName: node
   linkType: hard
 
+"expo-linear-gradient@npm:~15.0.8":
+  version: 15.0.8
+  resolution: "expo-linear-gradient@npm:15.0.8"
+  peerDependencies:
+    expo: "*"
+    react: "*"
+    react-native: "*"
+  checksum: 10c0/2ac3bff62143083e3d5b894fccc4c76de058277f65ed123232636cf26c88da6d566fa3cd46be4101f86e66b89ede7c058e12c93493b752df562da2fa971dcd66
+  languageName: node
+  linkType: hard
+
 "expo-linking@npm:~8.0.12":
   version: 8.0.12
   resolution: "expo-linking@npm:8.0.12"
@@ -6375,6 +6409,15 @@ __metadata:
     react: "*"
     react-native: "*"
   checksum: 10c0/56894fc1b53f3e21c197b547615395a2aec75535128db231abcce6356e5c28a3eaeca130816ee77c9bb74fa8f2ac01c996b4219d6bb0641d74bc9eb6eb1fe3e1
+  languageName: node
+  linkType: hard
+
+"expo-location@npm:~19.0.8":
+  version: 19.0.8
+  resolution: "expo-location@npm:19.0.8"
+  peerDependencies:
+    expo: "*"
+  checksum: 10c0/9549ed00d75a7d7780e16a70a9b6703a8aae8f6f2ffbe9f6ab41ef155444f4157cd26b32b1eb051e3a8a6b5b2071b555398e5d672435f240d2c2891fab041da5
   languageName: node
   linkType: hard
 
@@ -8410,6 +8453,13 @@ __metadata:
   bin:
     lan-network: dist/lan-network-cli.js
   checksum: 10c0/14995644bab174cde57e41c80ed828a52d6b788f8701b8a8347c536f3ecade3e71bd33b98091484b27a1df1e35b7f6f1921ac59521bf905b5dd06ab123e82e94
+  languageName: node
+  linkType: hard
+
+"leaflet@npm:^1.9.4":
+  version: 1.9.4
+  resolution: "leaflet@npm:1.9.4"
+  checksum: 10c0/f639441dbb7eb9ae3fcd29ffd7d3508f6c6106892441634b0232fafb9ffb1588b05a8244ec7085de2c98b5ed703894df246898477836cfd0ce5b96d4717b5ca1
   languageName: node
   linkType: hard
 
@@ -10620,6 +10670,19 @@ __metadata:
   languageName: node
   linkType: hard
 
+"react-leaflet@npm:^5.0.0":
+  version: 5.0.0
+  resolution: "react-leaflet@npm:5.0.0"
+  dependencies:
+    "@react-leaflet/core": "npm:^3.0.0"
+  peerDependencies:
+    leaflet: ^1.9.0
+    react: ^19.0.0
+    react-dom: ^19.0.0
+  checksum: 10c0/f0b6fb797cc2d81bc8cbb54e0cb32aefa689d35ca5f52d203ce3c5a1d14668e51244f10844bd2c88d5cb4aca5eb05bc280794e6d1652727ff9da2358e89d1b86
+  languageName: node
+  linkType: hard
+
 "react-native-bottom-tabs@npm:^1.2.0":
   version: 1.3.0
   resolution: "react-native-bottom-tabs@npm:1.3.0"
@@ -10700,6 +10763,22 @@ __metadata:
     react-native: "*"
     react-native-reanimated: ">=3.0.0"
   checksum: 10c0/708b8c299fdfc11749db4d84238330a2f04a07a92f40a5f0aa2870ffedb9e47c05455d50c3441a321f5cd5cacf7c936d5706e74cfb234a132e6c6c9ebb0d5e57
+  languageName: node
+  linkType: hard
+
+"react-native-maps@npm:1.20.1":
+  version: 1.20.1
+  resolution: "react-native-maps@npm:1.20.1"
+  dependencies:
+    "@types/geojson": "npm:^7946.0.13"
+  peerDependencies:
+    react: ">= 17.0.1"
+    react-native: ">= 0.64.3"
+    react-native-web: ">= 0.11"
+  peerDependenciesMeta:
+    react-native-web:
+      optional: true
+  checksum: 10c0/59c8d5600feb907df179c675b7185ef3bf205bdc85391c7ef530bb17d56d44d03ffd9ab3ae08dcc00cfabe9b14e37041327c7446114104b141efb2c8d4c3e797
   languageName: node
   linkType: hard
 

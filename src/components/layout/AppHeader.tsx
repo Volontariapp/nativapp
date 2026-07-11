@@ -6,17 +6,25 @@ import { useSocket } from '@/context/SocketContext';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import Feather from 'react-native-vector-icons/Feather';
 import { useNavigation } from '@react-navigation/native';
+import { TouchableOpacity } from 'react-native';
+import { AppIcons } from '@/components/media/AppIcons';
+import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
+import type { MainStackParamList } from '@/navigation/stacks/MainStack';
+
+type NavigationProp = NativeStackNavigationProp<MainStackParamList>;
 
 export interface AppHeaderProps {
   showBack?: boolean;
+  showSettings?: boolean;
 }
 
 export default function AppHeader({
   showBack = false,
+  showSettings = false,
 }: AppHeaderProps): React.JSX.Element {
   const { isConnected } = useSocket();
   const insets = useSafeAreaInsets();
-  const navigation = useNavigation();
+  const navigation = useNavigation<NavigationProp>();
 
   return (
     <View style={[styles.container, { paddingTop: insets.top }]}>
@@ -35,6 +43,17 @@ export default function AppHeader({
         <AppText style={styles.title}>VolontariApp</AppText>
       </View>
       <View style={styles.rightContainer}>
+        {showSettings && (
+          <TouchableOpacity
+            onPress={() => {
+              navigation.navigate('Settings');
+            }}
+            style={styles.settingsButton}
+            hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
+          >
+            <AppIcons icon="settings" size={24} color={theme.colors.black} />
+          </TouchableOpacity>
+        )}
         <View
           style={[
             styles.statusDot,
@@ -76,5 +95,8 @@ const styles = StyleSheet.create({
     width: 10,
     height: 10,
     borderRadius: 5,
+  },
+  settingsButton: {
+    marginRight: theme.spacing.sm,
   },
 });

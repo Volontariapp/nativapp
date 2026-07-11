@@ -1,21 +1,21 @@
-import React from 'react';
-import {
-  View,
-  Text,
-  StyleSheet,
-  ImageBackground,
-} from 'react-native';
+import { View, Text, StyleSheet, ImageBackground, Image, TouchableOpacity } from 'react-native';
 import { theme } from '@/shared/themes/theme';
 import type { AppEvent as Event } from '@/api/event/event.api';
 import { Ionicons } from '@expo/vector-icons';
 import { EventTypeTagComponent } from '@/components/dataDisplay/EventTypesTags';
-import EventPlaceholder from '../../../assets/image_placeholder.jpg';
+import { getFakeEcologyImage } from '@/utils/fake-images.util';
+import { LinearGradient } from 'expo-linear-gradient';
+import { ImpactScoreBadge } from '@/components/event/ImpactScoreBadge';
+import { calculateDistanceInKm, formatDistance } from '@/shared/lib/location.utils';
+import type { LocationObject } from 'expo-location';
 
 interface EventCardProps {
   event: Event;
+  userLocation?: LocationObject | null;
+  onLocationPress?: () => void;
 }
 
-export default function EventCard({ event }: EventCardProps) {
+export default function EventCard({ event, userLocation, onLocationPress }: EventCardProps) {
   const date = new Date(event.startAt);
 
   const formattedDate = date.toLocaleDateString('fr-FR', {
@@ -28,92 +28,132 @@ export default function EventCard({ event }: EventCardProps) {
     minute: '2-digit',
   });
 
+  const currentPart = Math.max(1, event.currentParticipants);
+  const displayCount = Math.min(currentPart, 3);
+  const avatars = Array.from({ length: displayCount }).map(
+    (_, i) => `https://i.pravatar.cc/150?u=${event.id}-${String(i)}`,
+  );
+  const remaining = currentPart - displayCount;
+
+  const fakeImageUrl = getFakeEcologyImage(event.id);
+
+  let distanceValue = '';
+  if (userLocation && event.location) {
+    const distance = calculateDistanceInKm(
+      userLocation.coords.latitude,
+      userLocation.coords.longitude,
+      event.location.latitude,
+      event.location.longitude,
+    );
+    distanceValue = `à ${formatDistance(distance)}`;
+  }
+
   return (
     <View style={styles.card}>
       <ImageBackground
-        source={EventPlaceholder}
-        style={styles.image}
+        source={{ uri: fakeImageUrl }}
+        style={styles.imageBackground}
         imageStyle={styles.imageStyle}
       >
-        <View style={styles.tagsContainer}>
-          <EventTypeTagComponent type={event.type} />
+        <LinearGradient
+          colors={['transparent', 'rgba(0,0,0,0.9)']}
+          locations={[0.4, 1]}
+          style={styles.gradient}
+        />
+
+        <View style={styles.topContainer}>
+          <View style={styles.tagsContainer}>
+            <EventTypeTagComponent type={event.type} />
+            {event.awardedImpactScore > 0 && <ImpactScoreBadge score={event.awardedImpactScore} />}
+          </View>
+
+          <View style={styles.dateAndDistanceContainer}>
+            <View style={styles.dateBadge}>
+              <Ionicons name="calendar-outline" size={16} color={theme.colors.black} />
+              <Text style={styles.dateText}>
+                {formattedDate.toUpperCase()}, {formattedTime}
+              </Text>
+            </View>
+
+            {!!distanceValue && (
+              <View style={styles.distanceChip}>
+                <Ionicons name="location-outline" size={16} color={theme.colors.white} />
+                <Text style={styles.distanceChipText}>{distanceValue}</Text>
+              </View>
+            )}
+          </View>
         </View>
 
-        <View style={styles.dateBadge}>
-          <Ionicons
-            name="calendar-outline"
-            size={16}
-            color={theme.colors.black}
-          />
-          <Text style={styles.dateText}>
-            {formattedDate.toUpperCase()}, {formattedTime}
+        <View style={styles.content}>
+          <Text style={styles.title}>{event.title}</Text>
+
+          <Text style={styles.description} numberOfLines={2}>
+            {event.description}
           </Text>
+
+          <View style={styles.footer}>
+            <View style={styles.participants}>
+              {avatars.map((url, i) => (
+                <Image
+                  key={i}
+                  source={{ uri: url }}
+                  style={[
+                    styles.avatar,
+                    i > 0 && styles.avatarOverlap,
+                    { zIndex: displayCount - i },
+                  ]}
+                />
+              ))}
+              {remaining > 0 ? <Text style={styles.participantsText}>+{remaining}</Text> : null}
+            </View>
+
+            <TouchableOpacity style={styles.location} onPress={onLocationPress} activeOpacity={0.7}>
+              <Ionicons name="location-outline" size={14} color={theme.colors.white} />
+              <Text style={styles.locationText} numberOfLines={1}>
+                {event.localisationName}
+              </Text>
+            </TouchableOpacity>
+          </View>
         </View>
       </ImageBackground>
-
-      <View style={styles.content}>
-        <Text style={styles.title}>{event.title}</Text>
-
-        <Text
-          style={styles.description}
-          numberOfLines={2}
-        >
-          {event.description}
-        </Text>
-
-        <View style={styles.footer}>
-          <View style={styles.participants}>
-            <View style={styles.avatar} />
-            <View style={[styles.avatar, styles.avatarOverlap]} />
-            <View style={[styles.avatar, styles.avatarOverlap]} />
-
-            <Text style={styles.participantsText}>
-              +{event.currentParticipants}
-            </Text>
-          </View>
-
-          <View style={styles.location}>
-            <Ionicons
-              name="location-outline"
-              size={14}
-              color={theme.colors.primarySocio}
-            />
-            <Text style={styles.locationText}>
-              {event.localisationName}
-            </Text>
-          </View>
-        </View>
-      </View>
     </View>
   );
 }
 
-const IMAGE_HEIGHT = 400;
-
 const styles = StyleSheet.create({
   card: {
-    backgroundColor: theme.colors.background,
-    borderRadius: 24,
     overflow: 'hidden',
-    marginVertical: theme.spacing.md,
     ...theme.shadows.card,
-    //minHeight: 500,
-    minHeight: 580,
+    flex: 1,
   },
 
-  image: {
-    height: IMAGE_HEIGHT,
+  imageBackground: {
+    flex: 1,
     justifyContent: 'space-between',
-    padding: theme.spacing.md,
   },
 
   imageStyle: {
-    borderTopLeftRadius: 24,
-    borderTopRightRadius: 24,
+    borderRadius: 0,
+  },
+
+  gradient: {
+    ...StyleSheet.absoluteFillObject,
+  },
+
+  topContainer: {
+    padding: theme.spacing.md,
+    justifyContent: 'space-between',
+    flex: 1,
   },
 
   tagsContainer: {
     flexDirection: 'row',
+    gap: theme.spacing.sm,
+  },
+
+  dateAndDistanceContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
     gap: theme.spacing.sm,
   },
 
@@ -135,23 +175,39 @@ const styles = StyleSheet.create({
     fontFamily: theme.typography.fonts.primary,
   },
 
+  distanceChip: {
+    alignSelf: 'flex-start',
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+    backgroundColor: 'rgba(255, 255, 255, 0.2)',
+    paddingHorizontal: 14,
+    paddingVertical: 10,
+    borderRadius: 999,
+  },
+
+  distanceChipText: {
+    color: theme.colors.white,
+    fontSize: theme.typography.fontSize.sm,
+    fontWeight: theme.typography.fontWeight.medium,
+    fontFamily: theme.typography.fonts.primary,
+  },
+
   content: {
     padding: theme.spacing.xl,
-    flex: 1,
-    justifyContent: 'space-between',
   },
 
   title: {
     fontSize: 28,
     lineHeight: 32,
-    color: theme.colors.black,
+    color: theme.colors.white,
     fontWeight: theme.typography.fontWeight.bold,
     fontFamily: theme.typography.fonts.primary,
     marginBottom: theme.spacing.sm,
   },
 
   description: {
-    color: theme.colors.grey,
+    color: '#E0E0E0',
     fontSize: theme.typography.fontSize.md,
     lineHeight: 22,
     fontFamily: theme.typography.fonts.primary,
@@ -184,20 +240,26 @@ const styles = StyleSheet.create({
 
   participantsText: {
     marginLeft: 6,
-    color: theme.colors.grey,
+    color: theme.colors.white,
     fontSize: theme.typography.fontSize.sm,
     fontFamily: theme.typography.fonts.primary,
+  },
+
+  footerRight: {
+    flexDirection: 'column',
+    alignItems: 'flex-end',
+    gap: 4,
+    maxWidth: '55%',
   },
 
   location: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: 4,
-    maxWidth: '50%',
   },
 
   locationText: {
-    color: theme.colors.primarySocio,
+    color: theme.colors.white,
     fontSize: theme.typography.fontSize.sm,
     fontFamily: theme.typography.fonts.primary,
   },
