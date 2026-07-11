@@ -10,6 +10,10 @@ import { PostImagePlaceholder } from './PostImagePlaceholder';
 import { PostActions } from './PostActions';
 import { PostCommentsModal } from './PostCommentsModal';
 import { PostCommentPreview } from './PostCommentPreview';
+import { useNavigation } from '@react-navigation/native';
+import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
+import type { MainStackParamList } from '@/navigation/stacks/MainStack';
+import { convertEventDtoToAppEvent } from '@/api/event/event.api';
 
 interface PostCardProps {
   post: PostWeb;
@@ -19,6 +23,7 @@ export default function AppPost({ post }: PostCardProps) {
   const { data: author } = useGetPublicUser(post.authorId);
   const { data: commentsData } = useListComments(post.id);
   const [isCommentsVisible, setIsCommentsVisible] = useState(false);
+  const navigation = useNavigation<NativeStackNavigationProp<MainStackParamList>>();
 
   const pseudo = author?.pseudo ?? 'Auteur inconnu';
   const topComments = commentsData?.comments.slice(0, 3) ?? [];
@@ -53,7 +58,10 @@ export default function AppPost({ post }: PostCardProps) {
             style={styles.eventLink}
             activeOpacity={0.7}
             onPress={() => {
-              console.log('Ouvrir la carte event');
+              if (post.event) {
+                const appEvent = convertEventDtoToAppEvent(post.event);
+                navigation.navigate('EventDetail', { event: appEvent });
+              }
             }}
           >
             <Icon name="search" size={14} color={theme.colors.primarySocio} />

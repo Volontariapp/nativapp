@@ -3,10 +3,11 @@ import { View, StyleSheet, Modal, Pressable, ScrollView } from 'react-native';
 import { theme } from '@/shared/themes/theme';
 import { AppText } from '@/components/typography/AppText';
 import { AppButton } from '@/components/buttons/AppButton';
-import { EventPreviewModal } from './event-preview-modal';
 import { convertEventDtoToAppEvent } from '@/api/event/event.api';
 import type { PostWeb, EventDTO } from '@volontariapp/contracts';
-import type { AppEvent } from '@/api/event/event.api';
+import { useNavigation } from '@react-navigation/native';
+import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
+import type { MainStackParamList } from '@/navigation/stacks/MainStack';
 
 interface PostWithEvent extends PostWeb {
   event?: EventDTO;
@@ -23,8 +24,7 @@ export function PostDetailModal({
   post,
   onClose,
 }: PostDetailModalProps): React.JSX.Element {
-  const [selectedEvent, setSelectedEvent] = React.useState<AppEvent | null>(null);
-  const [eventModalVisible, setEventModalVisible] = React.useState(false);
+  const navigation = useNavigation<NativeStackNavigationProp<MainStackParamList>>();
 
   if (!post) {
     return (
@@ -39,8 +39,10 @@ export function PostDetailModal({
   const handleEventPress = () => {
     if (postWithEvent.event !== undefined) {
       const appEvent = convertEventDtoToAppEvent(postWithEvent.event);
-      setSelectedEvent(appEvent);
-      setEventModalVisible(true);
+      onClose();
+      setTimeout(() => {
+        navigation.navigate('EventDetail', { event: appEvent });
+      }, 100);
     }
   };
 
@@ -99,17 +101,6 @@ export function PostDetailModal({
           </ScrollView>
         </View>
       </View>
-
-      {selectedEvent && (
-        <EventPreviewModal
-          visible={eventModalVisible}
-          event={selectedEvent}
-          onClose={() => {
-            setEventModalVisible(false);
-            setSelectedEvent(null);
-          }}
-        />
-      )}
     </Modal>
   );
 }

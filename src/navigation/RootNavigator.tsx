@@ -1,7 +1,7 @@
 import React from 'react';
 
 import AuthStack from './stacks/AuthStack';
-import MainAppNavigator from './MainAppNavigator';
+import MainStack from './stacks/MainStack';
 import { useAuth } from '@/context/AuthContext';
 import { ActivityIndicator, View } from 'react-native';
 import { AppText } from '@/components/typography/AppText';
@@ -18,5 +18,5 @@ export default function RootNavigator(): React.JSX.Element {
     );
   }
 
-  return isAuthenticated ? <MainAppNavigator /> : <AuthStack />;
+  return isAuthenticated ? <MainStack /> : <AuthStack />;
 }

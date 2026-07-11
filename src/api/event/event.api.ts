@@ -7,8 +7,10 @@ import type {
   CreateEventResponse,
   SearchEventsResponse,
   AddRequirementRequest,
-  ManageRequirementsResponse,
   EventDTO,
+  Tag,
+  Requirement,
+  ManageRequirementsResponse,
 } from '@volontariapp/contracts';
 
 export interface AppEvent {
@@ -27,6 +29,8 @@ export interface AppEvent {
     latitude: number;
     longitude: number;
   };
+  tags?: Tag[];
+  requirements?: Requirement[];
 }
 
 interface GrpcTimestamp {
@@ -65,6 +69,8 @@ export const convertEventDtoToAppEvent = (event: EventDTO): AppEvent => {
           longitude: event.location.longitude,
         }
       : undefined,
+    tags: event.tags,
+    requirements: event.requirements,
   };
 };
 
