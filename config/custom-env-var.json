@@ -8,5 +8,8 @@
   "cloudflareAccess": {
     "clientId": "CF_ACCESS_CLIENT_ID",
     "clientSecret": "CF_ACCESS_CLIENT_SECRET"
+  },
+  "swiper": {
+    "delayMs": "SWIPER_DELAY_MS"
   }
 }

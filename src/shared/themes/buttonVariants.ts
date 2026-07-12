@@ -36,6 +36,10 @@ export const ICONS_BUTTON_VARIANTS = {
     backgroundColor: theme.colors.danger,
     textColor: theme.colors.white,
   },
+  white: {
+    backgroundColor: theme.colors.white,
+    textColor: theme.colors.black,
+  },
   noBackground: {
     backgroundColor: theme.colors.danger,
     textColor: theme.colors.white,

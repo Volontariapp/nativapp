@@ -23,6 +23,10 @@ export class AppConfig implements FrontendConfig {
     clientSecret: string;
   };
 
+  swiper: {
+    delayMs: number;
+  } = undefined as unknown as { delayMs: number };
+
   getLoggerFormat(): LoggerFormat {
     return this.logger.format;
   }

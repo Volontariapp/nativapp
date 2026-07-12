@@ -1,10 +1,11 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { View, StyleSheet, ActivityIndicator } from 'react-native';
 
 import Swiper from 'react-native-deck-swiper';
 
 import { AppText } from '@/components/typography/AppText';
 import { EventCard } from '@/components/event/EventCard';
+import { config } from '@/shared/config/base-config';
 import AppHeader from '@/components/layout/AppHeader';
 import { AppIconsButton } from '@/components';
 import { theme } from '@/shared/themes/theme';
@@ -62,6 +63,25 @@ function SwipeEndView(): React.JSX.Element {
   );
 }
 
+function DelayedCardRender({ children }: { children: React.ReactNode }) {
+  const [ready, setReady] = useState(false);
+
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setReady(true);
+    }, config.swiper.delayMs);
+    return () => {
+      clearTimeout(timer);
+    };
+  }, []);
+
+  if (!ready) {
+    return <View style={{ flex: 1, backgroundColor: 'transparent' }} />;
+  }
+
+  return <>{children}</>;
+}
+
 // ─── Composant Principal (Dumb Presenter) ──────────────────────────────────
 
 export function SwipeScreen(): React.JSX.Element {
@@ -93,36 +113,41 @@ export function SwipeScreen(): React.JSX.Element {
           <Swiper<AppEvent>
             ref={swiperRef}
             cards={events}
-            cardIndex={currentIndex}
-            renderCard={(event: AppEvent) => (
-              <EventCard
-                event={event}
-                userLocation={userLocation}
-                onLocationPress={() => {
-                  handleLocationPress(event);
-                }}
-              />
-            )}
-            stackSize={4}
-            stackScale={5}
-            stackSeparation={20}
+            keyExtractor={(card: AppEvent) => card.id}
+            renderCard={(event: AppEvent | undefined, index: number) => {
+              if (!event) return <View style={{ flex: 1, backgroundColor: 'transparent' }} />;
+              const isVisible = index >= currentIndex && index < currentIndex + 3;
+              return (
+                <View style={{ flex: 1, opacity: isVisible ? 1 : 0 }}>
+                  <DelayedCardRender>
+                    <EventCard
+                      event={event}
+                      userLocation={userLocation}
+                      onLocationPress={handleLocationPress}
+                    />
+                  </DelayedCardRender>
+                </View>
+              );
+            }}
+            stackSize={3}
+            stackScale={4}
+            stackSeparation={18}
             backgroundColor="transparent"
             containerStyle={styles.swiperInner}
             animateOverlayLabelsOpacity
-            animateCardOpacity
             disableTopSwipe
             disableBottomSwipe
             cardStyle={styles.card}
             cardVerticalMargin={0}
             cardHorizontalMargin={0}
             marginTop={0}
-            marginBottom={0}
+            marginBottom={70}
             onSwipedLeft={handleSwipeLeft}
             onSwipedRight={handleSwipeRight}
             onTapCard={handleTapCard}
             overlayLabels={{
               left: {
-                title: 'PASS',
+                title: 'NOPE',
                 style: { label: styles.nopeLabel, wrapper: styles.nopeWrapper },
               },
               right: {
@@ -133,26 +158,29 @@ export function SwipeScreen(): React.JSX.Element {
           />
         </View>
 
-        <View style={styles.separatorContainer}>
-          <View style={styles.separator} />
-        </View>
-
-        <View style={styles.buttonsContainer}>
-          <AppIconsButton
-            icon="x"
-            size={80}
-            variant="danger"
-            onPress={() => swiperRef.current?.swipeLeft()}
-            accessibilityRole="button"
-            accessibilityLabel="Passer cet événement"
-          />
-          <AppIconsButton
-            icon="heart"
-            size={80}
-            onPress={() => swiperRef.current?.swipeRight()}
-            accessibilityRole="button"
-            accessibilityLabel="Aimer cet événement"
-          />
+        <View style={styles.buttonsContainer} pointerEvents="box-none">
+          <View style={styles.floatingButton}>
+            <AppIconsButton
+              icon="x"
+              size={64}
+              variant="white"
+              iconColor={theme.colors.danger}
+              onPress={() => swiperRef.current?.swipeLeft()}
+              accessibilityRole="button"
+              accessibilityLabel="Passer cet événement"
+            />
+          </View>
+          <View style={styles.floatingButton}>
+            <AppIconsButton
+              icon="heart"
+              size={64}
+              variant="white"
+              iconColor={theme.colors.success}
+              onPress={() => swiperRef.current?.swipeRight()}
+              accessibilityRole="button"
+              accessibilityLabel="Aimer cet événement"
+            />
+          </View>
         </View>
       </View>
     </View>
@@ -176,9 +204,9 @@ const styles = StyleSheet.create({
   },
   swiperContainer: {
     flex: 1,
-    paddingTop: theme.spacing.md,
-    paddingHorizontal: theme.spacing.lg,
-    paddingBottom: theme.spacing.md,
+    paddingTop: theme.spacing.sm,
+    paddingHorizontal: theme.spacing.sm,
+    paddingBottom: 20, // Leave some room at bottom
     zIndex: 1,
   },
   swiperInner: {
@@ -192,23 +220,25 @@ const styles = StyleSheet.create({
     right: 0,
     width: '100%',
     height: '100%',
-  },
-  separatorContainer: {
-    paddingHorizontal: theme.spacing.xxl,
-    paddingVertical: theme.spacing.md,
-  },
-  separator: {
-    height: 2,
-    backgroundColor: theme.colors.lightGrey,
-    borderRadius: theme.radius.sm,
+    backgroundColor: 'transparent', // Override internal Swiper white background
+    borderWidth: 0, // Override internal Swiper border
+    elevation: 0, // Remove Android shadow
+    shadowOpacity: 0, // Remove iOS shadow
   },
   buttonsContainer: {
+    position: 'absolute',
+    bottom: 40, // adjust to overlap halfway
+    left: 0,
+    right: 0,
     flexDirection: 'row',
     justifyContent: 'space-evenly',
     alignItems: 'center',
-    paddingHorizontal: theme.spacing.xxl,
-    paddingBottom: theme.spacing.xxl,
-    paddingTop: theme.spacing.sm,
+    zIndex: 2,
+  },
+  floatingButton: {
+    ...theme.shadows.card,
+    borderRadius: theme.radius.full,
+    backgroundColor: theme.colors.white,
   },
   message: {
     marginTop: theme.spacing.md,

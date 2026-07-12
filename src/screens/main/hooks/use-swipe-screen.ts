@@ -26,8 +26,8 @@ type SwipeScreenNavigation = CompositeNavigationProp<
   NativeStackNavigationProp<MainStackParamList>
 >;
 
-const SWIPE_PREFETCH_THRESHOLD = 3;
-const EVENTS_PAGE_LIMIT = 10;
+const SWIPE_PREFETCH_THRESHOLD = 10;
+const EVENTS_PAGE_LIMIT = 20;
 
 export interface UseSwipeScreenResult {
   events: AppEvent[];
@@ -56,7 +56,15 @@ export function useSwipeScreen(): UseSwipeScreenResult {
   const swiperRef = useRef<Swiper<AppEvent> | null>(null);
   const [currentIndex, setCurrentIndex] = useState(0);
 
-  const events = useMemo(() => data?.pages.flatMap((page) => page.events) ?? [], [data]);
+  const events = useMemo(() => {
+    const freshEvents = data?.pages.flatMap((page) => page.events) ?? [];
+    const seen = new Set<string>();
+    return freshEvents.filter((e) => {
+      if (seen.has(e.id)) return false;
+      seen.add(e.id);
+      return true;
+    });
+  }, [data]);
 
   const isEndReached = currentIndex >= events.length && !hasNextPage && !isFetchingNextPage;
 
@@ -65,7 +73,6 @@ export function useSwipeScreen(): UseSwipeScreenResult {
 
   const handleSwipeRight = useCallback((cardIndex: number): void => {
     const { events: currentEvents, wish: currentWish } = swipeStateRef.current;
-    // Array access via index can be out-of-bounds in race conditions (async context)
     const event = currentEvents[cardIndex];
     if (event != null) {
       void currentWish(event.id);

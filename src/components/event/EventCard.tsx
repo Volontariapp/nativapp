@@ -15,7 +15,7 @@ import { calculateDistanceInKm, formatDistance } from '@/shared/lib/location.uti
 interface EventCardProps {
   event: Event;
   userLocation?: LocationObject | null;
-  onLocationPress?: () => void;
+  onLocationPress?: (event: Event) => void;
 }
 
 export const EventCard = React.memo(function EventCard({
@@ -67,91 +67,95 @@ export const EventCard = React.memo(function EventCard({
   const fakeImageUrl = useMemo(() => getFakeEcologyImage(event.id), [event.id]);
 
   return (
-    <View style={styles.card}>
-      <View style={styles.imageContainer}>
-        <Image
-          source={{ uri: fakeImageUrl }}
-          style={StyleSheet.absoluteFillObject}
-          contentFit="cover"
-          cachePolicy="memory-disk"
-          accessibilityIgnoresInvertColors
-        />
-        <LinearGradient
-          colors={['transparent', 'rgba(0,0,0,0.9)']}
-          locations={[0.4, 1]}
-          style={StyleSheet.absoluteFillObject}
-        />
-      </View>
-
-      <View style={styles.contentOverlay}>
-        <View style={styles.topContainer}>
-          <View style={styles.tagsContainer}>
-            <EventTypeTagComponent type={event.type} />
-            {event.awardedImpactScore > 0 && <ImpactScoreBadge score={event.awardedImpactScore} />}
-          </View>
+    <View style={styles.cardContainer}>
+      <View style={styles.cardInner}>
+        <View style={styles.imageContainer}>
+          <Image
+            source={{ uri: fakeImageUrl }}
+            style={StyleSheet.absoluteFillObject}
+            contentFit="cover"
+            cachePolicy="memory-disk"
+            accessibilityIgnoresInvertColors
+          />
+          <LinearGradient
+            colors={['transparent', 'rgba(0,0,0,0.9)']}
+            locations={[0.4, 1]}
+            style={StyleSheet.absoluteFillObject}
+          />
         </View>
 
-        <View style={styles.content}>
-          <View style={styles.dateAndDistanceContainer}>
-            <View style={styles.dateBadge}>
-              <Ionicons
-                name="calendar-outline"
-                size={theme.typography.fontSize.md}
-                color={theme.colors.black}
-              />
-              <Text style={styles.dateText}>
-                {formattedDate}, {formattedTime}
-              </Text>
+        <View style={styles.contentOverlay}>
+          <View style={styles.topContainer}>
+            <View style={styles.tagsContainer}>
+              <EventTypeTagComponent type={event.type} />
+              {event.awardedImpactScore > 0 && (
+                <ImpactScoreBadge score={event.awardedImpactScore} />
+              )}
             </View>
-
-            {!!distanceValue && (
-              <View style={styles.distanceChip}>
-                <Ionicons
-                  name="location-outline"
-                  size={theme.typography.fontSize.md}
-                  color={theme.colors.white}
-                />
-                <Text style={styles.distanceChipText}>{distanceValue}</Text>
-              </View>
-            )}
           </View>
 
-          <Text style={styles.title}>{event.title}</Text>
-
-          <Text style={styles.description} numberOfLines={2}>
-            {event.description}
-          </Text>
-
-          <View style={styles.footer}>
-            <View style={styles.participants}>
-              {avatars.map((url, i) => (
-                <Image
-                  key={`${url}-${String(i)}`}
-                  source={{ uri: url }}
-                  style={[styles.avatar, i > 0 && styles.avatarOverlap, { zIndex: 10 - i }]}
-                  contentFit="cover"
-                  cachePolicy="memory-disk"
+          <View style={styles.content}>
+            <View style={styles.dateAndDistanceContainer}>
+              <View style={styles.dateBadge}>
+                <Ionicons
+                  name="calendar-outline"
+                  size={theme.typography.fontSize.md}
+                  color={theme.colors.black}
                 />
-              ))}
-              {remaining > 0 ? <Text style={styles.participantsText}>+{remaining}</Text> : null}
+                <Text style={styles.dateText}>
+                  {formattedDate}, {formattedTime}
+                </Text>
+              </View>
+
+              {!!distanceValue && (
+                <View style={styles.distanceChip}>
+                  <Ionicons
+                    name="location-outline"
+                    size={theme.typography.fontSize.md}
+                    color={theme.colors.white}
+                  />
+                  <Text style={styles.distanceChipText}>{distanceValue}</Text>
+                </View>
+              )}
             </View>
 
-            <Pressable
-              style={({ pressed }) => [styles.location, pressed && styles.locationPressed]}
-              onPress={onLocationPress}
-              hitSlop={{ top: 15, bottom: 15, left: 15, right: 15 }}
-              accessibilityRole="button"
-              accessibilityLabel={`Voir le lieu de l'événement : ${event.localisationName}`}
-            >
-              <Ionicons
-                name="location-outline"
-                size={theme.typography.fontSize.sm}
-                color={theme.colors.white}
-              />
-              <Text style={styles.locationText} numberOfLines={1}>
-                {event.localisationName}
-              </Text>
-            </Pressable>
+            <Text style={styles.title}>{event.title}</Text>
+
+            <Text style={styles.description} numberOfLines={2}>
+              {event.description}
+            </Text>
+
+            <View style={styles.footer}>
+              <View style={styles.participants}>
+                {avatars.map((url, i) => (
+                  <Image
+                    key={`${url}-${String(i)}`}
+                    source={{ uri: url }}
+                    style={[styles.avatar, i > 0 && styles.avatarOverlap, { zIndex: 10 - i }]}
+                    contentFit="cover"
+                    cachePolicy="memory-disk"
+                  />
+                ))}
+                {remaining > 0 ? <Text style={styles.participantsText}>+{remaining}</Text> : null}
+              </View>
+
+              <Pressable
+                style={({ pressed }) => [styles.location, pressed && styles.locationPressed]}
+                onPress={() => onLocationPress?.(event)}
+                hitSlop={{ top: 15, bottom: 15, left: 15, right: 15 }}
+                accessibilityRole="button"
+                accessibilityLabel={`Voir le lieu de l'événement : ${event.localisationName}`}
+              >
+                <Ionicons
+                  name="location-outline"
+                  size={theme.typography.fontSize.sm}
+                  color={theme.colors.white}
+                />
+                <Text style={styles.locationText} numberOfLines={1}>
+                  {event.localisationName}
+                </Text>
+              </Pressable>
+            </View>
           </View>
         </View>
       </View>
@@ -160,11 +164,14 @@ export const EventCard = React.memo(function EventCard({
 });
 
 const styles = StyleSheet.create({
-  card: {
+  cardContainer: {
+    flex: 1,
+    ...theme.shadows.card,
+  },
+  cardInner: {
     flex: 1,
     overflow: 'hidden',
-    ...theme.shadows.card,
-    borderRadius: 0,
+    borderRadius: theme.radius.md,
     backgroundColor: theme.colors.background,
   },
   imageContainer: {
@@ -220,6 +227,7 @@ const styles = StyleSheet.create({
   },
   content: {
     padding: theme.spacing.lg,
+    paddingBottom: 40, // Reduced since card is shorter
   },
   title: {
     fontSize: theme.typography.fontSize.xl,
