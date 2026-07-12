@@ -82,22 +82,35 @@ export const apiFetch = async <TResponse, TRequest = undefined>(
             refreshPromise ??= (async () => {
               const refreshUrl = `${baseUrl}/users/refresh`;
               const refreshHeaders = { ...headers };
-              delete refreshHeaders['Authorization'];
+              refreshHeaders['Authorization'] = `Bearer ${refreshToken}`;
+
+              console.log('[apiFetch] Attempting to refresh token...');
+              console.log('[apiFetch] Refresh URL:', refreshUrl);
+              console.log('[apiFetch] Refresh Headers:', JSON.stringify(refreshHeaders));
 
               const refreshRes = await axios.post(
                 refreshUrl,
                 { refreshToken },
                 { headers: refreshHeaders },
               );
+
+              console.log('[apiFetch] Refresh token response status:', refreshRes.status);
+              console.log(
+                '[apiFetch] Refresh token response data:',
+                JSON.stringify(refreshRes.data),
+              );
+
               const authData = (refreshRes.data as LoginWebResponse).auth;
 
               if (
                 typeof authData?.accessToken === 'string' &&
                 typeof authData.refreshToken === 'string'
               ) {
+                console.log('[apiFetch] Refresh successful, saving new tokens');
                 await TokenService.saveTokens(authData.accessToken, authData.refreshToken);
                 return authData.accessToken;
               }
+              console.log('[apiFetch] Refresh failed: Invalid auth data structure', authData);
               return null;
             })().finally(() => {
               refreshPromise = null;
@@ -117,7 +130,10 @@ export const apiFetch = async <TResponse, TRequest = undefined>(
               return retryRes.data as TResponse;
             }
           } catch (refreshErr) {
-            console.error('Failed to refresh token:', refreshErr);
+            console.error('[apiFetch] Failed to refresh token. Error:', refreshErr);
+            if (axios.isAxiosError(refreshErr)) {
+              console.error('[apiFetch] Refresh error response:', refreshErr.response?.data);
+            }
           }
         }
 

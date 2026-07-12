@@ -47,4 +47,32 @@ export const TokenService = {
       SecureStore.deleteItemAsync(REFRESH_TOKEN_KEY),
     ]);
   },
+
+  async deleteAccessToken(): Promise<void> {
+    if (Platform.OS === 'web') {
+      webAccessToken = null;
+      return;
+    }
+    await SecureStore.deleteItemAsync(ACCESS_TOKEN_KEY);
+  },
+
+  async corruptAccessToken(): Promise<void> {
+    const currentToken = await this.getAccessToken();
+    if (currentToken !== null) {
+      const corruptedToken = currentToken.slice(0, -1) + 'X';
+      if (Platform.OS === 'web') {
+        webAccessToken = corruptedToken;
+      } else {
+        await SecureStore.setItemAsync(ACCESS_TOKEN_KEY, corruptedToken);
+      }
+    }
+  },
+
+  async deleteRefreshToken(): Promise<void> {
+    if (Platform.OS === 'web') {
+      webRefreshToken = null;
+      return;
+    }
+    await SecureStore.deleteItemAsync(REFRESH_TOKEN_KEY);
+  },
 };
