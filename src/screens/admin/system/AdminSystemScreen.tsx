@@ -6,10 +6,16 @@ import { AppText } from '@/components/typography/AppText';
 import { AppButton } from '@/components/buttons/AppButton';
 import { AdminCard } from '@/components/admin';
 import { useAdminHealth } from '@/api/admin/hooks/use-admin-health';
+import { useSeedDatabaseMutation } from '@/api/admin/hooks/useAdminSystemHooks';
 
 export default function AdminSystemScreen(): React.JSX.Element {
   const queryClient = useQueryClient();
   const { isHealthy, isLoading, error, latency, isChecking, handleManualCheck } = useAdminHealth();
+  const {
+    mutate: seedDatabase,
+    isPending: isSeeding,
+    data: seedResult,
+  } = useSeedDatabaseMutation();
 
   return (
     <ScrollView style={styles.container} contentContainerStyle={styles.content}>
@@ -79,6 +85,45 @@ export default function AdminSystemScreen(): React.JSX.Element {
             variant="danger"
             onPress={() => {
               Alert.alert('Alerte système', 'Ceci est une simulation de panne serveur.');
+            }}
+          />
+        </View>
+      </AdminCard>
+
+      <AdminCard style={styles.card}>
+        <AppText style={styles.cardTitle}>Génération de données (Seeding)</AppText>
+        <AppText style={styles.cardDesc}>
+          Peupler la base de données avec des utilisateurs, évènements, posts, commentaires et
+          interactions factices (500 utilisateurs, etc).
+        </AppText>
+
+        {seedResult && (
+          <View style={styles.seedResultContainer}>
+            <AppText style={styles.seedResultTitle}>Processus lancé :</AppText>
+            <AppText style={styles.infoValue}>{seedResult.message}</AppText>
+          </View>
+        )}
+
+        <View style={styles.actionsGrid}>
+          <AppButton
+            text={isSeeding ? 'Génération en cours...' : 'Lancer le Seeding Global'}
+            variant="eco"
+            disabled={isSeeding}
+            onPress={() => {
+              Alert.alert(
+                'Confirmer',
+                'Cette action va injecter de nombreuses données dans la base. Continuer ?',
+                [
+                  { text: 'Annuler', style: 'cancel' },
+                  {
+                    text: 'Oui, générer',
+                    style: 'default',
+                    onPress: () => {
+                      seedDatabase();
+                    },
+                  },
+                ],
+              );
             }}
           />
         </View>
@@ -164,5 +209,17 @@ const styles = StyleSheet.create({
   actionsGrid: {
     gap: theme.spacing.sm,
     marginTop: theme.spacing.xs,
+  },
+  seedResultContainer: {
+    backgroundColor: theme.colors.lightGrey + '50',
+    padding: theme.spacing.md,
+    borderRadius: theme.radius.md,
+    marginTop: theme.spacing.sm,
+  },
+  seedResultTitle: {
+    fontSize: theme.typography.fontSize.sm,
+    fontWeight: '700',
+    color: theme.colors.black,
+    marginBottom: theme.spacing.xs,
   },
 });

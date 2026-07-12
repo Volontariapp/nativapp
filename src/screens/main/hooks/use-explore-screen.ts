@@ -59,8 +59,22 @@ export function useExploreScreen(): UseExploreScreenResult {
 
   const { coordinates: userCoordinates, isPermissionDenied } = useLocation();
 
+  const centerLat = initialLocation?.latitude ?? userCoordinates?.latitude;
+  const centerLon = initialLocation?.longitude ?? userCoordinates?.longitude;
+
   const { data: eventsData, isLoading } = useGetEvents({
     excludeCreatedByMe: true,
+    limit: 50,
+    ...(centerLat !== undefined &&
+      centerLon !== undefined && {
+        area: {
+          center: {
+            latitude: centerLat,
+            longitude: centerLon,
+          },
+          radiusMeters: 50000,
+        },
+      }),
   });
 
   const events = useMemo(

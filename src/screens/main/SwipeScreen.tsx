@@ -90,7 +90,6 @@ export function SwipeScreen(): React.JSX.Element {
     isLoading,
     isError,
     isEndReached,
-    currentIndex,
     userLocation,
     swiperRef,
     handleSwipeLeft,
@@ -114,11 +113,10 @@ export function SwipeScreen(): React.JSX.Element {
             ref={swiperRef}
             cards={events}
             keyExtractor={(card: AppEvent) => card.id}
-            renderCard={(event: AppEvent | undefined, index: number) => {
+            renderCard={(event: AppEvent | undefined, _index: number) => {
               if (!event) return <View style={{ flex: 1, backgroundColor: 'transparent' }} />;
-              const isVisible = index >= currentIndex && index < currentIndex + 3;
               return (
-                <View style={{ flex: 1, opacity: isVisible ? 1 : 0 }}>
+                <View style={{ flex: 1 }}>
                   <DelayedCardRender>
                     <EventCard
                       event={event}
@@ -129,9 +127,9 @@ export function SwipeScreen(): React.JSX.Element {
                 </View>
               );
             }}
-            stackSize={3}
-            stackScale={4}
-            stackSeparation={18}
+            stackSize={4}
+            stackScale={2}
+            stackSeparation={20}
             backgroundColor="transparent"
             containerStyle={styles.swiperInner}
             animateOverlayLabelsOpacity
