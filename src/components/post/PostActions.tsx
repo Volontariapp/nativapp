@@ -2,19 +2,42 @@ import React from 'react';
 import { View, Text, StyleSheet, Pressable } from 'react-native';
 import { theme } from '@/shared/themes/theme';
 import Icon from 'react-native-vector-icons/Feather';
+import Ionicons from 'react-native-vector-icons/Ionicons';
 
 interface PostActionsProps {
   onCommentPress?: () => void;
   commentCount?: number;
+  isLiked?: boolean;
+  likeCount?: number;
+  onLikePress?: () => void;
+  onLikeCountPress?: () => void;
 }
 
-export function PostActions({ onCommentPress, commentCount = 0 }: PostActionsProps) {
+export function PostActions({
+  onCommentPress,
+  commentCount = 0,
+  isLiked = false,
+  likeCount = 0,
+  onLikePress,
+  onLikeCountPress,
+}: PostActionsProps) {
   return (
     <View style={styles.container}>
       <View style={styles.leftActions}>
-        <Pressable style={styles.iconButton}>
-          <Icon name="heart" size={20} color={theme.colors.black} />
-        </Pressable>
+        <View style={styles.actionGroup}>
+          <Pressable style={styles.iconButton} onPress={onLikePress}>
+            <Ionicons
+              name={isLiked ? 'heart' : 'heart-outline'}
+              size={22}
+              color={isLiked ? theme.colors.danger : theme.colors.black}
+            />
+          </Pressable>
+          {likeCount >= 0 && (
+            <Pressable onPress={onLikeCountPress}>
+              <Text style={styles.actionText}>{likeCount}</Text>
+            </Pressable>
+          )}
+        </View>
 
         <Pressable style={styles.iconButton} onPress={onCommentPress}>
           <Icon name="message-square" size={20} color={theme.colors.black} />
@@ -38,6 +61,10 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     gap: theme.spacing.lg,
+  },
+  actionGroup: {
+    flexDirection: 'row',
+    alignItems: 'center',
   },
   iconButton: {
     flexDirection: 'row',

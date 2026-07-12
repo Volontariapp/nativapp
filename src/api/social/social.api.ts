@@ -1,8 +1,6 @@
 import { apiFetch } from '../client';
 import { SOCIAL_ENDPOINTS } from '../endpoints/social.endpoints';
-import type {
-  ActionSuccessWebResponse,
-} from '@volontariapp/contracts';
+import type { ActionSuccessWebResponse } from '@volontariapp/contracts';
 
 /**
  * Service API pour les interactions sociales (participations, likes, follows, etc.)
@@ -138,5 +136,58 @@ export const socialApi = {
     });
 
     return response;
+  },
+
+  /**
+   * Ajoute un like sur un post pour l'utilisateur connecté.
+   */
+  async likePost(postId: string): Promise<ActionSuccessWebResponse> {
+    return await apiFetch<ActionSuccessWebResponse>(
+      SOCIAL_ENDPOINTS.LIKE_POST_SELF.path.replace(':postId', postId),
+      {
+        method: SOCIAL_ENDPOINTS.LIKE_POST_SELF.method,
+        requiresAuth: SOCIAL_ENDPOINTS.LIKE_POST_SELF.requiresAuth,
+      },
+    );
+  },
+
+  /**
+   * Retire le like d'un post pour l'utilisateur connecté.
+   */
+  async unlikePost(postId: string): Promise<ActionSuccessWebResponse> {
+    return await apiFetch<ActionSuccessWebResponse>(
+      SOCIAL_ENDPOINTS.UNLIKE_POST_SELF.path.replace(':postId', postId),
+      {
+        method: SOCIAL_ENDPOINTS.UNLIKE_POST_SELF.method,
+        requiresAuth: SOCIAL_ENDPOINTS.UNLIKE_POST_SELF.requiresAuth,
+      },
+    );
+  },
+
+  /**
+   * Récupère la liste des IDs des posts likés par l'utilisateur connecté.
+   */
+  async getMyLikes(params?: {
+    page?: number;
+    limit?: number;
+  }): Promise<{ ids: string[]; totalCount: number }> {
+    const query = new URLSearchParams();
+    if (params?.page !== undefined) query.append('page', params.page.toString());
+    if (params?.limit !== undefined) query.append('limit', params.limit.toString());
+
+    const queryString = query.toString();
+    const path = queryString
+      ? `${SOCIAL_ENDPOINTS.GET_USER_LIKES_SELF.path}?${queryString}`
+      : SOCIAL_ENDPOINTS.GET_USER_LIKES_SELF.path;
+
+    const response = await apiFetch<{ ids: string[]; totalCount: number }>(path, {
+      method: SOCIAL_ENDPOINTS.GET_USER_LIKES_SELF.method,
+      requiresAuth: SOCIAL_ENDPOINTS.GET_USER_LIKES_SELF.requiresAuth,
+    });
+
+    return {
+      ids: response.ids,
+      totalCount: response.totalCount,
+    };
   },
 };

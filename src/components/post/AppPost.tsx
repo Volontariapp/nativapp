@@ -1,6 +1,7 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { View, Text, StyleSheet, Pressable } from 'react-native';
 import Icon from 'react-native-vector-icons/Feather';
+import Ionicons from 'react-native-vector-icons/Ionicons';
 import { theme } from '@/shared/themes/theme';
 import type { PostWeb } from '@volontariapp/contracts';
 import { useGetPublicUser } from '@/api/user/hooks/use-get-public-user';
@@ -14,6 +15,20 @@ import { useNavigation } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import type { MainStackParamList } from '@/navigation/stacks/MainStack';
 import { convertEventDtoToAppEvent } from '@/api/event/event.api';
+import { useLikePost } from '@/api/social/hooks/use-like-post';
+import { useUnlikePost } from '@/api/social/hooks/use-unlike-post';
+import { useGetMyLikes } from '@/api/social/hooks/use-get-my-likes';
+import { useGetPostLikers } from '@/api/user/hooks/use-get-post-likers';
+import { PostLikersModal } from './PostLikersModal';
+import Animated, {
+  useSharedValue,
+  useAnimatedStyle,
+  withSpring,
+  withSequence,
+  withDelay,
+  withTiming,
+} from 'react-native-reanimated';
+import { Gesture, GestureDetector } from 'react-native-gesture-handler';
 
 interface PostCardProps {
   post: PostWeb;
@@ -22,17 +37,88 @@ interface PostCardProps {
 export default function AppPost({ post }: PostCardProps) {
   const { data: author } = useGetPublicUser(post.authorId);
   const { data: commentsData } = useListComments(post.id);
+  const { data: myLikesData } = useGetMyLikes();
+  const { data: likersData } = useGetPostLikers(post.id, { limit: 1 });
+
+  const likePost = useLikePost();
+  const unlikePost = useUnlikePost();
+
   const [isCommentsVisible, setIsCommentsVisible] = useState(false);
+  const [isLikersVisible, setIsLikersVisible] = useState(false);
+
   const navigation = useNavigation<NativeStackNavigationProp<MainStackParamList>>();
 
   const pseudo = author?.pseudo ?? 'Auteur inconnu';
   const topComments = commentsData?.comments.slice(0, 3) ?? [];
+  const isLiked = myLikesData?.ids.includes(post.id) ?? false;
+
+  let likeCount = likersData?.totalCount ?? 0;
+  if (isLiked && likeCount === 0) {
+    likeCount = 1;
+  }
+
+  useEffect(() => {
+    console.log(`[AppPost ${post.id}] myLikesData:`, myLikesData?.ids);
+    console.log(`[AppPost ${post.id}] likersData totalCount:`, likersData?.totalCount);
+    console.log(
+      `[AppPost ${post.id}] Computed -> isLiked: ${String(isLiked)}, likeCount: ${String(likeCount)}`,
+    );
+  }, [isLiked, likeCount, post.id, myLikesData, likersData]);
+
+  const heartScale = useSharedValue(0);
+  const heartOpacity = useSharedValue(0);
+
+  const animatedHeartStyle = useAnimatedStyle(() => {
+    return {
+      transform: [{ scale: heartScale.value }],
+      opacity: heartOpacity.value,
+    };
+  });
+
+  const triggerLikeAnimation = () => {
+    heartOpacity.value = 1;
+    heartScale.value = withSequence(
+      withSpring(1, { damping: 12, stiffness: 300, mass: 0.5 }),
+      withDelay(
+        50,
+        withTiming(0, { duration: 150 }, () => {
+          heartOpacity.value = 0;
+        }),
+      ),
+    );
+  };
+
+  const handleToggleLike = () => {
+    if (isLiked) {
+      unlikePost.mutate(post.id);
+    } else {
+      likePost.mutate(post.id);
+      triggerLikeAnimation();
+    }
+  };
+
+  const doubleTapGesture = Gesture.Tap()
+    .numberOfTaps(2)
+    .onStart(() => {
+      triggerLikeAnimation();
+      if (!isLiked) {
+        handleToggleLike();
+      }
+    })
+    .runOnJS(true);
 
   return (
     <View style={styles.card}>
       <PostAuthorHeader pseudo={author?.pseudo} authorId={post.authorId} />
 
-      <PostImagePlaceholder postId={post.id} />
+      <GestureDetector gesture={doubleTapGesture}>
+        <View style={styles.imageWrapper}>
+          <PostImagePlaceholder postId={post.id} />
+          <Animated.View style={[styles.floatingHeart, animatedHeartStyle]} pointerEvents="none">
+            <Ionicons name="heart" size={100} color={theme.colors.danger} />
+          </Animated.View>
+        </View>
+      </GestureDetector>
 
       {post.title ? (
         <View style={styles.titleContainer}>
@@ -44,6 +130,12 @@ export default function AppPost({ post }: PostCardProps) {
         commentCount={commentsData?.comments.length ?? 0}
         onCommentPress={() => {
           setIsCommentsVisible(true);
+        }}
+        isLiked={isLiked}
+        likeCount={likeCount}
+        onLikePress={handleToggleLike}
+        onLikeCountPress={() => {
+          setIsLikersVisible(true);
         }}
       />
 
@@ -84,6 +176,14 @@ export default function AppPost({ post }: PostCardProps) {
           setIsCommentsVisible(false);
         }}
       />
+
+      <PostLikersModal
+        postId={post.id}
+        visible={isLikersVisible}
+        onClose={() => {
+          setIsLikersVisible(false);
+        }}
+      />
     </View>
   );
 }
@@ -91,6 +191,16 @@ export default function AppPost({ post }: PostCardProps) {
 const styles = StyleSheet.create({
   card: {
     backgroundColor: theme.colors.white,
+  },
+  imageWrapper: {
+    position: 'relative',
+  },
+  floatingHeart: {
+    ...StyleSheet.absoluteFillObject,
+    justifyContent: 'center',
+    alignItems: 'center',
+    zIndex: 10,
+    elevation: 10,
   },
   titleContainer: {
     paddingHorizontal: theme.spacing.lg,

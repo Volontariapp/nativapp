@@ -6,6 +6,7 @@ import type {
   BadgeWeb,
   UpdateUserRequest,
   UserWebResponse,
+  ListUsersWebResponse,
 } from '@volontariapp/contracts';
 
 export interface UserProfile {
@@ -138,6 +139,44 @@ export const userApi = {
     } catch (error) {
       console.error(
         '[userApi.updateMe] Error details:',
+        error instanceof Error ? error.message : String(error),
+      );
+      throw error;
+    }
+  },
+
+  async getPostLikers(
+    postId: string,
+    params?: { page?: number; limit?: number },
+  ): Promise<{ users: UserPublicProfile[]; totalCount: number }> {
+    try {
+      const query = new URLSearchParams();
+      if (params?.page !== undefined) query.append('page', params.page.toString());
+      if (params?.limit !== undefined) query.append('limit', params.limit.toString());
+
+      const queryString = query.toString();
+      const rawPath = USER_ENDPOINTS.GET_POST_LIKERS.path.replace(':postId', postId);
+      const path = queryString ? `${rawPath}?${queryString}` : rawPath;
+
+      const response = await apiFetch<ListUsersWebResponse>(path, {
+        method: USER_ENDPOINTS.GET_POST_LIKERS.method,
+        requiresAuth: USER_ENDPOINTS.GET_POST_LIKERS.requiresAuth,
+      });
+
+      return {
+        users: response.users.map((u) => ({
+          id: u.id,
+          pseudo: u.pseudo,
+          totalImpactScore: u.totalImpactScore,
+          bio: u.bio,
+          logoPath: u.logoPath,
+          badges: u.badges,
+        })),
+        totalCount: response.pagination?.total ?? 0,
+      };
+    } catch (error) {
+      console.error(
+        '[userApi.getPostLikers] Error details:',
         error instanceof Error ? error.message : String(error),
       );
       throw error;
