@@ -12,6 +12,7 @@ import { useUserSocialActions } from '@/api/social/hooks/use-user-social-actions
 import { useLocation } from '@/hooks/use-location';
 import type { UserCoordinates } from '@/hooks/use-location';
 import type Swiper from 'react-native-deck-swiper';
+import { EventState } from '@volontariapp/contracts';
 
 type TabParamList = {
   accueil: undefined;
@@ -46,9 +47,20 @@ export interface UseSwipeScreenResult {
 export function useSwipeScreen(): UseSwipeScreenResult {
   const navigation = useNavigation<SwipeScreenNavigation>();
 
-  const { data, isLoading, isError, hasNextPage, fetchNextPage, isFetchingNextPage } = useGetEvents(
-    { limit: EVENTS_PAGE_LIMIT, excludeCreatedByMe: true, excludeWishedByMe: true },
+  const params = useMemo(
+    () => ({
+      limit: EVENTS_PAGE_LIMIT,
+      excludeCreatedByMe: true,
+      excludeWishedByMe: true,
+      excludeParticipatedByMe: true,
+      statuses: [EventState.EVENT_STATE_PUBLISHED, EventState.EVENT_STATE_DRAFT],
+      startDateFrom: new Date().toISOString(),
+    }),
+    [],
   );
+
+  const { data, isLoading, isError, hasNextPage, fetchNextPage, isFetchingNextPage } =
+    useGetEvents(params);
 
   const { wish } = useUserSocialActions();
   const { locationObject: userLocation } = useLocation();

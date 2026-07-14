@@ -10,7 +10,10 @@ import {
 } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import type { NativeStackScreenProps } from '@react-navigation/native-stack';
+import type {
+  NativeStackScreenProps,
+  NativeStackNavigationProp,
+} from '@react-navigation/native-stack';
 import type { MainStackParamList } from '../../navigation/stacks/MainStack';
 
 import { AppText } from '@/components/typography/AppText';
@@ -19,6 +22,9 @@ import { theme } from '@/shared/themes/theme';
 import { EventState } from '@volontariapp/contracts';
 import type { AppEvent } from '@/api/event/event.api';
 import { mapEventType } from '@/shared/lib/event-mappers.utils';
+import { useUserSocialActions } from '@/api/social/hooks/use-user-social-actions';
+import { useUserParticipations } from '@/api/social/hooks/use-user-participations';
+import { useProfile } from '@/api/user/hooks/use-profile';
 
 import { EventCover } from '../../components/event/EventCover';
 import { EventInfoCards } from '../../components/event/EventInfoCards';
@@ -33,20 +39,60 @@ type Props = NativeStackScreenProps<MainStackParamList, 'EventDetail'>;
 
 export function EventDetailScreen({ route }: Props) {
   const event: AppEvent = route.params.event;
-  const navigation = useNavigation();
+  const navigation = useNavigation<NativeStackNavigationProp<MainStackParamList>>();
 
   const isJoinable =
     event.state === EventState.EVENT_STATE_PUBLISHED ||
-    event.state === EventState.EVENT_STATE_DRAFT;
-  const [isJoined, setIsJoined] = React.useState(false);
-  const [isPending, startTransition] = React.useTransition();
+    String(event.state) === EventState[EventState.EVENT_STATE_PUBLISHED] ||
+    event.state === EventState.EVENT_STATE_DRAFT ||
+    String(event.state) === EventState[EventState.EVENT_STATE_DRAFT];
+
+  const { participate, isParticipating, unparticipate, isUnparticipating } = useUserSocialActions();
+  const { data: participations } = useUserParticipations(100);
+  const { data: profile } = useProfile();
+
+  const isJoined = participations?.pages.flatMap((p) => p.ids).includes(event.id) ?? false;
+
+  const [optimisticEvent, setOptimisticEvent] = React.useState<AppEvent>(event);
+
+  React.useEffect(() => {
+    if (isJoined && profile && profile.id !== event.organizerId) {
+      setOptimisticEvent((prev) => {
+        if (prev.currentParticipants < 2) {
+          return { ...prev, currentParticipants: Math.max(2, prev.currentParticipants + 1) };
+        }
+        return prev;
+      });
+    }
+  }, [isJoined, profile?.id, event.organizerId]);
 
   const handleJoin = () => {
-    startTransition(async () => {
-      await new Promise((resolve) => setTimeout(resolve, 1000));
-      setIsJoined(true);
-      Alert.alert('Succès', 'Vous participez maintenant à cet événement !');
-    });
+    participate(event.id)
+      .then(() => {
+        setOptimisticEvent((prev) => ({
+          ...prev,
+          currentParticipants: prev.currentParticipants + 1,
+        }));
+        Alert.alert('Succès', 'Vous participez maintenant à cet événement !');
+        navigation.navigate('MainTabs', { screen: 'profil' });
+      })
+      .catch(() => {
+        Alert.alert('Erreur', 'Impossible de rejoindre cet événement.');
+      });
+  };
+
+  const handleUnjoin = () => {
+    unparticipate(event.id)
+      .then(() => {
+        setOptimisticEvent((prev) => ({
+          ...prev,
+          currentParticipants: Math.max(0, prev.currentParticipants - 1),
+        }));
+        Alert.alert('Succès', 'Vous ne participez plus à cet événement.');
+      })
+      .catch(() => {
+        Alert.alert('Erreur', 'Impossible de quitter cet événement.');
+      });
   };
 
   return (
@@ -77,39 +123,44 @@ export function EventDetailScreen({ route }: Props) {
       </SafeAreaView>
 
       <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
-        <EventCover event={event} />
+        <EventCover event={optimisticEvent} />
 
         <View style={styles.content}>
-          <AppText style={styles.categoryTitle}>{mapEventType(event.type)}</AppText>
-          <AppText style={styles.title}>{event.title}</AppText>
-          {event.awardedImpactScore > 0 && (
-            <ImpactScoreBadge score={event.awardedImpactScore} style={{ marginBottom: 16 }} />
+          <AppText style={styles.categoryTitle}>{mapEventType(optimisticEvent.type)}</AppText>
+          <AppText style={styles.title}>{optimisticEvent.title}</AppText>
+          {optimisticEvent.awardedImpactScore > 0 && (
+            <ImpactScoreBadge
+              score={optimisticEvent.awardedImpactScore}
+              style={{ marginBottom: 16 }}
+            />
           )}
 
-          <EventOrganizer organizerId={event.organizerId} />
+          <EventOrganizer organizerId={optimisticEvent.organizerId} />
 
-          <EventInfoCards event={event} />
+          <EventInfoCards event={optimisticEvent} />
 
           <View style={styles.section}>
             <AppText style={styles.sectionTitle}>Description</AppText>
-            <AppText style={styles.descriptionText}>{event.description}</AppText>
+            <AppText style={styles.descriptionText}>{optimisticEvent.description}</AppText>
 
-            {event.tags && event.tags.length > 0 && <EventTags tags={event.tags} />}
+            {optimisticEvent.tags && optimisticEvent.tags.length > 0 && (
+              <EventTags tags={optimisticEvent.tags} />
+            )}
           </View>
 
-          <EventParticipants event={event} />
+          <EventParticipants event={optimisticEvent} />
 
-          {event.requirements && event.requirements.length > 0 && (
-            <EventRequirements requirements={event.requirements} />
+          {optimisticEvent.requirements && optimisticEvent.requirements.length > 0 && (
+            <EventRequirements requirements={optimisticEvent.requirements} />
           )}
 
-          {event.location && (
+          {optimisticEvent.location && (
             <View style={styles.mapSection}>
               <AppText style={styles.sectionTitle}>Lieu</AppText>
               <View style={styles.mapContainer}>
                 <AppMap
-                  events={[event]}
-                  initialCenter={event.location}
+                  events={[optimisticEvent]}
+                  initialCenter={optimisticEvent.location}
                   scrollEnabled={false}
                   zoomEnabled={false}
                 />
@@ -121,8 +172,8 @@ export function EventDetailScreen({ route }: Props) {
 
       {isJoinable && !isJoined && (
         <View style={styles.bottomBar}>
-          <Pressable style={styles.joinButton} onPress={handleJoin} disabled={isPending}>
-            {isPending ? (
+          <Pressable style={styles.joinButton} onPress={handleJoin} disabled={isParticipating}>
+            {isParticipating ? (
               <ActivityIndicator color={theme.colors.white} />
             ) : (
               <>
@@ -132,7 +183,7 @@ export function EventDetailScreen({ route }: Props) {
                   size={20}
                   color={theme.colors.white}
                 />
-                <AppText style={styles.joinButtonText}>JOIN</AppText>
+                <AppText style={styles.joinButtonText}>Rejoindre</AppText>
               </>
             )}
           </Pressable>
@@ -141,10 +192,20 @@ export function EventDetailScreen({ route }: Props) {
 
       {isJoinable && isJoined && (
         <View style={styles.bottomBar}>
-          <View style={[styles.joinButton, styles.joinedButton]}>
-            <AppIcons icon="check" iconLibrary="Feather" size={20} color={theme.colors.white} />
-            <AppText style={styles.joinButtonText}>JOINED</AppText>
-          </View>
+          <Pressable
+            style={[styles.joinButton, styles.joinedButton]}
+            onPress={handleUnjoin}
+            disabled={isUnparticipating}
+          >
+            {isUnparticipating ? (
+              <ActivityIndicator color={theme.colors.white} />
+            ) : (
+              <>
+                <AppIcons icon="x" iconLibrary="Feather" size={20} color={theme.colors.white} />
+                <AppText style={styles.joinButtonText}>Ne plus y participer</AppText>
+              </>
+            )}
+          </Pressable>
         </View>
       )}
     </View>
@@ -245,7 +306,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   joinedButton: {
-    backgroundColor: theme.colors.success,
+    backgroundColor: theme.colors.danger,
   },
   joinButtonText: {
     color: theme.colors.white,

@@ -7,6 +7,7 @@ interface ProfileStatsProps {
   impactScore: number;
   badgesCount: number;
   eventsCount: number;
+  createdCount: number;
 }
 
 /**
@@ -16,12 +17,14 @@ export const ProfileStats = ({
   impactScore,
   badgesCount,
   eventsCount,
+  createdCount,
 }: ProfileStatsProps): React.JSX.Element => {
   return (
     <View style={styles.statsContainer}>
       <StatCard label="Impact" value={impactScore} color={theme.colors.primaryEco} />
       <StatCard label="Badges" value={badgesCount} color={theme.colors.secondarySocio} />
-      <StatCard label="Events" value={eventsCount} color={theme.colors.warning} />
+      <StatCard label="Rejoints" value={eventsCount} color={theme.colors.warning} />
+      <StatCard label="Créés" value={createdCount} color={theme.colors.primarySocio} />
     </View>
   );
 };
@@ -31,5 +34,6 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'space-between',
     gap: theme.spacing.md,
+    flexWrap: 'wrap',
   },
 });

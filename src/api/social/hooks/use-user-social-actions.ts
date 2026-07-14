@@ -15,6 +15,7 @@ export const useUserSocialActions = () => {
     onSuccess: () => {
       void queryClient.invalidateQueries({ queryKey: PARTICIPATIONS_QUERY_KEY });
       void queryClient.invalidateQueries({ queryKey: ['participated-events'] });
+      void queryClient.invalidateQueries({ queryKey: ['events'] });
     },
   });
 
@@ -23,6 +24,7 @@ export const useUserSocialActions = () => {
     onSuccess: () => {
       void queryClient.invalidateQueries({ queryKey: PARTICIPATIONS_QUERY_KEY });
       void queryClient.invalidateQueries({ queryKey: ['participated-events'] });
+      void queryClient.invalidateQueries({ queryKey: ['events'] });
     },
   });
 

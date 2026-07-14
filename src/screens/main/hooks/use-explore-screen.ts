@@ -10,6 +10,7 @@ import type { AppEvent } from '@/api/event/event.api';
 import { useGetEvents } from '@/api/event/hooks/use-get-events';
 import { useLocation } from '@/hooks/use-location';
 import type { UserCoordinates } from '@/hooks/use-location';
+import { EventState } from '@volontariapp/contracts';
 
 // ─── Navigation Typing ────────────────────────────────────────────────────────
 // ExploreScreen vit dans un tab ("explorer") ET dans une stack (MainStack).
@@ -35,11 +36,8 @@ type ExploreRouteProps = RouteProp<TabParamList, 'explorer'>;
 export interface UseExploreScreenResult {
   events: AppEvent[];
   isLoading: boolean;
-  /** Coordonnées de l'utilisateur pour le pin sur la carte */
   userCoordinates: UserCoordinates | null;
-  /** Location passée en param de navigation (ex: depuis SwipeScreen) */
   initialLocation: UserCoordinates | undefined;
-  /** Clé de remontage de la carte quand initialLocation change */
   mapKey: string;
   /** true si la permission GPS a été refusée */
   isPermissionDenied: boolean;
@@ -65,6 +63,7 @@ export function useExploreScreen(): UseExploreScreenResult {
   const { data: eventsData, isLoading } = useGetEvents({
     excludeCreatedByMe: true,
     limit: 50,
+    statuses: [EventState.EVENT_STATE_PUBLISHED, EventState.EVENT_STATE_DRAFT],
     ...(centerLat !== undefined &&
       centerLon !== undefined && {
         area: {

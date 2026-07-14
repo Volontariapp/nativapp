@@ -5,7 +5,7 @@ import { EventDetailScreen, SettingsScreen } from '@/screens';
 import type { AppEvent } from '@/api/event/event.api';
 
 export type MainStackParamList = {
-  MainTabs: undefined;
+  MainTabs: { screen: string } | undefined;
   EventDetail: { event: AppEvent };
   Settings: undefined;
 };

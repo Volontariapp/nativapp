@@ -5,7 +5,6 @@ import {
   AppText,
   AppHeader,
   AppLoader,
-  ComingSoonPlaceholder,
   ProfileHeader,
   ProfileSection,
   ProfileStats,
@@ -20,14 +19,16 @@ import { useAuth } from '@/context/AuthContext';
 import { theme } from '@/shared/themes/theme';
 import { useProfile } from '@/api/user/hooks/use-profile';
 import { useUpdateProfile } from '@/api/user/hooks/use-update-profile';
-import { useUserParticipations } from '@/api/social/hooks/use-user-participations';
 import { useGetMyEvents } from '@/api/event/hooks/use-get-my-events';
 import { useGetParticipatedEvents } from '@/api/event/hooks/use-get-participated-events';
 import { useGetWishedEvents } from '@/api/event/hooks/use-get-wished-events';
 import { useNavigation } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import type { ProfileStackParamList } from '@/navigation/stacks/ProfileStack';
-import {WishedEventCard} from "@/components/dataDisplay/WishedEventCard";
+import { WishedEventCard } from '@/components/dataDisplay/WishedEventCard';
+import type { CalendarProps } from 'react-native-calendars';
+
+type MarkedDates = NonNullable<CalendarProps['markedDates']>;
 
 const handleSettingsPress = () => {
   Alert.alert('Paramètres', 'Coming soon ⚙️');
@@ -35,11 +36,11 @@ const handleSettingsPress = () => {
 
 export function ProfileScreen(): React.JSX.Element {
   const [isEditModalVisible, setIsEditModalVisible] = useState(false);
+  const [activeTab, setActiveTab] = useState<'participated' | 'created' | 'wished'>('participated');
   const { logout } = useAuth();
   const { navigate } = useNavigation<NativeStackNavigationProp<ProfileStackParamList>>();
 
   const { data: profile, isLoading: isProfileLoading, error: profileError } = useProfile();
-  const { data: participations, isLoading: isParticipationsLoading } = useUserParticipations();
   const {
     data: myEventsData,
     isLoading: isMyEventsLoading,
@@ -66,7 +67,7 @@ export function ProfileScreen(): React.JSX.Element {
 
   const updateProfile = useUpdateProfile();
 
-  const isLoading = isProfileLoading || isParticipationsLoading;
+  const isLoading = isProfileLoading;
 
   if (isLoading) {
     return (
@@ -83,7 +84,9 @@ export function ProfileScreen(): React.JSX.Element {
         <AppHeader />
         <View style={styles.center}>
           <AppText style={styles.errorText}>
-            {profileError instanceof Error ? profileError.message : 'Impossible de charger le profil.'}
+            {profileError instanceof Error
+              ? profileError.message
+              : 'Impossible de charger le profil.'}
           </AppText>
         </View>
       </View>
@@ -93,6 +96,48 @@ export function ProfileScreen(): React.JSX.Element {
   const allMyEvents = myEventsData?.pages.flatMap((page) => page.events) ?? [];
   const allParticipatedEvents = participatedEventsData?.pages.flatMap((page) => page.events) ?? [];
   const allWishedEvents = wishedEventsData?.pages.flatMap((page) => page.events) ?? [];
+
+  const markedDates: MarkedDates = {};
+  allParticipatedEvents.forEach((event) => {
+    if (event.startAt) {
+      const dateStr = event.startAt.split('T')[0];
+      if (dateStr != null) {
+        markedDates[dateStr] = {
+          customStyles: {
+            container: {
+              borderWidth: 2,
+              borderColor: theme.colors.warning,
+              borderRadius: 20,
+            },
+            text: {
+              color: theme.colors.black,
+              fontWeight: 'bold',
+            },
+          },
+        };
+      }
+    }
+  });
+  allMyEvents.forEach((event) => {
+    if (event.startAt) {
+      const dateStr = event.startAt.split('T')[0];
+      if (dateStr != null) {
+        markedDates[dateStr] = {
+          customStyles: {
+            container: {
+              borderWidth: 2,
+              borderColor: theme.colors.primarySocio,
+              borderRadius: 20,
+            },
+            text: {
+              color: theme.colors.black,
+              fontWeight: 'bold',
+            },
+          },
+        };
+      }
+    }
+  });
 
   return (
     <View style={styles.container}>
@@ -128,102 +173,135 @@ export function ProfileScreen(): React.JSX.Element {
           <ProfileStats
             impactScore={profile.totalImpactScore}
             badgesCount={profile.badges.length}
-            eventsCount={participations?.pages[0]?.totalCount ?? 0}
+            eventsCount={participatedEventsData?.pages[0]?.totalCount ?? 0}
+            createdCount={myEventsData?.pages[0]?.totalCount ?? 0}
           />
         </ProfileSection>
 
         <ProfileSection title="Mes Engagements">
-          <AppCalendar />
+          <AppCalendar markedDates={markedDates} />
         </ProfileSection>
 
         <ProfileSection title="Mes Badges">
           <ProfileBadges badges={profile.badges} />
         </ProfileSection>
 
-        <ProfileSection title="Événements à venir">
-          {isParticipatedEventsLoading ? (
-            <ActivityIndicator color={theme.colors.primaryEco} />
-          ) : allParticipatedEvents.length > 0 ? (
-            <View>
-              {allParticipatedEvents.map((event) => (
-                <EventCard key={event.id} event={event} />
-              ))}
-              {hasNextParticipatedEvents && (
-                <View style={styles.seeMoreContainer}>
-                  <AppButton
-                    variant="eco"
-                    size="small"
-                    text={isFetchingNextParticipatedEvents ? 'Chargement...' : 'Voir plus'}
-                    onPress={() => {
-                      void fetchNextParticipatedEvents();
-                    }}
-                    disabled={isFetchingNextParticipatedEvents}
-                  />
-                </View>
-              )}
-            </View>
-          ) : (
-            <AppText style={styles.emptyText}>Aucun événement à venir pour le moment.</AppText>
-          )}
-        </ProfileSection>
+        <View style={styles.tabBar}>
+          <AppIconsButton
+            icon="calendar"
+            size={48}
+            variant={activeTab === 'participated' ? 'socio' : 'white'}
+            iconColor={activeTab === 'participated' ? theme.colors.white : theme.colors.grey}
+            onPress={() => {
+              setActiveTab('participated');
+            }}
+          />
+          <AppIconsButton
+            icon="heart"
+            size={48}
+            variant={activeTab === 'wished' ? 'danger' : 'white'}
+            iconColor={activeTab === 'wished' ? theme.colors.white : theme.colors.grey}
+            onPress={() => {
+              setActiveTab('wished');
+            }}
+          />
+          <AppIconsButton
+            icon="plus"
+            size={48}
+            variant={activeTab === 'created' ? 'eco' : 'white'}
+            iconColor={activeTab === 'created' ? theme.colors.white : theme.colors.grey}
+            onPress={() => {
+              setActiveTab('created');
+            }}
+          />
+        </View>
 
-        <ProfileSection title="Mes événements créés">
-          {isMyEventsLoading ? (
-            <ActivityIndicator color={theme.colors.primaryEco} />
-          ) : allMyEvents.length > 0 ? (
-            <View>
-              {allMyEvents.map((event) => (
-                <EventCard key={event.id} event={event} />
-              ))}
-              {hasNextMyEvents && (
-                <View style={styles.seeMoreContainer}>
-                  <AppButton
-                    variant="eco"
-                    size="small"
-                    text={isFetchingNextMyEvents ? 'Chargement...' : 'Voir plus'}
-                    onPress={() => {
-                      void fetchNextMyEvents();
-                    }}
-                    disabled={isFetchingNextMyEvents}
-                  />
-                </View>
-              )}
-            </View>
-          ) : (
-            <AppText style={styles.emptyText}>Aucun événement créé pour le moment.</AppText>
-          )}
-        </ProfileSection>
+        {activeTab === 'participated' && (
+          <ProfileSection title="Événements à venir">
+            {isParticipatedEventsLoading ? (
+              <ActivityIndicator color={theme.colors.primaryEco} />
+            ) : allParticipatedEvents.length > 0 ? (
+              <View>
+                {allParticipatedEvents.map((event) => (
+                  <EventCard key={event.id} event={event} />
+                ))}
+                {hasNextParticipatedEvents && (
+                  <View style={styles.seeMoreContainer}>
+                    <AppButton
+                      variant="eco"
+                      size="small"
+                      text={isFetchingNextParticipatedEvents ? 'Chargement...' : 'Voir plus'}
+                      onPress={() => {
+                        void fetchNextParticipatedEvents();
+                      }}
+                      disabled={isFetchingNextParticipatedEvents}
+                    />
+                  </View>
+                )}
+              </View>
+            ) : (
+              <AppText style={styles.emptyText}>Aucun événement à venir pour le moment.</AppText>
+            )}
+          </ProfileSection>
+        )}
 
-        <ProfileSection title="Mentions J'aime">
-          <ComingSoonPlaceholder />
-        </ProfileSection>
+        {activeTab === 'created' && (
+          <ProfileSection title="Mes événements créés">
+            {isMyEventsLoading ? (
+              <ActivityIndicator color={theme.colors.primaryEco} />
+            ) : allMyEvents.length > 0 ? (
+              <View>
+                {allMyEvents.map((event) => (
+                  <EventCard key={event.id} event={event} />
+                ))}
+                {hasNextMyEvents && (
+                  <View style={styles.seeMoreContainer}>
+                    <AppButton
+                      variant="eco"
+                      size="small"
+                      text={isFetchingNextMyEvents ? 'Chargement...' : 'Voir plus'}
+                      onPress={() => {
+                        void fetchNextMyEvents();
+                      }}
+                      disabled={isFetchingNextMyEvents}
+                    />
+                  </View>
+                )}
+              </View>
+            ) : (
+              <AppText style={styles.emptyText}>Aucun événement créé pour le moment.</AppText>
+            )}
+          </ProfileSection>
+        )}
 
-        <ProfileSection title="Wishlist">
-          {isWishedEventsLoading ? (
-            <ActivityIndicator color={theme.colors.primaryEco} />
-          ) : allWishedEvents.length > 0 ? (
-            <View>
-              {allWishedEvents.map((event) => (
-                <WishedEventCard key={event.id} event={event} />
-              ))}
-              {hasNextWishedEvents && (
-                <View style={styles.seeMoreContainer}>
-                  <AppButton
-                    variant="eco"
-                    size="small"
-                    text={isFetchingNextWishedEvents ? 'Chargement...' : 'Voir plus'}
-                    onPress={() => {
-                      void fetchNextWishedEvents();
-                    }}
-                    disabled={isFetchingNextWishedEvents}
-                  />
-                </View>
-              )}
-            </View>
-          ) : (
-            <AppText style={styles.emptyText}>Aucun événement dans votre wishlist.</AppText>
-          )}
-        </ProfileSection>
+        {activeTab === 'wished' && (
+          <ProfileSection title="Wishlist">
+            {isWishedEventsLoading ? (
+              <ActivityIndicator color={theme.colors.primaryEco} />
+            ) : allWishedEvents.length > 0 ? (
+              <View>
+                {allWishedEvents.map((event) => (
+                  <WishedEventCard key={event.id} event={event} />
+                ))}
+                {hasNextWishedEvents && (
+                  <View style={styles.seeMoreContainer}>
+                    <AppButton
+                      variant="eco"
+                      size="small"
+                      text={isFetchingNextWishedEvents ? 'Chargement...' : 'Voir plus'}
+                      onPress={() => {
+                        void fetchNextWishedEvents();
+                      }}
+                      disabled={isFetchingNextWishedEvents}
+                    />
+                  </View>
+                )}
+              </View>
+            ) : (
+              <AppText style={styles.emptyText}>Aucun événement dans votre wishlist.</AppText>
+            )}
+          </ProfileSection>
+        )}
 
         <View style={styles.actions}>
           <View style={styles.buttonSpacer} />
@@ -282,6 +360,12 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
     padding: theme.spacing.xl,
+  },
+  tabBar: {
+    flexDirection: 'row',
+    justifyContent: 'space-around',
+    marginVertical: theme.spacing.lg,
+    paddingHorizontal: theme.spacing.xl,
   },
   settingsHeader: {
     flexDirection: 'row',

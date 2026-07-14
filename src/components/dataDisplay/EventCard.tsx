@@ -1,17 +1,24 @@
 import React from 'react';
-import { View, StyleSheet } from 'react-native';
+import { View, StyleSheet, TouchableOpacity } from 'react-native';
+import { useNavigation } from '@react-navigation/native';
+import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
+import type { MainStackParamList } from '@/navigation/stacks/MainStack';
 import { AppText } from '@/components/typography/AppText';
 import { theme } from '@/shared/themes/theme';
 import type { AppEvent } from '@/api/event/event.api';
 import { mapEventType } from '@/shared/lib/event-mappers.utils';
 import { EventType } from '@volontariapp/contracts';
 import Feather from 'react-native-vector-icons/Feather';
+import { Image } from 'expo-image';
+import { getFakeEcologyImage } from '@/utils/fake-images.util';
 
 export interface EventCardProps {
   event: AppEvent;
 }
 
 export function EventCard({ event }: EventCardProps): React.JSX.Element {
+  const navigation = useNavigation<NativeStackNavigationProp<MainStackParamList>>();
+
   const isEcology =
     event.type === EventType.EVENT_TYPE_ECOLOGY ||
     String(event.type) === EventType[EventType.EVENT_TYPE_ECOLOGY];
@@ -42,19 +49,29 @@ export function EventCard({ event }: EventCardProps): React.JSX.Element {
     minute: '2-digit',
   });
 
+  const fakeImageUrl = React.useMemo(() => getFakeEcologyImage(event.id), [event.id]);
+
   return (
-    <View style={styles.card}>
+    <TouchableOpacity
+      style={styles.card}
+      activeOpacity={0.8}
+      onPress={() => { navigation.navigate('EventDetail', { event }); }}
+    >
       <View style={[styles.imageContainer, { backgroundColor: typeBg }]}>
-        <Feather
-          name={isEcology ? 'leaf' : isSocial ? 'users' : 'help-circle'}
-          size={32}
-          color={typeColor}
+        <Image
+          source={{ uri: fakeImageUrl }}
+          style={StyleSheet.absoluteFillObject}
+          contentFit="cover"
+          cachePolicy="memory-disk"
+          accessibilityIgnoresInvertColors
         />
       </View>
 
       <View style={styles.content}>
         <View style={[styles.tag, { backgroundColor: typeBg }]}>
-          <AppText style={[styles.tagText, { color: typeColor }]}>{mapEventType(event.type)}</AppText>
+          <AppText style={[styles.tagText, { color: typeColor }]}>
+            {mapEventType(event.type)}
+          </AppText>
         </View>
 
         <AppText style={styles.title} numberOfLines={1}>
@@ -75,7 +92,7 @@ export function EventCard({ event }: EventCardProps): React.JSX.Element {
           </AppText>
         </View>
       </View>
-    </View>
+    </TouchableOpacity>
   );
 }
 

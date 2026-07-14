@@ -1,4 +1,3 @@
-import React from 'react';
 import { View, StyleSheet, ActivityIndicator } from 'react-native';
 import { Image } from 'expo-image';
 import { AppText } from '@/components/typography/AppText';
@@ -29,7 +28,7 @@ export function EventOrganizer({ organizerId }: EventOrganizerProps) {
               style={styles.avatar}
             />
             <View style={styles.info}>
-              <AppText style={styles.name}>{user?.pseudo != null || 'Utilisateur inconnu'}</AppText>
+              <AppText style={styles.name}>{user?.pseudo ?? 'Utilisateur inconnu'}</AppText>
               {user?.totalImpactScore !== undefined && (
                 <AppText style={styles.score}>{user.totalImpactScore} pts d'impact</AppText>
               )}

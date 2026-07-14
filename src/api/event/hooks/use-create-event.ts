@@ -45,6 +45,7 @@ export const useCreateEvent = () => {
     onSuccess: (newEvent) => {
       if (newEvent !== null) {
         void queryClient.invalidateQueries({ queryKey: EVENTS_QUERY_KEY });
+        void queryClient.invalidateQueries({ queryKey: ['my-events'] });
         Alert.alert('Succès', `L'évènement "${newEvent.title}" a été créé avec succès !`);
       }
     },

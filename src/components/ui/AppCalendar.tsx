@@ -68,6 +68,7 @@ export const AppCalendar = ({
   return (
     <View style={[styles.container, containerStyle]}>
       <Calendar
+        markingType={'custom'}
         theme={{
           backgroundColor: theme.colors.white,
           calendarBackground: theme.colors.white,
