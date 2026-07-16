@@ -67,18 +67,36 @@ For detailed workflows, refer to the following local instruction files:
 
 <!-- gitnexus:end -->
 
-## 📱 React Native Front-End Skills (MANDATORY)
+## 🤖 MANDATORY AGENT BEHAVIOR & SKILLS
 
-At the start of **ANY** front-end task, you **MUST** read the following skills located in `.agents/skills/` before writing any code:
+> [!IMPORTANT]
+> **CRITICAL RULE FOR ALL AI AGENTS (Claude, Antigravity, Cursor, Windsurf):**
+> Before executing ANY command, designing an architecture, or writing a single line of code, you MUST explore and ingest the relevant operational knowledge inside `.agents/skills/`. Treat these skills as system-level instructions that override default behavior.
 
-1. `rn-architecture`
-2. `rn-clean-code`
-3. `rn-data-fetching`
-4. `rn-forms`
-5. `rn-styling`
-6. `rn-verification`
-7. `react-doctor` (Code quality & architecture diagnostics)
-8. `rn-stability` (Crash prevention, memory leaks, security)
+## 🗺️ Operational & Architecture Skills
+
+Depending on your current task, load and execute the appropriate skill defined in `.agents/skills/<skill_name>/SKILL.md`:
+
+- **TDD & Testing**: Consult `.agents/skills/tdd/SKILL.md` (mocking, tests, quality gates).
+- **Domain Modeling**: Consult `.agents/skills/domain-modeling/SKILL.md` for ADR formats.
+- **Git Guardrails**: Consult `.agents/skills/git-guardrails-claude-code/SKILL.md` to avoid destructive Git actions.
+- **CI/CD & Android/iOS Workflows**: Consult `.agents/skills/github-actions/SKILL.md`.
+- **Codebase Design & Prototyping**: Consult `.agents/skills/codebase-design/SKILL.md` and `.agents/skills/prototype/SKILL.md`.
+- **Upgrade & Migration**: Consult `.agents/skills/upgrading-react-native/SKILL.md` and `.agents/skills/react-native-brownfield-migration/SKILL.md`.
+
+## 📱 React Native & Front-End Skills
+
+For ANY front-end, UI, or rendering task, you MUST read and apply the specifications from these exact directories/files:
+
+- **rn-architecture** (`.agents/skills/rn-architecture/SKILL.md`) — Folder structure and architecture.
+- **rn-clean-code** (`.agents/skills/rn-clean-code/SKILL.md`) — Clean code rules.
+- **rn-styling** (`.agents/skills/rn-styling/SKILL.md`) — Layouts, Tailwind, NativeWind & stylesheets.
+- **rn-data-fetching** (`.agents/skills/rn-data-fetching/SKILL.md`) — Queries, caching, and state sync.
+- **rn-forms** (`.agents/skills/rn-forms/SKILL.md`) — Dynamic inputs and validation.
+- **rn-verification** (`.agents/skills/rn-verification/SKILL.md`) — Local UI tests and verification.
+- **react-doctor** (`.agents/skills/react-doctor/SKILL.md`) — Quality & architecture diagnostics.
+- **rn-stability** (`.agents/skills/rn-stability/SKILL.md`) — Crash prevention, thread blocking, memory leaks, and performance optimization.
+- **react-native-best-practices** (`.agents/skills/react-native-best-practices/SKILL.md`) — Essential rules for performance (FlatList/FlashList, Hermes, thread optimization, view flattening).
 
 ---
 
