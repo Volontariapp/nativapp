@@ -36,3 +36,4 @@ expo-env.d.ts
 .env.development
 .DS*
 .fallow/
+graphify-out/
