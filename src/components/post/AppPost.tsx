@@ -127,7 +127,7 @@ export default function AppPost({ post }: PostCardProps) {
       ) : null}
 
       <PostActions
-        commentCount={commentsData?.comments.length ?? 0}
+        commentCount={commentsData?.totalCount ?? commentsData?.comments.length ?? 0}
         onCommentPress={() => {
           setIsCommentsVisible(true);
         }}

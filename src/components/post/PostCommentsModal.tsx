@@ -62,6 +62,7 @@ export const PostCommentsModal = ({ postId, visible, onClose }: PostCommentsModa
             <ActivityIndicator style={styles.loader} color={theme.colors.primaryEco} />
           ) : (
             <FlatList
+              style={styles.list}
               data={comments}
               keyExtractor={(item) => item.id}
               renderItem={renderComment}
@@ -118,6 +119,8 @@ const styles = StyleSheet.create({
     maxHeight: '80%',
     minHeight: '50%',
     paddingBottom: theme.spacing.md,
+    flexShrink: 1,
+    overflow: 'hidden',
   },
   header: {
     flexDirection: 'row',
@@ -138,6 +141,9 @@ const styles = StyleSheet.create({
   loader: {
     flex: 1,
     padding: theme.spacing.xl,
+  },
+  list: {
+    flex: 1,
   },
   listContent: {
     padding: theme.spacing.md,

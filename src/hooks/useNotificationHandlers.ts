@@ -1,4 +1,5 @@
 import { useEffect, useRef } from 'react';
+import { useQueryClient } from '@tanstack/react-query';
 import type { Socket } from 'socket.io-client';
 import {
   type IPostCreatedWebsocketPayload,
@@ -13,14 +14,20 @@ import {
   type IFallbackCreateTagWebsocketPayload,
   type IFallbackUpdateTagWebsocketPayload,
   type IFallbackDeleteTagWebsocketPayload,
+  type ICommentCreatedWebsocketPayload,
+  type ICommentDeletedWebsocketPayload,
+  type IPostLikedWebsocketPayload,
+  type IPostUnlikedWebsocketPayload,
   WebsocketMessagingType,
 } from '@volontariapp/messaging';
+import { COMMENTS_LIST_QUERY_KEY } from '@/api/post/hooks/use-list-comments';
 import { syncPendingBus } from '../services/event-bus.service';
 
 export const useNotificationHandlers = (
   socket: Socket | null,
   showNotification: (msg: string) => void,
 ): void => {
+  const queryClient = useQueryClient();
   const notifyRef = useRef(showNotification);
   useEffect(() => {
     notifyRef.current = showNotification;
@@ -49,6 +56,42 @@ export const useNotificationHandlers = (
 
     const handlePostDeletionFailed = (): void => {
       notifyRef.current('La suppression du post a échoué.');
+    };
+
+    const handleCommentCreated = (data: ICommentCreatedWebsocketPayload): void => {
+      if (data.isEmitter !== true) {
+        notifyRef.current('Un nouveau commentaire a été ajouté !');
+      }
+      void queryClient.invalidateQueries({
+        queryKey: [...COMMENTS_LIST_QUERY_KEY, data.postId],
+      });
+    };
+
+    const handleCommentDeleted = (data: ICommentDeletedWebsocketPayload): void => {
+      if (data.isEmitter !== true) {
+        notifyRef.current('Un commentaire a été supprimé.');
+      }
+      void queryClient.invalidateQueries({
+        queryKey: [...COMMENTS_LIST_QUERY_KEY, data.postId],
+      });
+    };
+
+    const handlePostLiked = (data: IPostLikedWebsocketPayload): void => {
+      void queryClient.invalidateQueries({
+        queryKey: ['post-likers', data.postId],
+      });
+      void queryClient.invalidateQueries({
+        queryKey: ['my-likes'],
+      });
+    };
+
+    const handlePostUnliked = (data: IPostUnlikedWebsocketPayload): void => {
+      void queryClient.invalidateQueries({
+        queryKey: ['post-likers', data.postId],
+      });
+      void queryClient.invalidateQueries({
+        queryKey: ['my-likes'],
+      });
     };
 
     const handleEventCreated = (data: IEventCreatedWebsocketPayload): void => {
@@ -177,6 +220,10 @@ export const useNotificationHandlers = (
     socket.on(WebsocketMessagingType.POST_DELETED, handlePostDeleted);
     socket.on(WebsocketMessagingType.POST_CREATION_FAILED, handlePostFailed);
     socket.on(WebsocketMessagingType.POST_DELETION_FAILED, handlePostDeletionFailed);
+    socket.on(WebsocketMessagingType.COMMENT_CREATED, handleCommentCreated);
+    socket.on(WebsocketMessagingType.COMMENT_DELETED, handleCommentDeleted);
+    socket.on(WebsocketMessagingType.POST_LIKED, handlePostLiked);
+    socket.on(WebsocketMessagingType.POST_UNLIKED, handlePostUnliked);
 
     socket.on(WebsocketMessagingType.EVENT_CREATED, handleEventCreated);
     socket.on(WebsocketMessagingType.EVENT_DELETED, handleEventDeleted);
@@ -205,6 +252,10 @@ export const useNotificationHandlers = (
       socket.off(WebsocketMessagingType.POST_DELETED, handlePostDeleted);
       socket.off(WebsocketMessagingType.POST_CREATION_FAILED, handlePostFailed);
       socket.off(WebsocketMessagingType.POST_DELETION_FAILED, handlePostDeletionFailed);
+      socket.off(WebsocketMessagingType.COMMENT_CREATED, handleCommentCreated);
+      socket.off(WebsocketMessagingType.COMMENT_DELETED, handleCommentDeleted);
+      socket.off(WebsocketMessagingType.POST_LIKED, handlePostLiked);
+      socket.off(WebsocketMessagingType.POST_UNLIKED, handlePostUnliked);
 
       socket.off(WebsocketMessagingType.EVENT_CREATED, handleEventCreated);
       socket.off(WebsocketMessagingType.EVENT_DELETED, handleEventDeleted);
