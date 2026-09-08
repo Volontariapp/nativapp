@@ -7,7 +7,8 @@ import Animated, {
   withSpring,
 } from 'react-native-reanimated';
 import { AppText } from '@/components/typography/AppText';
-import { theme } from '@/shared/themes/theme';
+import { useAppTheme, useStyles } from '@/context/ThemeContext';
+import type { AppTheme } from '@/shared/themes/theme';
 import { useSocket } from '@/context/SocketContext';
 import { useNavigation } from '@react-navigation/native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -30,6 +31,8 @@ const EVENT_COLORS: Record<string, string> = {
 };
 
 function EventCard({ event }: { event: WsEvent }): React.JSX.Element {
+  const { theme } = useAppTheme();
+  const styles = useStyles(createStyles);
   const fadeAnim = useSharedValue(0);
   const slideAnim = useSharedValue(-20);
 
@@ -71,6 +74,8 @@ function EventCard({ event }: { event: WsEvent }): React.JSX.Element {
 }
 
 export function WsFeedbackScreen(): React.JSX.Element {
+  const { theme } = useAppTheme();
+  const styles = useStyles(createStyles);
   const { socket, isConnected } = useSocket();
   const { goBack } = useNavigation();
   const insets = useSafeAreaInsets();
@@ -182,152 +187,153 @@ export function WsFeedbackScreen(): React.JSX.Element {
   );
 }
 
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: theme.colors.background,
-  },
-  header: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    paddingHorizontal: theme.spacing.lg,
-    paddingBottom: theme.spacing.md,
-    backgroundColor: theme.colors.background,
-    borderBottomWidth: 1,
-    borderBottomColor: '#e5e7eb',
-  },
-  headerTitle: {
-    fontSize: 18,
-    fontWeight: '700',
-    color: theme.colors.black,
-  },
-  backBtn: {
-    width: 36,
-    height: 36,
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  statusBar: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    paddingHorizontal: theme.spacing.xl,
-    paddingVertical: theme.spacing.md,
-  },
-  statusRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 6,
-  },
-  dot: {
-    width: 8,
-    height: 8,
-    borderRadius: 4,
-  },
-  statusText: {
-    fontSize: 13,
-    fontWeight: '600',
-  },
-  clearBtn: {
-    backgroundColor: theme.colors.danger + '18',
-    paddingHorizontal: theme.spacing.md,
-    paddingVertical: theme.spacing.sm,
-    borderRadius: theme.radius.sm,
-  },
-  clearBtnText: {
-    color: theme.colors.danger,
-    fontWeight: '600',
-    fontSize: 14,
-  },
-  list: {
-    flex: 1,
-  },
-  listContent: {
-    paddingHorizontal: theme.spacing.lg,
-    paddingBottom: theme.spacing.xxl,
-    gap: theme.spacing.md,
-  },
-  count: {
-    fontSize: 13,
-    color: theme.colors.grey,
-    marginBottom: theme.spacing.sm,
-    fontWeight: '500',
-  },
-  card: {
-    backgroundColor: '#ffffff',
-    borderRadius: theme.radius.md,
-    flexDirection: 'row',
-    overflow: 'hidden',
-    ...theme.shadows.card,
-  },
-  cardAccent: {
-    width: 4,
-  },
-  cardBody: {
-    flex: 1,
-    padding: theme.spacing.md,
-  },
-  cardHeader: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    marginBottom: theme.spacing.sm,
-  },
-  badge: {
-    paddingHorizontal: 8,
-    paddingVertical: 3,
-    borderRadius: theme.radius.sm,
-  },
-  badgeText: {
-    fontSize: 12,
-    fontWeight: '700',
-  },
-  time: {
-    fontSize: 12,
-    color: theme.colors.grey,
-    fontWeight: '500',
-  },
-  payload: {
-    fontSize: 12,
-    color: '#374151',
-    fontFamily: 'monospace',
-    lineHeight: 18,
-    backgroundColor: '#f9fafb',
-    padding: theme.spacing.sm,
-    borderRadius: theme.radius.sm,
-  },
-  emptyState: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-    paddingHorizontal: theme.spacing.xxl,
-    gap: theme.spacing.md,
-  },
-  emptyIcon: {
-    fontSize: 48,
-  },
-  emptyTitle: {
-    fontSize: 20,
-    fontWeight: '700',
-    color: theme.colors.black,
-    textAlign: 'center',
-  },
-  emptySubtitle: {
-    fontSize: 15,
-    color: theme.colors.grey,
-    textAlign: 'center',
-    lineHeight: 22,
-  },
-  emptyEvents: {
-    marginTop: theme.spacing.lg,
-    fontSize: 12,
-    color: theme.colors.grey,
-    textAlign: 'center',
-    fontFamily: 'monospace',
-    backgroundColor: '#f3f4f6',
-    padding: theme.spacing.md,
-    borderRadius: theme.radius.md,
-    lineHeight: 20,
-  },
-});
+const createStyles = (theme: AppTheme) =>
+  StyleSheet.create({
+    container: {
+      flex: 1,
+      backgroundColor: theme.colors.background,
+    },
+    header: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      justifyContent: 'space-between',
+      paddingHorizontal: theme.spacing.lg,
+      paddingBottom: theme.spacing.md,
+      backgroundColor: theme.colors.background,
+      borderBottomWidth: 1,
+      borderBottomColor: '#e5e7eb',
+    },
+    headerTitle: {
+      fontSize: 18,
+      fontWeight: '700',
+      color: theme.colors.text,
+    },
+    backBtn: {
+      width: 36,
+      height: 36,
+      justifyContent: 'center',
+      alignItems: 'center',
+    },
+    statusBar: {
+      flexDirection: 'row',
+      justifyContent: 'space-between',
+      alignItems: 'center',
+      paddingHorizontal: theme.spacing.xl,
+      paddingVertical: theme.spacing.md,
+    },
+    statusRow: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: 6,
+    },
+    dot: {
+      width: 8,
+      height: 8,
+      borderRadius: 4,
+    },
+    statusText: {
+      fontSize: 13,
+      fontWeight: '600',
+    },
+    clearBtn: {
+      backgroundColor: theme.colors.danger + '18',
+      paddingHorizontal: theme.spacing.md,
+      paddingVertical: theme.spacing.sm,
+      borderRadius: theme.radius.sm,
+    },
+    clearBtnText: {
+      color: theme.colors.danger,
+      fontWeight: '600',
+      fontSize: 14,
+    },
+    list: {
+      flex: 1,
+    },
+    listContent: {
+      paddingHorizontal: theme.spacing.lg,
+      paddingBottom: theme.spacing.xxl,
+      gap: theme.spacing.md,
+    },
+    count: {
+      fontSize: 13,
+      color: theme.colors.grey,
+      marginBottom: theme.spacing.sm,
+      fontWeight: '500',
+    },
+    card: {
+      backgroundColor: theme.colors.white,
+      borderRadius: theme.radius.md,
+      flexDirection: 'row',
+      overflow: 'hidden',
+      ...theme.shadows.card,
+    },
+    cardAccent: {
+      width: 4,
+    },
+    cardBody: {
+      flex: 1,
+      padding: theme.spacing.md,
+    },
+    cardHeader: {
+      flexDirection: 'row',
+      justifyContent: 'space-between',
+      alignItems: 'center',
+      marginBottom: theme.spacing.sm,
+    },
+    badge: {
+      paddingHorizontal: 8,
+      paddingVertical: 3,
+      borderRadius: theme.radius.sm,
+    },
+    badgeText: {
+      fontSize: 12,
+      fontWeight: '700',
+    },
+    time: {
+      fontSize: 12,
+      color: theme.colors.grey,
+      fontWeight: '500',
+    },
+    payload: {
+      fontSize: 12,
+      color: theme.colors.text,
+      fontFamily: 'monospace',
+      lineHeight: 18,
+      backgroundColor: theme.colors.lightGrey,
+      padding: theme.spacing.sm,
+      borderRadius: theme.radius.sm,
+    },
+    emptyState: {
+      flex: 1,
+      justifyContent: 'center',
+      alignItems: 'center',
+      paddingHorizontal: theme.spacing.xxl,
+      gap: theme.spacing.md,
+    },
+    emptyIcon: {
+      fontSize: 48,
+    },
+    emptyTitle: {
+      fontSize: 20,
+      fontWeight: '700',
+      color: theme.colors.text,
+      textAlign: 'center',
+    },
+    emptySubtitle: {
+      fontSize: 15,
+      color: theme.colors.grey,
+      textAlign: 'center',
+      lineHeight: 22,
+    },
+    emptyEvents: {
+      marginTop: theme.spacing.lg,
+      fontSize: 12,
+      color: theme.colors.grey,
+      textAlign: 'center',
+      fontFamily: 'monospace',
+      backgroundColor: theme.colors.lightGrey,
+      padding: theme.spacing.md,
+      borderRadius: theme.radius.md,
+      lineHeight: 20,
+    },
+  });

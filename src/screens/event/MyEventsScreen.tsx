@@ -3,7 +3,8 @@ import type { ListRenderItemInfo } from 'react-native';
 import { View, StyleSheet, FlatList, ActivityIndicator } from 'react-native';
 import { AppText } from '@/components/typography/AppText';
 import AppHeader from '@/components/layout/AppHeader';
-import { theme } from '@/shared/themes/theme';
+import { useAppTheme, useStyles } from '@/context/ThemeContext';
+import type { AppTheme } from '@/shared/themes/theme';
 import { useGetMyEvents } from '@/api/event/hooks/use-get-my-events';
 import type { AppEvent } from '@/api/event/event.api';
 import { EventCard } from '@/components/dataDisplay/EventCard';
@@ -11,6 +12,8 @@ import { EventCard } from '@/components/dataDisplay/EventCard';
 const renderItem = ({ item }: ListRenderItemInfo<AppEvent>) => <EventCard event={item} />;
 
 export function MyEventsScreen(): React.JSX.Element {
+  const { theme } = useAppTheme();
+  const styles = useStyles(createStyles);
   const { data, isLoading, isError, error, hasNextPage, fetchNextPage, isFetchingNextPage } =
     useGetMyEvents(10);
 
@@ -63,36 +66,37 @@ export function MyEventsScreen(): React.JSX.Element {
   );
 }
 
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: theme.colors.background,
-  },
-  pageTitle: {
-    fontSize: 24,
-    fontWeight: 'bold',
-    color: theme.colors.black,
-    marginHorizontal: theme.spacing.xl,
-    marginVertical: theme.spacing.md,
-  },
-  listContent: {
-    paddingHorizontal: theme.spacing.xl,
-    paddingBottom: theme.spacing.xxl,
-  },
-  loader: {
-    marginTop: theme.spacing.xl,
-  },
-  footerLoader: {
-    marginVertical: theme.spacing.md,
-  },
-  errorText: {
-    color: theme.colors.danger,
-    textAlign: 'center',
-    marginTop: theme.spacing.xl,
-  },
-  emptyText: {
-    color: theme.colors.grey,
-    textAlign: 'center',
-    marginTop: theme.spacing.xl,
-  },
-});
+const createStyles = (theme: AppTheme) =>
+  StyleSheet.create({
+    container: {
+      flex: 1,
+      backgroundColor: theme.colors.background,
+    },
+    pageTitle: {
+      fontSize: 24,
+      fontWeight: 'bold',
+      color: theme.colors.text,
+      marginHorizontal: theme.spacing.xl,
+      marginVertical: theme.spacing.md,
+    },
+    listContent: {
+      paddingHorizontal: theme.spacing.xl,
+      paddingBottom: theme.spacing.xxl,
+    },
+    loader: {
+      marginTop: theme.spacing.xl,
+    },
+    footerLoader: {
+      marginVertical: theme.spacing.md,
+    },
+    errorText: {
+      color: theme.colors.danger,
+      textAlign: 'center',
+      marginTop: theme.spacing.xl,
+    },
+    emptyText: {
+      color: theme.colors.grey,
+      textAlign: 'center',
+      marginTop: theme.spacing.xl,
+    },
+  });

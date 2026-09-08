@@ -9,7 +9,8 @@ import { AppText } from '@/components/typography/AppText';
 import { AppButton } from '@/components/buttons/AppButton';
 import { AppInput } from '@/components/inputs/AppInput';
 import { AppKeyboardAvoidingView } from '@/components/layout/AppKeyboardAvoidingView';
-import { theme } from '@/shared/themes/theme';
+import { useAppTheme, useStyles } from '@/context/ThemeContext';
+import type { AppTheme } from '@/shared/themes/theme';
 import type { UserProfile } from '@/api/user/user.api';
 
 const profileSchema = z.object({
@@ -27,7 +28,10 @@ type ProfileFormData = z.infer<typeof profileSchema>;
 const handlePickImage = async () => {
   const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
   if (status !== ImagePicker.PermissionStatus.GRANTED) {
-    Alert.alert('Permission refusée', 'Nous avons besoin de votre permission pour accéder à vos photos.');
+    Alert.alert(
+      'Permission refusée',
+      'Nous avons besoin de votre permission pour accéder à vos photos.',
+    );
     return;
   }
 
@@ -58,6 +62,8 @@ export const ProfileEditModal = ({
   profile,
   isLoading = false,
 }: ProfileEditModalProps): React.JSX.Element | null => {
+  const { theme } = useAppTheme();
+  const styles = useStyles(createStyles);
   const {
     control,
     handleSubmit,
@@ -147,12 +153,7 @@ export const ProfileEditModal = ({
             />
 
             <View style={styles.actions}>
-              <AppButton
-                text="Annuler"
-                variant="danger"
-                onPress={onClose}
-                disabled={isLoading}
-              />
+              <AppButton text="Annuler" variant="danger" onPress={onClose} disabled={isLoading} />
               <View style={styles.buttonSpacer} />
               <AppButton
                 text="Enregistrer"
@@ -170,54 +171,55 @@ export const ProfileEditModal = ({
   );
 };
 
-const styles = StyleSheet.create({
-  overlay: {
-    flex: 1,
-    backgroundColor: 'rgba(0, 0, 0, 0.5)',
-    justifyContent: 'center',
-    padding: theme.spacing.lg,
-  },
-  container: {
-    backgroundColor: theme.colors.white,
-    borderRadius: theme.radius.lg,
-    overflow: 'hidden',
-    ...theme.shadows.card,
-    maxHeight: '80%',
-  },
-  header: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    padding: theme.spacing.lg,
-    borderBottomWidth: 1,
-    borderBottomColor: theme.colors.lightGrey,
-  },
-  title: {
-    fontSize: 20,
-    fontWeight: 'bold',
-    color: theme.colors.black,
-  },
-  closeButton: {
-    padding: theme.spacing.xs,
-  },
-  content: {
-    padding: theme.spacing.lg,
-  },
-  inputLabel: {
-    fontSize: 14,
-    fontWeight: '600',
-    color: theme.colors.black,
-    marginBottom: theme.spacing.sm,
-  },
-  imagePickerSection: {
-    marginBottom: theme.spacing.lg,
-  },
-  actions: {
-    flexDirection: 'row',
-    marginTop: theme.spacing.xl,
-    paddingBottom: theme.spacing.xl,
-  },
-  buttonSpacer: {
-    width: theme.spacing.md,
-  },
-});
+const createStyles = (theme: AppTheme) =>
+  StyleSheet.create({
+    overlay: {
+      flex: 1,
+      backgroundColor: 'rgba(0, 0, 0, 0.5)',
+      justifyContent: 'center',
+      padding: theme.spacing.lg,
+    },
+    container: {
+      backgroundColor: theme.colors.white,
+      borderRadius: theme.radius.lg,
+      overflow: 'hidden',
+      ...theme.shadows.card,
+      maxHeight: '80%',
+    },
+    header: {
+      flexDirection: 'row',
+      justifyContent: 'space-between',
+      alignItems: 'center',
+      padding: theme.spacing.lg,
+      borderBottomWidth: 1,
+      borderBottomColor: theme.colors.lightGrey,
+    },
+    title: {
+      fontSize: 20,
+      fontWeight: 'bold',
+      color: theme.colors.text,
+    },
+    closeButton: {
+      padding: theme.spacing.xs,
+    },
+    content: {
+      padding: theme.spacing.lg,
+    },
+    inputLabel: {
+      fontSize: 14,
+      fontWeight: '600',
+      color: theme.colors.text,
+      marginBottom: theme.spacing.sm,
+    },
+    imagePickerSection: {
+      marginBottom: theme.spacing.lg,
+    },
+    actions: {
+      flexDirection: 'row',
+      marginTop: theme.spacing.xl,
+      paddingBottom: theme.spacing.xl,
+    },
+    buttonSpacer: {
+      width: theme.spacing.md,
+    },
+  });

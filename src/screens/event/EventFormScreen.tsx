@@ -4,7 +4,8 @@ import { AppKeyboardScrollView } from '@/components/layout/AppKeyboardScrollView
 import { AppText } from '@/components/typography/AppText';
 import { AppButton } from '@/components/buttons/AppButton';
 import AppHeader from '@/components/layout/AppHeader';
-import { theme } from '@/shared/themes/theme';
+import { useAppTheme, useStyles } from '@/context/ThemeContext';
+import type { AppTheme } from '@/shared/themes/theme';
 import Feather from 'react-native-vector-icons/Feather';
 
 import type { CreateEventRequest } from '@volontariapp/contracts';
@@ -26,21 +27,24 @@ const EVENT_TYPE_OPTIONS: AppChipOption<EventType>[] = [
   {
     value: EventType.EVENT_TYPE_UNSPECIFIED,
     label: mapEventType(EventType.EVENT_TYPE_UNSPECIFIED),
-    color: theme.colors.grey,
+    color: '#9CA3AF', // grey
   },
   {
     value: EventType.EVENT_TYPE_ECOLOGY,
     label: mapEventType(EventType.EVENT_TYPE_ECOLOGY),
-    color: theme.colors.primaryEco,
+    color: '#22C55E', // primaryEco
   },
   {
     value: EventType.EVENT_TYPE_SOCIAL,
     label: mapEventType(EventType.EVENT_TYPE_SOCIAL),
-    color: theme.colors.primarySocio,
+    color: '#3B82F6', // primarySocio
   },
 ];
 
 export function EventFormScreen(): React.JSX.Element {
+  const { theme } = useAppTheme();
+  const styles = useStyles(createStyles);
+
   const mutation = useCreateEvent();
   const queryClient = useQueryClient();
   const navigation = useNavigation();
@@ -273,110 +277,111 @@ export function EventFormScreen(): React.JSX.Element {
   );
 }
 
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: theme.colors.background,
-  },
-  scrollContent: {
-    padding: theme.spacing.xl,
-  },
-  imagePlaceholder: {
-    width: '100%',
-    height: 180,
-    borderRadius: theme.radius.md,
-    borderWidth: 2,
-    borderColor: theme.colors.lightGrey,
-    borderStyle: 'dashed',
-    justifyContent: 'center',
-    alignItems: 'center',
-    backgroundColor: theme.colors.white,
-    marginBottom: theme.spacing.xl,
-  },
-  imagePlaceholderText: {
-    marginTop: theme.spacing.sm,
-    color: theme.colors.grey,
-    fontSize: 14,
-    fontWeight: '500',
-  },
-  title: {
-    fontSize: 28,
-    fontWeight: 'bold',
-    color: theme.colors.black,
-    marginBottom: theme.spacing.xl,
-  },
-  inputGroup: {
-    marginBottom: theme.spacing.lg,
-  },
-  label: {
-    fontSize: 14,
-    color: theme.colors.grey,
-    marginBottom: theme.spacing.xs,
-    fontWeight: '600',
-  },
-  input: {
-    backgroundColor: theme.colors.white,
-    borderWidth: 1,
-    borderColor: theme.colors.lightGrey,
-    borderRadius: theme.radius.md,
-    padding: theme.spacing.md,
-    fontSize: 16,
-    color: theme.colors.black,
-  },
-  textArea: {
-    height: 100,
-    textAlignVertical: 'top',
-  },
-  bottomSpacer: {
-    height: theme.spacing.xxl,
-  },
-  requirementsSection: {
-    marginTop: theme.spacing.lg,
-    marginBottom: theme.spacing.xl,
-  },
-  requirementsHeader: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    marginBottom: theme.spacing.md,
-  },
-  requirementsTitle: {
-    fontSize: 18,
-    fontWeight: 'bold',
-    color: theme.colors.black,
-  },
-  noRequirementsText: {
-    color: theme.colors.grey,
-    fontStyle: 'italic',
-    textAlign: 'center',
-    paddingVertical: theme.spacing.md,
-  },
-  publishContainer: {
-    marginTop: theme.spacing.md,
-    alignItems: 'center',
-    width: '100%',
-  },
-  publishButton: {
-    width: '100%',
-  },
-  publishButtonText: {
-    fontWeight: 'bold',
-    fontSize: 16,
-  },
-  testSection: {
-    marginTop: theme.spacing.xxl,
-    padding: theme.spacing.md,
-    backgroundColor: theme.colors.white,
-    borderRadius: theme.radius.md,
-    borderWidth: 1,
-    borderColor: theme.colors.lightGrey,
-    borderStyle: 'dashed',
-  },
-  testTitle: {
-    fontSize: 12,
-    color: theme.colors.grey,
-    marginBottom: theme.spacing.sm,
-    fontWeight: 'bold',
-    textTransform: 'uppercase',
-  },
-});
+const createStyles = (theme: AppTheme) =>
+  StyleSheet.create({
+    container: {
+      flex: 1,
+      backgroundColor: theme.colors.background,
+    },
+    scrollContent: {
+      padding: theme.spacing.xl,
+    },
+    imagePlaceholder: {
+      width: '100%',
+      height: 180,
+      borderRadius: theme.radius.md,
+      borderWidth: 2,
+      borderColor: theme.colors.lightGrey,
+      borderStyle: 'dashed',
+      justifyContent: 'center',
+      alignItems: 'center',
+      backgroundColor: theme.colors.white,
+      marginBottom: theme.spacing.xl,
+    },
+    imagePlaceholderText: {
+      marginTop: theme.spacing.sm,
+      color: theme.colors.grey,
+      fontSize: 14,
+      fontWeight: '500',
+    },
+    title: {
+      fontSize: 28,
+      fontWeight: 'bold',
+      color: theme.colors.text,
+      marginBottom: theme.spacing.xl,
+    },
+    inputGroup: {
+      marginBottom: theme.spacing.lg,
+    },
+    label: {
+      fontSize: 14,
+      color: theme.colors.grey,
+      marginBottom: theme.spacing.xs,
+      fontWeight: '600',
+    },
+    input: {
+      backgroundColor: theme.colors.white,
+      borderWidth: 1,
+      borderColor: theme.colors.lightGrey,
+      borderRadius: theme.radius.md,
+      padding: theme.spacing.md,
+      fontSize: 16,
+      color: theme.colors.text,
+    },
+    textArea: {
+      height: 100,
+      textAlignVertical: 'top',
+    },
+    bottomSpacer: {
+      height: theme.spacing.xxl,
+    },
+    requirementsSection: {
+      marginTop: theme.spacing.lg,
+      marginBottom: theme.spacing.xl,
+    },
+    requirementsHeader: {
+      flexDirection: 'row',
+      justifyContent: 'space-between',
+      alignItems: 'center',
+      marginBottom: theme.spacing.md,
+    },
+    requirementsTitle: {
+      fontSize: 18,
+      fontWeight: 'bold',
+      color: theme.colors.text,
+    },
+    noRequirementsText: {
+      color: theme.colors.grey,
+      fontStyle: 'italic',
+      textAlign: 'center',
+      paddingVertical: theme.spacing.md,
+    },
+    publishContainer: {
+      marginTop: theme.spacing.md,
+      alignItems: 'center',
+      width: '100%',
+    },
+    publishButton: {
+      width: '100%',
+    },
+    publishButtonText: {
+      fontWeight: 'bold',
+      fontSize: 16,
+    },
+    testSection: {
+      marginTop: theme.spacing.xxl,
+      padding: theme.spacing.md,
+      backgroundColor: theme.colors.white,
+      borderRadius: theme.radius.md,
+      borderWidth: 1,
+      borderColor: theme.colors.lightGrey,
+      borderStyle: 'dashed',
+    },
+    testTitle: {
+      fontSize: 12,
+      color: theme.colors.grey,
+      marginBottom: theme.spacing.sm,
+      fontWeight: 'bold',
+      textTransform: 'uppercase',
+    },
+  });

@@ -3,7 +3,8 @@ import { View, StyleSheet, Pressable } from 'react-native';
 import { Image } from 'expo-image';
 import type { DimensionValue } from 'react-native';
 import { AppText } from '@/components/typography/AppText';
-import { theme } from '@/shared/themes/theme';
+import { useStyles } from '@/context/ThemeContext';
+import type { AppTheme } from '@/shared/themes/theme';
 import type { AppEvent } from '@/api/event/event.api';
 
 interface EventParticipantsProps {
@@ -15,6 +16,7 @@ export const EventParticipants = React.memo(function EventParticipants({
   event,
   onSeeMorePress,
 }: EventParticipantsProps): React.JSX.Element {
+  const styles = useStyles(createStyles);
   const { currentPart, maxPart, fillPercentage } = useMemo(() => {
     const current = Math.max(1, event.currentParticipants);
     const max = event.maxParticipants;
@@ -94,95 +96,96 @@ export const EventParticipants = React.memo(function EventParticipants({
   );
 });
 
-const styles = StyleSheet.create({
-  section: {
-    backgroundColor: theme.colors.white,
-    padding: theme.spacing.lg,
-    borderRadius: theme.radius.lg,
-    marginBottom: theme.spacing.lg,
-    ...theme.shadows.card,
-  },
-  header: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    marginBottom: theme.spacing.md,
-  },
-  title: {
-    ...theme.sectionTitle,
-    color: theme.colors.black,
-    fontWeight: theme.typography.fontWeight.bold,
-    textTransform: 'none',
-    letterSpacing: 0,
-  },
-  link: {
-    fontSize: theme.typography.fontSize.xs,
-    fontWeight: theme.typography.fontWeight.bold,
-    color: theme.colors.info,
-  },
-  linkPressed: {
-    opacity: 0.7,
-  },
-  contentRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    marginBottom: theme.spacing.lg,
-    minHeight: theme.components.avatar.md, // Sécurise la hauteur au lieu du height 40px brut
-  },
-  avatarsContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    // Suppression complète des bidouilles en position absolute et width magique
-  },
-  avatar: {
-    width: theme.components.avatar.md,
-    height: theme.components.avatar.md,
-    borderRadius: theme.radius.full,
-    borderWidth: 2,
-    borderColor: theme.colors.white,
-    backgroundColor: theme.colors.skeletonGrey, // skeleton en attente du load expo-image
-  },
-  avatarOverlap: {
-    marginLeft: -theme.spacing.md, // Token flexbox propre au lieu du calcul left: i * 20
-  },
-  remainingBadge: {
-    width: theme.components.avatar.md,
-    height: theme.components.avatar.md,
-    borderRadius: theme.radius.full,
-    borderWidth: 2,
-    borderColor: theme.colors.white,
-    backgroundColor: theme.colors.info,
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  remainingText: {
-    color: theme.colors.white,
-    fontSize: theme.typography.fontSize.xs,
-    fontWeight: theme.typography.fontWeight.bold,
-  },
-  statsContainer: {
-    alignItems: 'flex-end',
-  },
-  statsText: {
-    fontSize: theme.typography.fontSize.md,
-    fontWeight: theme.typography.fontWeight.bold,
-    color: theme.colors.black,
-  },
-  statsSubtext: {
-    fontSize: theme.typography.fontSize.xs,
-    color: theme.colors.grey,
-  },
-  progressBarBg: {
-    height: theme.components.progressBar.height,
-    backgroundColor: theme.colors.background,
-    borderRadius: theme.radius.sm,
-    width: '100%',
-    overflow: 'hidden',
-  },
-  progressBarFill: {
-    height: '100%',
-    backgroundColor: theme.colors.info,
-    borderRadius: theme.radius.sm,
-  },
-});
+const createStyles = (theme: AppTheme) =>
+  StyleSheet.create({
+    section: {
+      backgroundColor: theme.colors.white,
+      padding: theme.spacing.lg,
+      borderRadius: theme.radius.lg,
+      marginBottom: theme.spacing.lg,
+      ...theme.shadows.card,
+    },
+    header: {
+      flexDirection: 'row',
+      justifyContent: 'space-between',
+      alignItems: 'center',
+      marginBottom: theme.spacing.md,
+    },
+    title: {
+      ...theme.sectionTitle,
+      color: theme.colors.text,
+      fontWeight: theme.typography.fontWeight.bold,
+      textTransform: 'none',
+      letterSpacing: 0,
+    },
+    link: {
+      fontSize: theme.typography.fontSize.xs,
+      fontWeight: theme.typography.fontWeight.bold,
+      color: theme.colors.info,
+    },
+    linkPressed: {
+      opacity: 0.7,
+    },
+    contentRow: {
+      flexDirection: 'row',
+      justifyContent: 'space-between',
+      alignItems: 'center',
+      marginBottom: theme.spacing.lg,
+      minHeight: theme.components.avatar.md, // Sécurise la hauteur au lieu du height 40px brut
+    },
+    avatarsContainer: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      // Suppression complète des bidouilles en position absolute et width magique
+    },
+    avatar: {
+      width: theme.components.avatar.md,
+      height: theme.components.avatar.md,
+      borderRadius: theme.radius.full,
+      borderWidth: 2,
+      borderColor: theme.colors.white,
+      backgroundColor: theme.colors.skeletonGrey, // skeleton en attente du load expo-image
+    },
+    avatarOverlap: {
+      marginLeft: -theme.spacing.md, // Token flexbox propre au lieu du calcul left: i * 20
+    },
+    remainingBadge: {
+      width: theme.components.avatar.md,
+      height: theme.components.avatar.md,
+      borderRadius: theme.radius.full,
+      borderWidth: 2,
+      borderColor: theme.colors.white,
+      backgroundColor: theme.colors.info,
+      justifyContent: 'center',
+      alignItems: 'center',
+    },
+    remainingText: {
+      color: theme.colors.white,
+      fontSize: theme.typography.fontSize.xs,
+      fontWeight: theme.typography.fontWeight.bold,
+    },
+    statsContainer: {
+      alignItems: 'flex-end',
+    },
+    statsText: {
+      fontSize: theme.typography.fontSize.md,
+      fontWeight: theme.typography.fontWeight.bold,
+      color: theme.colors.text,
+    },
+    statsSubtext: {
+      fontSize: theme.typography.fontSize.xs,
+      color: theme.colors.grey,
+    },
+    progressBarBg: {
+      height: theme.components.progressBar.height,
+      backgroundColor: theme.colors.background,
+      borderRadius: theme.radius.sm,
+      width: '100%',
+      overflow: 'hidden',
+    },
+    progressBarFill: {
+      height: '100%',
+      backgroundColor: theme.colors.info,
+      borderRadius: theme.radius.sm,
+    },
+  });

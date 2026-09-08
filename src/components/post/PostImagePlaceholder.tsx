@@ -1,7 +1,8 @@
 import React from 'react';
 import { View, StyleSheet } from 'react-native';
 import { Image } from 'expo-image';
-import { theme } from '@/shared/themes/theme';
+import { useStyles } from '@/context/ThemeContext';
+import type { AppTheme } from '@/shared/themes/theme';
 import { getFakeEcologyImage } from '@/utils/fake-images.util';
 
 interface PostImagePlaceholderProps {
@@ -9,6 +10,7 @@ interface PostImagePlaceholderProps {
 }
 
 export function PostImagePlaceholder({ postId }: PostImagePlaceholderProps) {
+  const styles = useStyles(createStyles);
   const imageUrl = getFakeEcologyImage(postId);
 
   return (
@@ -18,17 +20,18 @@ export function PostImagePlaceholder({ postId }: PostImagePlaceholderProps) {
   );
 }
 
-const styles = StyleSheet.create({
-  container: {
-    width: '100%',
-    paddingBottom: theme.spacing.lg,
-  },
-  image: {
-    width: '100%',
-    height: 300,
-    backgroundColor: theme.colors.background,
-    borderTopWidth: 1,
-    borderBottomWidth: 1,
-    borderColor: theme.colors.lightGrey,
-  },
-});
+const createStyles = (theme: AppTheme) =>
+  StyleSheet.create({
+    container: {
+      width: '100%',
+      paddingBottom: theme.spacing.lg,
+    },
+    image: {
+      width: '100%',
+      height: 300,
+      backgroundColor: theme.colors.background,
+      borderTopWidth: 1,
+      borderBottomWidth: 1,
+      borderColor: theme.colors.lightGrey,
+    },
+  });

@@ -1,7 +1,8 @@
 import { View, StyleSheet } from 'react-native';
 import { AppText } from '@/components/typography/AppText';
 import { AppIcons } from '@/components/media/AppIcons';
-import { theme } from '@/shared/themes/theme';
+import { useAppTheme, useStyles } from '@/context/ThemeContext';
+import type { AppTheme } from '@/shared/themes/theme';
 import type { AppEvent } from '@/api/event/event.api';
 
 interface EventInfoCardsProps {
@@ -9,6 +10,8 @@ interface EventInfoCardsProps {
 }
 
 export function EventInfoCards({ event }: EventInfoCardsProps) {
+  const { theme } = useAppTheme();
+  const styles = useStyles(createStyles);
   let dateString = 'À définir';
   if (event.startAt) {
     try {
@@ -50,29 +53,30 @@ export function EventInfoCards({ event }: EventInfoCardsProps) {
   );
 }
 
-const styles = StyleSheet.create({
-  container: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    marginBottom: theme.spacing.lg,
-  },
-  card: {
-    flex: 1,
-    backgroundColor: theme.colors.white,
-    padding: theme.spacing.lg,
-    borderRadius: theme.radius.lg,
-    marginHorizontal: theme.spacing.xs,
-    ...theme.shadows.card,
-  },
-  label: {
-    fontSize: 12,
-    color: theme.colors.grey,
-    marginTop: theme.spacing.md,
-    marginBottom: theme.spacing.xs,
-  },
-  value: {
-    fontSize: 14,
-    fontWeight: theme.typography.fontWeight.bold,
-    color: theme.colors.black,
-  },
-});
+const createStyles = (theme: AppTheme) =>
+  StyleSheet.create({
+    container: {
+      flexDirection: 'row',
+      justifyContent: 'space-between',
+      marginBottom: theme.spacing.lg,
+    },
+    card: {
+      flex: 1,
+      backgroundColor: theme.colors.white,
+      padding: theme.spacing.lg,
+      borderRadius: theme.radius.lg,
+      marginHorizontal: theme.spacing.xs,
+      ...theme.shadows.card,
+    },
+    label: {
+      fontSize: 12,
+      color: theme.colors.grey,
+      marginTop: theme.spacing.md,
+      marginBottom: theme.spacing.xs,
+    },
+    value: {
+      fontSize: 14,
+      fontWeight: theme.typography.fontWeight.bold,
+      color: theme.colors.text,
+    },
+  });

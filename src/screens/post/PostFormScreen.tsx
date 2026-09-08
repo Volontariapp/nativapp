@@ -8,7 +8,8 @@ import { AppText } from '@/components/typography/AppText';
 import { AppInput } from '@/components/inputs/AppInput';
 import { AppButton } from '@/components/buttons/AppButton';
 import AppHeader from '@/components/layout/AppHeader';
-import { theme } from '@/shared/themes/theme';
+import { useAppTheme, useStyles } from '@/context/ThemeContext';
+import type { AppTheme } from '@/shared/themes/theme';
 import { useCreatePost } from '@/api/post/hooks';
 import { EventSelector } from '@/components/post/event-selector';
 import { useDebug } from '@/context/DebugContext';
@@ -23,6 +24,9 @@ const createPostSchema = z.object({
 type CreatePostFormData = z.infer<typeof createPostSchema>;
 
 export function PostFormScreen(): React.JSX.Element {
+  const { theme } = useAppTheme();
+  const styles = useStyles(createStyles);
+
   const navigation = useNavigation();
   const { mutateAsync: createPost, isPending } = useCreatePost();
   const { isDebugMode } = useDebug();
@@ -187,38 +191,39 @@ export function PostFormScreen(): React.JSX.Element {
   );
 }
 
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: theme.colors.background,
-  },
-  content: {
-    padding: theme.spacing.lg,
-  },
-  label: {
-    fontSize: 16,
-    fontWeight: 'bold',
-    marginBottom: theme.spacing.xs,
-    marginTop: theme.spacing.md,
-  },
-  submitButton: {
-    marginTop: theme.spacing.xl,
-  },
-  testSection: {
-    marginTop: theme.spacing.xxl,
-    padding: theme.spacing.md,
-    backgroundColor: theme.colors.white,
-    borderRadius: theme.radius.md,
-    borderWidth: 1,
-    borderColor: theme.colors.lightGrey,
-    borderStyle: 'dashed',
-    marginBottom: theme.spacing.xl,
-  },
-  testTitle: {
-    fontSize: 12,
-    color: theme.colors.grey,
-    marginBottom: theme.spacing.sm,
-    fontWeight: 'bold',
-    textTransform: 'uppercase',
-  },
-});
+const createStyles = (theme: AppTheme) =>
+  StyleSheet.create({
+    container: {
+      flex: 1,
+      backgroundColor: theme.colors.background,
+    },
+    content: {
+      padding: theme.spacing.lg,
+    },
+    label: {
+      fontSize: 16,
+      fontWeight: 'bold',
+      marginBottom: theme.spacing.xs,
+      marginTop: theme.spacing.md,
+    },
+    submitButton: {
+      marginTop: theme.spacing.xl,
+    },
+    testSection: {
+      marginTop: theme.spacing.xxl,
+      padding: theme.spacing.md,
+      backgroundColor: theme.colors.white,
+      borderRadius: theme.radius.md,
+      borderWidth: 1,
+      borderColor: theme.colors.lightGrey,
+      borderStyle: 'dashed',
+      marginBottom: theme.spacing.xl,
+    },
+    testTitle: {
+      fontSize: 12,
+      color: theme.colors.text,
+      marginBottom: theme.spacing.sm,
+      fontWeight: 'bold',
+      textTransform: 'uppercase',
+    },
+  });

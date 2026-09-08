@@ -16,7 +16,8 @@ import {
   EventCard,
 } from '@/components';
 import { useAuth } from '@/context/AuthContext';
-import { theme } from '@/shared/themes/theme';
+import { useAppTheme, useStyles } from '@/context/ThemeContext';
+import type { AppTheme } from '@/shared/themes/theme';
 import { useProfile } from '@/api/user/hooks/use-profile';
 import { useUpdateProfile } from '@/api/user/hooks/use-update-profile';
 import { useGetMyEvents } from '@/api/event/hooks/use-get-my-events';
@@ -35,6 +36,9 @@ const handleSettingsPress = () => {
 };
 
 export function ProfileScreen(): React.JSX.Element {
+  const { theme } = useAppTheme();
+  const styles = useStyles(createStyles);
+
   const [isEditModalVisible, setIsEditModalVisible] = useState(false);
   const [activeTab, setActiveTab] = useState<'participated' | 'created' | 'wished'>('participated');
   const { logout } = useAuth();
@@ -110,7 +114,7 @@ export function ProfileScreen(): React.JSX.Element {
               borderRadius: 20,
             },
             text: {
-              color: theme.colors.black,
+              color: theme.colors.text,
               fontWeight: 'bold',
             },
           },
@@ -130,7 +134,7 @@ export function ProfileScreen(): React.JSX.Element {
               borderRadius: 20,
             },
             text: {
-              color: theme.colors.black,
+              color: theme.colors.text,
               fontWeight: 'bold',
             },
           },
@@ -342,61 +346,62 @@ export function ProfileScreen(): React.JSX.Element {
   );
 }
 
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: theme.colors.background,
-  },
-  scrollView: {
-    flex: 1,
-  },
-  scrollContent: {
-    paddingHorizontal: theme.spacing.xl,
-    paddingTop: theme.spacing.xl,
-    paddingBottom: theme.spacing.xxl * 2,
-  },
-  center: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-    padding: theme.spacing.xl,
-  },
-  tabBar: {
-    flexDirection: 'row',
-    justifyContent: 'space-around',
-    marginVertical: theme.spacing.lg,
-    paddingHorizontal: theme.spacing.xl,
-  },
-  settingsHeader: {
-    flexDirection: 'row',
-    justifyContent: 'flex-end',
-    marginBottom: -20,
-    zIndex: 1,
-  },
-  editButtonContainer: {
-    flexDirection: 'row',
-    justifyContent: 'flex-end',
-    marginTop: theme.spacing.xs,
-  },
-  actions: {
-    marginTop: theme.spacing.md,
-  },
-  buttonSpacer: {
-    height: theme.spacing.md,
-  },
-  errorText: {
-    color: theme.colors.danger,
-    fontSize: 16,
-    textAlign: 'center',
-  },
-  emptyText: {
-    color: theme.colors.grey,
-    fontStyle: 'italic',
-    textAlign: 'center',
-    marginTop: theme.spacing.sm,
-  },
-  seeMoreContainer: {
-    alignItems: 'center',
-    marginTop: theme.spacing.sm,
-  },
-});
+const createStyles = (theme: AppTheme) =>
+  StyleSheet.create({
+    container: {
+      flex: 1,
+      backgroundColor: theme.colors.background,
+    },
+    scrollView: {
+      flex: 1,
+    },
+    scrollContent: {
+      paddingHorizontal: theme.spacing.xl,
+      paddingTop: theme.spacing.xl,
+      paddingBottom: theme.spacing.xxl * 2,
+    },
+    center: {
+      flex: 1,
+      justifyContent: 'center',
+      alignItems: 'center',
+      padding: theme.spacing.xl,
+    },
+    tabBar: {
+      flexDirection: 'row',
+      justifyContent: 'space-around',
+      marginVertical: theme.spacing.lg,
+      paddingHorizontal: theme.spacing.xl,
+    },
+    settingsHeader: {
+      flexDirection: 'row',
+      justifyContent: 'flex-end',
+      marginBottom: -20,
+      zIndex: 1,
+    },
+    editButtonContainer: {
+      flexDirection: 'row',
+      justifyContent: 'flex-end',
+      marginTop: theme.spacing.xs,
+    },
+    actions: {
+      marginTop: theme.spacing.md,
+    },
+    buttonSpacer: {
+      height: theme.spacing.md,
+    },
+    errorText: {
+      color: theme.colors.danger,
+      fontSize: 16,
+      textAlign: 'center',
+    },
+    emptyText: {
+      color: theme.colors.grey,
+      fontStyle: 'italic',
+      textAlign: 'center',
+      marginTop: theme.spacing.sm,
+    },
+    seeMoreContainer: {
+      alignItems: 'center',
+      marginTop: theme.spacing.sm,
+    },
+  });

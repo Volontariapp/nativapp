@@ -4,7 +4,8 @@ import { useNavigation } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import type { MainStackParamList } from '@/navigation/stacks/MainStack';
 import { AppText } from '@/components/typography/AppText';
-import { theme } from '@/shared/themes/theme';
+import { useAppTheme, useStyles } from '@/context/ThemeContext';
+import type { AppTheme } from '@/shared/themes/theme';
 import type { AppEvent } from '@/api/event/event.api';
 import { mapEventType } from '@/shared/lib/event-mappers.utils';
 import { EventType } from '@volontariapp/contracts';
@@ -19,6 +20,8 @@ export interface EventCardProps {
 }
 
 export function WishedEventCard({ event }: EventCardProps): React.JSX.Element {
+  const { theme } = useAppTheme();
+  const styles = useStyles(createStyles);
   const { unwish } = useUserSocialActions();
   const navigation = useNavigation<NativeStackNavigationProp<MainStackParamList>>();
 
@@ -58,7 +61,9 @@ export function WishedEventCard({ event }: EventCardProps): React.JSX.Element {
     <TouchableOpacity
       style={styles.card}
       activeOpacity={0.8}
-      onPress={() => { navigation.navigate('EventDetail', { event }); }}
+      onPress={() => {
+        navigation.navigate('EventDetail', { event });
+      }}
     >
       <View style={[styles.imageContainer, { backgroundColor: typeBg }]}>
         <Image
@@ -109,67 +114,68 @@ export function WishedEventCard({ event }: EventCardProps): React.JSX.Element {
   );
 }
 
-const styles = StyleSheet.create({
-  card: {
-    backgroundColor: theme.colors.white,
-    padding: theme.spacing.md,
-    marginBottom: theme.spacing.md,
-    flexDirection: 'row',
-    alignItems: 'center',
-    ...theme.shadows.card,
-    borderRadius: 40,
-  },
-  imageContainer: {
-    width: 70,
-    height: 70,
-    borderRadius: 15,
-    justifyContent: 'center',
-    alignItems: 'center',
-    marginRight: theme.spacing.md,
-    overflow: 'hidden',
-  },
-  image: {
-    width: '100%',
-    height: '100%',
-    resizeMode: 'cover',
-  },
-  content: {
-    flex: 1,
-  },
-  tag: {
-    alignSelf: 'flex-start',
-    paddingHorizontal: theme.spacing.sm,
-    paddingVertical: 2,
-    borderRadius: 10,
-    marginBottom: 4,
-  },
-  tagText: {
-    fontSize: 10,
-    fontWeight: 'bold',
-  },
-  title: {
-    fontSize: 16,
-    fontWeight: 'bold',
-    color: theme.colors.black,
-    marginBottom: 4,
-    // Add underline if desired, but image doesn't strictly require it
-  },
-  detailRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginBottom: 2,
-  },
-  detailText: {
-    fontSize: 12,
-    color: theme.colors.grey,
-    marginLeft: 6,
-    flex: 1,
-  },
-  trash: {
-    position: 'absolute',
-    right: 10,
-    padding: 5,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-});
+const createStyles = (theme: AppTheme) =>
+  StyleSheet.create({
+    card: {
+      backgroundColor: theme.colors.white,
+      padding: theme.spacing.md,
+      marginBottom: theme.spacing.md,
+      flexDirection: 'row',
+      alignItems: 'center',
+      ...theme.shadows.card,
+      borderRadius: 40,
+    },
+    imageContainer: {
+      width: 70,
+      height: 70,
+      borderRadius: 15,
+      justifyContent: 'center',
+      alignItems: 'center',
+      marginRight: theme.spacing.md,
+      overflow: 'hidden',
+    },
+    image: {
+      width: '100%',
+      height: '100%',
+      resizeMode: 'cover',
+    },
+    content: {
+      flex: 1,
+    },
+    tag: {
+      alignSelf: 'flex-start',
+      paddingHorizontal: theme.spacing.sm,
+      paddingVertical: 2,
+      borderRadius: 10,
+      marginBottom: 4,
+    },
+    tagText: {
+      fontSize: 10,
+      fontWeight: 'bold',
+    },
+    title: {
+      fontSize: 16,
+      fontWeight: 'bold',
+      color: theme.colors.text,
+      marginBottom: 4,
+      // Add underline if desired, but image doesn't strictly require it
+    },
+    detailRow: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      marginBottom: 2,
+    },
+    detailText: {
+      fontSize: 12,
+      color: theme.colors.grey,
+      marginLeft: 6,
+      flex: 1,
+    },
+    trash: {
+      position: 'absolute',
+      right: 10,
+      padding: 5,
+      alignItems: 'center',
+      justifyContent: 'center',
+    },
+  });

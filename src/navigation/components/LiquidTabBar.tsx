@@ -12,7 +12,8 @@ import Animated, {
 } from 'react-native-reanimated';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { BlurView } from 'expo-blur';
-import { theme } from '@/shared/themes/theme';
+import { useAppTheme, useStyles } from '@/context/ThemeContext';
+import type { AppTheme } from '@/shared/themes/theme';
 import { tabBarScale, tabBarTranslateY } from '../hooks/useScrollTabBar';
 
 const { width: SCREEN_WIDTH } = Dimensions.get('window');
@@ -28,6 +29,8 @@ export function LiquidTabBar({
 }: BottomTabBarProps): React.JSX.Element {
   const insets = useSafeAreaInsets();
   const activeIndex = useSharedValue(state.index);
+  const { theme, themeMode } = useAppTheme();
+  const styles = useStyles(createStyles);
 
   useEffect(() => {
     activeIndex.value = withSpring(state.index, {
@@ -68,7 +71,11 @@ export function LiquidTabBar({
       style={[styles.container, { bottom: Math.max(insets.bottom, 15) }, containerAnimatedStyle]}
     >
       {/* Background Pill */}
-      <BlurView intensity={80} tint="light" style={styles.backgroundPill} />
+      <BlurView
+        intensity={80}
+        tint={themeMode === 'dark' ? 'dark' : 'light'}
+        style={styles.backgroundPill}
+      />
 
       {/* Animated Liquid Indicator */}
       <Animated.View style={[styles.indicator, indicatorStyle]}>
@@ -112,7 +119,7 @@ export function LiquidTabBar({
                 <IconWrapper isFocused={isFocused} activeIndex={activeIndex} index={index}>
                   {options.tabBarIcon({
                     focused: isFocused,
-                    color: isFocused ? theme.colors.white : theme.colors.grey,
+                    color: isFocused ? theme.colors.text : theme.colors.grey,
                     size: 26,
                   })}
                 </IconWrapper>
@@ -157,61 +164,61 @@ function IconWrapper({
   return <Animated.View style={animatedStyle}>{children}</Animated.View>;
 }
 
-const styles = StyleSheet.create({
-  container: {
-    position: 'absolute',
-    alignSelf: 'center',
-    width: TAB_BAR_WIDTH,
-    height: TAB_BAR_HEIGHT,
-    elevation: 10,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 10 },
-    shadowOpacity: 0.4,
-    shadowRadius: 20,
-    zIndex: 100,
-  },
-  backgroundPill: {
-    ...StyleSheet.absoluteFillObject,
-    borderRadius: TAB_BAR_HEIGHT / 2,
-    borderWidth: 1,
-    borderColor: 'rgba(255,255,255,0.15)', // Subtle glass edge
-    overflow: 'hidden',
-  },
-  tabsContainer: {
-    flex: 1,
-    flexDirection: 'row',
-    alignItems: 'center',
-  },
-  tabButton: {
-    flex: 1,
-    height: '100%',
-    alignItems: 'center',
-    justifyContent: 'center',
-    zIndex: 2,
-  },
-  indicator: {
-    position: 'absolute',
-    top: (TAB_BAR_HEIGHT - INDICATOR_SIZE) / 2,
-    left: 0,
-    width: INDICATOR_SIZE,
-    height: INDICATOR_SIZE,
-    borderRadius: INDICATOR_SIZE / 2,
-    backgroundColor: 'rgba(255, 255, 255, 0.15)', // Glassy overlay
-    alignItems: 'center',
-    justifyContent: 'center',
-    zIndex: 1,
-    // Glowing border from the image
-    borderWidth: 1.5,
-    borderColor: 'rgba(255, 255, 255, 0.4)',
-    shadowColor: '#5BC0F8', // subtle blue/white glow
-    shadowOffset: { width: 0, height: 0 },
-    shadowOpacity: 0.6,
-    shadowRadius: 8,
-  },
-  indicatorInner: {
-    width: '100%',
-    height: '100%',
-    borderRadius: 999, // Force un rond parfait peu importe la taille parente
-    backgroundColor: 'transparent',
-  },
-});
+const createStyles = (theme: AppTheme) =>
+  StyleSheet.create({
+    container: {
+      position: 'absolute',
+      alignSelf: 'center',
+      width: TAB_BAR_WIDTH,
+      height: TAB_BAR_HEIGHT,
+      elevation: 10,
+      shadowColor: '#000',
+      shadowOffset: { width: 0, height: 10 },
+      shadowOpacity: 0.4,
+      shadowRadius: 20,
+      zIndex: 100,
+    },
+    backgroundPill: {
+      ...StyleSheet.absoluteFillObject,
+      borderRadius: TAB_BAR_HEIGHT / 2,
+      borderWidth: 1,
+      borderColor: theme.colors.whiteOverlay,
+      overflow: 'hidden',
+    },
+    tabsContainer: {
+      flex: 1,
+      flexDirection: 'row',
+      alignItems: 'center',
+    },
+    tabButton: {
+      flex: 1,
+      height: '100%',
+      alignItems: 'center',
+      justifyContent: 'center',
+      zIndex: 2,
+    },
+    indicator: {
+      position: 'absolute',
+      top: (TAB_BAR_HEIGHT - INDICATOR_SIZE) / 2,
+      left: 0,
+      width: INDICATOR_SIZE,
+      height: INDICATOR_SIZE,
+      borderRadius: INDICATOR_SIZE / 2,
+      backgroundColor: theme.colors.whiteOverlay,
+      alignItems: 'center',
+      justifyContent: 'center',
+      zIndex: 1,
+      borderWidth: 1.5,
+      borderColor: 'rgba(255, 255, 255, 0.4)',
+      shadowColor: '#5BC0F8', // subtle blue/white glow
+      shadowOffset: { width: 0, height: 0 },
+      shadowOpacity: 0.6,
+      shadowRadius: 8,
+    },
+    indicatorInner: {
+      width: '100%',
+      height: '100%',
+      borderRadius: 999,
+      backgroundColor: 'transparent',
+    },
+  });

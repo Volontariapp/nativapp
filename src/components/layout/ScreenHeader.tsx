@@ -1,7 +1,8 @@
 import React from 'react';
 import { View, StyleSheet } from 'react-native';
 import { AppText } from '@/components/typography/AppText';
-import { theme } from '@/shared/themes/theme';
+import { useStyles } from '@/context/ThemeContext';
+import type { AppTheme } from '@/shared/themes/theme';
 
 interface ScreenHeaderProps {
   title: string;
@@ -9,6 +10,7 @@ interface ScreenHeaderProps {
 }
 
 export function ScreenHeader({ title, subtitle }: ScreenHeaderProps): React.JSX.Element {
+  const styles = useStyles(createStyles);
   return (
     <View style={styles.container}>
       <AppText style={styles.title}>{title}</AppText>
@@ -19,21 +21,22 @@ export function ScreenHeader({ title, subtitle }: ScreenHeaderProps): React.JSX.
   );
 }
 
-const styles = StyleSheet.create({
-  container: {
-    paddingHorizontal: theme.spacing.md,
-    paddingTop: theme.spacing.md,
-    paddingBottom: theme.spacing.xs,
-  },
-  title: {
-    fontSize: theme.typography.fontSize.sm,
-    fontWeight: theme.typography.fontWeight.bold,
-    color: theme.colors.background,
-    letterSpacing: -0.5,
-  },
-  subtitle: {
-    fontSize: theme.typography.fontSize.md,
-    color: theme.colors.grey,
-    marginTop: theme.spacing.xs,
-  },
-});
+const createStyles = (theme: AppTheme) =>
+  StyleSheet.create({
+    container: {
+      paddingHorizontal: theme.spacing.md,
+      paddingTop: theme.spacing.md,
+      paddingBottom: theme.spacing.xs,
+    },
+    title: {
+      fontSize: theme.typography.fontSize.sm,
+      fontWeight: theme.typography.fontWeight.bold,
+      color: theme.colors.background,
+      letterSpacing: -0.5,
+    },
+    subtitle: {
+      fontSize: theme.typography.fontSize.md,
+      color: theme.colors.grey,
+      marginTop: theme.spacing.xs,
+    },
+  });

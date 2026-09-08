@@ -18,7 +18,8 @@ import type { MainStackParamList } from '../../navigation/stacks/MainStack';
 
 import { AppText } from '@/components/typography/AppText';
 import { AppIcons } from '@/components/media/AppIcons';
-import { theme } from '@/shared/themes/theme';
+import { useAppTheme, useStyles } from '@/context/ThemeContext';
+import type { AppTheme } from '@/shared/themes/theme';
 import { EventState } from '@volontariapp/contracts';
 import type { AppEvent } from '@/api/event/event.api';
 import { mapEventType } from '@/shared/lib/event-mappers.utils';
@@ -38,6 +39,8 @@ import AppMap from '@/components/map/AppMap';
 type Props = NativeStackScreenProps<MainStackParamList, 'EventDetail'>;
 
 export function EventDetailScreen({ route }: Props) {
+  const { theme } = useAppTheme();
+  const styles = useStyles(createStyles);
   const event: AppEvent = route.params.event;
   const navigation = useNavigation<NativeStackNavigationProp<MainStackParamList>>();
 
@@ -212,115 +215,116 @@ export function EventDetailScreen({ route }: Props) {
   );
 }
 
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: theme.colors.background,
-  },
-  topBar: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    paddingHorizontal: theme.spacing.lg,
-    paddingBottom: theme.spacing.md,
-    backgroundColor: theme.colors.background,
-    zIndex: 10,
-  },
-  backButton: {
-    padding: theme.spacing.xs,
-  },
-  topBarTitle: {
-    fontSize: 16,
-    fontWeight: theme.typography.fontWeight.bold,
-    color: theme.colors.primarySocio,
-    flex: 1,
-    textAlign: 'center',
-    marginHorizontal: theme.spacing.md,
-  },
-  placeholderAvatar: {
-    width: 32,
-    height: 32,
-    borderRadius: 16,
-    backgroundColor: theme.colors.lightGrey,
-  },
-  scrollContent: {
-    paddingBottom: 100, // Make room for bottom bar
-  },
-  content: {
-    padding: theme.spacing.xl,
-  },
-  categoryTitle: {
-    fontSize: 12,
-    fontWeight: theme.typography.fontWeight.bold,
-    color: theme.colors.primarySocio,
-    textTransform: 'uppercase',
-    letterSpacing: 1,
-    marginBottom: theme.spacing.xs,
-  },
-  title: {
-    fontSize: 24,
-    fontWeight: theme.typography.fontWeight.bold,
-    color: theme.colors.black,
-    marginBottom: theme.spacing.lg,
-  },
-  section: {
-    backgroundColor: theme.colors.white,
-    padding: theme.spacing.lg,
-    borderRadius: theme.radius.lg,
-    marginBottom: theme.spacing.lg,
-    ...theme.shadows.card,
-  },
-  sectionTitle: {
-    ...theme.sectionTitle,
-    marginBottom: theme.spacing.md,
-    color: theme.colors.black,
-    fontWeight: theme.typography.fontWeight.bold,
-    textTransform: 'none',
-    letterSpacing: 0,
-  },
-  descriptionText: {
-    fontSize: 14,
-    lineHeight: 22,
-    color: theme.colors.grey,
-    fontFamily: theme.typography.fonts.primary,
-    marginBottom: theme.spacing.lg,
-  },
-  bottomBar: {
-    position: 'absolute',
-    bottom: 0,
-    left: 0,
-    right: 0,
-    padding: theme.spacing.xl,
-    paddingBottom: 32,
-    backgroundColor: theme.colors.white,
-    borderTopLeftRadius: 24,
-    borderTopRightRadius: 24,
-    ...theme.shadows.card,
-  },
-  joinButton: {
-    backgroundColor: theme.colors.primarySocio,
-    borderRadius: theme.radius.full,
-    paddingVertical: 16,
-    flexDirection: 'row',
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  joinedButton: {
-    backgroundColor: theme.colors.danger,
-  },
-  joinButtonText: {
-    color: theme.colors.white,
-    fontWeight: theme.typography.fontWeight.bold,
-    fontSize: 16,
-    marginLeft: theme.spacing.sm,
-  },
-  mapSection: {
-    marginTop: theme.spacing.lg,
-  },
-  mapContainer: {
-    height: 200,
-    borderRadius: theme.radius.lg,
-    overflow: 'hidden',
-    ...theme.shadows.card,
-  },
-});
+const createStyles = (theme: AppTheme) =>
+  StyleSheet.create({
+    container: {
+      flex: 1,
+      backgroundColor: theme.colors.background,
+    },
+    topBar: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      justifyContent: 'space-between',
+      paddingHorizontal: theme.spacing.lg,
+      paddingBottom: theme.spacing.md,
+      backgroundColor: theme.colors.background,
+      zIndex: 10,
+    },
+    backButton: {
+      padding: theme.spacing.xs,
+    },
+    topBarTitle: {
+      fontSize: 16,
+      fontWeight: theme.typography.fontWeight.bold,
+      color: theme.colors.primarySocio,
+      flex: 1,
+      textAlign: 'center',
+      marginHorizontal: theme.spacing.md,
+    },
+    placeholderAvatar: {
+      width: 32,
+      height: 32,
+      borderRadius: 16,
+      backgroundColor: theme.colors.lightGrey,
+    },
+    scrollContent: {
+      paddingBottom: 100, // Make room for bottom bar
+    },
+    content: {
+      padding: theme.spacing.xl,
+    },
+    categoryTitle: {
+      fontSize: 12,
+      fontWeight: theme.typography.fontWeight.bold,
+      color: theme.colors.primarySocio,
+      textTransform: 'uppercase',
+      letterSpacing: 1,
+      marginBottom: theme.spacing.xs,
+    },
+    title: {
+      fontSize: 24,
+      fontWeight: theme.typography.fontWeight.bold,
+      color: theme.colors.text,
+      marginBottom: theme.spacing.lg,
+    },
+    section: {
+      backgroundColor: theme.colors.white,
+      padding: theme.spacing.lg,
+      borderRadius: theme.radius.lg,
+      marginBottom: theme.spacing.lg,
+      ...theme.shadows.card,
+    },
+    sectionTitle: {
+      ...theme.sectionTitle,
+      marginBottom: theme.spacing.md,
+      color: theme.colors.text,
+      fontWeight: theme.typography.fontWeight.bold,
+      textTransform: 'none',
+      letterSpacing: 0,
+    },
+    descriptionText: {
+      fontSize: 14,
+      lineHeight: 22,
+      color: theme.colors.grey,
+      fontFamily: theme.typography.fonts.primary,
+      marginBottom: theme.spacing.lg,
+    },
+    bottomBar: {
+      position: 'absolute',
+      bottom: 0,
+      left: 0,
+      right: 0,
+      padding: theme.spacing.xl,
+      paddingBottom: 32,
+      backgroundColor: theme.colors.white,
+      borderTopLeftRadius: 24,
+      borderTopRightRadius: 24,
+      ...theme.shadows.card,
+    },
+    joinButton: {
+      backgroundColor: theme.colors.primarySocio,
+      borderRadius: theme.radius.full,
+      paddingVertical: 16,
+      flexDirection: 'row',
+      justifyContent: 'center',
+      alignItems: 'center',
+    },
+    joinedButton: {
+      backgroundColor: theme.colors.danger,
+    },
+    joinButtonText: {
+      color: theme.colors.white,
+      fontWeight: theme.typography.fontWeight.bold,
+      fontSize: 16,
+      marginLeft: theme.spacing.sm,
+    },
+    mapSection: {
+      marginTop: theme.spacing.lg,
+    },
+    mapContainer: {
+      height: 200,
+      borderRadius: theme.radius.lg,
+      overflow: 'hidden',
+      ...theme.shadows.card,
+    },
+  });

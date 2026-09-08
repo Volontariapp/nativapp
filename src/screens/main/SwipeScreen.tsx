@@ -9,7 +9,8 @@ import { EventCard } from '@/components/event/EventCard';
 import { config } from '@/shared/config/base-config';
 import AppHeader from '@/components/layout/AppHeader';
 import { AppIconsButton } from '@/components';
-import { theme } from '@/shared/themes/theme';
+import { useAppTheme, useStyles } from '@/context/ThemeContext';
+import type { AppTheme } from '@/shared/themes/theme';
 import type { AppEvent } from '@/api/event/event.api';
 import { useSwipeScreen } from './hooks/use-swipe-screen';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -18,17 +19,19 @@ import { Platform } from 'react-native';
 // ─── Sous-composants "State Views" ─────────────────────────────────────────
 
 function SwipeLoadingView(): React.JSX.Element {
+  const { theme, themeMode } = useAppTheme();
+  const styles = useStyles(createStyles);
   return (
     <View style={styles.container}>
-      <StatusBar style="light" />
-      <AppHeader showSettings dark />
+      <StatusBar style={themeMode === 'dark' ? 'light' : 'dark'} />
+      <AppHeader showSettings dark={themeMode === 'dark'} />
       <View style={styles.center}>
         <ActivityIndicator
           size="large"
           color={theme.colors.primaryEco}
           accessibilityLabel="Chargement des événements"
         />
-        <AppText style={[styles.message, { color: theme.colors.white }]}>
+        <AppText style={[styles.message, { color: theme.colors.text }]}>
           Chargement des événements...
         </AppText>
       </View>
@@ -37,24 +40,28 @@ function SwipeLoadingView(): React.JSX.Element {
 }
 
 function SwipeErrorView(): React.JSX.Element {
+  const { theme, themeMode } = useAppTheme();
+  const styles = useStyles(createStyles);
   return (
     <View style={styles.container}>
-      <StatusBar style="light" />
-      <AppHeader showSettings dark />
+      <StatusBar style={themeMode === 'dark' ? 'light' : 'dark'} />
+      <AppHeader showSettings dark={themeMode === 'dark'} />
       <View style={styles.center}>
-        <AppText style={{ color: theme.colors.white }}>Erreur lors du chargement.</AppText>
+        <AppText style={{ color: theme.colors.text }}>Erreur lors du chargement.</AppText>
       </View>
     </View>
   );
 }
 
 function SwipeEmptyView(): React.JSX.Element {
+  const { theme, themeMode } = useAppTheme();
+  const styles = useStyles(createStyles);
   return (
     <View style={styles.container}>
-      <StatusBar style="light" />
-      <AppHeader showSettings dark />
+      <StatusBar style={themeMode === 'dark' ? 'light' : 'dark'} />
+      <AppHeader showSettings dark={themeMode === 'dark'} />
       <View style={styles.center}>
-        <AppText variant="subtitle" style={{ color: theme.colors.white }}>
+        <AppText variant="subtitle" style={{ color: theme.colors.text }}>
           Aucun événement disponible pour le moment.
         </AppText>
       </View>
@@ -63,12 +70,14 @@ function SwipeEmptyView(): React.JSX.Element {
 }
 
 function SwipeEndView(): React.JSX.Element {
+  const { theme, themeMode } = useAppTheme();
+  const styles = useStyles(createStyles);
   return (
     <View style={styles.container}>
-      <StatusBar style="light" />
-      <AppHeader showSettings dark />
+      <StatusBar style={themeMode === 'dark' ? 'light' : 'dark'} />
+      <AppHeader showSettings dark={themeMode === 'dark'} />
       <View style={styles.center}>
-        <AppText variant="subtitle" style={{ color: theme.colors.white }}>
+        <AppText variant="subtitle" style={{ color: theme.colors.text }}>
           Plus d&apos;événement pour l&apos;instant.
         </AppText>
       </View>
@@ -111,6 +120,9 @@ export function SwipeScreen(): React.JSX.Element {
     handleLocationPress,
   } = useSwipeScreen();
 
+  const { theme, themeMode } = useAppTheme();
+  const styles = useStyles(createStyles);
+
   const insets = useSafeAreaInsets();
 
   // Calculate total height of the bottom tab bar
@@ -130,8 +142,8 @@ export function SwipeScreen(): React.JSX.Element {
 
   return (
     <View style={styles.container}>
-      <StatusBar style="light" />
-      <AppHeader showSettings dark />
+      <StatusBar style={themeMode === 'dark' ? 'light' : 'dark'} />
+      <AppHeader showSettings dark={themeMode === 'dark'} />
 
       <View style={styles.contentWrapper}>
         <View style={styles.swiperContainer}>
@@ -183,23 +195,23 @@ export function SwipeScreen(): React.JSX.Element {
         </View>
 
         <View style={[styles.buttonsContainer, { bottom: buttonsBottom }]} pointerEvents="box-none">
-          <View style={[styles.floatingButton, { backgroundColor: theme.colors.danger }]}>
+          <View style={[styles.floatingButton, { backgroundColor: theme.colors.white }]}>
             <AppIconsButton
               icon="x"
               size={64}
               variant="noBackground"
-              iconColor={theme.colors.white}
+              iconColor={theme.colors.danger}
               onPress={() => swiperRef.current?.swipeLeft()}
               accessibilityRole="button"
               accessibilityLabel="Passer cet événement"
             />
           </View>
-          <View style={[styles.floatingButton, { backgroundColor: theme.colors.success }]}>
+          <View style={[styles.floatingButton, { backgroundColor: theme.colors.white }]}>
             <AppIconsButton
               icon="heart"
               size={64}
               variant="noBackground"
-              iconColor={theme.colors.white}
+              iconColor={theme.colors.success}
               onPress={() => swiperRef.current?.swipeRight()}
               accessibilityRole="button"
               accessibilityLabel="Aimer cet événement"
@@ -213,87 +225,88 @@ export function SwipeScreen(): React.JSX.Element {
 
 // ─── Styles ────────────────────────────────────────────────────────────────
 
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: theme.colors.darkGreen,
-  },
-  center: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  contentWrapper: {
-    flex: 1,
-  },
-  swiperContainer: {
-    flex: 1,
-    paddingTop: theme.spacing.sm,
-    paddingHorizontal: theme.spacing.sm,
-    paddingBottom: 20, // Leave some room at bottom
-    zIndex: 1,
-  },
-  swiperInner: {
-    flex: 1,
-    backgroundColor: 'transparent',
-  },
-  card: {
-    top: 0,
-    left: 0,
-    bottom: 0,
-    right: 0,
-    width: '100%',
-    height: '100%',
-    backgroundColor: 'transparent', // Override internal Swiper white background
-    borderWidth: 0, // Override internal Swiper border
-    elevation: 0, // Remove Android shadow
-    shadowOpacity: 0, // Remove iOS shadow
-  },
-  buttonsContainer: {
-    position: 'absolute',
-    left: 0,
-    right: 0,
-    flexDirection: 'row',
-    justifyContent: 'space-evenly',
-    alignItems: 'center',
-    zIndex: 2,
-  },
-  floatingButton: {
-    ...theme.shadows.card,
-    borderRadius: theme.radius.full,
-    backgroundColor: theme.colors.white,
-  },
-  message: {
-    marginTop: theme.spacing.md,
-  },
-  likeWrapper: {
-    flexDirection: 'column',
-    alignItems: 'flex-start',
-    justifyContent: 'flex-start',
-    marginTop: -theme.spacing.sm,
-    marginLeft: -theme.spacing.sm,
-  },
-  likeLabel: {
-    borderColor: theme.colors.success,
-    color: theme.colors.success,
-    borderWidth: 4,
-    fontSize: theme.typography.fontSize.xl,
-    fontWeight: theme.typography.fontWeight.bold,
-    padding: theme.spacing.sm,
-  },
-  nopeWrapper: {
-    flexDirection: 'column',
-    alignItems: 'flex-end',
-    justifyContent: 'flex-start',
-    marginTop: -theme.spacing.sm,
-    marginRight: -theme.spacing.sm,
-  },
-  nopeLabel: {
-    borderColor: theme.colors.danger,
-    color: theme.colors.danger,
-    borderWidth: 4,
-    fontSize: theme.typography.fontSize.xl,
-    fontWeight: theme.typography.fontWeight.bold,
-    padding: theme.spacing.sm,
-  },
-});
+const createStyles = (theme: AppTheme) =>
+  StyleSheet.create({
+    container: {
+      flex: 1,
+      backgroundColor: theme.colors.background,
+    },
+    center: {
+      flex: 1,
+      justifyContent: 'center',
+      alignItems: 'center',
+    },
+    contentWrapper: {
+      flex: 1,
+    },
+    swiperContainer: {
+      flex: 1,
+      paddingTop: theme.spacing.sm,
+      paddingHorizontal: theme.spacing.sm,
+      paddingBottom: 20, // Leave some room at bottom
+      zIndex: 1,
+    },
+    swiperInner: {
+      flex: 1,
+      backgroundColor: 'transparent',
+    },
+    card: {
+      top: 0,
+      left: 0,
+      bottom: 0,
+      right: 0,
+      width: '100%',
+      height: '100%',
+      backgroundColor: 'transparent',
+      borderWidth: 0,
+      elevation: 0,
+      shadowOpacity: 0,
+    },
+    buttonsContainer: {
+      position: 'absolute',
+      left: 0,
+      right: 0,
+      flexDirection: 'row',
+      justifyContent: 'space-evenly',
+      alignItems: 'center',
+      zIndex: 2,
+    },
+    floatingButton: {
+      ...theme.shadows.card,
+      borderRadius: theme.radius.full,
+      backgroundColor: theme.colors.white,
+    },
+    message: {
+      marginTop: theme.spacing.md,
+    },
+    likeWrapper: {
+      flexDirection: 'column',
+      alignItems: 'flex-start',
+      justifyContent: 'flex-start',
+      marginTop: -theme.spacing.sm,
+      marginLeft: -theme.spacing.sm,
+    },
+    likeLabel: {
+      borderColor: theme.colors.success,
+      color: theme.colors.success,
+      borderWidth: 4,
+      fontSize: theme.typography.fontSize.xl,
+      fontWeight: theme.typography.fontWeight.bold,
+      padding: theme.spacing.sm,
+    },
+    nopeWrapper: {
+      flexDirection: 'column',
+      alignItems: 'flex-end',
+      justifyContent: 'flex-start',
+      marginTop: -theme.spacing.sm,
+      marginRight: -theme.spacing.sm,
+    },
+    nopeLabel: {
+      borderColor: theme.colors.danger,
+      color: theme.colors.danger,
+      borderWidth: 4,
+      fontSize: theme.typography.fontSize.xl,
+      fontWeight: theme.typography.fontWeight.bold,
+      padding: theme.spacing.sm,
+    },
+  });

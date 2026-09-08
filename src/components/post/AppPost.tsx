@@ -2,7 +2,8 @@ import React, { useState, useEffect } from 'react';
 import { View, Text, StyleSheet, Pressable } from 'react-native';
 import Icon from 'react-native-vector-icons/Feather';
 import Ionicons from 'react-native-vector-icons/Ionicons';
-import { theme } from '@/shared/themes/theme';
+import { useAppTheme, useStyles } from '@/context/ThemeContext';
+import type { AppTheme } from '@/shared/themes/theme';
 import type { PostWeb } from '@volontariapp/contracts';
 import { useGetPublicUser } from '@/api/user/hooks/use-get-public-user';
 import { useListComments } from '@/api/post/hooks/use-list-comments';
@@ -35,6 +36,9 @@ interface PostCardProps {
 }
 
 export default function AppPost({ post }: PostCardProps) {
+  const { theme } = useAppTheme();
+  const styles = useStyles(createStyles);
+
   const { data: author } = useGetPublicUser(post.authorId);
   const { data: commentsData } = useListComments(post.id);
   const { data: myLikesData } = useGetMyLikes();
@@ -188,57 +192,58 @@ export default function AppPost({ post }: PostCardProps) {
   );
 }
 
-const styles = StyleSheet.create({
-  card: {
-    backgroundColor: theme.colors.background,
-  },
-  imageWrapper: {
-    position: 'relative',
-  },
-  floatingHeart: {
-    ...StyleSheet.absoluteFillObject,
-    justifyContent: 'center',
-    alignItems: 'center',
-    zIndex: 10,
-    elevation: 10,
-  },
-  titleContainer: {
-    paddingHorizontal: theme.spacing.lg,
-    paddingTop: theme.spacing.sm,
-  },
-  title: {
-    fontSize: theme.typography.fontSize.md,
-    fontWeight: theme.typography.fontWeight.bold,
-    color: theme.colors.black,
-    fontFamily: theme.typography.fonts.primary,
-  },
-  content: {
-    paddingHorizontal: theme.spacing.lg,
-    paddingBottom: theme.spacing.md,
-  },
-  description: {
-    fontSize: theme.typography.fontSize.sm,
-    lineHeight: 20,
-    color: theme.colors.black,
-    fontFamily: theme.typography.fonts.primary,
-    marginBottom: theme.spacing.sm,
-  },
-  authorPseudo: {
-    fontWeight: theme.typography.fontWeight.bold,
-  },
-  commentsSection: {
-    marginTop: theme.spacing.xs,
-  },
-  eventLink: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginBottom: theme.spacing.sm,
-    gap: theme.spacing.xs,
-  },
-  eventText: {
-    fontSize: theme.typography.fontSize.xs,
-    color: theme.colors.primarySocio,
-    fontWeight: theme.typography.fontWeight.semibold,
-    fontFamily: theme.typography.fonts.primary,
-  },
-});
+const createStyles = (theme: AppTheme) =>
+  StyleSheet.create({
+    card: {
+      backgroundColor: theme.colors.background,
+    },
+    imageWrapper: {
+      position: 'relative',
+    },
+    floatingHeart: {
+      ...StyleSheet.absoluteFillObject,
+      justifyContent: 'center',
+      alignItems: 'center',
+      zIndex: 10,
+      elevation: 10,
+    },
+    titleContainer: {
+      paddingHorizontal: theme.spacing.lg,
+      paddingTop: theme.spacing.sm,
+    },
+    title: {
+      fontSize: theme.typography.fontSize.md,
+      fontWeight: theme.typography.fontWeight.bold,
+      color: theme.colors.text,
+      fontFamily: theme.typography.fonts.primary,
+    },
+    content: {
+      paddingHorizontal: theme.spacing.lg,
+      paddingBottom: theme.spacing.md,
+    },
+    description: {
+      fontSize: theme.typography.fontSize.sm,
+      lineHeight: 20,
+      color: theme.colors.text,
+      fontFamily: theme.typography.fonts.primary,
+      marginBottom: theme.spacing.sm,
+    },
+    authorPseudo: {
+      fontWeight: theme.typography.fontWeight.bold,
+    },
+    commentsSection: {
+      marginTop: theme.spacing.xs,
+    },
+    eventLink: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      marginBottom: theme.spacing.sm,
+      gap: theme.spacing.xs,
+    },
+    eventText: {
+      fontSize: theme.typography.fontSize.xs,
+      color: theme.colors.primarySocio,
+      fontWeight: theme.typography.fontWeight.semibold,
+      fontFamily: theme.typography.fonts.primary,
+    },
+  });

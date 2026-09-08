@@ -1,7 +1,8 @@
 import { View, StyleSheet, ActivityIndicator } from 'react-native';
 import { Image } from 'expo-image';
 import { AppText } from '@/components/typography/AppText';
-import { theme } from '@/shared/themes/theme';
+import { useAppTheme, useStyles } from '@/context/ThemeContext';
+import type { AppTheme } from '@/shared/themes/theme';
 import { useGetPublicUser } from '@/api/user/hooks/use-get-public-user';
 
 interface EventOrganizerProps {
@@ -9,6 +10,8 @@ interface EventOrganizerProps {
 }
 
 export function EventOrganizer({ organizerId }: EventOrganizerProps) {
+  const { theme } = useAppTheme();
+  const styles = useStyles(createStyles);
   const { data: user, isLoading } = useGetPublicUser(organizerId);
 
   if (organizerId == null) return null;
@@ -40,46 +43,47 @@ export function EventOrganizer({ organizerId }: EventOrganizerProps) {
   );
 }
 
-const styles = StyleSheet.create({
-  container: {
-    backgroundColor: theme.colors.white,
-    padding: theme.spacing.lg,
-    borderRadius: theme.radius.lg,
-    marginBottom: theme.spacing.lg,
-    ...theme.shadows.card,
-  },
-  label: {
-    fontSize: 12,
-    fontWeight: theme.typography.fontWeight.bold,
-    color: theme.colors.grey,
-    textTransform: 'uppercase',
-    letterSpacing: 1,
-    marginBottom: theme.spacing.sm,
-  },
-  profileContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    minHeight: 40,
-  },
-  avatar: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
-    marginRight: theme.spacing.md,
-    backgroundColor: theme.colors.lightGrey,
-  },
-  info: {
-    flex: 1,
-  },
-  name: {
-    fontSize: 16,
-    fontWeight: theme.typography.fontWeight.bold,
-    color: theme.colors.black,
-  },
-  score: {
-    fontSize: 12,
-    color: theme.colors.success,
-    fontWeight: theme.typography.fontWeight.medium,
-    marginTop: 2,
-  },
-});
+const createStyles = (theme: AppTheme) =>
+  StyleSheet.create({
+    container: {
+      backgroundColor: theme.colors.white,
+      padding: theme.spacing.lg,
+      borderRadius: theme.radius.lg,
+      marginBottom: theme.spacing.lg,
+      ...theme.shadows.card,
+    },
+    label: {
+      fontSize: 12,
+      fontWeight: theme.typography.fontWeight.bold,
+      color: theme.colors.grey,
+      textTransform: 'uppercase',
+      letterSpacing: 1,
+      marginBottom: theme.spacing.sm,
+    },
+    profileContainer: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      minHeight: 40,
+    },
+    avatar: {
+      width: 40,
+      height: 40,
+      borderRadius: 20,
+      marginRight: theme.spacing.md,
+      backgroundColor: theme.colors.lightGrey,
+    },
+    info: {
+      flex: 1,
+    },
+    name: {
+      fontSize: 16,
+      fontWeight: theme.typography.fontWeight.bold,
+      color: theme.colors.text,
+    },
+    score: {
+      fontSize: 12,
+      color: theme.colors.success,
+      fontWeight: theme.typography.fontWeight.medium,
+      marginTop: 2,
+    },
+  });

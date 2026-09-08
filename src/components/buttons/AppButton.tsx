@@ -1,7 +1,8 @@
 import type { ReactNode } from 'react';
 import { Text, Pressable, StyleSheet, View, type ViewStyle, type TextStyle } from 'react-native';
 import { BUTTON_VARIANTS } from '@/shared/themes/buttonVariants';
-import { theme } from '@/shared/themes/theme';
+import { useAppTheme, useStyles } from '@/context/ThemeContext';
+import type { AppTheme } from '@/shared/themes/theme';
 import { AppIcons } from '@/components/media/AppIcons';
 import type { IconLibrary, ButtonVariant } from '@/shared/types/components';
 
@@ -28,6 +29,8 @@ export const AppButton = ({
   textStyle,
   size = 'default',
 }: AppButtonProps): ReactNode => {
+  const { theme } = useAppTheme();
+  const styles = useStyles(createStyles);
   const stylesVariant = BUTTON_VARIANTS[variant];
   const isSmall = size === 'small';
 
@@ -74,33 +77,34 @@ export const AppButton = ({
   );
 };
 
-const styles = StyleSheet.create({
-  button: {
-    borderRadius: theme.radius.md,
-    paddingVertical: theme.spacing.md,
-    paddingHorizontal: theme.spacing.md,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
+const createStyles = (theme: AppTheme) =>
+  StyleSheet.create({
+    button: {
+      borderRadius: theme.radius.md,
+      paddingVertical: theme.spacing.md,
+      paddingHorizontal: theme.spacing.md,
+      alignItems: 'center',
+      justifyContent: 'center',
+    },
 
-  buttonSmall: {
-    paddingVertical: theme.spacing.sm,
-    paddingHorizontal: theme.spacing.md,
-    borderRadius: theme.radius.sm,
-  },
+    buttonSmall: {
+      paddingVertical: theme.spacing.sm,
+      paddingHorizontal: theme.spacing.md,
+      borderRadius: theme.radius.sm,
+    },
 
-  content: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: theme.spacing.sm,
-  },
+    content: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: theme.spacing.sm,
+    },
 
-  text: {
-    fontSize: theme.typography.fontSize.sm,
-    fontWeight: theme.typography.fontWeight.semibold,
-  },
+    text: {
+      fontSize: theme.typography.fontSize.sm,
+      fontWeight: theme.typography.fontWeight.semibold,
+    },
 
-  textSmall: {
-    fontSize: theme.typography.fontSize.xs,
-  },
-});
+    textSmall: {
+      fontSize: theme.typography.fontSize.xs,
+    },
+  });
