@@ -33,8 +33,6 @@ export function HomeScreen(): React.JSX.Element {
   }, [refetch]);
 
   const posts = useMemo(() => {
-    void refreshCount;
-
     const randomizedPages =
       data?.pages.map((page) => {
         const pagePosts = [...page.posts];

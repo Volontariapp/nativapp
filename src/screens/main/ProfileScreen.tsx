@@ -42,7 +42,7 @@ export function ProfileScreen(): React.JSX.Element {
   const [isEditModalVisible, setIsEditModalVisible] = useState(false);
   const [activeTab, setActiveTab] = useState<'participated' | 'created' | 'wished'>('participated');
   const { logout } = useAuth();
-  const { navigate } = useNavigation<NativeStackNavigationProp<ProfileStackParamList>>();
+  const navigation = useNavigation<NativeStackNavigationProp<ProfileStackParamList>>();
 
   const { data: profile, isLoading: isProfileLoading, error: profileError } = useProfile();
   const {
@@ -313,7 +313,7 @@ export function ProfileScreen(): React.JSX.Element {
             variant="eco"
             text="Voir mes feedbacks"
             onPress={() => {
-              navigate('ws-feedback');
+              navigation.navigate('ws-feedback');
             }}
           />
           <View style={styles.buttonSpacer} />

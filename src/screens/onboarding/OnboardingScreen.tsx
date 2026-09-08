@@ -10,7 +10,7 @@ import { useNavigation } from '@react-navigation/native';
 import type { AuthNavigationProp } from '@/navigation/stacks/AuthStack';
 
 export function OnboardingScreen(): React.JSX.Element {
-  const { navigate } = useNavigation<AuthNavigationProp>();
+  const navigation = useNavigation<AuthNavigationProp>();
 
   return (
     <SafeAreaView style={styles.safeArea}>
@@ -27,7 +27,7 @@ export function OnboardingScreen(): React.JSX.Element {
             variant="eco"
             text="Se connecter"
             onPress={() => {
-              navigate('login');
+              navigation.navigate('login');
             }}
           />
           <View style={styles.spacer} />
@@ -35,7 +35,7 @@ export function OnboardingScreen(): React.JSX.Element {
             variant="secondary"
             text="S'inscrire"
             onPress={() => {
-              navigate('register');
+              navigation.navigate('register');
             }}
           />
         </View>

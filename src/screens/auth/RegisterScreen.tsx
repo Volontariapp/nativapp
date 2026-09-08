@@ -23,7 +23,7 @@ interface RegisterState {
 }
 
 export const RegisterScreen = (): React.JSX.Element => {
-  const { navigate } = useNavigation<AuthNavigationProp>();
+  const navigation = useNavigation<AuthNavigationProp>();
   const { login } = useAuth();
 
   const [state, setState] = useState<RegisterState>({
@@ -118,7 +118,7 @@ export const RegisterScreen = (): React.JSX.Element => {
         <AppText style={styles.footerText}>Déjà un compte ? </AppText>
         <Pressable
           onPress={() => {
-            navigate('login');
+            navigation.navigate('login');
           }}
         >
           <AppText style={styles.footerLink}>Se connecter</AppText>
