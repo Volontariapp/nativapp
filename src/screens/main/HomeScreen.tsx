@@ -1,4 +1,4 @@
-import { StyleSheet, FlatList, View, ActivityIndicator } from 'react-native';
+import { StyleSheet, View, ActivityIndicator } from 'react-native';
 
 import React, { useCallback, useMemo, useRef } from 'react';
 import { AppText } from '@/components/typography/AppText';
@@ -6,6 +6,8 @@ import AppHeader from '@/components/layout/AppHeader';
 import { theme } from '@/shared/themes/theme';
 import { useListPosts } from '@/api/post/hooks/use-list-all-posts';
 import AppPost from '@/components/post/AppPost';
+import Animated from 'react-native-reanimated';
+import { useScrollTabBar } from '@/navigation/hooks/useScrollTabBar';
 
 export function HomeScreen(): React.JSX.Element {
   const { data, isLoading, isError, refetch, fetchNextPage, hasNextPage, isFetchingNextPage } =
@@ -13,6 +15,7 @@ export function HomeScreen(): React.JSX.Element {
       limit: 10,
     });
 
+  const scrollHandler = useScrollTabBar();
   const randomSortMap = useRef<Record<string, number>>({});
   const [isRefreshing, setIsRefreshing] = React.useState(false);
   const [refreshCount, setRefreshCount] = React.useState(0);
@@ -56,12 +59,14 @@ export function HomeScreen(): React.JSX.Element {
             <AppText>Une erreur est survenue lors du chargement des posts.</AppText>
           </View>
         ) : (
-          <FlatList
+          <Animated.FlatList
             data={posts}
             keyExtractor={keyExtractor}
             renderItem={renderItem}
             contentContainerStyle={styles.listContent}
             showsVerticalScrollIndicator={false}
+            onScroll={scrollHandler}
+            scrollEventThrottle={16}
             onRefresh={() => {
               void handleRefresh();
             }}

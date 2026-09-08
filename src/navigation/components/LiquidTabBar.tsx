@@ -5,6 +5,7 @@ import Animated, {
   useAnimatedStyle,
   useSharedValue,
   withSpring,
+  withTiming,
   interpolate,
   Extrapolation,
   type SharedValue,
@@ -12,12 +13,13 @@ import Animated, {
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { BlurView } from 'expo-blur';
 import { theme } from '@/shared/themes/theme';
+import { tabBarScale, tabBarTranslateY } from '../hooks/useScrollTabBar';
 
 const { width: SCREEN_WIDTH } = Dimensions.get('window');
 const TAB_BAR_MARGIN = 20;
 const TAB_BAR_WIDTH = SCREEN_WIDTH - TAB_BAR_MARGIN * 2;
-const TAB_BAR_HEIGHT = 70;
-const INDICATOR_SIZE = 60;
+const TAB_BAR_HEIGHT = 64; // Réduit de 70 à 64
+const INDICATOR_SIZE = 54; // Réduit de 60 à 54
 
 export function LiquidTabBar({
   state,
@@ -38,14 +40,33 @@ export function LiquidTabBar({
   const tabWidth = TAB_BAR_WIDTH / state.routes.length;
 
   const indicatorStyle = useAnimatedStyle(() => {
+    // On cache l'indicateur (opacité 0) quand on est sur le bouton "+" (index 2)
+    const opacity = interpolate(activeIndex.value, [1.5, 2, 2.5], [1, 0, 1], Extrapolation.CLAMP);
+
     const translateX = activeIndex.value * tabWidth + tabWidth / 2 - INDICATOR_SIZE / 2;
+
     return {
+      opacity,
+      width: INDICATOR_SIZE,
+      height: INDICATOR_SIZE,
+      borderRadius: INDICATOR_SIZE / 2,
       transform: [{ translateX }],
     };
   });
 
+  const containerAnimatedStyle = useAnimatedStyle(() => {
+    return {
+      transform: [
+        { scale: withTiming(tabBarScale.value, { duration: 350 }) },
+        { translateY: withTiming(tabBarTranslateY.value, { duration: 350 }) },
+      ],
+    };
+  });
+
   return (
-    <View style={[styles.container, { bottom: Math.max(insets.bottom, 20) }]}>
+    <Animated.View
+      style={[styles.container, { bottom: Math.max(insets.bottom, 15) }, containerAnimatedStyle]}
+    >
       {/* Background Pill */}
       <BlurView intensity={80} tint="light" style={styles.backgroundPill} />
 
@@ -63,6 +84,10 @@ export function LiquidTabBar({
           const isFocused = state.index === index;
 
           const onPress = () => {
+            // Reset tab bar scale and translation when switching tabs
+            tabBarScale.value = 1;
+            tabBarTranslateY.value = 0;
+
             const event = navigation.emit({
               type: 'tabPress',
               target: route.key,
@@ -96,7 +121,7 @@ export function LiquidTabBar({
           );
         })}
       </View>
-    </View>
+    </Animated.View>
   );
 }
 
@@ -186,7 +211,7 @@ const styles = StyleSheet.create({
   indicatorInner: {
     width: '100%',
     height: '100%',
-    borderRadius: INDICATOR_SIZE / 2,
+    borderRadius: 999, // Force un rond parfait peu importe la taille parente
     backgroundColor: 'transparent',
   },
 });

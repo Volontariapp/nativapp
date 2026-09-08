@@ -8,16 +8,19 @@ import ProfileStack from './stacks/ProfileStack';
 import CreateEventStack from './stacks/CreateEventStack';
 import { AppIconsButton } from '@/components/buttons/AppIconsButton';
 import { AppIcons } from '@/components/media/AppIcons';
-import { theme } from '@/shared/themes/theme';
-import { View } from 'react-native';
+import { View, Platform } from 'react-native';
 
 const Tab = createBottomTabNavigator();
 
 export default function MainAppNavigator(): React.JSX.Element {
   return (
     <Tab.Navigator
-      screenOptions={{ headerShown: true }}
-      tabBar={(props) => <LiquidTabBar {...props} />}
+      screenOptions={{
+        headerShown: true,
+        tabBarActiveTintColor: '#000',
+        tabBarInactiveTintColor: '#888',
+      }}
+      tabBar={Platform.OS === 'ios' ? (props) => <LiquidTabBar {...props} /> : undefined}
     >
       <Tab.Screen
         name="accueil"
@@ -25,12 +28,12 @@ export default function MainAppNavigator(): React.JSX.Element {
         options={{
           title: 'Accueil',
           headerShown: false,
-          tabBarIcon: () => (
+          tabBarIcon: ({ focused, color }) => (
             <AppIcons
-              icon="home"
+              icon={focused ? 'home' : 'home-outline'}
               iconLibrary={'MaterialDesignIcons'}
               size={30}
-              color={theme.colors.grey}
+              color={color}
             />
           ),
         }}
@@ -42,12 +45,12 @@ export default function MainAppNavigator(): React.JSX.Element {
         options={{
           title: 'Swipe',
           headerShown: false,
-          tabBarIcon: () => (
+          tabBarIcon: ({ focused, color }) => (
             <AppIcons
-              icon="cards"
+              icon={focused ? 'cards' : 'cards-outline'}
               iconLibrary={'MaterialDesignIcons'}
               size={30}
-              color={theme.colors.grey}
+              color={color}
             />
           ),
         }}
@@ -80,7 +83,14 @@ export default function MainAppNavigator(): React.JSX.Element {
         options={{
           title: 'Explorer',
           headerShown: false,
-          tabBarIcon: () => <AppIcons icon="map" size={30} color={theme.colors.grey} />,
+          tabBarIcon: ({ focused, color }) => (
+            <AppIcons
+              icon={focused ? 'map' : 'map-outline'}
+              iconLibrary={'MaterialDesignIcons'}
+              size={30}
+              color={color}
+            />
+          ),
         }}
       />
 
@@ -90,8 +100,13 @@ export default function MainAppNavigator(): React.JSX.Element {
         options={{
           title: 'Profil',
           headerShown: false,
-          tabBarIcon: () => (
-            <AppIcons icon="person" iconLibrary={'Ionicons'} size={30} color={theme.colors.grey} />
+          tabBarIcon: ({ focused, color }) => (
+            <AppIcons
+              icon={focused ? 'person' : 'person-outline'}
+              iconLibrary={'Ionicons'}
+              size={30}
+              color={color}
+            />
           ),
         }}
       />

@@ -49,7 +49,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }): React.JSX.E
         }
 
         const res = await apiFetch<
-          { accessToken: string; refreshToken: string },
+          { auth: { accessToken: string; refreshToken: string } },
           { refreshToken: string }
         >('/users/refresh', {
           method: 'POST',
@@ -60,8 +60,8 @@ export const AuthProvider = ({ children }: { children: ReactNode }): React.JSX.E
           body: { refreshToken },
         });
 
-        activeAccessToken = res.accessToken;
-        await TokenService.saveTokens(res.accessToken, res.refreshToken);
+        activeAccessToken = res.auth.accessToken;
+        await TokenService.saveTokens(res.auth.accessToken, res.auth.refreshToken);
       }
 
       if (activeAccessToken !== null) {
