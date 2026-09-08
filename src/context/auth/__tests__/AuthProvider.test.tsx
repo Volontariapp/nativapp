@@ -57,8 +57,10 @@ describe('AuthProvider', () => {
     });
 
     apiFetchSpy.mockResolvedValue({
-      accessToken: 'new-access-token',
-      refreshToken: 'new-refresh-token',
+      auth: {
+        accessToken: 'new-access-token',
+        refreshToken: 'new-refresh-token',
+      },
     });
 
     void render(
