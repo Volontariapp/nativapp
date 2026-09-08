@@ -260,8 +260,10 @@ export const eventApi = {
     };
   },
 
+  // `organizerId` is accepted by the gateway's SearchEventsRequestDTO (forwarded to ms-event)
+  // but not yet part of the published @volontariapp/contracts SearchEventsRequest type.
   async getEvents(
-    params: Partial<SearchEventsRequest>,
+    params: Partial<SearchEventsRequest> & { organizerId?: string },
   ): Promise<{ events: AppEvent[]; totalCount: number }> {
     const response = await apiFetch<SearchEventsResponse>(EVENT_ENDPOINTS.LIST_EVENTS.path, {
       method: EVENT_ENDPOINTS.LIST_EVENTS.method,

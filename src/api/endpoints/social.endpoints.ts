@@ -21,6 +21,7 @@ import type {
   GetUserEventWebRequest,
   GetUserParticipateEventWebRequest,
   GetUserWishEventWebRequest,
+  GetIsFollowingWebResponse,
 } from '@volontariapp/contracts';
 
 export const SOCIAL_ENDPOINTS = {
@@ -378,4 +379,10 @@ export const SOCIAL_ENDPOINTS = {
     requiresAuth: true,
     roles: [UserRoles.ADMIN],
   } as EndpointDefinition<void, GetUserNodeWebResponse>,
+  GET_IS_FOLLOWING: {
+    path: '/social/users/:userId/is-following',
+    method: 'GET',
+    requiresAuth: true,
+    roles: [UserRoles.ORGANIZATION, UserRoles.VOLUNTEER, UserRoles.ADMIN],
+  } as EndpointDefinition<void, GetIsFollowingWebResponse>,
 } as const;

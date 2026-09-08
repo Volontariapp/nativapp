@@ -3,6 +3,7 @@ export * from './auth/RegisterScreen';
 export * from './onboarding/OnboardingScreen';
 export * from './main/HomeScreen';
 export * from './main/ProfileScreen';
+export * from './main/PublicProfileScreen';
 export * from './main/ExploreScreen';
 export * from './main/SettingsScreen';
 export * from './main/SwipeScreen';

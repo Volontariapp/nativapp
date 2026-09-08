@@ -1,9 +1,12 @@
-import { View, StyleSheet, ActivityIndicator } from 'react-native';
+import { View, StyleSheet, ActivityIndicator, Pressable } from 'react-native';
 import { Image } from 'expo-image';
 import { AppText } from '@/components/typography/AppText';
 import { useAppTheme, useStyles } from '@/context/ThemeContext';
 import type { AppTheme } from '@/shared/themes/theme';
 import { useGetPublicUser } from '@/api/user/hooks/use-get-public-user';
+import { useNavigation } from '@react-navigation/native';
+import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
+import type { MainStackParamList } from '@/navigation/stacks/MainStack';
 
 interface EventOrganizerProps {
   organizerId?: string;
@@ -13,13 +16,19 @@ export function EventOrganizer({ organizerId }: EventOrganizerProps) {
   const { theme } = useAppTheme();
   const styles = useStyles(createStyles);
   const { data: user, isLoading } = useGetPublicUser(organizerId);
+  const navigation = useNavigation<NativeStackNavigationProp<MainStackParamList>>();
 
   if (organizerId == null) return null;
 
   return (
     <View style={styles.container}>
       <AppText style={styles.label}>Organisé par</AppText>
-      <View style={styles.profileContainer}>
+      <Pressable
+        style={styles.profileContainer}
+        onPress={() => {
+          navigation.navigate('PublicProfile', { userId: organizerId });
+        }}
+      >
         {isLoading ? (
           <ActivityIndicator size="small" color={theme.colors.primarySocio} />
         ) : (
@@ -38,7 +47,7 @@ export function EventOrganizer({ organizerId }: EventOrganizerProps) {
             </View>
           </>
         )}
-      </View>
+      </Pressable>
     </View>
   );
 }

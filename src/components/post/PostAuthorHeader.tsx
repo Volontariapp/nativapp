@@ -1,4 +1,4 @@
-import { View, Text, StyleSheet } from 'react-native';
+import { Text, StyleSheet, Pressable } from 'react-native';
 import { Image } from 'expo-image';
 import { useStyles } from '@/context/ThemeContext';
 import type { AppTheme } from '@/shared/themes/theme';
@@ -6,19 +6,20 @@ import type { AppTheme } from '@/shared/themes/theme';
 interface PostAuthorHeaderProps {
   pseudo?: string | null;
   authorId?: string;
+  onPress?: () => void;
 }
 
-export function PostAuthorHeader({ pseudo, authorId }: PostAuthorHeaderProps) {
+export function PostAuthorHeader({ pseudo, authorId, onPress }: PostAuthorHeaderProps) {
   const styles = useStyles(createStyles);
 
   const seed = pseudo ?? authorId ?? 'default';
   const avatarUrl = `https://i.pravatar.cc/150?u=${seed}`;
 
   return (
-    <View style={styles.container}>
+    <Pressable style={styles.container} onPress={onPress} disabled={onPress == null}>
       <Image source={{ uri: avatarUrl }} style={styles.avatarImage} />
       <Text style={styles.authorName}>{pseudo ?? 'Auteur inconnu'}</Text>
-    </View>
+    </Pressable>
   );
 }
 

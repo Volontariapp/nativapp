@@ -6,6 +6,9 @@ import { useAppTheme, useStyles } from '@/context/ThemeContext';
 import type { AppTheme } from '@/shared/themes/theme';
 import { useGetPostLikers } from '@/api/user/hooks/use-get-post-likers';
 import type { UserPublicProfile } from '@/api/user/user.api';
+import { useNavigation } from '@react-navigation/native';
+import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
+import type { MainStackParamList } from '@/navigation/stacks/MainStack';
 
 interface PostLikersModalProps {
   postId: string;
@@ -17,16 +20,27 @@ export const PostLikersModal = ({ postId, visible, onClose }: PostLikersModalPro
   const { theme } = useAppTheme();
   const styles = useStyles(createStyles);
   const { data, isLoading } = useGetPostLikers(postId);
+  const navigation = useNavigation<NativeStackNavigationProp<MainStackParamList>>();
 
   const likers = data?.users ?? [];
 
+  const goToProfile = (userId: string) => {
+    onClose();
+    navigation.navigate('PublicProfile', { userId });
+  };
+
   const renderLiker = ({ item }: { item: UserPublicProfile }) => (
-    <View style={styles.likerItem}>
+    <Pressable
+      style={styles.likerItem}
+      onPress={() => {
+        goToProfile(item.id);
+      }}
+    >
       <View style={styles.avatarPlaceholder}>
         <Icon name="user" size={20} color={theme.colors.white} />
       </View>
       <AppText style={styles.likerPseudo}>@{item.pseudo}</AppText>
-    </View>
+    </Pressable>
   );
 
   return (

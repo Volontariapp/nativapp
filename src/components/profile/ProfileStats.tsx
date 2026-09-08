@@ -1,33 +1,29 @@
 import React from 'react';
 import { View, StyleSheet } from 'react-native';
 import { StatCard } from '@/components/dataDisplay/StatCard';
-import { useAppTheme, useStyles } from '@/context/ThemeContext';
+import { useStyles } from '@/context/ThemeContext';
 import type { AppTheme } from '@/shared/themes/theme';
 
+export interface ProfileStatItem {
+  label: string;
+  value: number;
+  color: string;
+}
+
 interface ProfileStatsProps {
-  impactScore: number;
-  badgesCount: number;
-  eventsCount: number;
-  createdCount: number;
+  stats: ProfileStatItem[];
 }
 
 /**
  * Section des statistiques de l'utilisateur sur son profil.
  */
-export const ProfileStats = ({
-  impactScore,
-  badgesCount,
-  eventsCount,
-  createdCount,
-}: ProfileStatsProps): React.JSX.Element => {
+export const ProfileStats = ({ stats }: ProfileStatsProps): React.JSX.Element => {
   const styles = useStyles(createStyles);
-  const { theme } = useAppTheme();
   return (
     <View style={styles.statsContainer}>
-      <StatCard label="Impact" value={impactScore} color={theme.colors.primaryEco} />
-      <StatCard label="Badges" value={badgesCount} color={theme.colors.secondarySocio} />
-      <StatCard label="Rejoints" value={eventsCount} color={theme.colors.warning} />
-      <StatCard label="Créés" value={createdCount} color={theme.colors.primarySocio} />
+      {stats.map((stat) => (
+        <StatCard key={stat.label} label={stat.label} value={stat.value} color={stat.color} />
+      ))}
     </View>
   );
 };

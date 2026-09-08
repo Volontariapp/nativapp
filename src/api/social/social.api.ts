@@ -1,6 +1,10 @@
 import { apiFetch } from '../client';
 import { SOCIAL_ENDPOINTS } from '../endpoints/social.endpoints';
-import type { ActionSuccessWebResponse } from '@volontariapp/contracts';
+import type {
+  ActionSuccessWebResponse,
+  ListUsersWebResponse,
+  GetIsFollowingWebResponse,
+} from '@volontariapp/contracts';
 
 /**
  * Service API pour les interactions sociales (participations, likes, follows, etc.)
@@ -189,5 +193,63 @@ export const socialApi = {
       ids: response.ids,
       totalCount: response.totalCount,
     };
+  },
+
+  /**
+   * Fait suivre un utilisateur par l'utilisateur connecté.
+   */
+  async followUser(followedId: string): Promise<ActionSuccessWebResponse> {
+    return await apiFetch<ActionSuccessWebResponse>(
+      SOCIAL_ENDPOINTS.FOLLOW_SELF.path.replace(':followedId', followedId),
+      {
+        method: SOCIAL_ENDPOINTS.FOLLOW_SELF.method,
+        requiresAuth: SOCIAL_ENDPOINTS.FOLLOW_SELF.requiresAuth,
+      },
+    );
+  },
+
+  /**
+   * Retire le suivi d'un utilisateur pour l'utilisateur connecté.
+   */
+  async unfollowUser(followedId: string): Promise<ActionSuccessWebResponse> {
+    return await apiFetch<ActionSuccessWebResponse>(
+      SOCIAL_ENDPOINTS.UNFOLLOW_SELF.path.replace(':followedId', followedId),
+      {
+        method: SOCIAL_ENDPOINTS.UNFOLLOW_SELF.method,
+        requiresAuth: SOCIAL_ENDPOINTS.UNFOLLOW_SELF.requiresAuth,
+      },
+    );
+  },
+
+  /**
+   * Récupère la liste des utilisateurs suivis par l'utilisateur connecté.
+   */
+  async getMyFollows(params?: { page?: number; limit?: number }): Promise<ListUsersWebResponse> {
+    const query = new URLSearchParams();
+    if (params?.page !== undefined) query.append('pagination[page]', params.page.toString());
+    if (params?.limit !== undefined) query.append('pagination[limit]', params.limit.toString());
+
+    const queryString = query.toString();
+    const path = queryString
+      ? `${SOCIAL_ENDPOINTS.GET_FOLLOWS_SELF.path}?${queryString}`
+      : SOCIAL_ENDPOINTS.GET_FOLLOWS_SELF.path;
+
+    return await apiFetch<ListUsersWebResponse>(path, {
+      method: SOCIAL_ENDPOINTS.GET_FOLLOWS_SELF.method,
+      requiresAuth: SOCIAL_ENDPOINTS.GET_FOLLOWS_SELF.requiresAuth,
+    });
+  },
+
+  /**
+   * Vérifie si l'utilisateur courant suit un autre utilisateur
+   */
+  async getIsFollowing(userId: string): Promise<GetIsFollowingWebResponse> {
+    return await apiFetch<GetIsFollowingWebResponse>(
+      SOCIAL_ENDPOINTS.GET_IS_FOLLOWING.path.replace(':userId', userId),
+      {
+        method: SOCIAL_ENDPOINTS.GET_IS_FOLLOWING.method,
+        requiresAuth: SOCIAL_ENDPOINTS.GET_IS_FOLLOWING.requiresAuth,
+      },
+    );
   },
 };

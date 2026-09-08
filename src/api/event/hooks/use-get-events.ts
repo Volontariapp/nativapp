@@ -4,7 +4,7 @@ import type { SearchEventsRequest } from '@volontariapp/contracts';
 
 const EVENTS_QUERY_KEY = ['events'] as const;
 
-export const useGetEvents = (params?: Partial<SearchEventsRequest>) => {
+export const useGetEvents = (params?: Partial<SearchEventsRequest> & { organizerId?: string }) => {
   return useInfiniteQuery({
     queryKey: [...EVENTS_QUERY_KEY, params],
     queryFn: async ({ pageParam }) => {

@@ -113,7 +113,13 @@ export default function AppPost({ post }: PostCardProps) {
 
   return (
     <View style={styles.card}>
-      <PostAuthorHeader pseudo={author?.pseudo} authorId={post.authorId} />
+      <PostAuthorHeader
+        pseudo={author?.pseudo}
+        authorId={post.authorId}
+        onPress={() => {
+          navigation.navigate('PublicProfile', { userId: post.authorId });
+        }}
+      />
 
       <GestureDetector gesture={doubleTapGesture}>
         <View style={styles.imageWrapper}>

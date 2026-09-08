@@ -5,11 +5,8 @@ import {
   AppText,
   AppHeader,
   AppLoader,
-  ProfileHeader,
+  ProfileLayout,
   ProfileSection,
-  ProfileStats,
-  ProfileBadges,
-  ProfileBio,
   ProfileEditModal,
   AppIconsButton,
   AppCalendar,
@@ -156,191 +153,199 @@ export function ProfileScreen(): React.JSX.Element {
           <AppIconsButton icon="settings" variant="eco" size={36} onPress={handleSettingsPress} />
         </View>
 
-        <ProfileHeader pseudo={profile.pseudo} />
+        <ProfileLayout
+          pseudo={profile.pseudo}
+          avatarUrl={profile.logoPath}
+          bio={profile.bio}
+          badges={profile.badges}
+          stats={[
+            { label: 'Impact', value: profile.totalImpactScore, color: theme.colors.primaryEco },
+            {
+              label: 'Badges',
+              value: profile.badges.length,
+              color: theme.colors.secondarySocio,
+            },
+            {
+              label: 'Rejoints',
+              value: participatedEventsData?.pages[0]?.totalCount ?? 0,
+              color: theme.colors.warning,
+            },
+            {
+              label: 'Créés',
+              value: myEventsData?.pages[0]?.totalCount ?? 0,
+              color: theme.colors.primarySocio,
+            },
+          ]}
+          bioAction={
+            <View style={styles.editButtonContainer}>
+              <AppButton
+                variant="eco"
+                size="small"
+                text="Modifier"
+                icon="edit-2"
+                onPress={() => {
+                  setIsEditModalVisible(true);
+                }}
+              />
+            </View>
+          }
+        >
+          <ProfileSection title="Mes Engagements">
+            <AppCalendar markedDates={markedDates} />
+          </ProfileSection>
 
-        <ProfileSection title="Ma Bio">
-          <ProfileBio bio={profile.bio} />
-          <View style={styles.editButtonContainer}>
-            <AppButton
-              variant="eco"
-              size="small"
-              text="Modifier"
-              icon="edit-2"
+          <View style={styles.tabBar}>
+            <AppIconsButton
+              icon="calendar"
+              size={48}
+              variant={activeTab === 'participated' ? 'socio' : 'white'}
+              iconColor={activeTab === 'participated' ? theme.colors.white : theme.colors.grey}
               onPress={() => {
-                setIsEditModalVisible(true);
+                setActiveTab('participated');
+              }}
+            />
+            <AppIconsButton
+              icon="heart"
+              size={48}
+              variant={activeTab === 'wished' ? 'danger' : 'white'}
+              iconColor={activeTab === 'wished' ? theme.colors.white : theme.colors.grey}
+              onPress={() => {
+                setActiveTab('wished');
+              }}
+            />
+            <AppIconsButton
+              icon="plus"
+              size={48}
+              variant={activeTab === 'created' ? 'eco' : 'white'}
+              iconColor={activeTab === 'created' ? theme.colors.white : theme.colors.grey}
+              onPress={() => {
+                setActiveTab('created');
               }}
             />
           </View>
-        </ProfileSection>
 
-        <ProfileSection title="Mes Statistiques">
-          <ProfileStats
-            impactScore={profile.totalImpactScore}
-            badgesCount={profile.badges.length}
-            eventsCount={participatedEventsData?.pages[0]?.totalCount ?? 0}
-            createdCount={myEventsData?.pages[0]?.totalCount ?? 0}
-          />
-        </ProfileSection>
+          {activeTab === 'participated' && (
+            <ProfileSection title="Événements à venir">
+              {isParticipatedEventsLoading ? (
+                <ActivityIndicator color={theme.colors.primaryEco} />
+              ) : allParticipatedEvents.length > 0 ? (
+                <View>
+                  {allParticipatedEvents.map((event) => (
+                    <EventCard key={event.id} event={event} />
+                  ))}
+                  {hasNextParticipatedEvents && (
+                    <View style={styles.seeMoreContainer}>
+                      <AppButton
+                        variant="eco"
+                        size="small"
+                        text={isFetchingNextParticipatedEvents ? 'Chargement...' : 'Voir plus'}
+                        onPress={() => {
+                          void fetchNextParticipatedEvents();
+                        }}
+                        disabled={isFetchingNextParticipatedEvents}
+                      />
+                    </View>
+                  )}
+                </View>
+              ) : (
+                <AppText style={styles.emptyText}>Aucun événement à venir pour le moment.</AppText>
+              )}
+            </ProfileSection>
+          )}
 
-        <ProfileSection title="Mes Engagements">
-          <AppCalendar markedDates={markedDates} />
-        </ProfileSection>
+          {activeTab === 'created' && (
+            <ProfileSection title="Mes événements créés">
+              {isMyEventsLoading ? (
+                <ActivityIndicator color={theme.colors.primaryEco} />
+              ) : allMyEvents.length > 0 ? (
+                <View>
+                  {allMyEvents.map((event) => (
+                    <EventCard key={event.id} event={event} />
+                  ))}
+                  {hasNextMyEvents && (
+                    <View style={styles.seeMoreContainer}>
+                      <AppButton
+                        variant="eco"
+                        size="small"
+                        text={isFetchingNextMyEvents ? 'Chargement...' : 'Voir plus'}
+                        onPress={() => {
+                          void fetchNextMyEvents();
+                        }}
+                        disabled={isFetchingNextMyEvents}
+                      />
+                    </View>
+                  )}
+                </View>
+              ) : (
+                <AppText style={styles.emptyText}>Aucun événement créé pour le moment.</AppText>
+              )}
+            </ProfileSection>
+          )}
 
-        <ProfileSection title="Mes Badges">
-          <ProfileBadges badges={profile.badges} />
-        </ProfileSection>
+          {activeTab === 'wished' && (
+            <ProfileSection title="Wishlist">
+              {isWishedEventsLoading ? (
+                <ActivityIndicator color={theme.colors.primaryEco} />
+              ) : allWishedEvents.length > 0 ? (
+                <View>
+                  {allWishedEvents.map((event) => (
+                    <WishedEventCard key={event.id} event={event} />
+                  ))}
+                  {hasNextWishedEvents && (
+                    <View style={styles.seeMoreContainer}>
+                      <AppButton
+                        variant="eco"
+                        size="small"
+                        text={isFetchingNextWishedEvents ? 'Chargement...' : 'Voir plus'}
+                        onPress={() => {
+                          void fetchNextWishedEvents();
+                        }}
+                        disabled={isFetchingNextWishedEvents}
+                      />
+                    </View>
+                  )}
+                </View>
+              ) : (
+                <AppText style={styles.emptyText}>Aucun événement dans votre wishlist.</AppText>
+              )}
+            </ProfileSection>
+          )}
 
-        <View style={styles.tabBar}>
-          <AppIconsButton
-            icon="calendar"
-            size={48}
-            variant={activeTab === 'participated' ? 'socio' : 'white'}
-            iconColor={activeTab === 'participated' ? theme.colors.white : theme.colors.grey}
-            onPress={() => {
-              setActiveTab('participated');
+          <View style={styles.actions}>
+            <View style={styles.buttonSpacer} />
+            <AppButton
+              variant="eco"
+              text="Voir mes feedbacks"
+              onPress={() => {
+                navigation.navigate('ws-feedback');
+              }}
+            />
+            <View style={styles.buttonSpacer} />
+            <AppButton
+              variant="danger"
+              text="Se déconnecter"
+              onPress={() => {
+                void logout();
+              }}
+            />
+          </View>
+
+          <ProfileEditModal
+            visible={isEditModalVisible}
+            onClose={() => {
+              setIsEditModalVisible(false);
+            }}
+            profile={profile}
+            isLoading={updateProfile.isPending}
+            onSubmit={(data) => {
+              updateProfile.mutate(data, {
+                onSuccess: () => {
+                  setIsEditModalVisible(false);
+                },
+              });
             }}
           />
-          <AppIconsButton
-            icon="heart"
-            size={48}
-            variant={activeTab === 'wished' ? 'danger' : 'white'}
-            iconColor={activeTab === 'wished' ? theme.colors.white : theme.colors.grey}
-            onPress={() => {
-              setActiveTab('wished');
-            }}
-          />
-          <AppIconsButton
-            icon="plus"
-            size={48}
-            variant={activeTab === 'created' ? 'eco' : 'white'}
-            iconColor={activeTab === 'created' ? theme.colors.white : theme.colors.grey}
-            onPress={() => {
-              setActiveTab('created');
-            }}
-          />
-        </View>
-
-        {activeTab === 'participated' && (
-          <ProfileSection title="Événements à venir">
-            {isParticipatedEventsLoading ? (
-              <ActivityIndicator color={theme.colors.primaryEco} />
-            ) : allParticipatedEvents.length > 0 ? (
-              <View>
-                {allParticipatedEvents.map((event) => (
-                  <EventCard key={event.id} event={event} />
-                ))}
-                {hasNextParticipatedEvents && (
-                  <View style={styles.seeMoreContainer}>
-                    <AppButton
-                      variant="eco"
-                      size="small"
-                      text={isFetchingNextParticipatedEvents ? 'Chargement...' : 'Voir plus'}
-                      onPress={() => {
-                        void fetchNextParticipatedEvents();
-                      }}
-                      disabled={isFetchingNextParticipatedEvents}
-                    />
-                  </View>
-                )}
-              </View>
-            ) : (
-              <AppText style={styles.emptyText}>Aucun événement à venir pour le moment.</AppText>
-            )}
-          </ProfileSection>
-        )}
-
-        {activeTab === 'created' && (
-          <ProfileSection title="Mes événements créés">
-            {isMyEventsLoading ? (
-              <ActivityIndicator color={theme.colors.primaryEco} />
-            ) : allMyEvents.length > 0 ? (
-              <View>
-                {allMyEvents.map((event) => (
-                  <EventCard key={event.id} event={event} />
-                ))}
-                {hasNextMyEvents && (
-                  <View style={styles.seeMoreContainer}>
-                    <AppButton
-                      variant="eco"
-                      size="small"
-                      text={isFetchingNextMyEvents ? 'Chargement...' : 'Voir plus'}
-                      onPress={() => {
-                        void fetchNextMyEvents();
-                      }}
-                      disabled={isFetchingNextMyEvents}
-                    />
-                  </View>
-                )}
-              </View>
-            ) : (
-              <AppText style={styles.emptyText}>Aucun événement créé pour le moment.</AppText>
-            )}
-          </ProfileSection>
-        )}
-
-        {activeTab === 'wished' && (
-          <ProfileSection title="Wishlist">
-            {isWishedEventsLoading ? (
-              <ActivityIndicator color={theme.colors.primaryEco} />
-            ) : allWishedEvents.length > 0 ? (
-              <View>
-                {allWishedEvents.map((event) => (
-                  <WishedEventCard key={event.id} event={event} />
-                ))}
-                {hasNextWishedEvents && (
-                  <View style={styles.seeMoreContainer}>
-                    <AppButton
-                      variant="eco"
-                      size="small"
-                      text={isFetchingNextWishedEvents ? 'Chargement...' : 'Voir plus'}
-                      onPress={() => {
-                        void fetchNextWishedEvents();
-                      }}
-                      disabled={isFetchingNextWishedEvents}
-                    />
-                  </View>
-                )}
-              </View>
-            ) : (
-              <AppText style={styles.emptyText}>Aucun événement dans votre wishlist.</AppText>
-            )}
-          </ProfileSection>
-        )}
-
-        <View style={styles.actions}>
-          <View style={styles.buttonSpacer} />
-          <AppButton
-            variant="eco"
-            text="Voir mes feedbacks"
-            onPress={() => {
-              navigation.navigate('ws-feedback');
-            }}
-          />
-          <View style={styles.buttonSpacer} />
-          <AppButton
-            variant="danger"
-            text="Se déconnecter"
-            onPress={() => {
-              void logout();
-            }}
-          />
-        </View>
-
-        <ProfileEditModal
-          visible={isEditModalVisible}
-          onClose={() => {
-            setIsEditModalVisible(false);
-          }}
-          profile={profile}
-          isLoading={updateProfile.isPending}
-          onSubmit={(data) => {
-            updateProfile.mutate(data, {
-              onSuccess: () => {
-                setIsEditModalVisible(false);
-              },
-            });
-          }}
-        />
+        </ProfileLayout>
       </ScrollView>
     </View>
   );

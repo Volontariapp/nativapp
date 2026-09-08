@@ -8,6 +8,9 @@ import type { AppTheme } from '@/shared/themes/theme';
 import { useGetPublicUser } from '@/api/user/hooks/use-get-public-user';
 import { useDeleteComment } from '@/api/post/hooks/use-delete-comment';
 import { useAuth } from '@/context/AuthContext';
+import { useNavigation } from '@react-navigation/native';
+import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
+import type { MainStackParamList } from '@/navigation/stacks/MainStack';
 import type { CommentWebResponse } from '@volontariapp/contracts';
 
 interface CommentItemProps {
@@ -20,6 +23,7 @@ export function CommentItem({ comment }: CommentItemProps) {
   const { userId } = useAuth();
   const { data: author } = useGetPublicUser(comment.authorId);
   const { mutate: deleteComment, isPending } = useDeleteComment(comment.postId);
+  const navigation = useNavigation<NativeStackNavigationProp<MainStackParamList>>();
 
   const pseudo = author?.pseudo ?? 'Auteur inconnu';
   const seed = author?.pseudo ?? comment.authorId;
@@ -43,10 +47,15 @@ export function CommentItem({ comment }: CommentItemProps) {
   return (
     <View style={styles.commentCard}>
       <View style={styles.commentHeader}>
-        <View style={styles.authorContainer}>
+        <Pressable
+          style={styles.authorContainer}
+          onPress={() => {
+            navigation.navigate('PublicProfile', { userId: comment.authorId });
+          }}
+        >
           <Image source={{ uri: avatarUrl }} style={styles.avatarImage} />
           <AppText style={styles.author}>{pseudo}</AppText>
-        </View>
+        </Pressable>
         <View style={styles.actionsContainer}>
           <AppText style={styles.date}>{date}</AppText>
           {isMine && (

@@ -1,6 +1,7 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { socialApi } from '../social.api';
 import { PARTICIPATIONS_QUERY_KEY } from './use-user-participations';
+import { MY_FOLLOWS_QUERY_KEY } from './use-get-my-follows';
 const WISHES_QUERY_KEY = ['user-wishes'];
 
 /**
@@ -44,6 +45,20 @@ export const useUserSocialActions = () => {
     },
   });
 
+  const followMutation = useMutation({
+    mutationFn: (followedId: string) => socialApi.followUser(followedId),
+    onSuccess: () => {
+      void queryClient.invalidateQueries({ queryKey: MY_FOLLOWS_QUERY_KEY });
+    },
+  });
+
+  const unfollowMutation = useMutation({
+    mutationFn: (followedId: string) => socialApi.unfollowUser(followedId),
+    onSuccess: () => {
+      void queryClient.invalidateQueries({ queryKey: MY_FOLLOWS_QUERY_KEY });
+    },
+  });
+
   return {
     participate: participateMutation.mutateAsync,
     isParticipating: participateMutation.isPending,
@@ -53,5 +68,9 @@ export const useUserSocialActions = () => {
     isWishing: wishMutation.isPending,
     unwish: unwishMutation.mutateAsync,
     isUnwishing: unwishMutation.isPending,
+    follow: followMutation.mutateAsync,
+    isFollowingPending: followMutation.isPending,
+    unfollow: unfollowMutation.mutateAsync,
+    isUnfollowingPending: unfollowMutation.isPending,
   };
 };

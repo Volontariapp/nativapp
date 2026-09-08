@@ -1,5 +1,6 @@
 import React from 'react';
 import { View, StyleSheet } from 'react-native';
+import { Image } from 'expo-image';
 import Icon from 'react-native-vector-icons/Feather';
 import { AppText } from '@/components/typography/AppText';
 import { useAppTheme, useStyles } from '@/context/ThemeContext';
@@ -11,17 +12,21 @@ interface ProfileHeaderProps {
 }
 
 /**
- * En-tête de la page Profil avec la photo (placeholder) et le pseudo.
+ * En-tête de la page Profil avec la photo (ou un placeholder) et le pseudo.
  */
-export const ProfileHeader = ({ pseudo }: ProfileHeaderProps): React.JSX.Element => {
+export const ProfileHeader = ({ pseudo, avatarUrl }: ProfileHeaderProps): React.JSX.Element => {
   const { theme } = useAppTheme();
   const styles = useStyles(createStyles);
   return (
     <View style={styles.headerSection}>
       <View style={styles.avatarContainer}>
-        <View style={styles.avatarPlaceholder}>
-          <Icon name="user" size={60} color={theme.colors.grey} />
-        </View>
+        {typeof avatarUrl === 'string' && avatarUrl !== '' ? (
+          <Image source={{ uri: avatarUrl }} style={styles.avatarImage} />
+        ) : (
+          <View style={styles.avatarPlaceholder}>
+            <Icon name="user" size={60} color={theme.colors.grey} />
+          </View>
+        )}
       </View>
       <AppText style={styles.userName}>{pseudo}</AppText>
     </View>
@@ -45,6 +50,15 @@ const createStyles = (theme: AppTheme) =>
       backgroundColor: theme.colors.lightGrey,
       justifyContent: 'center',
       alignItems: 'center',
+      borderWidth: 4,
+      borderColor: theme.colors.white,
+      ...theme.shadows.card,
+    },
+    avatarImage: {
+      width: 120,
+      height: 120,
+      borderRadius: 60,
+      backgroundColor: theme.colors.lightGrey,
       borderWidth: 4,
       borderColor: theme.colors.white,
       ...theme.shadows.card,
