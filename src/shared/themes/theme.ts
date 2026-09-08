@@ -1,6 +1,36 @@
-export const theme = {
+export type AppThemeColors = {
+  text: string;
+  primaryEco: string;
+  darkGreen: string;
+  secondaryEco: string;
+  primarySocio: string;
+  secondarySocio: string;
+  background: string;
+  danger: string;
+  warning: string;
+  success: string;
+  white: string;
+  grey: string;
+  lightGrey: string;
+  black: string;
+  info: string;
+  gold: string;
+  goldText: string;
+  goldBackground: string;
+  goldBorder: string;
+  skeletonGrey: string;
+  whiteOverlay: string;
+  adminActive: string;
+  adminInactive: string;
+  separator: string;
+  blackOverlay: string;
+};
+
+export const lightTheme = {
   colors: {
+    text: '#000',
     primaryEco: '#2f6e3e',
+    darkGreen: '#1b3a20',
     secondaryEco: '#4caf50',
     primarySocio: '#1f6f8b',
     secondarySocio: '#3fa7c4',
@@ -30,9 +60,9 @@ export const theme = {
 
   sectionTitle: {
     fontSize: 16,
-    fontWeight: '600',
+    fontWeight: '600' as const,
     color: '#6b7280',
-    textTransform: 'uppercase',
+    textTransform: 'uppercase' as const,
     letterSpacing: 1,
   },
   spacing: {
@@ -62,10 +92,10 @@ export const theme = {
       xl: 24,
     },
     fontWeight: {
-      regular: '400',
-      medium: '500',
-      semibold: '600',
-      bold: '700',
+      regular: '400' as const,
+      medium: '500' as const,
+      semibold: '600' as const,
+      bold: '700' as const,
     },
   },
   shadows: {
@@ -86,4 +116,26 @@ export const theme = {
       height: 6,
     },
   },
-} as const;
+};
+
+export type AppTheme = typeof lightTheme;
+
+export const darkTheme: AppTheme = {
+  ...lightTheme,
+  colors: {
+    ...lightTheme.colors,
+    text: '#ffffff',
+    background: '#121212',
+    white: '#1e1e1e',
+    black: '#ffffff',
+    grey: '#a0aab5',
+    lightGrey: '#2c2c2c',
+    separator: '#333333',
+    whiteOverlay: 'rgba(255, 255, 255, 0.1)',
+    blackOverlay: 'rgba(0, 0, 0, 0.7)',
+    skeletonGrey: '#333333',
+  },
+};
+
+// Legacy export for files that haven't been migrated to useAppTheme yet
+export const theme = lightTheme;

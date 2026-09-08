@@ -2,7 +2,8 @@ import React from 'react';
 import { View, StyleSheet } from 'react-native';
 import { Image } from 'expo-image';
 import { AppText } from '@/components/typography/AppText';
-import { theme } from '@/shared/themes/theme';
+import { useAppTheme, useStyles } from '@/context/ThemeContext';
+import type { AppTheme } from '@/shared/themes/theme';
 import { EventState } from '@volontariapp/contracts';
 import type { AppEvent } from '@/api/event/event.api';
 import { getFakeEcologyImage } from '@/utils/fake-images.util';
@@ -12,6 +13,8 @@ interface EventCoverProps {
 }
 
 export function EventCover({ event }: EventCoverProps) {
+  const { theme } = useAppTheme();
+  const styles = useStyles(createStyles);
   const placeholderUrl = getFakeEcologyImage(event.id);
 
   const getStatusConfig = () => {
@@ -41,28 +44,29 @@ export function EventCover({ event }: EventCoverProps) {
   );
 }
 
-const styles = StyleSheet.create({
-  container: {
-    height: 200,
-    width: '100%',
-    position: 'relative',
-    marginBottom: theme.spacing.lg,
-  },
-  coverImage: {
-    width: '100%',
-    height: '100%',
-  },
-  badge: {
-    position: 'absolute',
-    top: theme.spacing.md,
-    left: theme.spacing.md,
-    paddingHorizontal: theme.spacing.md,
-    paddingVertical: theme.spacing.xs,
-    borderRadius: theme.radius.full,
-  },
-  badgeText: {
-    color: theme.colors.white,
-    fontSize: 12,
-    fontWeight: theme.typography.fontWeight.bold,
-  },
-});
+const createStyles = (theme: AppTheme) =>
+  StyleSheet.create({
+    container: {
+      height: 200,
+      width: '100%',
+      position: 'relative',
+      marginBottom: theme.spacing.lg,
+    },
+    coverImage: {
+      width: '100%',
+      height: '100%',
+    },
+    badge: {
+      position: 'absolute',
+      top: theme.spacing.md,
+      left: theme.spacing.md,
+      paddingHorizontal: theme.spacing.md,
+      paddingVertical: theme.spacing.xs,
+      borderRadius: theme.radius.full,
+    },
+    badgeText: {
+      color: theme.colors.white,
+      fontSize: 12,
+      fontWeight: theme.typography.fontWeight.bold,
+    },
+  });

@@ -5,7 +5,8 @@ import { LinearGradient } from 'expo-linear-gradient';
 import { Ionicons } from '@expo/vector-icons';
 import type { LocationObject } from 'expo-location';
 
-import { theme } from '@/shared/themes/theme';
+import { useAppTheme, useStyles } from '@/context/ThemeContext';
+import type { AppTheme } from '@/shared/themes/theme';
 import type { AppEvent as Event } from '@/api/event/event.api';
 import { EventTypeTagComponent } from '@/components/dataDisplay/EventTypesTags';
 import { ImpactScoreBadge } from '@/components/event/ImpactScoreBadge';
@@ -23,6 +24,9 @@ export const EventCard = React.memo(function EventCard({
   userLocation,
   onLocationPress,
 }: EventCardProps): React.JSX.Element {
+  const { theme } = useAppTheme();
+  const styles = useStyles(createStyles);
+
   const formattedDate = useMemo(() => {
     const date = new Date(event.startAt);
     return date
@@ -163,125 +167,126 @@ export const EventCard = React.memo(function EventCard({
   );
 });
 
-const styles = StyleSheet.create({
-  cardContainer: {
-    flex: 1,
-    ...theme.shadows.card,
-  },
-  cardInner: {
-    flex: 1,
-    overflow: 'hidden',
-    borderRadius: theme.radius.md,
-    backgroundColor: theme.colors.background,
-  },
-  imageContainer: {
-    ...StyleSheet.absoluteFillObject,
-  },
-  contentOverlay: {
-    flex: 1,
-    justifyContent: 'space-between',
-  },
-  topContainer: {
-    padding: theme.spacing.md,
-    gap: theme.spacing.sm,
-  },
-  tagsContainer: {
-    flexDirection: 'row',
-    gap: theme.spacing.sm,
-  },
-  dateAndDistanceContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: theme.spacing.sm,
-    marginBottom: theme.spacing.md,
-  },
-  dateBadge: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: theme.spacing.xs,
-    backgroundColor: theme.colors.white,
-    paddingHorizontal: theme.spacing.md,
-    paddingVertical: theme.spacing.sm,
-    borderRadius: theme.radius.full,
-  },
-  dateText: {
-    color: theme.colors.black,
-    fontSize: theme.typography.fontSize.sm,
-    fontWeight: theme.typography.fontWeight.medium,
-    fontFamily: theme.typography.fonts.primary,
-  },
-  distanceChip: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: theme.spacing.xs,
-    backgroundColor: theme.colors.whiteOverlay,
-    paddingHorizontal: theme.spacing.md,
-    paddingVertical: theme.spacing.sm,
-    borderRadius: theme.radius.full,
-  },
-  distanceChipText: {
-    color: theme.colors.white,
-    fontSize: theme.typography.fontSize.sm,
-    fontWeight: theme.typography.fontWeight.medium,
-    fontFamily: theme.typography.fonts.primary,
-  },
-  content: {
-    padding: theme.spacing.lg,
-    paddingBottom: 40, // Reduced since card is shorter
-  },
-  title: {
-    fontSize: theme.typography.fontSize.xl,
-    color: theme.colors.white,
-    fontWeight: theme.typography.fontWeight.bold,
-    fontFamily: theme.typography.fonts.primary,
-    marginBottom: theme.spacing.xs,
-  },
-  description: {
-    color: theme.colors.lightGrey,
-    fontSize: theme.typography.fontSize.md,
-    fontFamily: theme.typography.fonts.primary,
-    marginBottom: theme.spacing.lg,
-    lineHeight: 22,
-  },
-  footer: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-  },
-  participants: {
-    flexDirection: 'row',
-    alignItems: 'center',
-  },
-  avatar: {
-    width: theme.spacing.xl,
-    height: theme.spacing.xl,
-    borderRadius: theme.radius.full,
-    backgroundColor: theme.colors.skeletonGrey,
-    borderWidth: 2,
-    borderColor: theme.colors.white,
-  },
-  avatarOverlap: {
-    marginLeft: -theme.spacing.sm,
-  },
-  participantsText: {
-    marginLeft: theme.spacing.xs,
-    color: theme.colors.white,
-    fontSize: theme.typography.fontSize.sm,
-    fontFamily: theme.typography.fonts.primary,
-    fontWeight: theme.typography.fontWeight.medium,
-  },
-  location: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: theme.spacing.xs,
-    maxWidth: '55%',
-  },
-  locationPressed: {
-    opacity: 0.7,
-  },
-  locationText: {
-    color: theme.colors.white,
-    fontSize: theme.typography.fontSize.sm,
-    fontFamily: theme.typography.fonts.primary,
-  },
-});
+const createStyles = (theme: AppTheme) =>
+  StyleSheet.create({
+    cardContainer: {
+      flex: 1,
+      ...theme.shadows.card,
+    },
+    cardInner: {
+      flex: 1,
+      overflow: 'hidden',
+      borderRadius: theme.radius.md,
+      backgroundColor: theme.colors.background,
+    },
+    imageContainer: {
+      ...StyleSheet.absoluteFillObject,
+    },
+    contentOverlay: {
+      flex: 1,
+      justifyContent: 'space-between',
+    },
+    topContainer: {
+      padding: theme.spacing.md,
+      gap: theme.spacing.sm,
+    },
+    tagsContainer: {
+      flexDirection: 'row',
+      gap: theme.spacing.sm,
+    },
+    dateAndDistanceContainer: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: theme.spacing.sm,
+      marginBottom: theme.spacing.md,
+    },
+    dateBadge: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: theme.spacing.xs,
+      backgroundColor: theme.colors.white,
+      paddingHorizontal: theme.spacing.md,
+      paddingVertical: theme.spacing.sm,
+      borderRadius: theme.radius.full,
+    },
+    dateText: {
+      color: theme.colors.text,
+      fontSize: theme.typography.fontSize.sm,
+      fontWeight: theme.typography.fontWeight.medium,
+      fontFamily: theme.typography.fonts.primary,
+    },
+    distanceChip: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: theme.spacing.xs,
+      backgroundColor: theme.colors.whiteOverlay,
+      paddingHorizontal: theme.spacing.md,
+      paddingVertical: theme.spacing.sm,
+      borderRadius: theme.radius.full,
+    },
+    distanceChipText: {
+      color: theme.colors.text,
+      fontSize: theme.typography.fontSize.sm,
+      fontWeight: theme.typography.fontWeight.medium,
+      fontFamily: theme.typography.fonts.primary,
+    },
+    content: {
+      padding: theme.spacing.lg,
+      paddingBottom: 40, // Reduced since card is shorter
+    },
+    title: {
+      fontSize: theme.typography.fontSize.xl,
+      color: theme.colors.white,
+      fontWeight: theme.typography.fontWeight.bold,
+      fontFamily: theme.typography.fonts.primary,
+      marginBottom: theme.spacing.xs,
+    },
+    description: {
+      color: theme.colors.lightGrey,
+      fontSize: theme.typography.fontSize.md,
+      fontFamily: theme.typography.fonts.primary,
+      marginBottom: theme.spacing.lg,
+      lineHeight: 22,
+    },
+    footer: {
+      flexDirection: 'row',
+      justifyContent: 'space-between',
+      alignItems: 'center',
+    },
+    participants: {
+      flexDirection: 'row',
+      alignItems: 'center',
+    },
+    avatar: {
+      width: theme.spacing.xl,
+      height: theme.spacing.xl,
+      borderRadius: theme.radius.full,
+      backgroundColor: theme.colors.skeletonGrey,
+      borderWidth: 2,
+      borderColor: theme.colors.white,
+    },
+    avatarOverlap: {
+      marginLeft: -theme.spacing.sm,
+    },
+    participantsText: {
+      marginLeft: theme.spacing.xs,
+      color: theme.colors.white,
+      fontSize: theme.typography.fontSize.sm,
+      fontFamily: theme.typography.fonts.primary,
+      fontWeight: theme.typography.fontWeight.medium,
+    },
+    location: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: theme.spacing.xs,
+      maxWidth: '55%',
+    },
+    locationPressed: {
+      opacity: 0.7,
+    },
+    locationText: {
+      color: theme.colors.white,
+      fontSize: theme.typography.fontSize.sm,
+      fontFamily: theme.typography.fonts.primary,
+    },
+  });

@@ -1,6 +1,7 @@
 import React from 'react';
 import { View, StyleSheet, Modal, Pressable, ScrollView } from 'react-native';
-import { theme } from '@/shared/themes/theme';
+import { useStyles } from '@/context/ThemeContext';
+import type { AppTheme } from '@/shared/themes/theme';
 import { AppText } from '@/components/typography/AppText';
 import { AppButton } from '@/components/buttons/AppButton';
 import { convertEventDtoToAppEvent } from '@/api/event/event.api';
@@ -24,6 +25,7 @@ export function PostDetailModal({
   post,
   onClose,
 }: PostDetailModalProps): React.JSX.Element {
+  const styles = useStyles(createStyles);
   const navigation = useNavigation<NativeStackNavigationProp<MainStackParamList>>();
 
   if (!post) {
@@ -105,111 +107,112 @@ export function PostDetailModal({
   );
 }
 
-const styles = StyleSheet.create({
-  overlay: {
-    flex: 1,
-    backgroundColor: 'rgba(0, 0, 0, 0.5)',
-    justifyContent: 'center',
-    alignItems: 'center',
-    display: 'flex',
-  },
-  modalContent: {
-    backgroundColor: theme.colors.white,
-    borderRadius: theme.radius.lg,
-    padding: theme.spacing.lg,
-    maxHeight: '85%',
-    width: '90%',
-    alignSelf: 'center',
-  },
-  header: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'flex-start',
-    marginBottom: theme.spacing.lg,
-  },
-  title: {
-    fontSize: 20,
-    fontWeight: 'bold',
-    flex: 1,
-    marginRight: theme.spacing.md,
-    color: theme.colors.black,
-  },
-  closeButton: {
-    padding: theme.spacing.sm,
-  },
-  closeText: {
-    fontSize: 24,
-    color: theme.colors.grey,
-  },
-  section: {
-    marginBottom: theme.spacing.lg,
-  },
-  label: {
-    fontSize: 12,
-    fontWeight: '600',
-    color: theme.colors.grey,
-    marginBottom: theme.spacing.xs,
-    textTransform: 'uppercase',
-  },
-  value: {
-    fontSize: 14,
-    color: theme.colors.black,
-    lineHeight: 20,
-  },
-  row: {
-    flexDirection: 'row',
-    gap: theme.spacing.md,
-    marginBottom: theme.spacing.lg,
-  },
-  flex1: {
-    flex: 1,
-  },
-  eventSection: {
-    marginBottom: theme.spacing.lg,
-    borderTopWidth: 1,
-    borderTopColor: theme.colors.lightGrey,
-    paddingTop: theme.spacing.lg,
-  },
-  sectionTitle: {
-    fontSize: 16,
-    fontWeight: 'bold',
-    color: theme.colors.black,
-    marginBottom: theme.spacing.md,
-  },
-  eventCard: {
-    backgroundColor: theme.colors.lightGrey,
-    borderRadius: theme.radius.md,
-    padding: theme.spacing.md,
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-  },
-  eventContent: {
-    flex: 1,
-    marginRight: theme.spacing.md,
-  },
-  eventTitle: {
-    fontSize: 14,
-    fontWeight: 'bold',
-    color: theme.colors.black,
-    marginBottom: theme.spacing.xs,
-  },
-  eventDescription: {
-    fontSize: 12,
-    color: theme.colors.grey,
-    marginBottom: theme.spacing.xs,
-    lineHeight: 16,
-  },
-  eventMeta: {
-    fontSize: 11,
-    color: theme.colors.grey,
-  },
-  eventArrow: {
-    fontSize: 18,
-    color: theme.colors.primaryEco,
-    fontWeight: 'bold',
-  },
-  closeButtonAction: {
-    marginTop: theme.spacing.lg,
-  },
-});
+const createStyles = (theme: AppTheme) =>
+  StyleSheet.create({
+    overlay: {
+      flex: 1,
+      backgroundColor: 'rgba(0, 0, 0, 0.5)',
+      justifyContent: 'center',
+      alignItems: 'center',
+      display: 'flex',
+    },
+    modalContent: {
+      backgroundColor: theme.colors.white,
+      borderRadius: theme.radius.lg,
+      padding: theme.spacing.lg,
+      maxHeight: '85%',
+      width: '90%',
+      alignSelf: 'center',
+    },
+    header: {
+      flexDirection: 'row',
+      justifyContent: 'space-between',
+      alignItems: 'flex-start',
+      marginBottom: theme.spacing.lg,
+    },
+    title: {
+      fontSize: 20,
+      fontWeight: 'bold',
+      flex: 1,
+      marginRight: theme.spacing.md,
+      color: theme.colors.text,
+    },
+    closeButton: {
+      padding: theme.spacing.sm,
+    },
+    closeText: {
+      fontSize: 24,
+      color: theme.colors.grey,
+    },
+    section: {
+      marginBottom: theme.spacing.lg,
+    },
+    label: {
+      fontSize: 12,
+      fontWeight: '600',
+      color: theme.colors.grey,
+      marginBottom: theme.spacing.xs,
+      textTransform: 'uppercase',
+    },
+    value: {
+      fontSize: 14,
+      color: theme.colors.text,
+      lineHeight: 20,
+    },
+    row: {
+      flexDirection: 'row',
+      gap: theme.spacing.md,
+      marginBottom: theme.spacing.lg,
+    },
+    flex1: {
+      flex: 1,
+    },
+    eventSection: {
+      marginBottom: theme.spacing.lg,
+      borderTopWidth: 1,
+      borderTopColor: theme.colors.lightGrey,
+      paddingTop: theme.spacing.lg,
+    },
+    sectionTitle: {
+      fontSize: 16,
+      fontWeight: 'bold',
+      color: theme.colors.black,
+      marginBottom: theme.spacing.md,
+    },
+    eventCard: {
+      backgroundColor: theme.colors.lightGrey,
+      borderRadius: theme.radius.md,
+      padding: theme.spacing.md,
+      flexDirection: 'row',
+      justifyContent: 'space-between',
+      alignItems: 'center',
+    },
+    eventContent: {
+      flex: 1,
+      marginRight: theme.spacing.md,
+    },
+    eventTitle: {
+      fontSize: 14,
+      fontWeight: 'bold',
+      color: theme.colors.black,
+      marginBottom: theme.spacing.xs,
+    },
+    eventDescription: {
+      fontSize: 12,
+      color: theme.colors.grey,
+      marginBottom: theme.spacing.xs,
+      lineHeight: 16,
+    },
+    eventMeta: {
+      fontSize: 11,
+      color: theme.colors.grey,
+    },
+    eventArrow: {
+      fontSize: 18,
+      color: theme.colors.primaryEco,
+      fontWeight: 'bold',
+    },
+    closeButtonAction: {
+      marginTop: theme.spacing.lg,
+    },
+  });

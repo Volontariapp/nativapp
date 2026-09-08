@@ -14,7 +14,7 @@ import type { AuthNavigationProp } from '@/navigation/stacks/AuthStack';
 
 export function LoginScreen(): React.JSX.Element {
   const { login } = useAuth();
-  const { navigate } = useNavigation<AuthNavigationProp>();
+  const navigation = useNavigation<AuthNavigationProp>();
 
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -73,7 +73,7 @@ export function LoginScreen(): React.JSX.Element {
         <AppText style={styles.footerText}>Nouveau parmi nous ? </AppText>
         <Pressable
           onPress={() => {
-            navigate('register');
+            navigation.navigate('register');
           }}
         >
           <AppText style={styles.footerLink}>S'inscrire</AppText>

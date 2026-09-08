@@ -1,7 +1,8 @@
 import React from 'react';
 import { View, StyleSheet } from 'react-native';
 import { StatCard } from '@/components/dataDisplay/StatCard';
-import { theme } from '@/shared/themes/theme';
+import { useAppTheme, useStyles } from '@/context/ThemeContext';
+import type { AppTheme } from '@/shared/themes/theme';
 
 interface ProfileStatsProps {
   impactScore: number;
@@ -19,6 +20,8 @@ export const ProfileStats = ({
   eventsCount,
   createdCount,
 }: ProfileStatsProps): React.JSX.Element => {
+  const styles = useStyles(createStyles);
+  const { theme } = useAppTheme();
   return (
     <View style={styles.statsContainer}>
       <StatCard label="Impact" value={impactScore} color={theme.colors.primaryEco} />
@@ -29,11 +32,12 @@ export const ProfileStats = ({
   );
 };
 
-const styles = StyleSheet.create({
-  statsContainer: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    gap: theme.spacing.md,
-    flexWrap: 'wrap',
-  },
-});
+const createStyles = (theme: AppTheme) =>
+  StyleSheet.create({
+    statsContainer: {
+      flexDirection: 'row',
+      justifyContent: 'space-between',
+      gap: theme.spacing.md,
+      flexWrap: 'wrap',
+    },
+  });

@@ -3,13 +3,17 @@ import { StyleSheet, View, ActivityIndicator } from 'react-native';
 import React, { useCallback, useMemo, useRef } from 'react';
 import { AppText } from '@/components/typography/AppText';
 import AppHeader from '@/components/layout/AppHeader';
-import { theme } from '@/shared/themes/theme';
+import { useAppTheme, useStyles } from '@/context/ThemeContext';
+import type { AppTheme } from '@/shared/themes/theme';
 import { useListPosts } from '@/api/post/hooks/use-list-all-posts';
 import AppPost from '@/components/post/AppPost';
 import Animated from 'react-native-reanimated';
 import { useScrollTabBar } from '@/navigation/hooks/useScrollTabBar';
 
 export function HomeScreen(): React.JSX.Element {
+  const { theme } = useAppTheme();
+  const styles = useStyles(createStyles);
+
   const { data, isLoading, isError, refetch, fetchNextPage, hasNextPage, isFetchingNextPage } =
     useListPosts({
       limit: 10,
@@ -29,15 +33,20 @@ export function HomeScreen(): React.JSX.Element {
   }, [refetch]);
 
   const posts = useMemo(() => {
-    // Read refreshCount to force dependency re-evaluation
-    void refreshCount;
-    const allPosts = data?.pages.flatMap((page) => page.posts) ?? [];
-    allPosts.forEach((post) => {
-      randomSortMap.current[post.id] ??= Math.random();
-    });
-    return [...allPosts].sort(
-      (a, b) => (randomSortMap.current[a.id] ?? 0) - (randomSortMap.current[b.id] ?? 0),
-    );
+    const randomizedPages =
+      data?.pages.map((page) => {
+        const pagePosts = [...page.posts];
+        pagePosts.forEach((post) => {
+          randomSortMap.current[post.id] ??= Math.random();
+        });
+        return pagePosts.sort(
+          (a, b) => (randomSortMap.current[a.id] ?? 0) - (randomSortMap.current[b.id] ?? 0),
+        );
+      }) ?? [];
+
+    const finalPosts = randomizedPages.flat();
+    console.log('[HomeScreen] Total posts rendered:', finalPosts.length);
+    return finalPosts;
   }, [data, refreshCount]);
 
   type PostItem = React.ComponentProps<typeof AppPost>['post'];
@@ -72,17 +81,45 @@ export function HomeScreen(): React.JSX.Element {
             }}
             refreshing={isRefreshing}
             onEndReached={() => {
+              console.log(
+                '[HomeScreen] onEndReached triggered. hasNextPage:',
+                hasNextPage,
+                'isFetchingNextPage:',
+                isFetchingNextPage,
+              );
               if (hasNextPage && !isFetchingNextPage) {
+                console.log('[HomeScreen] Calling fetchNextPage()...');
                 void fetchNextPage();
+              } else if (!hasNextPage) {
+                console.log('[HomeScreen] No more pages available (hasNextPage is false).');
               }
             }}
             onEndReachedThreshold={0.5}
             ListFooterComponent={
-              isFetchingNextPage ? (
-                <View style={styles.footerLoader}>
+              <View style={styles.footerLoader}>
+                {isFetchingNextPage ? (
                   <ActivityIndicator size="small" color={theme.colors.primarySocio} />
-                </View>
-              ) : null
+                ) : hasNextPage ? (
+                  <AppText
+                    style={{
+                      padding: 20,
+                      color: theme.colors.primarySocio,
+                      textAlign: 'center',
+                      fontWeight: 'bold',
+                    }}
+                    onPress={() => {
+                      console.log('[HomeScreen] Manual load more clicked!');
+                      void fetchNextPage();
+                    }}
+                  >
+                    Charger plus de posts
+                  </AppText>
+                ) : (
+                  <AppText style={{ padding: 20, color: theme.colors.grey, textAlign: 'center' }}>
+                    Fin des posts
+                  </AppText>
+                )}
+              </View>
             }
             ListEmptyComponent={
               <View style={styles.center}>
@@ -96,29 +133,30 @@ export function HomeScreen(): React.JSX.Element {
   );
 }
 
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: theme.colors.background,
-  },
-  content: {
-    flex: 1,
-  },
-  listContent: {
-    paddingBottom: 20,
-  },
-  center: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-    padding: 20,
-  },
-  footerLoader: {
-    paddingVertical: 20,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  spacer: {
-    height: 12,
-  },
-});
+const createStyles = (theme: AppTheme) =>
+  StyleSheet.create({
+    container: {
+      flex: 1,
+      backgroundColor: theme.colors.background,
+    },
+    content: {
+      flex: 1,
+    },
+    listContent: {
+      paddingBottom: 20,
+    },
+    center: {
+      flex: 1,
+      justifyContent: 'center',
+      alignItems: 'center',
+      padding: 20,
+    },
+    footerLoader: {
+      paddingVertical: 20,
+      alignItems: 'center',
+      justifyContent: 'center',
+    },
+    spacer: {
+      height: 12,
+    },
+  });

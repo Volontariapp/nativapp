@@ -1,13 +1,15 @@
 import React from 'react';
 import { View, StyleSheet } from 'react-native';
 import { AppText } from '@/components/typography/AppText';
-import { theme } from '@/shared/themes/theme';
+import { useStyles } from '@/context/ThemeContext';
+import type { AppTheme } from '@/shared/themes/theme';
 
 interface ProfileBioProps {
   bio?: string;
 }
 
 export const ProfileBio = ({ bio }: ProfileBioProps): React.JSX.Element => {
+  const styles = useStyles(createStyles);
   return (
     <View style={styles.bioCard}>
       <AppText style={styles.bioText}>
@@ -19,16 +21,17 @@ export const ProfileBio = ({ bio }: ProfileBioProps): React.JSX.Element => {
   );
 };
 
-const styles = StyleSheet.create({
-  bioCard: {
-    backgroundColor: theme.colors.white,
-    padding: theme.spacing.lg,
-    borderRadius: theme.radius.md,
-    ...theme.shadows.card,
-  },
-  bioText: {
-    fontSize: theme.typography.fontSize.md,
-    lineHeight: 22,
-    color: theme.colors.black,
-  },
-});
+const createStyles = (theme: AppTheme) =>
+  StyleSheet.create({
+    bioCard: {
+      backgroundColor: theme.colors.white,
+      padding: theme.spacing.lg,
+      borderRadius: theme.radius.md,
+      ...theme.shadows.card,
+    },
+    bioText: {
+      fontSize: theme.typography.fontSize.md,
+      lineHeight: 22,
+      color: theme.colors.text,
+    },
+  });

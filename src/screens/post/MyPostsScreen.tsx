@@ -12,11 +12,14 @@ import { AppText } from '@/components/typography/AppText';
 import AppHeader from '@/components/layout/AppHeader';
 import { AppButton } from '@/components/buttons/AppButton';
 import { PostDetailModal } from '@/components/post/PostDetailModal';
-import { theme } from '@/shared/themes/theme';
+import { useAppTheme, useStyles } from '@/context/ThemeContext';
+import type { AppTheme } from '@/shared/themes/theme';
 import { useGetMyPosts, useDeletePost } from '@/api/post/hooks';
 import type { PostWeb } from '@volontariapp/contracts';
 
 export function MyPostsScreen(): React.JSX.Element {
+  const { theme } = useAppTheme();
+  const styles = useStyles(createStyles);
   const { data, isLoading, fetchNextPage, hasNextPage, isFetchingNextPage } = useGetMyPosts(10);
   const { mutateAsync: deletePost } = useDeletePost();
   const [selectedPost, setSelectedPost] = React.useState<PostWeb | null>(null);
@@ -110,48 +113,49 @@ export function MyPostsScreen(): React.JSX.Element {
   );
 }
 
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: theme.colors.background,
-  },
-  center: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  listContent: {
-    padding: theme.spacing.md,
-  },
-  postCard: {
-    backgroundColor: theme.colors.white,
-    padding: theme.spacing.md,
-    borderRadius: theme.radius.md,
-    marginBottom: theme.spacing.md,
-    boxShadow: '0 2px 4px rgba(0,0,0,0.1)',
-  },
-  postHeader: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    marginBottom: theme.spacing.sm,
-  },
-  postTitle: {
-    fontSize: 18,
-    fontWeight: 'bold',
-    flex: 1,
-  },
-  postContent: {
-    fontSize: 14,
-    color: theme.colors.grey,
-    marginBottom: theme.spacing.md,
-  },
-  deleteButton: {
-    alignSelf: 'flex-end',
-    width: 120,
-  },
-  emptyText: {
-    textAlign: 'center',
-    color: theme.colors.grey,
-    marginTop: theme.spacing.xxl,
-  },
-});
+const createStyles = (theme: AppTheme) =>
+  StyleSheet.create({
+    container: {
+      flex: 1,
+      backgroundColor: theme.colors.background,
+    },
+    center: {
+      flex: 1,
+      justifyContent: 'center',
+      alignItems: 'center',
+    },
+    listContent: {
+      padding: theme.spacing.md,
+    },
+    postCard: {
+      backgroundColor: theme.colors.white,
+      padding: theme.spacing.md,
+      borderRadius: theme.radius.md,
+      marginBottom: theme.spacing.md,
+      boxShadow: '0 2px 4px rgba(0,0,0,0.1)',
+    },
+    postHeader: {
+      flexDirection: 'row',
+      justifyContent: 'space-between',
+      marginBottom: theme.spacing.sm,
+    },
+    postTitle: {
+      fontSize: 18,
+      fontWeight: 'bold',
+      flex: 1,
+    },
+    postContent: {
+      fontSize: 14,
+      color: theme.colors.grey,
+      marginBottom: theme.spacing.md,
+    },
+    deleteButton: {
+      alignSelf: 'flex-end',
+      width: 120,
+    },
+    emptyText: {
+      textAlign: 'center',
+      color: theme.colors.grey,
+      marginTop: theme.spacing.xxl,
+    },
+  });

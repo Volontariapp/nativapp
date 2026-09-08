@@ -9,7 +9,8 @@ import {
   type TargetedEvent,
 } from 'react-native';
 import { AppText } from '@/components/typography/AppText';
-import { theme } from '@/shared/themes/theme';
+import { useAppTheme, useStyles } from '@/context/ThemeContext';
+import type { AppTheme } from '@/shared/themes/theme';
 
 export interface AppInputProps extends Omit<TextInputProps, 'onChangeText'> {
   label: string;
@@ -30,6 +31,8 @@ export const AppInput = ({
   style,
   ...props
 }: AppInputProps): ReactNode => {
+  const { theme } = useAppTheme();
+  const styles = useStyles(createStyles);
   const [internalError, setInternalError] = useState<string | null>(null);
   const [isFocused, setIsFocused] = useState(false);
   const hasBlurred = useRef(false);
@@ -124,72 +127,73 @@ export const AppInput = ({
   );
 };
 
-const styles = StyleSheet.create({
-  container: {
-    marginBottom: theme.spacing.lg,
-  },
-  errorTextTop: {
-    color: theme.colors.danger,
-    fontSize: 12,
-    marginBottom: theme.spacing.xs,
-    fontWeight: '500',
-  },
-  errorText: {
-    color: theme.colors.danger,
-  },
-  errorBorder: {
-    borderColor: theme.colors.danger,
-  },
-  label: {
-    fontSize: 14,
-    fontWeight: '600',
-    color: theme.colors.black,
-    marginBottom: theme.spacing.sm,
-  },
-  input: {
-    backgroundColor: theme.colors.background,
-    borderWidth: 1.5,
-    borderColor: theme.colors.grey + '40', // light grey border
-    borderRadius: theme.radius.md,
-    paddingHorizontal: theme.spacing.md,
-    paddingVertical: theme.spacing.md,
-    fontSize: 16,
-    color: theme.colors.black,
-  },
-  inputFocused: {
-    borderColor: theme.colors.primaryEco,
-  },
-  outlinedWrapper: {
-    borderWidth: 1.5,
-    borderColor: theme.colors.grey,
-    borderRadius: theme.radius.md,
-    backgroundColor: 'transparent',
-    marginTop: 8,
-  },
-  outlinedWrapperFocused: {
-    borderColor: theme.colors.primaryEco,
-  },
-  outlinedLabelContainer: {
-    position: 'absolute',
-    top: -10,
-    left: 12,
-    backgroundColor: theme.colors.white,
-    paddingHorizontal: 4,
-    zIndex: 1,
-  },
-  outlinedLabel: {
-    fontSize: 12,
-    color: theme.colors.grey,
-    fontWeight: '500',
-  },
-  outlinedLabelFocused: {
-    color: theme.colors.primaryEco,
-    fontWeight: '700',
-  },
-  outlinedInput: {
-    paddingHorizontal: theme.spacing.md,
-    paddingVertical: theme.spacing.md,
-    fontSize: 16,
-    color: theme.colors.black,
-  },
-});
+const createStyles = (theme: AppTheme) =>
+  StyleSheet.create({
+    container: {
+      marginBottom: theme.spacing.lg,
+    },
+    errorTextTop: {
+      color: theme.colors.danger,
+      fontSize: 12,
+      marginBottom: theme.spacing.xs,
+      fontWeight: '500',
+    },
+    errorText: {
+      color: theme.colors.danger,
+    },
+    errorBorder: {
+      borderColor: theme.colors.danger,
+    },
+    label: {
+      fontSize: 14,
+      fontWeight: '600',
+      color: theme.colors.text,
+      marginBottom: theme.spacing.sm,
+    },
+    input: {
+      backgroundColor: theme.colors.background,
+      borderWidth: 1.5,
+      borderColor: theme.colors.grey + '40', // light grey border
+      borderRadius: theme.radius.md,
+      paddingHorizontal: theme.spacing.md,
+      paddingVertical: theme.spacing.md,
+      fontSize: 16,
+      color: theme.colors.text,
+    },
+    inputFocused: {
+      borderColor: theme.colors.primaryEco,
+    },
+    outlinedWrapper: {
+      borderWidth: 1.5,
+      borderColor: theme.colors.grey,
+      borderRadius: theme.radius.md,
+      backgroundColor: 'transparent',
+      marginTop: 8,
+    },
+    outlinedWrapperFocused: {
+      borderColor: theme.colors.primaryEco,
+    },
+    outlinedLabelContainer: {
+      position: 'absolute',
+      top: -10,
+      left: 12,
+      backgroundColor: theme.colors.white,
+      paddingHorizontal: 4,
+      zIndex: 1,
+    },
+    outlinedLabel: {
+      fontSize: 12,
+      color: theme.colors.grey,
+      fontWeight: '500',
+    },
+    outlinedLabelFocused: {
+      color: theme.colors.primaryEco,
+      fontWeight: '700',
+    },
+    outlinedInput: {
+      paddingHorizontal: theme.spacing.md,
+      paddingVertical: theme.spacing.md,
+      fontSize: 16,
+      color: theme.colors.text,
+    },
+  });

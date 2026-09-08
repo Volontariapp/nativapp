@@ -3,7 +3,8 @@ import { View, StyleSheet, Pressable, Alert } from 'react-native';
 import { Image } from 'expo-image';
 import Icon from 'react-native-vector-icons/Feather';
 import { AppText } from '@/components/typography/AppText';
-import { theme } from '@/shared/themes/theme';
+import { useAppTheme, useStyles } from '@/context/ThemeContext';
+import type { AppTheme } from '@/shared/themes/theme';
 import { useGetPublicUser } from '@/api/user/hooks/use-get-public-user';
 import { useDeleteComment } from '@/api/post/hooks/use-delete-comment';
 import { useAuth } from '@/context/AuthContext';
@@ -14,6 +15,8 @@ interface CommentItemProps {
 }
 
 export function CommentItem({ comment }: CommentItemProps) {
+  const { theme } = useAppTheme();
+  const styles = useStyles(createStyles);
   const { userId } = useAuth();
   const { data: author } = useGetPublicUser(comment.authorId);
   const { mutate: deleteComment, isPending } = useDeleteComment(comment.postId);
@@ -58,50 +61,51 @@ export function CommentItem({ comment }: CommentItemProps) {
   );
 }
 
-const styles = StyleSheet.create({
-  commentCard: {
-    backgroundColor: theme.colors.white,
-    padding: theme.spacing.md,
-    borderWidth: 1,
-    borderColor: theme.colors.black,
-    borderRadius: 0,
-  },
-  commentHeader: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    marginBottom: theme.spacing.xs,
-  },
-  authorContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
-  },
-  avatarImage: {
-    width: 24,
-    height: 24,
-    borderRadius: 12,
-    marginRight: theme.spacing.sm,
-  },
-  author: {
-    fontWeight: 'bold',
-    fontSize: 14,
-  },
-  date: {
-    fontFamily: theme.typography.fonts.secondary,
-    color: theme.colors.grey,
-    fontSize: 12,
-  },
-  content: {
-    fontSize: 14,
-    lineHeight: 20,
-    fontFamily: theme.typography.fonts.primary,
-  },
-  actionsContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
-  },
-  deleteButton: {
-    marginLeft: theme.spacing.sm,
-    padding: theme.spacing.xs,
-  },
-});
+const createStyles = (theme: AppTheme) =>
+  StyleSheet.create({
+    commentCard: {
+      backgroundColor: theme.colors.white,
+      padding: theme.spacing.md,
+      borderWidth: 1,
+      borderColor: theme.colors.lightGrey,
+      borderRadius: theme.radius.sm,
+    },
+    commentHeader: {
+      flexDirection: 'row',
+      justifyContent: 'space-between',
+      alignItems: 'center',
+      marginBottom: theme.spacing.xs,
+    },
+    authorContainer: {
+      flexDirection: 'row',
+      alignItems: 'center',
+    },
+    avatarImage: {
+      width: 24,
+      height: 24,
+      borderRadius: 12,
+      marginRight: theme.spacing.sm,
+    },
+    author: {
+      fontWeight: 'bold',
+      fontSize: 14,
+    },
+    date: {
+      fontFamily: theme.typography.fonts.secondary,
+      color: theme.colors.grey,
+      fontSize: 12,
+    },
+    content: {
+      fontSize: 14,
+      lineHeight: 20,
+      fontFamily: theme.typography.fonts.primary,
+    },
+    actionsContainer: {
+      flexDirection: 'row',
+      alignItems: 'center',
+    },
+    deleteButton: {
+      marginLeft: theme.spacing.sm,
+      padding: theme.spacing.xs,
+    },
+  });

@@ -6,10 +6,13 @@ import { AppText } from '@/components/typography/AppText';
 import AppHeader from '@/components/layout/AppHeader';
 import AppMap from '@/components/map/AppMap';
 import { MapProvider } from '@/components/map/MapContext';
-import { theme } from '@/shared/themes/theme';
+import { useAppTheme, useStyles } from '@/context/ThemeContext';
+import type { AppTheme } from '@/shared/themes/theme';
 import { useExploreScreen } from './hooks/use-explore-screen';
 
 export const ExploreScreen = React.memo(function ExploreScreen(): React.JSX.Element {
+  const { theme } = useAppTheme();
+  const styles = useStyles(createStyles);
   const insets = useSafeAreaInsets();
 
   const {
@@ -51,33 +54,34 @@ export const ExploreScreen = React.memo(function ExploreScreen(): React.JSX.Elem
   );
 });
 
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: theme.colors.background,
-  },
-  skeletonContainer: {
-    flex: 1,
-  },
-  skeletonMap: {
-    flex: 1,
-    backgroundColor: theme.colors.skeletonGrey,
-    opacity: 0.3, // Effet de base pour le chargement
-  },
-  errorContainer: {
-    position: 'absolute',
-    left: theme.spacing.lg,
-    right: theme.spacing.lg,
-    backgroundColor: theme.colors.danger,
-    padding: theme.spacing.md,
-    borderRadius: theme.radius.md,
-    zIndex: 100,
-    ...theme.shadows.card,
-  },
-  errorText: {
-    color: theme.colors.white,
-    textAlign: 'center',
-    fontWeight: theme.typography.fontWeight.bold,
-    fontSize: theme.typography.fontSize.sm,
-  },
-});
+const createStyles = (theme: AppTheme) =>
+  StyleSheet.create({
+    container: {
+      flex: 1,
+      backgroundColor: theme.colors.background,
+    },
+    skeletonContainer: {
+      flex: 1,
+    },
+    skeletonMap: {
+      flex: 1,
+      backgroundColor: theme.colors.skeletonGrey,
+      opacity: 0.3, // Effet de base pour le chargement
+    },
+    errorContainer: {
+      position: 'absolute',
+      left: theme.spacing.lg,
+      right: theme.spacing.lg,
+      backgroundColor: theme.colors.danger,
+      padding: theme.spacing.md,
+      borderRadius: theme.radius.md,
+      zIndex: 100,
+      ...theme.shadows.card,
+    },
+    errorText: {
+      color: theme.colors.white,
+      textAlign: 'center',
+      fontWeight: theme.typography.fontWeight.bold,
+      fontSize: theme.typography.fontSize.sm,
+    },
+  });

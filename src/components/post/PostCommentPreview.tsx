@@ -3,13 +3,16 @@ import { Text, StyleSheet, View } from 'react-native';
 import { Image } from 'expo-image';
 import { useGetPublicUser } from '@/api/user/hooks/use-get-public-user';
 import type { CommentWebResponse } from '@volontariapp/contracts';
-import { theme } from '@/shared/themes/theme';
+import { useStyles } from '@/context/ThemeContext';
+import type { AppTheme } from '@/shared/themes/theme';
 
 interface PostCommentPreviewProps {
   comment: CommentWebResponse;
 }
 
 export function PostCommentPreview({ comment }: PostCommentPreviewProps) {
+  const styles = useStyles(createStyles);
+
   const { data: author } = useGetPublicUser(comment.authorId);
   const pseudo = author?.pseudo ?? 'Auteur inconnu';
   const seed = author?.pseudo ?? comment.authorId;
@@ -25,27 +28,28 @@ export function PostCommentPreview({ comment }: PostCommentPreviewProps) {
   );
 }
 
-const styles = StyleSheet.create({
-  container: {
-    flexDirection: 'row',
-    alignItems: 'flex-start',
-    marginBottom: theme.spacing.xs,
-  },
-  avatarImage: {
-    width: 20,
-    height: 20,
-    borderRadius: 10,
-    marginRight: theme.spacing.xs,
-    marginTop: 2,
-  },
-  text: {
-    flex: 1,
-    fontSize: theme.typography.fontSize.sm,
-    color: theme.colors.black,
-    fontFamily: theme.typography.fonts.primary,
-    lineHeight: 20,
-  },
-  author: {
-    fontWeight: theme.typography.fontWeight.bold,
-  },
-});
+const createStyles = (theme: AppTheme) =>
+  StyleSheet.create({
+    container: {
+      flexDirection: 'row',
+      alignItems: 'flex-start',
+      marginBottom: theme.spacing.xs,
+    },
+    avatarImage: {
+      width: 20,
+      height: 20,
+      borderRadius: 10,
+      marginRight: theme.spacing.xs,
+      marginTop: 2,
+    },
+    text: {
+      flex: 1,
+      fontSize: theme.typography.fontSize.sm,
+      color: theme.colors.text,
+      fontFamily: theme.typography.fonts.primary,
+      lineHeight: 20,
+    },
+    author: {
+      fontWeight: theme.typography.fontWeight.bold,
+    },
+  });

@@ -1,6 +1,7 @@
 import React from 'react';
 import { View, Text, StyleSheet, Pressable } from 'react-native';
-import { theme } from '@/shared/themes/theme';
+import { useAppTheme, useStyles } from '@/context/ThemeContext';
+import type { AppTheme } from '@/shared/themes/theme';
 import Icon from 'react-native-vector-icons/Feather';
 import Ionicons from 'react-native-vector-icons/Ionicons';
 
@@ -21,6 +22,9 @@ export function PostActions({
   onLikePress,
   onLikeCountPress,
 }: PostActionsProps) {
+  const { theme } = useAppTheme();
+  const styles = useStyles(createStyles);
+
   return (
     <View style={styles.container}>
       <View style={styles.leftActions}>
@@ -29,7 +33,7 @@ export function PostActions({
             <Ionicons
               name={isLiked ? 'heart' : 'heart-outline'}
               size={22}
-              color={isLiked ? theme.colors.danger : theme.colors.black}
+              color={isLiked ? theme.colors.danger : theme.colors.text}
             />
           </Pressable>
           {likeCount >= 0 && (
@@ -40,41 +44,42 @@ export function PostActions({
         </View>
 
         <Pressable style={styles.iconButton} onPress={onCommentPress}>
-          <Icon name="message-square" size={20} color={theme.colors.black} />
+          <Icon name="message-square" size={20} color={theme.colors.text} />
           {commentCount > 0 && <Text style={styles.actionText}>{commentCount}</Text>}
         </Pressable>
 
         <Pressable style={styles.iconButton}>
-          <Icon name="share-2" size={20} color={theme.colors.black} />
+          <Icon name="share-2" size={20} color={theme.colors.text} />
         </Pressable>
       </View>
     </View>
   );
 }
 
-const styles = StyleSheet.create({
-  container: {
-    paddingHorizontal: theme.spacing.lg,
-    paddingVertical: theme.spacing.md,
-  },
-  leftActions: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: theme.spacing.lg,
-  },
-  actionGroup: {
-    flexDirection: 'row',
-    alignItems: 'center',
-  },
-  iconButton: {
-    flexDirection: 'row',
-    alignItems: 'center',
-  },
-  actionText: {
-    marginLeft: theme.spacing.xs,
-    fontSize: theme.typography.fontSize.sm,
-    fontWeight: theme.typography.fontWeight.semibold,
-    color: theme.colors.black,
-    fontFamily: theme.typography.fonts.primary,
-  },
-});
+const createStyles = (theme: AppTheme) =>
+  StyleSheet.create({
+    container: {
+      paddingHorizontal: theme.spacing.lg,
+      paddingVertical: theme.spacing.md,
+    },
+    leftActions: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: theme.spacing.lg,
+    },
+    actionGroup: {
+      flexDirection: 'row',
+      alignItems: 'center',
+    },
+    iconButton: {
+      flexDirection: 'row',
+      alignItems: 'center',
+    },
+    actionText: {
+      marginLeft: theme.spacing.xs,
+      fontSize: theme.typography.fontSize.sm,
+      fontWeight: theme.typography.fontWeight.semibold,
+      color: theme.colors.text,
+      fontFamily: theme.typography.fonts.primary,
+    },
+  });

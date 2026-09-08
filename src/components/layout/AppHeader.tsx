@@ -1,6 +1,7 @@
 import React from 'react';
 import { View, StyleSheet } from 'react-native';
-import { theme } from '@/shared/themes/theme';
+import { useAppTheme, useStyles } from '@/context/ThemeContext';
+import type { AppTheme } from '@/shared/themes/theme';
 import { AppText } from '@/components/typography/AppText';
 import { useSocket } from '@/context/SocketContext';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -16,31 +17,43 @@ type NavigationProp = NativeStackNavigationProp<MainStackParamList>;
 export interface AppHeaderProps {
   showBack?: boolean;
   showSettings?: boolean;
+  dark?: boolean;
 }
 
 export default function AppHeader({
   showBack = false,
   showSettings = false,
+  dark = false,
 }: AppHeaderProps): React.JSX.Element {
+  const { theme } = useAppTheme();
+  const styles = useStyles(createStyles);
   const { isConnected } = useSocket();
   const insets = useSafeAreaInsets();
   const navigation = useNavigation<NavigationProp>();
 
   return (
-    <View style={[styles.container, { paddingTop: insets.top }]}>
+    <View
+      style={[
+        styles.container,
+        { paddingTop: insets.top },
+        dark && { backgroundColor: theme.colors.background },
+      ]}
+    >
       <View style={styles.leftContainer}>
         {showBack && (
           <Feather
             name="arrow-left"
             size={24}
-            color={theme.colors.black}
+            color={dark ? theme.colors.white : theme.colors.text}
             style={styles.backIcon}
             onPress={() => {
               navigation.goBack();
             }}
           />
         )}
-        <AppText style={styles.title}>VolontariApp</AppText>
+        <AppText style={[styles.title, dark && { color: theme.colors.white }]}>
+          VolontariApp
+        </AppText>
       </View>
       <View style={styles.rightContainer}>
         {showSettings && (
@@ -51,7 +64,11 @@ export default function AppHeader({
             style={styles.settingsButton}
             hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
           >
-            <AppIcons icon="settings" size={24} color={theme.colors.black} />
+            <AppIcons
+              icon="settings"
+              size={24}
+              color={dark ? theme.colors.white : theme.colors.text}
+            />
           </Pressable>
         )}
         <View
@@ -65,38 +82,39 @@ export default function AppHeader({
   );
 }
 
-const styles = StyleSheet.create({
-  container: {
-    backgroundColor: theme.colors.background,
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    flexDirection: 'row',
-    paddingHorizontal: theme.spacing.lg,
-    paddingBottom: theme.spacing.sm,
-  },
-  leftContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
-  },
-  rightContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: theme.spacing.sm,
-  },
-  backIcon: {
-    marginRight: theme.spacing.md,
-  },
-  title: {
-    fontSize: 20,
-    fontWeight: 'bold',
-    color: theme.colors.black,
-  },
-  statusDot: {
-    width: 10,
-    height: 10,
-    borderRadius: 5,
-  },
-  settingsButton: {
-    marginRight: theme.spacing.sm,
-  },
-});
+const createStyles = (theme: AppTheme) =>
+  StyleSheet.create({
+    container: {
+      backgroundColor: theme.colors.background,
+      justifyContent: 'space-between',
+      alignItems: 'center',
+      flexDirection: 'row',
+      paddingHorizontal: theme.spacing.lg,
+      paddingBottom: theme.spacing.sm,
+    },
+    leftContainer: {
+      flexDirection: 'row',
+      alignItems: 'center',
+    },
+    rightContainer: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: theme.spacing.sm,
+    },
+    backIcon: {
+      marginRight: theme.spacing.md,
+    },
+    title: {
+      fontSize: 20,
+      fontWeight: 'bold',
+      color: theme.colors.text,
+    },
+    statusDot: {
+      width: 10,
+      height: 10,
+      borderRadius: 5,
+    },
+    settingsButton: {
+      marginRight: theme.spacing.sm,
+    },
+  });

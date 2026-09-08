@@ -6,7 +6,8 @@ import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { AppText } from '@/components/typography/AppText';
 import { AppButton } from '@/components/buttons/AppButton';
 import AppHeader from '@/components/layout/AppHeader';
-import { theme } from '@/shared/themes/theme';
+import { useStyles } from '@/context/ThemeContext';
+import type { AppTheme } from '@/shared/themes/theme';
 import type { CreateEventStackParamList } from '@/navigation/stacks/CreateEventStack';
 
 type ManageEventsNavigationProp = NativeStackNavigationProp<
@@ -15,6 +16,7 @@ type ManageEventsNavigationProp = NativeStackNavigationProp<
 >;
 
 export function ManageEventsScreen(): React.JSX.Element {
+  const styles = useStyles(createStyles);
   const navigation = useNavigation<ManageEventsNavigationProp>();
 
   return (
@@ -61,33 +63,34 @@ export function ManageEventsScreen(): React.JSX.Element {
   );
 }
 
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: theme.colors.background,
-  },
-  content: {
-    flex: 1,
-    padding: theme.spacing.xl,
-    justifyContent: 'center',
-  },
-  title: {
-    fontSize: 28,
-    fontWeight: 'bold',
-    color: theme.colors.black,
-    marginBottom: theme.spacing.sm,
-    textAlign: 'center',
-  },
-  subtitle: {
-    fontSize: 16,
-    color: theme.colors.grey,
-    marginBottom: theme.spacing.xxl,
-    textAlign: 'center',
-  },
-  buttonContainer: {
-    gap: theme.spacing.lg,
-  },
-  button: {
-    width: '100%',
-  },
-});
+const createStyles = (theme: AppTheme) =>
+  StyleSheet.create({
+    container: {
+      flex: 1,
+      backgroundColor: theme.colors.background,
+    },
+    content: {
+      flex: 1,
+      padding: theme.spacing.xl,
+      justifyContent: 'center',
+    },
+    title: {
+      fontSize: 28,
+      fontWeight: 'bold',
+      color: theme.colors.text,
+      marginBottom: theme.spacing.sm,
+      textAlign: 'center',
+    },
+    subtitle: {
+      fontSize: 16,
+      color: theme.colors.grey,
+      marginBottom: theme.spacing.xxl,
+      textAlign: 'center',
+    },
+    buttonContainer: {
+      gap: theme.spacing.lg,
+    },
+    button: {
+      width: '100%',
+    },
+  });

@@ -2,8 +2,7 @@ import type { ReactNode } from 'react';
 import { Pressable, StyleSheet } from 'react-native';
 import type { PressableProps } from 'react-native';
 
-import { ICONS_BUTTON_VARIANTS } from '@/shared/themes/buttonVariants';
-import { theme } from '@/shared/themes/theme';
+import { useAppTheme } from '@/context/ThemeContext';
 import { AppIcons } from '@/components/media/AppIcons';
 import type { IconLibrary, IconButtonVariant } from '@/shared/types/components';
 
@@ -20,17 +19,24 @@ export const AppIconsButton = ({
   variant = 'eco',
   icon,
   iconLibrary = 'Feather',
-  iconColor = theme.colors.white,
+  iconColor,
   top = 0,
   size = 24,
   ...pressableProps
 }: AppIconsButtonProps): ReactNode => {
-  const stylesVariant = ICONS_BUTTON_VARIANTS[variant];
+  const { theme } = useAppTheme();
+  const resolvedIconColor = iconColor ?? theme.colors.text;
 
   const backgroundColor =
-    stylesVariant !== ICONS_BUTTON_VARIANTS.noBackground
-      ? stylesVariant.backgroundColor
-      : 'transparent';
+    variant === 'eco'
+      ? theme.colors.primaryEco
+      : variant === 'socio'
+        ? theme.colors.primarySocio
+        : variant === 'danger'
+          ? theme.colors.danger
+          : variant === 'white'
+            ? theme.colors.white
+            : 'transparent';
 
   return (
     <Pressable
@@ -48,7 +54,12 @@ export const AppIconsButton = ({
       ]}
     >
       {icon != null && (
-        <AppIcons icon={icon} iconLibrary={iconLibrary} size={size * 0.5} color={iconColor} />
+        <AppIcons
+          icon={icon}
+          iconLibrary={iconLibrary}
+          size={size * 0.5}
+          color={resolvedIconColor}
+        />
       )}
     </Pressable>
   );

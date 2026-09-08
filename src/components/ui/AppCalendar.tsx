@@ -3,7 +3,8 @@ import { StyleSheet, View } from 'react-native';
 import type { ViewStyle } from 'react-native';
 import { Calendar, LocaleConfig } from 'react-native-calendars';
 import type { CalendarProps } from 'react-native-calendars';
-import { theme } from '@/shared/themes/theme';
+import { useAppTheme, useStyles } from '@/context/ThemeContext';
+import type { AppTheme } from '@/shared/themes/theme';
 
 interface CalendarLocale {
   monthNames: string[];
@@ -65,6 +66,9 @@ export const AppCalendar = ({
   theme: customTheme,
   ...props
 }: AppCalendarProps): React.JSX.Element => {
+  const { theme } = useAppTheme();
+  const styles = useStyles(createStyles);
+
   return (
     <View style={[styles.container, containerStyle]}>
       <Calendar
@@ -76,9 +80,9 @@ export const AppCalendar = ({
           selectedDayBackgroundColor: theme.colors.primaryEco,
           selectedDayTextColor: theme.colors.white,
           todayTextColor: theme.colors.primaryEco,
-          dayTextColor: theme.colors.black,
+          dayTextColor: theme.colors.text,
           arrowColor: theme.colors.primaryEco,
-          monthTextColor: theme.colors.black,
+          monthTextColor: theme.colors.text,
           textDayFontSize: 16,
           textMonthFontSize: 18,
           textDayHeaderFontSize: 14,
@@ -92,14 +96,15 @@ export const AppCalendar = ({
   );
 };
 
-const styles = StyleSheet.create({
-  container: {
-    backgroundColor: theme.colors.white,
-    borderRadius: theme.radius.md,
-    overflow: 'hidden',
-    ...theme.shadows.card,
-  },
-  calendar: {
-    borderRadius: theme.radius.md,
-  },
-});
+const createStyles = (theme: AppTheme) =>
+  StyleSheet.create({
+    container: {
+      backgroundColor: theme.colors.white,
+      borderRadius: theme.radius.md,
+      overflow: 'hidden',
+      ...theme.shadows.card,
+    },
+    calendar: {
+      borderRadius: theme.radius.md,
+    },
+  });
