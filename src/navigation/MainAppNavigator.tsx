@@ -1,5 +1,6 @@
 import React from 'react';
-import { createBottomTabNavigator } from '@react-navigation/native-tabs';
+import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
+import { LiquidTabBar } from './components/LiquidTabBar';
 
 import { HomeScreen } from '@/screens';
 import { SwipeScreen, ExploreScreen } from '@/screens';
@@ -14,7 +15,10 @@ const Tab = createBottomTabNavigator();
 
 export default function MainAppNavigator(): React.JSX.Element {
   return (
-    <Tab.Navigator screenOptions={{ headerShown: true }}>
+    <Tab.Navigator
+      screenOptions={{ headerShown: true }}
+      tabBar={(props) => <LiquidTabBar {...props} />}
+    >
       <Tab.Screen
         name="accueil"
         component={HomeScreen}
