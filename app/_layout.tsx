@@ -3,6 +3,7 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { AuthProvider } from '@/context/AuthContext';
 import { SocketProvider } from '@/context/SocketContext';
 import { NotificationProvider } from '@/context/NotificationContext';
+import { DebugProvider } from '@/context/DebugContext';
 import AdminNavigator from '@/navigation/AdminNavigator';
 import { KeyboardProvider } from 'react-native-keyboard-controller';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
@@ -15,11 +16,13 @@ export default function Layout(): React.JSX.Element {
       <KeyboardProvider statusBarTranslucent navigationBarTranslucent>
         <QueryClientProvider client={queryClient}>
           <AuthProvider>
-            <SocketProvider>
-              <NotificationProvider>
-                <AdminNavigator />
-              </NotificationProvider>
-            </SocketProvider>
+            <DebugProvider>
+              <SocketProvider>
+                <NotificationProvider>
+                  <AdminNavigator />
+                </NotificationProvider>
+              </SocketProvider>
+            </DebugProvider>
           </AuthProvider>
         </QueryClientProvider>
       </KeyboardProvider>

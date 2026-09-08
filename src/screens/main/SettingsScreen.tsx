@@ -1,5 +1,5 @@
 import React from 'react';
-import { View, StyleSheet, Pressable, Linking, Platform, Alert } from 'react-native';
+import { View, StyleSheet, Pressable, Linking, Platform, Alert, Switch } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useNavigation } from '@react-navigation/native';
 
@@ -7,6 +7,7 @@ import { AppText } from '@/components/typography/AppText';
 import { AppIcons } from '@/components/media/AppIcons';
 import { theme } from '@/shared/themes/theme';
 import { TokenService } from '@/services/token.service';
+import { useDebug } from '@/context/DebugContext';
 
 const handleOpenLocationSettings = () => {
   if (Platform.OS === 'ios') {
@@ -18,6 +19,7 @@ const handleOpenLocationSettings = () => {
 
 export function SettingsScreen() {
   const navigation = useNavigation();
+  const { isDebugMode, toggleDebugMode } = useDebug();
 
   return (
     <View style={styles.container}>
@@ -54,7 +56,40 @@ export function SettingsScreen() {
 
         {/* Debug Section */}
         <View style={{ marginTop: theme.spacing.xl }}>
-          <AppText style={styles.settingTitle}>Debug (Test Auth)</AppText>
+          <AppText style={styles.settingTitle}>Options Développeur</AppText>
+
+          <View
+            style={[
+              styles.settingCard,
+              {
+                marginTop: theme.spacing.md,
+                marginBottom: theme.spacing.sm,
+                backgroundColor: theme.colors.lightGrey,
+              },
+            ]}
+          >
+            <View style={styles.settingInfo}>
+              <View style={[styles.iconContainer, { backgroundColor: theme.colors.primaryEco }]}>
+                <AppIcons icon="code" size={20} color={theme.colors.white} />
+              </View>
+              <View style={styles.settingTextContainer}>
+                <AppText style={styles.settingTitle}>Mode Debug</AppText>
+                <AppText style={styles.settingDescription}>
+                  Affiche des outils de test (Création de mock data)
+                </AppText>
+              </View>
+            </View>
+            <Switch
+              value={isDebugMode}
+              onValueChange={toggleDebugMode}
+              trackColor={{ false: theme.colors.grey, true: theme.colors.primarySocio }}
+              thumbColor={theme.colors.white}
+            />
+          </View>
+
+          <AppText style={[styles.settingTitle, { marginTop: theme.spacing.lg }]}>
+            Debug (Test Auth)
+          </AppText>
 
           <Pressable
             style={[

@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { View, StyleSheet, ActivityIndicator } from 'react-native';
+import { StatusBar } from 'expo-status-bar';
 
 import Swiper from 'react-native-deck-swiper';
 
@@ -11,20 +12,25 @@ import { AppIconsButton } from '@/components';
 import { theme } from '@/shared/themes/theme';
 import type { AppEvent } from '@/api/event/event.api';
 import { useSwipeScreen } from './hooks/use-swipe-screen';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { Platform } from 'react-native';
 
 // ─── Sous-composants "State Views" ─────────────────────────────────────────
 
 function SwipeLoadingView(): React.JSX.Element {
   return (
     <View style={styles.container}>
-      <AppHeader showSettings />
+      <StatusBar style="light" />
+      <AppHeader showSettings dark />
       <View style={styles.center}>
         <ActivityIndicator
           size="large"
           color={theme.colors.primaryEco}
           accessibilityLabel="Chargement des événements"
         />
-        <AppText style={styles.message}>Chargement des événements...</AppText>
+        <AppText style={[styles.message, { color: theme.colors.white }]}>
+          Chargement des événements...
+        </AppText>
       </View>
     </View>
   );
@@ -33,9 +39,10 @@ function SwipeLoadingView(): React.JSX.Element {
 function SwipeErrorView(): React.JSX.Element {
   return (
     <View style={styles.container}>
-      <AppHeader showSettings />
+      <StatusBar style="light" />
+      <AppHeader showSettings dark />
       <View style={styles.center}>
-        <AppText>Erreur lors du chargement.</AppText>
+        <AppText style={{ color: theme.colors.white }}>Erreur lors du chargement.</AppText>
       </View>
     </View>
   );
@@ -44,9 +51,12 @@ function SwipeErrorView(): React.JSX.Element {
 function SwipeEmptyView(): React.JSX.Element {
   return (
     <View style={styles.container}>
-      <AppHeader showSettings />
+      <StatusBar style="light" />
+      <AppHeader showSettings dark />
       <View style={styles.center}>
-        <AppText variant="subtitle">Aucun événement disponible pour le moment.</AppText>
+        <AppText variant="subtitle" style={{ color: theme.colors.white }}>
+          Aucun événement disponible pour le moment.
+        </AppText>
       </View>
     </View>
   );
@@ -55,9 +65,12 @@ function SwipeEmptyView(): React.JSX.Element {
 function SwipeEndView(): React.JSX.Element {
   return (
     <View style={styles.container}>
-      <AppHeader showSettings />
+      <StatusBar style="light" />
+      <AppHeader showSettings dark />
       <View style={styles.center}>
-        <AppText variant="subtitle">Plus d&apos;événement pour l&apos;instant.</AppText>
+        <AppText variant="subtitle" style={{ color: theme.colors.white }}>
+          Plus d&apos;événement pour l&apos;instant.
+        </AppText>
       </View>
     </View>
   );
@@ -98,6 +111,18 @@ export function SwipeScreen(): React.JSX.Element {
     handleLocationPress,
   } = useSwipeScreen();
 
+  const insets = useSafeAreaInsets();
+
+  // Calculate total height of the bottom tab bar
+  const bottomInset = Platform.OS === 'ios' ? Math.max(insets.bottom, 15) : insets.bottom;
+  const tabBarHeight = Platform.OS === 'ios' ? 64 : 60;
+  const safeBottomOffset = bottomInset + tabBarHeight;
+
+  // The like/nope buttons will float right above the nav bar
+  const buttonsBottom = safeBottomOffset + 10;
+  // The cards should float above the buttons
+  const swiperMarginBottom = buttonsBottom + 80;
+
   if (isLoading) return <SwipeLoadingView />;
   if (isError) return <SwipeErrorView />;
   if (events.length === 0) return <SwipeEmptyView />;
@@ -105,7 +130,8 @@ export function SwipeScreen(): React.JSX.Element {
 
   return (
     <View style={styles.container}>
-      <AppHeader showSettings />
+      <StatusBar style="light" />
+      <AppHeader showSettings dark />
 
       <View style={styles.contentWrapper}>
         <View style={styles.swiperContainer}>
@@ -139,7 +165,7 @@ export function SwipeScreen(): React.JSX.Element {
             cardVerticalMargin={0}
             cardHorizontalMargin={0}
             marginTop={0}
-            marginBottom={70}
+            marginBottom={swiperMarginBottom}
             onSwipedLeft={handleSwipeLeft}
             onSwipedRight={handleSwipeRight}
             onTapCard={handleTapCard}
@@ -156,24 +182,24 @@ export function SwipeScreen(): React.JSX.Element {
           />
         </View>
 
-        <View style={styles.buttonsContainer} pointerEvents="box-none">
-          <View style={styles.floatingButton}>
+        <View style={[styles.buttonsContainer, { bottom: buttonsBottom }]} pointerEvents="box-none">
+          <View style={[styles.floatingButton, { backgroundColor: theme.colors.danger }]}>
             <AppIconsButton
               icon="x"
               size={64}
-              variant="white"
-              iconColor={theme.colors.danger}
+              variant="noBackground"
+              iconColor={theme.colors.white}
               onPress={() => swiperRef.current?.swipeLeft()}
               accessibilityRole="button"
               accessibilityLabel="Passer cet événement"
             />
           </View>
-          <View style={styles.floatingButton}>
+          <View style={[styles.floatingButton, { backgroundColor: theme.colors.success }]}>
             <AppIconsButton
               icon="heart"
               size={64}
-              variant="white"
-              iconColor={theme.colors.success}
+              variant="noBackground"
+              iconColor={theme.colors.white}
               onPress={() => swiperRef.current?.swipeRight()}
               accessibilityRole="button"
               accessibilityLabel="Aimer cet événement"
@@ -190,7 +216,7 @@ export function SwipeScreen(): React.JSX.Element {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: theme.colors.background,
+    backgroundColor: theme.colors.darkGreen,
   },
   center: {
     flex: 1,
@@ -225,7 +251,6 @@ const styles = StyleSheet.create({
   },
   buttonsContainer: {
     position: 'absolute',
-    bottom: 40, // adjust to overlap halfway
     left: 0,
     right: 0,
     flexDirection: 'row',

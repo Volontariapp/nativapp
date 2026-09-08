@@ -16,7 +16,7 @@ import { theme } from '@/shared/themes/theme';
 import { tabBarScale, tabBarTranslateY } from '../hooks/useScrollTabBar';
 
 const { width: SCREEN_WIDTH } = Dimensions.get('window');
-const TAB_BAR_MARGIN = 20;
+const TAB_BAR_MARGIN = 30;
 const TAB_BAR_WIDTH = SCREEN_WIDTH - TAB_BAR_MARGIN * 2;
 const TAB_BAR_HEIGHT = 64; // Réduit de 70 à 64
 const INDICATOR_SIZE = 54; // Réduit de 60 à 54

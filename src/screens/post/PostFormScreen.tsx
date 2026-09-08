@@ -1,5 +1,5 @@
 import React, { useCallback } from 'react';
-import { View, StyleSheet, ScrollView, type GestureResponderEvent } from 'react-native';
+import { View, StyleSheet, ScrollView, Alert, type GestureResponderEvent } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import { useForm, Controller } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -11,6 +11,8 @@ import AppHeader from '@/components/layout/AppHeader';
 import { theme } from '@/shared/themes/theme';
 import { useCreatePost } from '@/api/post/hooks';
 import { EventSelector } from '@/components/post/event-selector';
+import { useDebug } from '@/context/DebugContext';
+import { useQueryClient } from '@tanstack/react-query';
 
 const createPostSchema = z.object({
   title: z.string().min(3, 'Le titre doit faire au moins 3 caractères').max(100),
@@ -23,6 +25,9 @@ type CreatePostFormData = z.infer<typeof createPostSchema>;
 export function PostFormScreen(): React.JSX.Element {
   const navigation = useNavigation();
   const { mutateAsync: createPost, isPending } = useCreatePost();
+  const { isDebugMode } = useDebug();
+  const queryClient = useQueryClient();
+  const [isBatching, setIsBatching] = React.useState(false);
 
   const {
     control,
@@ -60,6 +65,57 @@ export function PostFormScreen(): React.JSX.Element {
       console.error('Failed to create post:', err instanceof Error ? err.message : String(err));
     }
   };
+
+  const handleCreate50Posts = React.useCallback(async (): Promise<void> => {
+    setIsBatching(true);
+    try {
+      const titles = [
+        "Aujourd'hui on se bouge !",
+        'Super initiative dans le quartier',
+        "J'ai besoin de bras",
+        'Merci à tous les participants',
+        'Prochain événement la semaine prochaine',
+        "C'est quoi votre projet préféré ?",
+      ];
+
+      const contents = [
+        "On a fait du super boulot ce matin. N'hésitez pas à nous rejoindre pour la prochaine session. Plus on est de fous, plus on rit !",
+        "C'était intense mais tellement gratifiant. La planète vous dit merci.",
+        'Si des personnes sont motivées pour nous aider à trier les dons demain, envoyez-moi un message !',
+        "Un immense merci à la communauté pour votre générosité, ça fait chaud au cœur de voir autant d'entraide.",
+        "Je lance l'idée comme ça, mais qui serait chaud pour monter un groupe de nettoyage dans le centre-ville ?",
+        'Regardez-moi cette belle équipe ! Merci encore pour tout.',
+      ];
+
+      const promises = [];
+      for (let i = 0; i < 50; i++) {
+        const randomTitle = titles[Math.floor(Math.random() * titles.length)] ?? '';
+        const randomContent = contents[Math.floor(Math.random() * contents.length)] ?? '';
+        promises.push(
+          createPost({
+            title: `${randomTitle} #${String(i + 1)}`,
+            content: randomContent,
+            eventId: selectedEventId,
+          }),
+        );
+      }
+
+      await Promise.all(promises);
+      void queryClient.invalidateQueries({ queryKey: ['posts'] });
+      Alert.alert('Succès', 'Les 50 posts ont été créés avec succès !', [
+        {
+          text: 'OK',
+          onPress: () => {
+            navigation.goBack();
+          },
+        },
+      ]);
+    } catch {
+      Alert.alert('Erreur', 'Impossible de créer les posts.');
+    } finally {
+      setIsBatching(false);
+    }
+  }, [createPost, queryClient, navigation, selectedEventId]);
 
   return (
     <View style={styles.container}>
@@ -105,13 +161,27 @@ export function PostFormScreen(): React.JSX.Element {
         <EventSelector onSelectEvent={handleSelectEvent} selectedEventId={selectedEventId} />
 
         <AppButton
-          text={isPending ? 'Publication en cours...' : 'Publier'}
+          text={isPending || isBatching ? 'Publication en cours...' : 'Publier'}
           onPress={(e?: GestureResponderEvent) => {
             void handleSubmit(onSubmit)(e);
           }}
-          disabled={isPending}
+          disabled={isPending || isBatching}
           style={styles.submitButton}
         />
+
+        {isDebugMode && (
+          <View style={styles.testSection}>
+            <AppText style={styles.testTitle}>Debug: Outils de test</AppText>
+            <AppButton
+              text={isBatching ? 'Création en cours...' : 'Créer 50 posts'}
+              variant="socio"
+              onPress={() => {
+                void handleCreate50Posts();
+              }}
+              disabled={isPending || isBatching}
+            />
+          </View>
+        )}
       </ScrollView>
     </View>
   );
@@ -133,5 +203,22 @@ const styles = StyleSheet.create({
   },
   submitButton: {
     marginTop: theme.spacing.xl,
+  },
+  testSection: {
+    marginTop: theme.spacing.xxl,
+    padding: theme.spacing.md,
+    backgroundColor: theme.colors.white,
+    borderRadius: theme.radius.md,
+    borderWidth: 1,
+    borderColor: theme.colors.lightGrey,
+    borderStyle: 'dashed',
+    marginBottom: theme.spacing.xl,
+  },
+  testTitle: {
+    fontSize: 12,
+    color: theme.colors.grey,
+    marginBottom: theme.spacing.sm,
+    fontWeight: 'bold',
+    textTransform: 'uppercase',
   },
 });

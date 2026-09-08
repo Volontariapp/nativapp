@@ -16,31 +16,41 @@ type NavigationProp = NativeStackNavigationProp<MainStackParamList>;
 export interface AppHeaderProps {
   showBack?: boolean;
   showSettings?: boolean;
+  dark?: boolean;
 }
 
 export default function AppHeader({
   showBack = false,
   showSettings = false,
+  dark = false,
 }: AppHeaderProps): React.JSX.Element {
   const { isConnected } = useSocket();
   const insets = useSafeAreaInsets();
   const navigation = useNavigation<NavigationProp>();
 
   return (
-    <View style={[styles.container, { paddingTop: insets.top }]}>
+    <View
+      style={[
+        styles.container,
+        { paddingTop: insets.top },
+        dark && { backgroundColor: theme.colors.black },
+      ]}
+    >
       <View style={styles.leftContainer}>
         {showBack && (
           <Feather
             name="arrow-left"
             size={24}
-            color={theme.colors.black}
+            color={dark ? theme.colors.white : theme.colors.black}
             style={styles.backIcon}
             onPress={() => {
               navigation.goBack();
             }}
           />
         )}
-        <AppText style={styles.title}>VolontariApp</AppText>
+        <AppText style={[styles.title, dark && { color: theme.colors.white }]}>
+          VolontariApp
+        </AppText>
       </View>
       <View style={styles.rightContainer}>
         {showSettings && (
@@ -51,7 +61,11 @@ export default function AppHeader({
             style={styles.settingsButton}
             hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
           >
-            <AppIcons icon="settings" size={24} color={theme.colors.black} />
+            <AppIcons
+              icon="settings"
+              size={24}
+              color={dark ? theme.colors.white : theme.colors.black}
+            />
           </Pressable>
         )}
         <View

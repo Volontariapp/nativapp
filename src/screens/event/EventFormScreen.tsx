@@ -20,17 +20,31 @@ import { AppFormController, EventInfoGrid, EventRequirementItem } from '@/compon
 import { eventApi } from '@/api/event/event.api';
 import { useQueryClient } from '@tanstack/react-query';
 import { useNavigation } from '@react-navigation/native';
+import { useDebug } from '@/context/DebugContext';
 
 const EVENT_TYPE_OPTIONS: AppChipOption<EventType>[] = [
-  { value: EventType.EVENT_TYPE_UNSPECIFIED, label: mapEventType(EventType.EVENT_TYPE_UNSPECIFIED), color: theme.colors.grey },
-  { value: EventType.EVENT_TYPE_ECOLOGY, label: mapEventType(EventType.EVENT_TYPE_ECOLOGY), color: theme.colors.primaryEco },
-  { value: EventType.EVENT_TYPE_SOCIAL, label: mapEventType(EventType.EVENT_TYPE_SOCIAL), color: theme.colors.primarySocio },
+  {
+    value: EventType.EVENT_TYPE_UNSPECIFIED,
+    label: mapEventType(EventType.EVENT_TYPE_UNSPECIFIED),
+    color: theme.colors.grey,
+  },
+  {
+    value: EventType.EVENT_TYPE_ECOLOGY,
+    label: mapEventType(EventType.EVENT_TYPE_ECOLOGY),
+    color: theme.colors.primaryEco,
+  },
+  {
+    value: EventType.EVENT_TYPE_SOCIAL,
+    label: mapEventType(EventType.EVENT_TYPE_SOCIAL),
+    color: theme.colors.primarySocio,
+  },
 ];
 
 export function EventFormScreen(): React.JSX.Element {
   const mutation = useCreateEvent();
   const queryClient = useQueryClient();
   const navigation = useNavigation();
+  const { isDebugMode } = useDebug();
   const [isBatching, setIsBatching] = React.useState(false);
 
   const {
@@ -65,12 +79,12 @@ export function EventFormScreen(): React.JSX.Element {
     });
   });
 
-  const handleCreate10Events = React.useCallback(async (): Promise<void> => {
+  const handleCreate50Events = React.useCallback(async (): Promise<void> => {
     setIsBatching(true);
     try {
       const payload: CreateEventRequest = {
         title: 'Batch Event',
-        description: 'Created 10 times via batch button',
+        description: 'Évènement généré automatiquement pour des tests.',
         localisationName: 'Paris, France',
         type: EventType.EVENT_TYPE_UNSPECIFIED,
         maxParticipants: 10,
@@ -80,20 +94,31 @@ export function EventFormScreen(): React.JSX.Element {
         endAt: new Date(Date.now() + 86400000 * 2),
       };
 
-      const batchId = Date.now().toString().slice(-4);
+      const adjectives = ['Solidaire', 'Écologique', 'Communautaire', 'Local', 'Engagé', 'Citoyen'];
+      const nouns = [
+        'Nettoyage',
+        'Atelier',
+        'Collecte',
+        'Rencontre',
+        'Distribution',
+        'Sensibilisation',
+      ];
+
       const promises = [];
-      for (let i = 0; i < 10; i++) {
+      for (let i = 0; i < 50; i++) {
+        const randomAdj = adjectives[Math.floor(Math.random() * adjectives.length)] ?? '';
+        const randomNoun = nouns[Math.floor(Math.random() * nouns.length)] ?? '';
         promises.push(
           eventApi.createEvent({
             ...payload,
-            title: `Event Batch ${batchId} #${String(i + 1)}`,
+            title: `${randomNoun} ${randomAdj} #${String(i + 1)}`,
           }),
         );
       }
 
       await Promise.all(promises);
       void queryClient.invalidateQueries({ queryKey: ['events'] });
-      Alert.alert('Succès', 'Les 10 événements ont été créés avec succès !', [
+      Alert.alert('Succès', 'Les 50 événements ont été créés avec succès !', [
         {
           text: 'OK',
           onPress: () => {
@@ -178,11 +203,7 @@ export function EventFormScreen(): React.JSX.Element {
           label="Type d'évènement"
           errors={errors}
           render={({ field: { onChange, value } }) => (
-            <AppChipSelector
-              options={EVENT_TYPE_OPTIONS}
-              value={value}
-              onChange={onChange}
-            />
+            <AppChipSelector options={EVENT_TYPE_OPTIONS} value={value} onChange={onChange} />
           )}
         />
 
@@ -232,17 +253,19 @@ export function EventFormScreen(): React.JSX.Element {
           />
         </View>
 
-        <View style={styles.testSection}>
-          <AppText style={styles.testTitle}>Test (à supprimer)</AppText>
-          <AppButton
-            text={isBatching ? 'Patientez...' : 'Création x10'}
-            variant="socio"
-            onPress={() => {
-              void handleCreate10Events();
-            }}
-            disabled={mutation.isPending || isBatching}
-          />
-        </View>
+        {isDebugMode && (
+          <View style={styles.testSection}>
+            <AppText style={styles.testTitle}>Debug: Outils de test</AppText>
+            <AppButton
+              text={isBatching ? 'Création en cours...' : 'Créer 50 événements'}
+              variant="socio"
+              onPress={() => {
+                void handleCreate50Events();
+              }}
+              disabled={mutation.isPending || isBatching}
+            />
+          </View>
+        )}
 
         <View style={styles.bottomSpacer} />
       </AppKeyboardScrollView>

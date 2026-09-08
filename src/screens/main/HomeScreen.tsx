@@ -29,15 +29,22 @@ export function HomeScreen(): React.JSX.Element {
   }, [refetch]);
 
   const posts = useMemo(() => {
-    // Read refreshCount to force dependency re-evaluation
     void refreshCount;
-    const allPosts = data?.pages.flatMap((page) => page.posts) ?? [];
-    allPosts.forEach((post) => {
-      randomSortMap.current[post.id] ??= Math.random();
-    });
-    return [...allPosts].sort(
-      (a, b) => (randomSortMap.current[a.id] ?? 0) - (randomSortMap.current[b.id] ?? 0),
-    );
+
+    const randomizedPages =
+      data?.pages.map((page) => {
+        const pagePosts = [...page.posts];
+        pagePosts.forEach((post) => {
+          randomSortMap.current[post.id] ??= Math.random();
+        });
+        return pagePosts.sort(
+          (a, b) => (randomSortMap.current[a.id] ?? 0) - (randomSortMap.current[b.id] ?? 0),
+        );
+      }) ?? [];
+
+    const finalPosts = randomizedPages.flat();
+    console.log('[HomeScreen] Total posts rendered:', finalPosts.length);
+    return finalPosts;
   }, [data, refreshCount]);
 
   type PostItem = React.ComponentProps<typeof AppPost>['post'];
@@ -72,17 +79,45 @@ export function HomeScreen(): React.JSX.Element {
             }}
             refreshing={isRefreshing}
             onEndReached={() => {
+              console.log(
+                '[HomeScreen] onEndReached triggered. hasNextPage:',
+                hasNextPage,
+                'isFetchingNextPage:',
+                isFetchingNextPage,
+              );
               if (hasNextPage && !isFetchingNextPage) {
+                console.log('[HomeScreen] Calling fetchNextPage()...');
                 void fetchNextPage();
+              } else if (!hasNextPage) {
+                console.log('[HomeScreen] No more pages available (hasNextPage is false).');
               }
             }}
             onEndReachedThreshold={0.5}
             ListFooterComponent={
-              isFetchingNextPage ? (
-                <View style={styles.footerLoader}>
+              <View style={styles.footerLoader}>
+                {isFetchingNextPage ? (
                   <ActivityIndicator size="small" color={theme.colors.primarySocio} />
-                </View>
-              ) : null
+                ) : hasNextPage ? (
+                  <AppText
+                    style={{
+                      padding: 20,
+                      color: theme.colors.primarySocio,
+                      textAlign: 'center',
+                      fontWeight: 'bold',
+                    }}
+                    onPress={() => {
+                      console.log('[HomeScreen] Manual load more clicked!');
+                      void fetchNextPage();
+                    }}
+                  >
+                    Charger plus de posts
+                  </AppText>
+                ) : (
+                  <AppText style={{ padding: 20, color: theme.colors.grey, textAlign: 'center' }}>
+                    Fin des posts
+                  </AppText>
+                )}
+              </View>
             }
             ListEmptyComponent={
               <View style={styles.center}>
