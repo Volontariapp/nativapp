@@ -190,7 +190,7 @@ export default function AppPost({ post }: PostCardProps) {
 
 const styles = StyleSheet.create({
   card: {
-    backgroundColor: theme.colors.white,
+    backgroundColor: theme.colors.background,
   },
   imageWrapper: {
     position: 'relative',

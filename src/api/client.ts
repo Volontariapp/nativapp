@@ -76,64 +76,58 @@ export const apiFetch = async <TResponse, TRequest = undefined>(
         (status === 401 || isTokenRelated403 || isTokenExpiredError) &&
         !endpoint.includes('/users/refresh')
       ) {
-        const refreshToken = await TokenService.getRefreshToken();
-        if (refreshToken !== null) {
-          try {
-            refreshPromise ??= (async () => {
-              const refreshUrl = `${baseUrl}/users/refresh`;
-              const refreshHeaders = { ...headers };
-              refreshHeaders['Authorization'] = `Bearer ${refreshToken}`;
-
-              console.log('[apiFetch] Attempting to refresh token...');
-              console.log('[apiFetch] Refresh URL:', refreshUrl);
-              console.log('[apiFetch] Refresh Headers:', JSON.stringify(refreshHeaders));
-
-              const refreshRes = await axios.post(
-                refreshUrl,
-                { refreshToken },
-                { headers: refreshHeaders },
-              );
-
-              console.log('[apiFetch] Refresh token response status:', refreshRes.status);
-              console.log(
-                '[apiFetch] Refresh token response data:',
-                JSON.stringify(refreshRes.data),
-              );
-
-              const authData = (refreshRes.data as LoginWebResponse).auth;
-
-              if (
-                typeof authData?.accessToken === 'string' &&
-                typeof authData.refreshToken === 'string'
-              ) {
-                console.log('[apiFetch] Refresh successful, saving new tokens');
-                await TokenService.saveTokens(authData.accessToken, authData.refreshToken);
-                return authData.accessToken;
-              }
-              console.log('[apiFetch] Refresh failed: Invalid auth data structure', authData);
+        try {
+          refreshPromise ??= (async () => {
+            const currentRefreshToken = await TokenService.getRefreshToken();
+            if (currentRefreshToken == null) {
               return null;
-            })().finally(() => {
-              refreshPromise = null;
+            }
+
+            const refreshUrl = `${baseUrl}/users/refresh`;
+            const refreshHeaders = { ...headers };
+            refreshHeaders['Authorization'] = `Bearer ${currentRefreshToken}`;
+
+            console.log('[apiFetch] Attempting to refresh token...');
+
+            const refreshRes = await axios.post(
+              refreshUrl,
+              { refreshToken: currentRefreshToken },
+              { headers: refreshHeaders },
+            );
+
+            const authData = (refreshRes.data as LoginWebResponse).auth;
+
+            if (
+              typeof authData?.accessToken === 'string' &&
+              typeof authData.refreshToken === 'string'
+            ) {
+              console.log('[apiFetch] Refresh successful, saving new tokens');
+              await TokenService.saveTokens(authData.accessToken, authData.refreshToken);
+              return authData.accessToken;
+            }
+            console.log('[apiFetch] Refresh failed: Invalid auth data structure');
+            return null;
+          })().finally(() => {
+            refreshPromise = null;
+          });
+
+          const newAccessToken = await refreshPromise;
+
+          if (newAccessToken !== null) {
+            headers['Authorization'] = `Bearer ${newAccessToken}`;
+            const retryRes = await axios({
+              url,
+              method: options.method ?? 'GET',
+              headers,
+              data: options.body,
+              params: options.params,
             });
-
-            const newAccessToken = await refreshPromise;
-
-            if (newAccessToken !== null) {
-              headers['Authorization'] = `Bearer ${newAccessToken}`;
-              const retryRes = await axios({
-                url,
-                method: options.method ?? 'GET',
-                headers,
-                data: options.body,
-                params: options.params,
-              });
-              return retryRes.data as TResponse;
-            }
-          } catch (refreshErr) {
-            console.error('[apiFetch] Failed to refresh token. Error:', refreshErr);
-            if (axios.isAxiosError(refreshErr)) {
-              console.error('[apiFetch] Refresh error response:', refreshErr.response?.data);
-            }
+            return retryRes.data as TResponse;
+          }
+        } catch (refreshErr) {
+          console.error('[apiFetch] Failed to refresh token. Error:', refreshErr);
+          if (axios.isAxiosError(refreshErr)) {
+            console.error('[apiFetch] Refresh error response:', refreshErr.response?.data);
           }
         }
 
