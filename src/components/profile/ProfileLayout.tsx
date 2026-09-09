@@ -2,9 +2,9 @@ import React from 'react';
 import type { BadgeWeb } from '@volontariapp/contracts';
 import { ProfileHeader } from './ProfileHeader';
 import { ProfileSection } from './ProfileSection';
-import { ProfileBio } from './ProfileBio';
-import { ProfileStats, type ProfileStatItem } from './ProfileStats';
+import { type ProfileStatItem } from './ProfileStats';
 import { ProfileBadges } from './ProfileBadges';
+import { ProfileEventsTabs, type PaginatedEventListData } from './ProfileEventsTabs';
 
 interface ProfileLayoutProps {
   pseudo: string;
@@ -12,6 +12,11 @@ interface ProfileLayoutProps {
   bio?: string;
   stats: ProfileStatItem[];
   badges: BadgeWeb[];
+  eventsTabs?: {
+    participated?: PaginatedEventListData;
+    created?: PaginatedEventListData;
+    wished?: PaginatedEventListData;
+  };
   headerAction?: React.ReactNode;
   bioAction?: React.ReactNode;
   children?: React.ReactNode;
@@ -29,27 +34,33 @@ export const ProfileLayout = ({
   bio,
   stats,
   badges,
+  eventsTabs,
   headerAction,
   bioAction,
   children,
 }: ProfileLayoutProps): React.JSX.Element => {
   return (
     <>
-      <ProfileHeader pseudo={pseudo} avatarUrl={avatarUrl} />
-      {headerAction}
-
-      <ProfileSection title="Bio">
-        <ProfileBio bio={bio} />
-        {bioAction}
-      </ProfileSection>
-
-      <ProfileSection title="Statistiques">
-        <ProfileStats stats={stats} />
-      </ProfileSection>
+      <ProfileHeader
+        pseudo={pseudo}
+        avatarUrl={avatarUrl}
+        bio={bio}
+        stats={stats}
+        headerAction={headerAction}
+        bioAction={bioAction}
+      />
 
       <ProfileSection title="Badges">
         <ProfileBadges badges={badges} />
       </ProfileSection>
+
+      {eventsTabs && (
+        <ProfileEventsTabs
+          participated={eventsTabs.participated}
+          created={eventsTabs.created}
+          wished={eventsTabs.wished}
+        />
+      )}
 
       {children}
     </>

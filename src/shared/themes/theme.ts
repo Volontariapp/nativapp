@@ -1,5 +1,6 @@
 export type AppThemeColors = {
   text: string;
+  reversed: string;
   primaryEco: string;
   darkGreen: string;
   secondaryEco: string;
@@ -29,6 +30,7 @@ export type AppThemeColors = {
 export const lightTheme = {
   colors: {
     text: '#000',
+    reversed: '#ffffff',
     primaryEco: '#2f6e3e',
     darkGreen: '#1b3a20',
     secondaryEco: '#4caf50',
@@ -124,6 +126,7 @@ export const darkTheme: AppTheme = {
   ...lightTheme,
   colors: {
     ...lightTheme.colors,
+    reversed: '#000',
     text: '#ffffff',
     background: '#121212',
     white: '#1e1e1e',

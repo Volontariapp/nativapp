@@ -25,7 +25,7 @@ export const AppIconsButton = ({
   ...pressableProps
 }: AppIconsButtonProps): ReactNode => {
   const { theme } = useAppTheme();
-  const resolvedIconColor = iconColor ?? theme.colors.text;
+  const resolvedIconColor = iconColor ?? theme.colors.reversed;
 
   const backgroundColor =
     variant === 'eco'

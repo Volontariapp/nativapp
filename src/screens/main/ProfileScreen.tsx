@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { View, StyleSheet, ScrollView, Alert, ActivityIndicator } from 'react-native';
+import { View, StyleSheet, ScrollView } from 'react-native';
 import {
   AppButton,
   AppText,
@@ -10,63 +10,41 @@ import {
   ProfileEditModal,
   AppIconsButton,
   AppCalendar,
-  EventCard,
 } from '@/components';
 import { useAuth } from '@/context/AuthContext';
 import { useAppTheme, useStyles } from '@/context/ThemeContext';
 import type { AppTheme } from '@/shared/themes/theme';
 import { useProfile } from '@/api/user/hooks/use-profile';
 import { useUpdateProfile } from '@/api/user/hooks/use-update-profile';
-import { useGetMyEvents } from '@/api/event/hooks/use-get-my-events';
-import { useGetParticipatedEvents } from '@/api/event/hooks/use-get-participated-events';
-import { useGetWishedEvents } from '@/api/event/hooks/use-get-wished-events';
+import { useGetFollows } from '@/api/social/hooks/use-get-follows';
+import { useGetFollowers } from '@/api/social/hooks/use-get-followers';
 import { useNavigation } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import type { ProfileStackParamList } from '@/navigation/stacks/ProfileStack';
-import { WishedEventCard } from '@/components/dataDisplay/WishedEventCard';
-import type { CalendarProps } from 'react-native-calendars';
-
-type MarkedDates = NonNullable<CalendarProps['markedDates']>;
-
-const handleSettingsPress = () => {
-  Alert.alert('Paramètres', 'Coming soon ⚙️');
-};
+import { useProfileEvents } from './hooks/use-profile-events';
 
 export function ProfileScreen(): React.JSX.Element {
   const { theme } = useAppTheme();
   const styles = useStyles(createStyles);
 
   const [isEditModalVisible, setIsEditModalVisible] = useState(false);
-  const [activeTab, setActiveTab] = useState<'participated' | 'created' | 'wished'>('participated');
   const { logout } = useAuth();
   const navigation = useNavigation<NativeStackNavigationProp<ProfileStackParamList>>();
 
   const { data: profile, isLoading: isProfileLoading, error: profileError } = useProfile();
-  const {
-    data: myEventsData,
-    isLoading: isMyEventsLoading,
-    hasNextPage: hasNextMyEvents,
-    fetchNextPage: fetchNextMyEvents,
-    isFetchingNextPage: isFetchingNextMyEvents,
-  } = useGetMyEvents(2);
-
-  const {
-    data: participatedEventsData,
-    isLoading: isParticipatedEventsLoading,
-    hasNextPage: hasNextParticipatedEvents,
-    fetchNextPage: fetchNextParticipatedEvents,
-    isFetchingNextPage: isFetchingNextParticipatedEvents,
-  } = useGetParticipatedEvents(2);
-
-  const {
-    data: wishedEventsData,
-    isLoading: isWishedEventsLoading,
-    hasNextPage: hasNextWishedEvents,
-    fetchNextPage: fetchNextWishedEvents,
-    isFetchingNextPage: isFetchingNextWishedEvents,
-  } = useGetWishedEvents(2);
-
   const updateProfile = useUpdateProfile();
+  const { data: followsData } = useGetFollows(
+    profile?.id ?? '',
+    { page: 1, limit: 1 },
+    Boolean(profile?.id),
+  );
+  const { data: followersData } = useGetFollowers(
+    profile?.id ?? '',
+    { page: 1, limit: 1 },
+    Boolean(profile?.id),
+  );
+
+  const { participated, created, wished, markedDates } = useProfileEvents(theme);
 
   const isLoading = isProfileLoading;
 
@@ -94,55 +72,9 @@ export function ProfileScreen(): React.JSX.Element {
     );
   }
 
-  const allMyEvents = myEventsData?.pages.flatMap((page) => page.events) ?? [];
-  const allParticipatedEvents = participatedEventsData?.pages.flatMap((page) => page.events) ?? [];
-  const allWishedEvents = wishedEventsData?.pages.flatMap((page) => page.events) ?? [];
-
-  const markedDates: MarkedDates = {};
-  allParticipatedEvents.forEach((event) => {
-    if (event.startAt) {
-      const dateStr = event.startAt.split('T')[0];
-      if (dateStr != null) {
-        markedDates[dateStr] = {
-          customStyles: {
-            container: {
-              borderWidth: 2,
-              borderColor: theme.colors.warning,
-              borderRadius: 20,
-            },
-            text: {
-              color: theme.colors.text,
-              fontWeight: 'bold',
-            },
-          },
-        };
-      }
-    }
-  });
-  allMyEvents.forEach((event) => {
-    if (event.startAt) {
-      const dateStr = event.startAt.split('T')[0];
-      if (dateStr != null) {
-        markedDates[dateStr] = {
-          customStyles: {
-            container: {
-              borderWidth: 2,
-              borderColor: theme.colors.primarySocio,
-              borderRadius: 20,
-            },
-            text: {
-              color: theme.colors.text,
-              fontWeight: 'bold',
-            },
-          },
-        };
-      }
-    }
-  });
-
   return (
     <View style={styles.container}>
-      <AppHeader />
+      <AppHeader showSettings={true} />
 
       <ScrollView
         style={styles.scrollView}
@@ -150,7 +82,14 @@ export function ProfileScreen(): React.JSX.Element {
         showsVerticalScrollIndicator={false}
       >
         <View style={styles.settingsHeader}>
-          <AppIconsButton icon="settings" variant="eco" size={36} onPress={handleSettingsPress} />
+          <AppIconsButton
+            icon="edit-2"
+            variant="eco"
+            size={36}
+            onPress={() => {
+              setIsEditModalVisible(true);
+            }}
+          />
         </View>
 
         <ProfileLayout
@@ -159,157 +98,31 @@ export function ProfileScreen(): React.JSX.Element {
           bio={profile.bio}
           badges={profile.badges}
           stats={[
-            { label: 'Impact', value: profile.totalImpactScore, color: theme.colors.primaryEco },
             {
-              label: 'Badges',
-              value: profile.badges.length,
-              color: theme.colors.secondarySocio,
+              label: 'Abonnés',
+              value: followersData?.pagination?.total ?? 0,
+              color: theme.colors.primarySocio,
             },
             {
-              label: 'Rejoints',
-              value: participatedEventsData?.pages[0]?.totalCount ?? 0,
+              label: 'Abonnements',
+              value: followsData?.pagination?.total ?? 0,
               color: theme.colors.warning,
             },
             {
-              label: 'Créés',
-              value: myEventsData?.pages[0]?.totalCount ?? 0,
+              label: 'Évents créés',
+              value: created.totalCount || created.events.length,
               color: theme.colors.primarySocio,
             },
           ]}
-          bioAction={
-            <View style={styles.editButtonContainer}>
-              <AppButton
-                variant="eco"
-                size="small"
-                text="Modifier"
-                icon="edit-2"
-                onPress={() => {
-                  setIsEditModalVisible(true);
-                }}
-              />
-            </View>
-          }
+          eventsTabs={{
+            participated,
+            created,
+            wished,
+          }}
         >
           <ProfileSection title="Mes Engagements">
             <AppCalendar markedDates={markedDates} />
           </ProfileSection>
-
-          <View style={styles.tabBar}>
-            <AppIconsButton
-              icon="calendar"
-              size={48}
-              variant={activeTab === 'participated' ? 'socio' : 'white'}
-              iconColor={activeTab === 'participated' ? theme.colors.white : theme.colors.grey}
-              onPress={() => {
-                setActiveTab('participated');
-              }}
-            />
-            <AppIconsButton
-              icon="heart"
-              size={48}
-              variant={activeTab === 'wished' ? 'danger' : 'white'}
-              iconColor={activeTab === 'wished' ? theme.colors.white : theme.colors.grey}
-              onPress={() => {
-                setActiveTab('wished');
-              }}
-            />
-            <AppIconsButton
-              icon="plus"
-              size={48}
-              variant={activeTab === 'created' ? 'eco' : 'white'}
-              iconColor={activeTab === 'created' ? theme.colors.white : theme.colors.grey}
-              onPress={() => {
-                setActiveTab('created');
-              }}
-            />
-          </View>
-
-          {activeTab === 'participated' && (
-            <ProfileSection title="Événements à venir">
-              {isParticipatedEventsLoading ? (
-                <ActivityIndicator color={theme.colors.primaryEco} />
-              ) : allParticipatedEvents.length > 0 ? (
-                <View>
-                  {allParticipatedEvents.map((event) => (
-                    <EventCard key={event.id} event={event} />
-                  ))}
-                  {hasNextParticipatedEvents && (
-                    <View style={styles.seeMoreContainer}>
-                      <AppButton
-                        variant="eco"
-                        size="small"
-                        text={isFetchingNextParticipatedEvents ? 'Chargement...' : 'Voir plus'}
-                        onPress={() => {
-                          void fetchNextParticipatedEvents();
-                        }}
-                        disabled={isFetchingNextParticipatedEvents}
-                      />
-                    </View>
-                  )}
-                </View>
-              ) : (
-                <AppText style={styles.emptyText}>Aucun événement à venir pour le moment.</AppText>
-              )}
-            </ProfileSection>
-          )}
-
-          {activeTab === 'created' && (
-            <ProfileSection title="Mes événements créés">
-              {isMyEventsLoading ? (
-                <ActivityIndicator color={theme.colors.primaryEco} />
-              ) : allMyEvents.length > 0 ? (
-                <View>
-                  {allMyEvents.map((event) => (
-                    <EventCard key={event.id} event={event} />
-                  ))}
-                  {hasNextMyEvents && (
-                    <View style={styles.seeMoreContainer}>
-                      <AppButton
-                        variant="eco"
-                        size="small"
-                        text={isFetchingNextMyEvents ? 'Chargement...' : 'Voir plus'}
-                        onPress={() => {
-                          void fetchNextMyEvents();
-                        }}
-                        disabled={isFetchingNextMyEvents}
-                      />
-                    </View>
-                  )}
-                </View>
-              ) : (
-                <AppText style={styles.emptyText}>Aucun événement créé pour le moment.</AppText>
-              )}
-            </ProfileSection>
-          )}
-
-          {activeTab === 'wished' && (
-            <ProfileSection title="Wishlist">
-              {isWishedEventsLoading ? (
-                <ActivityIndicator color={theme.colors.primaryEco} />
-              ) : allWishedEvents.length > 0 ? (
-                <View>
-                  {allWishedEvents.map((event) => (
-                    <WishedEventCard key={event.id} event={event} />
-                  ))}
-                  {hasNextWishedEvents && (
-                    <View style={styles.seeMoreContainer}>
-                      <AppButton
-                        variant="eco"
-                        size="small"
-                        text={isFetchingNextWishedEvents ? 'Chargement...' : 'Voir plus'}
-                        onPress={() => {
-                          void fetchNextWishedEvents();
-                        }}
-                        disabled={isFetchingNextWishedEvents}
-                      />
-                    </View>
-                  )}
-                </View>
-              ) : (
-                <AppText style={styles.emptyText}>Aucun événement dans votre wishlist.</AppText>
-              )}
-            </ProfileSection>
-          )}
 
           <View style={styles.actions}>
             <View style={styles.buttonSpacer} />
@@ -369,13 +182,7 @@ const createStyles = (theme: AppTheme) =>
       flex: 1,
       justifyContent: 'center',
       alignItems: 'center',
-      padding: theme.spacing.xl,
-    },
-    tabBar: {
-      flexDirection: 'row',
-      justifyContent: 'space-around',
       marginVertical: theme.spacing.lg,
-      paddingHorizontal: theme.spacing.xl,
     },
     settingsHeader: {
       flexDirection: 'row',

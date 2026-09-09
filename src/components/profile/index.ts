@@ -5,3 +5,4 @@ export * from './ProfileHeader';
 export * from './ProfileLayout';
 export * from './ProfileSection';
 export * from './ProfileStats';
+export * from './ProfileEventsTabs';

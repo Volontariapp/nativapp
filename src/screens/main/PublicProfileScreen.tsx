@@ -1,23 +1,12 @@
-import React, { useState, useEffect } from 'react';
-import { View, StyleSheet, ScrollView, ActivityIndicator, Alert } from 'react-native';
-import {
-  AppText,
-  AppHeader,
-  AppLoader,
-  ProfileLayout,
-  ProfileSection,
-  AppButton,
-  EventCard,
-} from '@/components';
+import React from 'react';
+import { View, StyleSheet, ScrollView, Alert } from 'react-native';
+import { AppText, AppHeader, AppLoader, ProfileLayout, AppButton } from '@/components';
 import { useAppTheme, useStyles } from '@/context/ThemeContext';
 import type { AppTheme } from '@/shared/themes/theme';
 import { useAuth } from '@/context/AuthContext';
 import { useGetPublicUser } from '@/api/user/hooks/use-get-public-user';
 import { useGetEvents } from '@/api/event/hooks/use-get-events';
-import { useGetIsFollowing } from '@/api/social/hooks/use-get-is-following';
-import { useGetFollows } from '@/api/social/hooks/use-get-follows';
-import { useGetFollowers } from '@/api/social/hooks/use-get-followers';
-import { useUserSocialActions } from '@/api/social/hooks/use-user-social-actions';
+import { useOptimisticFollow } from '@/api/social/hooks/use-optimistic-follow';
 import { useRoute, type RouteProp } from '@react-navigation/native';
 import type { MainStackParamList } from '@/navigation/stacks/MainStack';
 import { EventState } from '@volontariapp/contracts';
@@ -46,47 +35,14 @@ export function PublicProfileScreen(): React.JSX.Element {
     limit: 2,
   });
 
-  const isOwnProfile = currentUserId === params.userId;
-  const { data: isFollowingData, isLoading: isMyFollowsLoading } = useGetIsFollowing(
-    params.userId,
-    !isOwnProfile,
-  );
-  const { data: followsData } = useGetFollows(params.userId, { page: 1, limit: 1 });
-  const { data: followersData } = useGetFollowers(params.userId, { page: 1, limit: 1 });
-  const { follow, unfollow, isFollowingPending, isUnfollowingPending } = useUserSocialActions();
-
-  const [followOverride, setFollowOverride] = useState<boolean | null>(null);
-  const serverIsFollowing = isFollowingData?.isFollowing ?? false;
-  const isFollowing = followOverride ?? serverIsFollowing;
-  const isFollowActionPending = isFollowingPending || isUnfollowingPending;
-
-  const [localFollowersCount, setLocalFollowersCount] = useState<number>(0);
-
-  useEffect(() => {
-    if (followersData?.pagination?.total !== undefined) {
-      setLocalFollowersCount(followersData.pagination.total);
-    }
-  }, [followersData?.pagination?.total]);
-
-  useEffect(() => {
-    if (followOverride !== null && serverIsFollowing === followOverride) {
-      setFollowOverride(null);
-    }
-  }, [serverIsFollowing, followOverride]);
-
-  const handleFollowPress = () => {
-    const nextIsFollowing = !isFollowing;
-    setFollowOverride(nextIsFollowing);
-
-    setLocalFollowersCount((prev) => (nextIsFollowing ? prev + 1 : Math.max(0, prev - 1)));
-
-    const mutate = nextIsFollowing ? follow : unfollow;
-    void mutate(params.userId).catch(() => {
-      setFollowOverride(!nextIsFollowing);
-      setLocalFollowersCount((prev) => (!nextIsFollowing ? prev + 1 : Math.max(0, prev - 1)));
-      Alert.alert('Erreur', "Cette action n'a pas pu être effectuée. Réessaie plus tard.");
-    });
-  };
+  const {
+    isFollowing,
+    localFollowersCount,
+    followsCount,
+    isMyFollowsLoading,
+    isFollowActionPending,
+    handleFollowPress,
+  } = useOptimisticFollow(params.userId, currentUserId);
 
   const isPageLoading = isLoading;
 
@@ -116,57 +72,52 @@ export function PublicProfileScreen(): React.JSX.Element {
             bio={user.bio}
             badges={user.badges}
             stats={[
-              { label: 'Impact', value: user.totalImpactScore, color: theme.colors.primaryEco },
-              { label: 'Badges', value: user.badges.length, color: theme.colors.secondarySocio },
               { label: 'Abonnés', value: localFollowersCount, color: theme.colors.primarySocio },
               {
                 label: 'Abonnements',
-                value: followsData?.pagination?.total ?? 0,
+                value: followsCount,
                 color: theme.colors.warning,
               },
             ]}
             headerAction={
-              isOwnProfile ? null : (
+              currentUserId === params.userId ? null : (
                 <View style={styles.followButtonContainer}>
-                  <AppButton
-                    variant={isFollowing ? 'danger' : 'eco'}
-                    size="small"
-                    icon={isFollowing ? 'user-minus' : 'user-plus'}
-                    text={isMyFollowsLoading ? '...' : isFollowing ? 'Ne plus suivre' : 'Suivre'}
-                    disabled={isMyFollowsLoading || isFollowActionPending}
-                    onPress={handleFollowPress}
-                  />
+                  <View style={styles.buttonWrapper}>
+                    <AppButton
+                      variant={isFollowing ? 'danger' : 'eco'}
+                      size="small"
+                      icon={isFollowing ? 'user-minus' : 'user-plus'}
+                      text={isMyFollowsLoading ? '...' : isFollowing ? 'Ne plus suivre' : 'Suivre'}
+                      disabled={isMyFollowsLoading || isFollowActionPending}
+                      onPress={handleFollowPress}
+                    />
+                  </View>
+                  <View style={styles.buttonWrapper}>
+                    <AppButton
+                      variant="secondary"
+                      size="small"
+                      icon="message-circle"
+                      text="Message"
+                      onPress={() => {
+                        Alert.alert('Message', 'Bientôt disponible 💬');
+                      }}
+                    />
+                  </View>
                 </View>
               )
             }
-          >
-            <ProfileSection title="Événements créés">
-              {isUserEventsLoading ? (
-                <ActivityIndicator color={theme.colors.primaryEco} />
-              ) : allUserEvents.length > 0 ? (
-                <View>
-                  {allUserEvents.map((event) => (
-                    <EventCard key={event.id} event={event} />
-                  ))}
-                  {hasNextUserEvents && (
-                    <View style={styles.seeMoreContainer}>
-                      <AppButton
-                        variant="eco"
-                        size="small"
-                        text={isFetchingNextUserEvents ? 'Chargement...' : 'Voir plus'}
-                        onPress={() => {
-                          void fetchNextUserEvents();
-                        }}
-                        disabled={isFetchingNextUserEvents}
-                      />
-                    </View>
-                  )}
-                </View>
-              ) : (
-                <AppText style={styles.emptyText}>Aucun événement créé pour le moment.</AppText>
-              )}
-            </ProfileSection>
-          </ProfileLayout>
+            eventsTabs={{
+              created: {
+                events: allUserEvents,
+                isLoading: isUserEventsLoading,
+                hasNextPage: hasNextUserEvents,
+                fetchNextPage: () => {
+                  void fetchNextUserEvents();
+                },
+                isFetchingNextPage: isFetchingNextUserEvents,
+              },
+            }}
+          />
         </ScrollView>
       )}
     </View>
@@ -194,9 +145,15 @@ const createStyles = (theme: AppTheme) =>
       padding: theme.spacing.xl,
     },
     followButtonContainer: {
+      flexDirection: 'row',
       alignItems: 'center',
       marginBottom: theme.spacing.lg,
-      marginTop: -theme.spacing.sm,
+      marginTop: theme.spacing.lg,
+      gap: theme.spacing.sm,
+      width: '100%',
+    },
+    buttonWrapper: {
+      flex: 1,
     },
     errorText: {
       color: theme.colors.danger,
@@ -207,10 +164,6 @@ const createStyles = (theme: AppTheme) =>
       color: theme.colors.grey,
       fontStyle: 'italic',
       textAlign: 'center',
-      marginTop: theme.spacing.sm,
-    },
-    seeMoreContainer: {
-      alignItems: 'center',
       marginTop: theme.spacing.sm,
     },
   });
