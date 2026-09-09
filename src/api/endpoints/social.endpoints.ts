@@ -18,10 +18,12 @@ import type {
   GetEventNodeWebResponse,
   GetPostNodeWebResponse,
   GetUserNodeWebResponse,
-  GetUserEventWebRequest,
   GetUserParticipateEventWebRequest,
   GetUserWishEventWebRequest,
   GetIsFollowingWebResponse,
+  GetMyFollowsWebResponse,
+  GetMyFollowersWebResponse,
+  GetUserEventWebRequest,
 } from '@volontariapp/contracts';
 
 export const SOCIAL_ENDPOINTS = {
@@ -329,14 +331,14 @@ export const SOCIAL_ENDPOINTS = {
     path: '/social/users/:userId/follows',
     method: 'GET',
     requiresAuth: true,
-    roles: [UserRoles.ADMIN],
-  } as EndpointDefinition<GetMyFollowsWebRequest, GetUserEventWebResponse>,
+    roles: [UserRoles.ORGANIZATION, UserRoles.VOLUNTEER, UserRoles.ADMIN],
+  } as EndpointDefinition<GetMyFollowsWebRequest, GetMyFollowsWebResponse>,
   GET_FOLLOWERS: {
     path: '/social/users/:userId/followers',
     method: 'GET',
     requiresAuth: true,
-    roles: [UserRoles.ADMIN],
-  } as EndpointDefinition<GetMyFollowersWebRequest, GetUserEventWebResponse>,
+    roles: [UserRoles.ORGANIZATION, UserRoles.VOLUNTEER, UserRoles.ADMIN],
+  } as EndpointDefinition<GetMyFollowersWebRequest, GetMyFollowersWebResponse>,
   GET_BLOCKS: {
     path: '/social/users/:userId/blocks',
     method: 'GET',

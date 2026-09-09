@@ -2,6 +2,9 @@ import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { socialApi } from '../social.api';
 import { PARTICIPATIONS_QUERY_KEY } from './use-user-participations';
 import { MY_FOLLOWS_QUERY_KEY } from './use-get-my-follows';
+import { GET_IS_FOLLOWING_QUERY_KEY } from './use-get-is-following';
+import { FOLLOWS_QUERY_KEY } from './use-get-follows';
+import { FOLLOWERS_QUERY_KEY } from './use-get-followers';
 const WISHES_QUERY_KEY = ['user-wishes'];
 
 /**
@@ -49,6 +52,9 @@ export const useUserSocialActions = () => {
     mutationFn: (followedId: string) => socialApi.followUser(followedId),
     onSuccess: () => {
       void queryClient.invalidateQueries({ queryKey: MY_FOLLOWS_QUERY_KEY });
+      void queryClient.invalidateQueries({ queryKey: GET_IS_FOLLOWING_QUERY_KEY });
+      void queryClient.invalidateQueries({ queryKey: FOLLOWS_QUERY_KEY });
+      void queryClient.invalidateQueries({ queryKey: FOLLOWERS_QUERY_KEY });
     },
   });
 
@@ -56,6 +62,9 @@ export const useUserSocialActions = () => {
     mutationFn: (followedId: string) => socialApi.unfollowUser(followedId),
     onSuccess: () => {
       void queryClient.invalidateQueries({ queryKey: MY_FOLLOWS_QUERY_KEY });
+      void queryClient.invalidateQueries({ queryKey: GET_IS_FOLLOWING_QUERY_KEY });
+      void queryClient.invalidateQueries({ queryKey: FOLLOWS_QUERY_KEY });
+      void queryClient.invalidateQueries({ queryKey: FOLLOWERS_QUERY_KEY });
     },
   });
 

@@ -4,6 +4,8 @@ import type {
   ActionSuccessWebResponse,
   ListUsersWebResponse,
   GetIsFollowingWebResponse,
+  GetMyFollowsWebResponse,
+  GetMyFollowersWebResponse,
 } from '@volontariapp/contracts';
 
 /**
@@ -237,6 +239,48 @@ export const socialApi = {
     return await apiFetch<ListUsersWebResponse>(path, {
       method: SOCIAL_ENDPOINTS.GET_FOLLOWS_SELF.method,
       requiresAuth: SOCIAL_ENDPOINTS.GET_FOLLOWS_SELF.requiresAuth,
+    });
+  },
+
+  /**
+   * Récupère la liste des utilisateurs suivis par un utilisateur donné.
+   */
+  async getFollows(
+    userId: string,
+    params?: { page?: number; limit?: number },
+  ): Promise<GetMyFollowsWebResponse> {
+    const query = new URLSearchParams();
+    if (params?.page !== undefined) query.append('pagination[page]', params.page.toString());
+    if (params?.limit !== undefined) query.append('pagination[limit]', params.limit.toString());
+
+    const queryString = query.toString();
+    const endpointPath = SOCIAL_ENDPOINTS.GET_FOLLOWS.path.replace(':userId', userId);
+    const path = queryString ? `${endpointPath}?${queryString}` : endpointPath;
+
+    return await apiFetch<GetMyFollowsWebResponse>(path, {
+      method: SOCIAL_ENDPOINTS.GET_FOLLOWS.method,
+      requiresAuth: SOCIAL_ENDPOINTS.GET_FOLLOWS.requiresAuth,
+    });
+  },
+
+  /**
+   * Récupère la liste des abonnés d'un utilisateur donné.
+   */
+  async getFollowers(
+    userId: string,
+    params?: { page?: number; limit?: number },
+  ): Promise<GetMyFollowersWebResponse> {
+    const query = new URLSearchParams();
+    if (params?.page !== undefined) query.append('pagination[page]', params.page.toString());
+    if (params?.limit !== undefined) query.append('pagination[limit]', params.limit.toString());
+
+    const queryString = query.toString();
+    const endpointPath = SOCIAL_ENDPOINTS.GET_FOLLOWERS.path.replace(':userId', userId);
+    const path = queryString ? `${endpointPath}?${queryString}` : endpointPath;
+
+    return await apiFetch<GetMyFollowersWebResponse>(path, {
+      method: SOCIAL_ENDPOINTS.GET_FOLLOWERS.method,
+      requiresAuth: SOCIAL_ENDPOINTS.GET_FOLLOWERS.requiresAuth,
     });
   },
 

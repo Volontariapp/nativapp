@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { View, StyleSheet, ScrollView, ActivityIndicator, Alert } from 'react-native';
 import {
   AppText,
@@ -15,6 +15,8 @@ import { useAuth } from '@/context/AuthContext';
 import { useGetPublicUser } from '@/api/user/hooks/use-get-public-user';
 import { useGetEvents } from '@/api/event/hooks/use-get-events';
 import { useGetIsFollowing } from '@/api/social/hooks/use-get-is-following';
+import { useGetFollows } from '@/api/social/hooks/use-get-follows';
+import { useGetFollowers } from '@/api/social/hooks/use-get-followers';
 import { useUserSocialActions } from '@/api/social/hooks/use-user-social-actions';
 import { useRoute, type RouteProp } from '@react-navigation/native';
 import type { MainStackParamList } from '@/navigation/stacks/MainStack';
@@ -49,21 +51,39 @@ export function PublicProfileScreen(): React.JSX.Element {
     params.userId,
     !isOwnProfile,
   );
+  const { data: followsData } = useGetFollows(params.userId, { page: 1, limit: 1 });
+  const { data: followersData } = useGetFollowers(params.userId, { page: 1, limit: 1 });
   const { follow, unfollow, isFollowingPending, isUnfollowingPending } = useUserSocialActions();
 
-  // Override optimiste : posé au clic pour un retour instantané, et jamais réconcilié
-  // avec le refetch de useGetMyFollows (trop lent pour ça, cf. commentaire plus haut).
-  // Réinitialisé uniquement si l'action échoue (rollback).
   const [followOverride, setFollowOverride] = useState<boolean | null>(null);
-  const isFollowing = followOverride ?? isFollowingData?.isFollowing ?? false;
+  const serverIsFollowing = isFollowingData?.isFollowing ?? false;
+  const isFollowing = followOverride ?? serverIsFollowing;
   const isFollowActionPending = isFollowingPending || isUnfollowingPending;
+
+  const [localFollowersCount, setLocalFollowersCount] = useState<number>(0);
+
+  useEffect(() => {
+    if (followersData?.pagination?.total !== undefined) {
+      setLocalFollowersCount(followersData.pagination.total);
+    }
+  }, [followersData?.pagination?.total]);
+
+  useEffect(() => {
+    if (followOverride !== null && serverIsFollowing === followOverride) {
+      setFollowOverride(null);
+    }
+  }, [serverIsFollowing, followOverride]);
 
   const handleFollowPress = () => {
     const nextIsFollowing = !isFollowing;
     setFollowOverride(nextIsFollowing);
+
+    setLocalFollowersCount((prev) => (nextIsFollowing ? prev + 1 : Math.max(0, prev - 1)));
+
     const mutate = nextIsFollowing ? follow : unfollow;
     void mutate(params.userId).catch(() => {
       setFollowOverride(!nextIsFollowing);
+      setLocalFollowersCount((prev) => (!nextIsFollowing ? prev + 1 : Math.max(0, prev - 1)));
       Alert.alert('Erreur', "Cette action n'a pas pu être effectuée. Réessaie plus tard.");
     });
   };
@@ -98,11 +118,12 @@ export function PublicProfileScreen(): React.JSX.Element {
             stats={[
               { label: 'Impact', value: user.totalImpactScore, color: theme.colors.primaryEco },
               { label: 'Badges', value: user.badges.length, color: theme.colors.secondarySocio },
-              // TODO: brancher sur un futur endpoint public de comptage des follows/followers
-              // par userId (aujourd'hui seuls /social/follows et /social/followers "self"
-              // existent ; la variante par :userId est réservée aux admins).
-              { label: 'Abonnés', value: 0, color: theme.colors.primarySocio },
-              { label: 'Abonnements', value: 0, color: theme.colors.warning },
+              { label: 'Abonnés', value: localFollowersCount, color: theme.colors.primarySocio },
+              {
+                label: 'Abonnements',
+                value: followsData?.pagination?.total ?? 0,
+                color: theme.colors.warning,
+              },
             ]}
             headerAction={
               isOwnProfile ? null : (
