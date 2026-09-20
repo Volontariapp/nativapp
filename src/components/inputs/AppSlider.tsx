@@ -1,4 +1,4 @@
-import React, { useRef, useCallback, useMemo } from 'react';
+import React, { useRef, useCallback, useMemo, useEffect } from 'react';
 import type {
   DimensionValue,
   StyleProp,
@@ -56,14 +56,17 @@ export function AppSlider({
     disabled,
     onValueChange,
   });
-  latestPropsRef.current = {
-    value,
-    minimumValue,
-    maximumValue,
-    step,
-    disabled,
-    onValueChange,
-  };
+
+  useEffect(() => {
+    latestPropsRef.current = {
+      value,
+      minimumValue,
+      maximumValue,
+      step,
+      disabled,
+      onValueChange,
+    };
+  });
 
   const calculateValueFromPosition = useCallback(
     (pageX: number): number => {

@@ -73,7 +73,10 @@ interface MapControllerProps {
 
 function MapController({ mapRef, onMapPress }: MapControllerProps) {
   const map = useMap();
-  mapRef.current = map;
+
+  useEffect(() => {
+    mapRef.current = map;
+  }, [map, mapRef]);
 
   useEffect(() => {
     if (!onMapPress) return;
