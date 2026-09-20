@@ -131,6 +131,7 @@ const createStyles = (theme: AppTheme) =>
       borderWidth: 1,
       borderColor: theme.colors.lightGrey,
       gap: theme.spacing.sm,
+      zIndex: 1200,
     },
     header: {
       flexDirection: 'row',

@@ -1,6 +1,6 @@
-import { useRef, useCallback } from 'react';
+import { useRef, useCallback, useMemo } from 'react';
 import { StyleSheet, View } from 'react-native';
-import type { Region } from 'react-native-maps';
+import type { Region, MarkerPressEvent } from 'react-native-maps';
 import MapView, { UrlTile, Marker } from 'react-native-maps';
 import { theme } from '@/shared/themes/theme';
 import { useAppTheme } from '@/context/ThemeContext';
@@ -34,6 +34,15 @@ export default function AppMap({
 }: AppMapProps) {
   const { theme: appTheme } = useAppTheme();
   const mapRef = useRef<MapView | null>(null);
+  const lastMarkerPressTimestamp = useRef(0);
+
+  const eventMap = useMemo(() => {
+    const map = new Map<string, AppEvent>();
+    for (const event of events) {
+      map.set(event.id, event);
+    }
+    return map;
+  }, [events]);
 
   const handleRecenter = useCallback(() => {
     if (userLocation && mapRef.current) {
@@ -48,6 +57,39 @@ export default function AppMap({
       );
     }
   }, [userLocation]);
+
+  const handleMarkerPress = useCallback(
+    (event: AppEvent) => {
+      lastMarkerPressTimestamp.current = Date.now();
+      onMarkerPress?.(event);
+    },
+    [onMarkerPress],
+  );
+
+  const handleMapPress = useCallback(() => {
+    // Sur iOS / MapKit, un tap sur un marker propage également l'événement au MapView.
+    // Pour éviter de refermer instantanément la prévisualisation qui vient de s'ouvrir,
+    // on ignore les clics sur la carte survenus dans les 400ms suivant un clic sur un marker.
+    if (Date.now() - lastMarkerPressTimestamp.current < 400) {
+      return;
+    }
+    onMapPress?.();
+  }, [onMapPress]);
+
+  const handleNativeMarkerPress = useCallback(
+    (e: MarkerPressEvent) => {
+      lastMarkerPressTimestamp.current = Date.now();
+      const markerId = e.nativeEvent.id;
+      if (markerId && eventMap.has(markerId)) {
+        const ev = eventMap.get(markerId);
+        if (ev) {
+          onMarkerPress?.(ev);
+        }
+      }
+    },
+    [eventMap, onMarkerPress],
+  );
+
   const centerLat = initialCenter?.latitude ?? userLocation?.latitude ?? 46.2276;
   const centerLon = initialCenter?.longitude ?? userLocation?.longitude ?? 2.2137;
   const hasSpecificCenter = !!initialCenter || !!userLocation;
@@ -69,7 +111,8 @@ export default function AppMap({
         showsUserLocation={false}
         scrollEnabled={scrollEnabled}
         zoomEnabled={zoomEnabled}
-        onPress={() => onMapPress?.()}
+        onPress={handleMapPress}
+        onMarkerPress={handleNativeMarkerPress}
       >
         <UrlTile
           urlTemplate="https://a.tile.openstreetmap.org/{z}/{x}/{y}.png"
@@ -90,6 +133,7 @@ export default function AppMap({
           return (
             <CustomMarker
               key={`custom-marker-${event.id}`}
+              identifier={event.id}
               coordinate={{
                 latitude: event.location.latitude,
                 longitude: event.location.longitude,
@@ -100,7 +144,9 @@ export default function AppMap({
                   ? theme.colors.primarySocio
                   : theme.colors.primaryEco
               }
-              onPress={() => onMarkerPress?.(event)}
+              onPress={() => {
+                handleMarkerPress(event);
+              }}
             />
           );
         })}
