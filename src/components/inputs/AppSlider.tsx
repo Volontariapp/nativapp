@@ -1,5 +1,10 @@
-import React, { useRef, useState, useEffect, useCallback } from 'react';
-import type { DimensionValue, StyleProp, ViewStyle, LayoutChangeEvent } from 'react-native';
+import React, { useRef, useCallback, useMemo } from 'react';
+import type {
+  DimensionValue,
+  StyleProp,
+  ViewStyle,
+  LayoutChangeEvent,
+} from 'react-native';
 import { View, StyleSheet, PanResponder } from 'react-native';
 import { useAppTheme, useStyles } from '@/context/ThemeContext';
 import type { AppTheme } from '@/shared/themes/theme';
@@ -34,11 +39,6 @@ export function AppSlider({
   const trackWidthRef = useRef<number>(0);
   const trackXRef = useRef<number>(0);
   const sliderViewRef = useRef<View>(null);
-  const [internalValue, setInternalValue] = useState(value);
-
-  useEffect(() => {
-    setInternalValue(value);
-  }, [value]);
 
   const activeColor = color ?? theme.colors.primaryEco;
 
@@ -47,36 +47,60 @@ export function AppSlider({
     [],
   );
 
+  // Keep fresh references to avoid recreating PanResponder on every render
+  const latestPropsRef = useRef({
+    value,
+    minimumValue,
+    maximumValue,
+    step,
+    disabled,
+    onValueChange,
+  });
+  latestPropsRef.current = {
+    value,
+    minimumValue,
+    maximumValue,
+    step,
+    disabled,
+    onValueChange,
+  };
+
   const calculateValueFromPosition = useCallback(
     (pageX: number): number => {
-      if (trackWidthRef.current <= 0) return internalValue;
+      const {
+        value: currentVal,
+        minimumValue: min,
+        maximumValue: max,
+        step: currentStep,
+      } = latestPropsRef.current;
+      if (trackWidthRef.current <= 0) return currentVal;
       const localX = pageX - trackXRef.current;
       const ratio = clamp(localX / trackWidthRef.current, 0, 1);
-      const rawVal = minimumValue + ratio * (maximumValue - minimumValue);
-      const stepped = Math.round(rawVal / step) * step;
-      return clamp(stepped, minimumValue, maximumValue);
+      const rawVal = min + ratio * (max - min);
+      const stepped = Math.round(rawVal / currentStep) * currentStep;
+      return clamp(stepped, min, max);
     },
-    [clamp, internalValue, maximumValue, minimumValue, step],
+    [clamp],
   );
 
-  const panResponder = useRef(
-    PanResponder.create({
-      onStartShouldSetPanResponder: () => !disabled,
-      onMoveShouldSetPanResponder: () => !disabled,
-      onPanResponderGrant: (evt) => {
-        if (disabled) return;
-        const newVal = calculateValueFromPosition(evt.nativeEvent.pageX);
-        setInternalValue(newVal);
-        onValueChange(newVal);
-      },
-      onPanResponderMove: (evt) => {
-        if (disabled) return;
-        const newVal = calculateValueFromPosition(evt.nativeEvent.pageX);
-        setInternalValue(newVal);
-        onValueChange(newVal);
-      },
-    }),
-  ).current;
+  const panResponder = useMemo(
+    () =>
+      PanResponder.create({
+        onStartShouldSetPanResponder: () => !latestPropsRef.current.disabled,
+        onMoveShouldSetPanResponder: () => !latestPropsRef.current.disabled,
+        onPanResponderGrant: (evt) => {
+          if (latestPropsRef.current.disabled) return;
+          const newVal = calculateValueFromPosition(evt.nativeEvent.pageX);
+          latestPropsRef.current.onValueChange(newVal);
+        },
+        onPanResponderMove: (evt) => {
+          if (latestPropsRef.current.disabled) return;
+          const newVal = calculateValueFromPosition(evt.nativeEvent.pageX);
+          latestPropsRef.current.onValueChange(newVal);
+        },
+      }),
+    [calculateValueFromPosition],
+  );
 
   const updateMeasurements = useCallback(() => {
     sliderViewRef.current?.measure((_x, _y, width, _height, pageX) => {
@@ -96,7 +120,7 @@ export function AppSlider({
   );
 
   const percentage = clamp(
-    (internalValue - minimumValue) / (maximumValue - minimumValue),
+    (value - minimumValue) / (maximumValue - minimumValue),
     0,
     1,
   );
@@ -163,10 +187,6 @@ const createStyles = (theme: AppTheme) =>
     thumb: {
       position: 'absolute',
       borderWidth: 2.5,
-      shadowColor: theme.colors.black,
-      shadowOffset: { width: 0, height: 2 },
-      shadowOpacity: 0.25,
-      shadowRadius: 3,
-      elevation: 3,
+      boxShadow: '0 2px 4px rgba(0, 0, 0, 0.25)',
     },
   });

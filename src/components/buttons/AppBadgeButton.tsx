@@ -161,11 +161,7 @@ const createStyles = (theme: AppTheme) =>
       gap: 6,
     },
     selectedShadow: {
-      shadowColor: theme.colors.black,
-      shadowOffset: { width: 0, height: 1.5 },
-      shadowOpacity: 0.25,
-      shadowRadius: 2,
-      elevation: 2,
+      boxShadow: '0 1px 3px rgba(0, 0, 0, 0.2)',
     },
     text: {
       fontSize: 12.5,

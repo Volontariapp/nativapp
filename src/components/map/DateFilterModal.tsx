@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { View, StyleSheet, Modal, Pressable } from 'react-native';
 import { AppText } from '@/components/typography/AppText';
 import { AppCalendar } from '@/components/ui/AppCalendar';
@@ -39,27 +39,28 @@ const formatFrenchDisplay = (isoDate: string): string => {
   return isoDate;
 };
 
-export function DateFilterModal({
-  visible,
-  onClose,
+const getTodayString = (): string => {
+  const today = new Date();
+  const year = today.getFullYear();
+  const month = String(today.getMonth() + 1).padStart(2, '0');
+  const day = String(today.getDate()).padStart(2, '0');
+  return `${String(year)}-${month}-${day}`;
+};
+
+interface DateFilterContentProps {
+  selectedDate: string | null;
+  onClose: () => void;
+  onApply: (date: string | null) => void;
+}
+
+function DateFilterContent({
   selectedDate,
+  onClose,
   onApply,
-}: DateFilterModalProps): React.JSX.Element {
+}: DateFilterContentProps): React.JSX.Element {
   const { theme } = useAppTheme();
   const styles = useStyles(createStyles);
   const [tempDate, setTempDate] = useState<string | null>(() => normalizeToIsoDate(selectedDate));
-
-  useEffect(() => {
-    setTempDate(normalizeToIsoDate(selectedDate));
-  }, [selectedDate, visible]);
-
-  const getTodayString = (): string => {
-    const today = new Date();
-    const year = today.getFullYear();
-    const month = String(today.getMonth() + 1).padStart(2, '0');
-    const day = String(today.getDate()).padStart(2, '0');
-    return `${String(year)}-${month}-${day}`;
-  };
 
   const handleDayPress = (day: { dateString: string }): void => {
     setTempDate(day.dateString);
@@ -97,76 +98,94 @@ export function DateFilterModal({
       : undefined;
 
   return (
-    <Modal visible={visible} transparent animationType="fade" onRequestClose={onClose}>
-      <Pressable style={styles.overlay} onPress={onClose}>
-        <Pressable
-          style={styles.card}
-          onPress={(e) => {
-            e.stopPropagation();
-          }}
-        >
-          {/* Header */}
-          <View style={styles.header}>
-            <AppText style={styles.title}>Filtrer par date</AppText>
-            <AppIconsButton
-              icon="x"
-              size={28}
-              variant="white"
-              iconColor={theme.colors.grey}
-              onPress={onClose}
-              accessibilityLabel="Fermer"
-            />
-          </View>
+    <Pressable style={styles.overlay} onPress={onClose}>
+      <Pressable
+        style={styles.card}
+        onPress={(e) => {
+          e.stopPropagation();
+        }}
+      >
+        {/* Header */}
+        <View style={styles.header}>
+          <AppText style={styles.title}>Filtrer par date</AppText>
+          <AppIconsButton
+            icon="x"
+            size={28}
+            variant="white"
+            iconColor={theme.colors.grey}
+            onPress={onClose}
+            accessibilityLabel="Fermer"
+          />
+        </View>
 
-          {/* Value Display */}
-          <View style={styles.valueContainer}>
-            <AppText style={styles.valueText}>
-              {tempDate !== null ? formatFrenchDisplay(tempDate) : 'Toutes les dates'}
-            </AppText>
-            <AppText style={styles.subText}>
-              {tempDate !== null
-                ? 'Afficher les initiatives à cette date'
-                : 'Afficher toutes les initiatives sans filtre de date'}
-            </AppText>
-          </View>
+        {/* Value Display */}
+        <View style={styles.valueContainer}>
+          <AppText style={styles.valueText}>
+            {tempDate !== null ? formatFrenchDisplay(tempDate) : 'Toutes les dates'}
+          </AppText>
+          <AppText style={styles.subText}>
+            {tempDate !== null
+              ? 'Afficher les initiatives à cette date'
+              : 'Afficher toutes les initiatives sans filtre de date'}
+          </AppText>
+        </View>
 
-          {/* Quick presets */}
-          <View style={styles.presetsRow}>
-            <AppBadgeButton
-              label="Toutes les dates"
-              variant="all"
-              selected={tempDate === null}
-              onPress={handleSelectAll}
-            />
-            <AppBadgeButton
-              label="Aujourd'hui"
-              variant="eco"
-              selected={tempDate === getTodayString()}
-              onPress={handleSelectToday}
-            />
-          </View>
+        {/* Quick presets */}
+        <View style={styles.presetsRow}>
+          <AppBadgeButton
+            label="Toutes les dates"
+            variant="all"
+            selected={tempDate === null}
+            onPress={handleSelectAll}
+          />
+          <AppBadgeButton
+            label="Aujourd'hui"
+            variant="eco"
+            selected={tempDate === getTodayString()}
+            onPress={handleSelectToday}
+          />
+        </View>
 
-          {/* Calendar */}
-          <View style={styles.calendarWrapper}>
-            <AppCalendar
-              current={tempDate ?? getTodayString()}
-              markedDates={markedDates}
-              onDayPress={handleDayPress}
-              containerStyle={styles.calendarContainer}
-            />
-          </View>
+        {/* Calendar */}
+        <View style={styles.calendarWrapper}>
+          <AppCalendar
+            current={tempDate ?? getTodayString()}
+            markedDates={markedDates}
+            onDayPress={handleDayPress}
+            containerStyle={styles.calendarContainer}
+          />
+        </View>
 
-          {/* Actions */}
-          <View style={styles.actionContainer}>
-            <AppButton
-              text="Appliquer"
-              variant="eco"
-              size="default"
-              onPress={handleConfirm}
-            />
-          </View>
-        </Pressable>
+        {/* Actions */}
+        <View style={styles.actionContainer}>
+          <AppButton
+            text="Appliquer"
+            variant="eco"
+            size="default"
+            onPress={handleConfirm}
+          />
+        </View>
       </Pressable>
+    </Pressable>
+  );
+}
+
+export function DateFilterModal({
+  visible,
+  onClose,
+  selectedDate,
+  onApply,
+}: DateFilterModalProps): React.JSX.Element {
+  return (
+    <Modal visible={visible} transparent animationType="fade" onRequestClose={onClose}>
+      {visible && (
+        <DateFilterContent
+          key={selectedDate ?? 'all'}
+          selectedDate={selectedDate}
+          onClose={onClose}
+          onApply={onApply}
+        />
+      )}
     </Modal>
   );
 }
@@ -186,10 +205,7 @@ const createStyles = (theme: AppTheme) =>
       backgroundColor: theme.colors.white,
       borderRadius: theme.radius.lg,
       padding: theme.spacing.xl,
-      ...theme.shadows.card,
-      shadowOpacity: 0.3,
-      shadowRadius: 10,
-      elevation: 10,
+      boxShadow: '0 4px 14px rgba(0, 0, 0, 0.25)',
       gap: theme.spacing.md,
     },
     header: {
@@ -227,8 +243,7 @@ const createStyles = (theme: AppTheme) =>
       overflow: 'hidden',
     },
     calendarContainer: {
-      elevation: 0,
-      shadowOpacity: 0,
+      boxShadow: 'none',
     },
     actionContainer: {
       marginTop: theme.spacing.xs,

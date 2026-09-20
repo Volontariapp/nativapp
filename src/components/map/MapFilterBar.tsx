@@ -226,12 +226,7 @@ const createStyles = (theme: AppTheme) =>
       borderColor: theme.colors.black,
       paddingVertical: 10,
       paddingHorizontal: 12,
-      alignItems: 'center',
-      shadowColor: theme.colors.black,
-      shadowOffset: { width: 0, height: 3 },
-      shadowOpacity: 0.15,
-      shadowRadius: 6,
-      elevation: 5,
+      boxShadow: '0 3px 8px rgba(0, 0, 0, 0.15)',
     },
     collapsedWrapper: {
       alignItems: 'center',

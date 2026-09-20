@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { View, StyleSheet, Modal, Pressable } from 'react-native';
 import { AppText } from '@/components/typography/AppText';
 import { AppSlider } from '@/components/inputs/AppSlider';
@@ -17,21 +17,21 @@ export interface DistanceFilterModalProps {
 
 const PRESET_DISTANCES = [5, 10, 20, 50];
 
-export function DistanceFilterModal({
-  visible,
-  onClose,
+interface DistanceFilterContentProps {
+  distanceKm: number | null;
+  onClose: () => void;
+  onApply: (distance: number | null) => void;
+}
+
+function DistanceFilterContent({
   distanceKm,
+  onClose,
   onApply,
-}: DistanceFilterModalProps): React.JSX.Element {
+}: DistanceFilterContentProps): React.JSX.Element {
   const { theme } = useAppTheme();
   const styles = useStyles(createStyles);
   const [tempDistance, setTempDistance] = useState<number>(distanceKm ?? 5);
   const [isUnlimited, setIsUnlimited] = useState<boolean>(distanceKm === null);
-
-  useEffect(() => {
-    setTempDistance(distanceKm ?? 5);
-    setIsUnlimited(distanceKm === null);
-  }, [distanceKm, visible]);
 
   const handleSelectPreset = (dist: number): void => {
     setIsUnlimited(false);
@@ -53,87 +53,105 @@ export function DistanceFilterModal({
   };
 
   return (
-    <Modal visible={visible} transparent animationType="fade" onRequestClose={onClose}>
-      <Pressable style={styles.overlay} onPress={onClose}>
-        <Pressable
-          style={styles.card}
-          onPress={(e) => {
-            e.stopPropagation();
-          }}
-        >
-          {/* Header */}
-          <View style={styles.header}>
-            <AppText style={styles.title}>Rayon de recherche</AppText>
-            <AppIconsButton
-              icon="x"
-              size={28}
-              variant="white"
-              iconColor={theme.colors.grey}
-              onPress={onClose}
-              accessibilityLabel="Fermer"
-            />
-          </View>
+    <Pressable style={styles.overlay} onPress={onClose}>
+      <Pressable
+        style={styles.card}
+        onPress={(e) => {
+          e.stopPropagation();
+        }}
+      >
+        {/* Header */}
+        <View style={styles.header}>
+          <AppText style={styles.title}>Rayon de recherche</AppText>
+          <AppIconsButton
+            icon="x"
+            size={28}
+            variant="white"
+            iconColor={theme.colors.grey}
+            onPress={onClose}
+            accessibilityLabel="Fermer"
+          />
+        </View>
 
-          {/* Value Display */}
-          <View style={styles.valueContainer}>
-            <AppText style={styles.valueText}>
-              {isUnlimited ? 'Toutes les distances' : `${String(tempDistance)} km`}
-            </AppText>
-            <AppText style={styles.subText}>
-              {isUnlimited
-                ? 'Afficher les initiatives partout'
-                : `Autour de votre position actuelle (${String(tempDistance)} km max)`}
-            </AppText>
-          </View>
+        {/* Value Display */}
+        <View style={styles.valueContainer}>
+          <AppText style={styles.valueText}>
+            {isUnlimited ? 'Toutes les distances' : `${String(tempDistance)} km`}
+          </AppText>
+          <AppText style={styles.subText}>
+            {isUnlimited
+              ? 'Afficher les initiatives partout'
+              : `Autour de votre position actuelle (${String(tempDistance)} km max)`}
+          </AppText>
+        </View>
 
-          {/* Slider */}
-          <View style={styles.sliderContainer}>
-            <AppSlider
-              value={tempDistance}
-              minimumValue={1}
-              maximumValue={50}
-              step={1}
-              disabled={isUnlimited}
-              onValueChange={handleSliderChange}
-            />
-            <View style={styles.sliderLabels}>
-              <AppText style={styles.sliderLabel}>1 km</AppText>
-              <AppText style={styles.sliderLabel}>50 km</AppText>
-            </View>
+        {/* Slider */}
+        <View style={styles.sliderContainer}>
+          <AppSlider
+            value={tempDistance}
+            minimumValue={1}
+            maximumValue={50}
+            step={1}
+            disabled={isUnlimited}
+            onValueChange={handleSliderChange}
+          />
+          <View style={styles.sliderLabels}>
+            <AppText style={styles.sliderLabel}>1 km</AppText>
+            <AppText style={styles.sliderLabel}>50 km</AppText>
           </View>
+        </View>
 
-          {/* Presets */}
-          <View style={styles.presetsRow}>
-            {PRESET_DISTANCES.map((preset) => (
-              <AppBadgeButton
-                key={preset}
-                label={`${String(preset)} km`}
-                variant="eco"
-                selected={!isUnlimited && tempDistance === preset}
-                onPress={() => {
-                  handleSelectPreset(preset);
-                }}
-              />
-            ))}
+        {/* Presets */}
+        <View style={styles.presetsRow}>
+          {PRESET_DISTANCES.map((preset) => (
             <AppBadgeButton
-              label="Illimité"
-              variant="all"
-              selected={isUnlimited}
-              onPress={handleSelectUnlimited}
-            />
-          </View>
-
-          {/* Actions */}
-          <View style={styles.actionContainer}>
-            <AppButton
-              text="Appliquer"
+              key={preset}
+              label={`${String(preset)} km`}
               variant="eco"
-              size="default"
-              onPress={handleConfirm}
+              selected={!isUnlimited && tempDistance === preset}
+              onPress={() => {
+                handleSelectPreset(preset);
+              }}
             />
-          </View>
-        </Pressable>
+          ))}
+          <AppBadgeButton
+            label="Illimité"
+            variant="all"
+            selected={isUnlimited}
+            onPress={handleSelectUnlimited}
+          />
+        </View>
+
+        {/* Actions */}
+        <View style={styles.actionContainer}>
+          <AppButton
+            text="Appliquer"
+            variant="eco"
+            size="default"
+            onPress={handleConfirm}
+          />
+        </View>
       </Pressable>
+    </Pressable>
+  );
+}
+
+export function DistanceFilterModal({
+  visible,
+  onClose,
+  distanceKm,
+  onApply,
+}: DistanceFilterModalProps): React.JSX.Element {
+  return (
+    <Modal visible={visible} transparent animationType="fade" onRequestClose={onClose}>
+      {visible && (
+        <DistanceFilterContent
+          key={String(distanceKm)}
+          distanceKm={distanceKm}
+          onClose={onClose}
+          onApply={onApply}
+        />
+      )}
     </Modal>
   );
 }
@@ -153,10 +171,7 @@ const createStyles = (theme: AppTheme) =>
       backgroundColor: theme.colors.white,
       borderRadius: theme.radius.lg,
       padding: theme.spacing.xl,
-      ...theme.shadows.card,
-      shadowOpacity: 0.3,
-      shadowRadius: 10,
-      elevation: 10,
+      boxShadow: '0 4px 14px rgba(0, 0, 0, 0.25)',
       gap: theme.spacing.md,
     },
     header: {

@@ -67,15 +67,13 @@ const userMarkerIcon = L.divIcon({
 });
 
 interface MapControllerProps {
-  onMapReady: (map: L.Map) => void;
+  mapRef: React.RefObject<L.Map | null>;
   onMapPress?: () => void;
 }
 
-function MapController({ onMapReady, onMapPress }: MapControllerProps) {
+function MapController({ mapRef, onMapPress }: MapControllerProps) {
   const map = useMap();
-  useEffect(() => {
-    onMapReady(map);
-  }, [map, onMapReady]);
+  mapRef.current = map;
 
   useEffect(() => {
     if (!onMapPress) return;
@@ -104,10 +102,6 @@ export default function LeafletMap({
 }: AppMapProps) {
   const { theme: appTheme } = useAppTheme();
   const mapRef = useRef<L.Map | null>(null);
-
-  const handleMapReady = useCallback((map: L.Map) => {
-    mapRef.current = map;
-  }, []);
 
   const handleRecenter = useCallback(() => {
     if (userLocation && mapRef.current) {
@@ -170,7 +164,7 @@ export default function LeafletMap({
         dragging={scrollEnabled}
         zoomControl={zoomEnabled}
       >
-        <MapController onMapReady={handleMapReady} onMapPress={onMapPress} />
+        <MapController mapRef={mapRef} onMapPress={onMapPress} />
         <TileLayer
           attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
           url="https://a.tile.openstreetmap.org/{z}/{x}/{y}.png"
@@ -234,9 +228,7 @@ const styles = StyleSheet.create({
     right: 20,
     zIndex: 1100,
     borderRadius: theme.radius.full,
-    ...theme.shadows.card,
-    shadowOpacity: 0.25,
-    elevation: 5,
+    boxShadow: '0 2px 6px rgba(0, 0, 0, 0.25)',
   },
   recenterContainerWithPreview: {
     bottom: 210,

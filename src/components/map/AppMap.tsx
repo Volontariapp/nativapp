@@ -142,9 +142,7 @@ const styles = StyleSheet.create({
     right: 20,
     zIndex: 1100,
     borderRadius: theme.radius.full,
-    ...theme.shadows.card,
-    shadowOpacity: 0.25,
-    elevation: 5,
+    boxShadow: '0 2px 6px rgba(0, 0, 0, 0.25)',
   },
   recenterContainerWithPreview: {
     bottom: 210,

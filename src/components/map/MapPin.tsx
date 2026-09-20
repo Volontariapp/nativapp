@@ -71,14 +71,7 @@ export const CustomMarker: React.FC<CustomMarkerProps> = ({
 const styles = StyleSheet.create({
   container: {
     alignItems: 'center',
-    justifyContent: 'center',
-    // Ombre iOS
-    shadowColor: theme.colors.black,
-    shadowOffset: { width: 0, height: 3 },
-    shadowOpacity: 0.25,
-    shadowRadius: 4,
-    // Ombre Android
-    elevation: 6,
+    boxShadow: '0 3px 6px rgba(0, 0, 0, 0.25)',
   },
   bubble: {
     alignItems: 'center',
