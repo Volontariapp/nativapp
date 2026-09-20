@@ -6,3 +6,5 @@ export * from './AppDateTimePicker';
 export * from './EventInput';
 export * from './AppInfoCard';
 export * from './AppChipSelector';
+export * from './AppPillInput';
+export * from './AppSlider';
