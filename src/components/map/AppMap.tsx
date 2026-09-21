@@ -70,16 +70,19 @@ export default function AppMap({
     );
   }, [events]);
 
-  // Incrémenter une version à chaque changement de la liste d'événements (ex: changement de filtre).
-  // Cela force React à démonter l'ancien lot et remonter le nouveau de manière séquentielle,
-  // évitant le bug natif d'Apple Maps / AIRMap sur iOS : "insertObject:atIndex: index beyond bounds".
-  const filterVersionRef = useRef(0);
-  const prevEventsRef = useRef(events);
-  if (prevEventsRef.current !== events) {
-    prevEventsRef.current = events;
-    filterVersionRef.current += 1;
-  }
-  const currentVersion = filterVersionRef.current;
+  // Signature de lot dérivée des IDs des événements affichés.
+  // Permet d'attribuer une clé unique par lot de filtre de manière 100% pure (sans muter de ref au rendu),
+  // forçant React à démonter l'ancien lot et insérer le nouveau séquentiellement sur iOS (évite le crash natif AIRMap).
+  const eventsBatchId = useMemo(() => {
+    let hash = 0;
+    for (const event of validEvents) {
+      for (let i = 0; i < event.id.length; i++) {
+        hash = ((hash << 5) - hash + event.id.charCodeAt(i)) | 0;
+      }
+      hash = ((hash << 5) - hash + 44) | 0; // séparateur ','
+    }
+    return hash.toString(36);
+  }, [validEvents]);
 
   const eventMap = useMemo(() => {
     const map = new Map<string, AppEvent>();
@@ -176,7 +179,7 @@ export default function AppMap({
         {validEvents.map((event) => {
           return (
             <CustomMarker
-              key={`custom-marker-${event.id}-v${String(currentVersion)}`}
+              key={`custom-marker-${event.id}-${eventsBatchId}`}
               identifier={event.id}
               coordinate={{
                 latitude: event.location.latitude,
