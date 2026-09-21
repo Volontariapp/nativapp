@@ -1,4 +1,4 @@
-import { useCallback, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import { useNavigation, useRoute } from '@react-navigation/native';
 import type { RouteProp } from '@react-navigation/native';
 import type { CompositeNavigationProp } from '@react-navigation/native';
@@ -164,6 +164,13 @@ export function useExploreScreen(): UseExploreScreenResult {
       return true;
     });
   }, [events, selectedCategory, searchQuery, selectedDistance, userCoordinates, selectedDate]);
+
+  // Fermer la prévisualisation si l'événement sélectionné est filtré
+  useEffect(() => {
+    if (selectedEvent && !filteredEvents.some((e) => e.id === selectedEvent.id)) {
+      setSelectedEvent(null);
+    }
+  }, [filteredEvents, selectedEvent]);
 
   const handleMarkerPress = useCallback((event: AppEvent): void => {
     setSelectedEvent(event);

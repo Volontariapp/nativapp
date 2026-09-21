@@ -54,13 +54,40 @@ export default function AppMap({
       : sideButtonBottomOffset;
   }, [bottomOffset, hasBottomPreview, cardBottomOffset, sideButtonBottomOffset]);
 
+  // Filtrer les événements avec coordonnées valides pour éviter d'injecter des enfants null dans MapView
+  const validEvents = useMemo(() => {
+    return events.filter(
+      (
+        event,
+      ): event is AppEvent & {
+        location: { latitude: number; longitude: number };
+      } =>
+        event.location != null &&
+        typeof event.location.latitude === 'number' &&
+        typeof event.location.longitude === 'number' &&
+        !Number.isNaN(event.location.latitude) &&
+        !Number.isNaN(event.location.longitude),
+    );
+  }, [events]);
+
+  // Incrémenter une version à chaque changement de la liste d'événements (ex: changement de filtre).
+  // Cela force React à démonter l'ancien lot et remonter le nouveau de manière séquentielle,
+  // évitant le bug natif d'Apple Maps / AIRMap sur iOS : "insertObject:atIndex: index beyond bounds".
+  const filterVersionRef = useRef(0);
+  const prevEventsRef = useRef(events);
+  if (prevEventsRef.current !== events) {
+    prevEventsRef.current = events;
+    filterVersionRef.current += 1;
+  }
+  const currentVersion = filterVersionRef.current;
+
   const eventMap = useMemo(() => {
     const map = new Map<string, AppEvent>();
-    for (const event of events) {
+    for (const event of validEvents) {
       map.set(event.id, event);
     }
     return map;
-  }, [events]);
+  }, [validEvents]);
 
   const handleRecenter = useCallback(() => {
     if (userLocation && mapRef.current) {
@@ -146,11 +173,10 @@ export default function AppMap({
           />
         )}
 
-        {events.map((event) => {
-          if (!event.location) return null;
+        {validEvents.map((event) => {
           return (
             <CustomMarker
-              key={`custom-marker-${event.id}`}
+              key={`custom-marker-${event.id}-v${String(currentVersion)}`}
               identifier={event.id}
               coordinate={{
                 latitude: event.location.latitude,
