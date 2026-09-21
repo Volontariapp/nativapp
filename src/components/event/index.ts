@@ -5,3 +5,4 @@ export * from './EventInfoCards';
 export * from './EventTags';
 export * from './EventParticipants';
 export * from './EventRequirements';
+export * from './EventMapPrevue';

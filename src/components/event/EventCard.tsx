@@ -225,7 +225,7 @@ const createStyles = (theme: AppTheme) =>
       borderRadius: theme.radius.full,
     },
     distanceChipText: {
-      color: theme.colors.text,
+      color: theme.colors.white,
       fontSize: theme.typography.fontSize.sm,
       fontWeight: theme.typography.fontWeight.medium,
       fontFamily: theme.typography.fonts.primary,

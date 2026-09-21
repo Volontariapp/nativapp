@@ -6,6 +6,8 @@ import { AppText } from '@/components/typography/AppText';
 import AppHeader from '@/components/layout/AppHeader';
 import AppMap from '@/components/map/AppMap';
 import { MapProvider } from '@/components/map/MapContext';
+import { EventMapPrevue } from '@/components/event/EventMapPrevue';
+import { MapFilterBar } from '@/components/map/MapFilterBar';
 import { useAppTheme, useStyles } from '@/context/ThemeContext';
 import type { AppTheme } from '@/shared/themes/theme';
 import { useExploreScreen } from './hooks/use-explore-screen';
@@ -22,7 +24,19 @@ export const ExploreScreen = React.memo(function ExploreScreen(): React.JSX.Elem
     initialLocation,
     mapKey,
     isPermissionDenied,
+    selectedEvent,
+    searchQuery,
+    setSearchQuery,
+    selectedCategory,
+    setSelectedCategory,
+    selectedDistance,
+    setSelectedDistance,
+    selectedDate,
+    setSelectedDate,
     handleMarkerPress,
+    handleOpenEvent,
+    handleClosePrevue,
+    handleMapPress,
   } = useExploreScreen();
 
   return (
@@ -41,13 +55,37 @@ export const ExploreScreen = React.memo(function ExploreScreen(): React.JSX.Elem
         </View>
       ) : (
         <MapProvider>
-          <AppMap
-            key={mapKey}
-            initialCenter={initialLocation}
-            userLocation={userCoordinates ?? undefined}
-            events={events}
-            onMarkerPress={handleMarkerPress}
-          />
+          <View style={styles.mapContainer}>
+            <AppMap
+              key={mapKey}
+              initialCenter={initialLocation}
+              userLocation={userCoordinates ?? undefined}
+              events={events}
+              onMarkerPress={handleMarkerPress}
+              onMapPress={handleMapPress}
+              hasBottomPreview={Boolean(selectedEvent)}
+            />
+
+            <MapFilterBar
+              style={styles.filterBar}
+              searchQuery={searchQuery}
+              onSearchChange={setSearchQuery}
+              selectedCategory={selectedCategory}
+              onCategoryChange={setSelectedCategory}
+              distanceKm={selectedDistance}
+              onDistanceChange={setSelectedDistance}
+              dateFilter={selectedDate}
+              onDateChange={setSelectedDate}
+            />
+
+            {selectedEvent && (
+              <EventMapPrevue
+                event={selectedEvent}
+                onOpen={handleOpenEvent}
+                onClose={handleClosePrevue}
+              />
+            )}
+          </View>
         </MapProvider>
       )}
     </View>
@@ -62,6 +100,19 @@ const createStyles = (theme: AppTheme) =>
     },
     skeletonContainer: {
       flex: 1,
+    },
+    mapContainer: {
+      flex: 1,
+      position: 'relative',
+    },
+    filterBar: {
+      position: 'absolute',
+      top: 14,
+      left: 16,
+      right: 16,
+      alignSelf: 'center',
+      zIndex: 1100,
+      maxWidth: 380,
     },
     skeletonMap: {
       flex: 1,
