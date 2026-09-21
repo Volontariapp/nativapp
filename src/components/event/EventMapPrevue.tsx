@@ -11,20 +11,25 @@ import { useAppTheme, useStyles } from '@/context/ThemeContext';
 import type { AppTheme } from '@/shared/themes/theme';
 import type { AppEvent } from '@/api/event/event.api';
 import { getFakeEcologyImage } from '@/utils/fake-images.util';
+import { useFloatingTabBarOffset } from '@/navigation/hooks/useFloatingTabBarOffset';
 
 export interface EventMapPrevueProps {
   event: AppEvent;
   onOpen?: (event: AppEvent) => void;
   onClose?: () => void;
+  bottomOffset?: number;
 }
 
 export function EventMapPrevue({
   event,
   onOpen,
   onClose,
+  bottomOffset,
 }: EventMapPrevueProps): React.JSX.Element {
   const { theme } = useAppTheme();
   const styles = useStyles(createStyles);
+  const { cardBottomOffset } = useFloatingTabBarOffset();
+  const bottom = bottomOffset ?? cardBottomOffset;
 
   const isEco =
     event.type === EventType.EVENT_TYPE_ECOLOGY ||
@@ -59,7 +64,7 @@ export function EventMapPrevue({
   const hasLocation = event.localisationName.length > 0;
 
   return (
-    <View style={styles.container}>
+    <View style={[styles.container, { bottom }]}>
       {/* Header bar: category badge + close button */}
       <View style={styles.header}>
         <AppBadgeButton

@@ -8,6 +8,10 @@ import { AppIconsButton } from '@/components/buttons/AppIconsButton';
 import type { AppEvent } from '@/api/event/event.api';
 import { CustomMarker } from './MapPin';
 import { EventType } from '@volontariapp/contracts';
+import {
+  useFloatingTabBarOffset,
+  PREVUE_CARD_HEIGHT_ESTIMATE,
+} from '@/navigation/hooks/useFloatingTabBarOffset';
 
 export interface AppMapProps {
   userLocation?: { latitude: number; longitude: number };
@@ -19,6 +23,7 @@ export interface AppMapProps {
   zoomEnabled?: boolean;
   showRecenterButton?: boolean;
   hasBottomPreview?: boolean;
+  bottomOffset?: number;
 }
 
 export default function AppMap({
@@ -31,10 +36,23 @@ export default function AppMap({
   zoomEnabled = true,
   showRecenterButton = true,
   hasBottomPreview = false,
+  bottomOffset,
 }: AppMapProps) {
   const { theme: appTheme } = useAppTheme();
+  const { cardBottomOffset, sideButtonBottomOffset } = useFloatingTabBarOffset();
   const mapRef = useRef<MapView | null>(null);
   const lastMarkerPressTimestamp = useRef(0);
+
+  const recenterBottom = useMemo(() => {
+    if (bottomOffset !== undefined) {
+      return hasBottomPreview
+        ? bottomOffset + PREVUE_CARD_HEIGHT_ESTIMATE
+        : bottomOffset;
+    }
+    return hasBottomPreview
+      ? cardBottomOffset + PREVUE_CARD_HEIGHT_ESTIMATE
+      : sideButtonBottomOffset;
+  }, [bottomOffset, hasBottomPreview, cardBottomOffset, sideButtonBottomOffset]);
 
   const eventMap = useMemo(() => {
     const map = new Map<string, AppEvent>();
@@ -153,12 +171,7 @@ export default function AppMap({
       </MapView>
 
       {showRecenterButton && userLocation && scrollEnabled && (
-        <View
-          style={[
-            styles.recenterContainer,
-            hasBottomPreview && styles.recenterContainerWithPreview,
-          ]}
-        >
+        <View style={[styles.recenterContainer, { bottom: recenterBottom }]}>
           <AppIconsButton
             icon="crosshair"
             size={48}
@@ -189,9 +202,6 @@ const styles = StyleSheet.create({
     zIndex: 1100,
     borderRadius: theme.radius.full,
     boxShadow: '0 2px 6px rgba(0, 0, 0, 0.25)',
-  },
-  recenterContainerWithPreview: {
-    bottom: 210,
   },
 });
 
