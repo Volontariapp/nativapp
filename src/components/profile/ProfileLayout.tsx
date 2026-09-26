@@ -11,7 +11,7 @@ interface ProfileLayoutProps {
   avatarUrl?: string;
   bio?: string;
   stats: ProfileStatItem[];
-  badges: BadgeWeb[];
+  badges?: (BadgeWeb | string)[];
   eventsTabs?: {
     participated?: PaginatedEventListData;
     created?: PaginatedEventListData;
