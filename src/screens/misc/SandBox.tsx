@@ -17,6 +17,7 @@ import { AppIcons } from '@/components/media/AppIcons';
 import { AppIconsButton } from '@/components/buttons/AppIconsButton';
 import { AppImage } from '@/components/media/AppImage';
 import { AuthCard } from '@/components/layout/AuthCard';
+import { SandboxBadgesSection } from './sandbox-badges-section';
 
 import chienPng from '../../../assets/chien.png';
 
@@ -92,18 +93,16 @@ export function SandBoxScreen(): React.JSX.Element {
           </View>
         </Section>
 
+        <Section title="Badges">
+          <SandboxBadgesSection />
+        </Section>
+
         <Section title="Inputs Classiques (AppInput)">
           <AppInput
             value={demoInput}
             onChangeText={setDemoInput}
             placeholder="AppInput standard..."
             label="Input Standard"
-          />
-          <AppInput
-            value={demoInput}
-            onChangeText={setDemoInput}
-            placeholder="AppInput..."
-            label="Input Icon"
           />
           <AppInput
             value={demoInput}
@@ -170,38 +169,16 @@ export function SandBoxScreen(): React.JSX.Element {
             iconLibrary="FontAwesome5"
           />
           <AppButton variant="danger" text="Retirer la participation" icon="x-circle" />
-          <AppButton
-            variant="socio"
-            text="Participer"
-            icon="hand-holding-heart"
-            iconLibrary="FontAwesome5"
-          />
+          <AppButton variant="socio" text="Participer" icon="hand-holding-heart" iconLibrary="FontAwesome5" />
           <AppButton variant="socio" text="Sans icone" />
         </Section>
 
         <Section title="Icons Buttons">
           <View style={styles.rowWrap}>
-            <AppIconsButton
-              variant="eco"
-              size={40}
-              icon="hand-holding-heart"
-              iconLibrary="FontAwesome5"
-            />
+            <AppIconsButton variant="eco" size={40} icon="hand-holding-heart" iconLibrary="FontAwesome5" />
             <AppIconsButton variant="danger" size={50} icon="trash" iconLibrary="FontAwesome5" />
-            <AppIconsButton
-              variant="noBackground"
-              iconColor={theme.colors.success}
-              size={50}
-              icon="heart"
-              iconLibrary="FontAwesome5"
-            />
-            <AppIconsButton
-              variant="socio"
-              iconColor={theme.colors.success}
-              size={50}
-              icon="pen"
-              iconLibrary="FontAwesome5"
-            />
+            <AppIconsButton variant="noBackground" iconColor={theme.colors.success} size={50} icon="heart" iconLibrary="FontAwesome5" />
+            <AppIconsButton variant="socio" iconColor={theme.colors.success} size={50} icon="pen" iconLibrary="FontAwesome5" />
           </View>
         </Section>
 
@@ -254,9 +231,5 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     flexWrap: 'wrap',
     gap: theme.spacing.md,
-  },
-  link: {
-    color: 'blue',
-    textDecorationLine: 'underline',
   },
 });

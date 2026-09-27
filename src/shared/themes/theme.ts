@@ -25,6 +25,30 @@ export type AppThemeColors = {
   adminInactive: string;
   separator: string;
   blackOverlay: string;
+  bronze: string;
+  bronzeBorder: string;
+  bronzeBackground: string;
+  bronzeText: string;
+  silver: string;
+  silverBorder: string;
+  silverBackground: string;
+  silverText: string;
+  diamond: string;
+  diamondBorder: string;
+  diamondBackground: string;
+  diamondText: string;
+  badgeOverlay: string;
+  badgeNeutral: string;
+  badgeNeutralBorder: string;
+  badgeNeutralBackground: string;
+  badgeRed: string;
+  badgeRedBorder: string;
+  badgeRedBackground: string;
+  badgeGreen: string;
+  badgeGreenBorder: string;
+  badgeGreenBackground: string;
+  badgeEcoBackground: string;
+  badgeSocioBackground: string;
 };
 
 export const lightTheme = {
@@ -55,6 +79,30 @@ export const lightTheme = {
     adminInactive: '#5f6368',
     separator: '#f0f0f0',
     blackOverlay: 'rgba(0, 0, 0, 0.4)',
+    bronze: '#CD7F32',
+    bronzeBorder: '#A05A2C',
+    bronzeBackground: '#FAF0E6',
+    bronzeText: '#8B4513',
+    silver: '#8E9AA8',
+    silverBorder: '#B0BAC5',
+    silverBackground: '#F1F5F9',
+    silverText: '#475569',
+    diamond: '#00B4D8',
+    diamondBorder: '#90E0EF',
+    diamondBackground: '#E0F7FA',
+    diamondText: '#0077B6',
+    badgeOverlay: 'rgba(0, 0, 0, 0.6)',
+    badgeNeutral: '#64748B',
+    badgeNeutralBorder: '#CBD5E1',
+    badgeNeutralBackground: '#F8FAFC',
+    badgeRed: '#E53935',
+    badgeRedBorder: '#FFCDD2',
+    badgeRedBackground: '#FFEBEE',
+    badgeGreen: '#2E7D32',
+    badgeGreenBorder: '#A5D6A7',
+    badgeGreenBackground: '#E8F5E9',
+    badgeEcoBackground: '#EAF5EC',
+    badgeSocioBackground: '#E6F3F7',
   },
   section: {
     gap: 12,
@@ -137,6 +185,30 @@ export const darkTheme: AppTheme = {
     whiteOverlay: 'rgba(255, 255, 255, 0.1)',
     blackOverlay: 'rgba(0, 0, 0, 0.7)',
     skeletonGrey: '#333333',
+    bronze: '#D48C46',
+    bronzeBorder: '#8A4E24',
+    bronzeBackground: '#2A1F18',
+    bronzeText: '#F0B67F',
+    silver: '#A6B4C2',
+    silverBorder: '#64748B',
+    silverBackground: '#1E293B',
+    silverText: '#E2E8F0',
+    diamond: '#48CAE4',
+    diamondBorder: '#0096C7',
+    diamondBackground: '#0B2535',
+    diamondText: '#ADE8F4',
+    badgeOverlay: 'rgba(0, 0, 0, 0.75)',
+    badgeNeutral: '#94A3B8',
+    badgeNeutralBorder: '#475569',
+    badgeNeutralBackground: '#1E293B',
+    badgeRed: '#EF5350',
+    badgeRedBorder: '#B71C1C',
+    badgeRedBackground: '#2C1618',
+    badgeGreen: '#4CAF50',
+    badgeGreenBorder: '#1B5E20',
+    badgeGreenBackground: '#152A18',
+    badgeEcoBackground: '#1A3320',
+    badgeSocioBackground: '#152C36',
   },
 };
 
