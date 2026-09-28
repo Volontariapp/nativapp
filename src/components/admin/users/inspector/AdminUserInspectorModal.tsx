@@ -6,6 +6,7 @@ import { AppButton } from '@/components/buttons/AppButton';
 import type { UserWeb, Event } from '@volontariapp/contracts';
 import { AdminInspectorUserItem } from './AdminInspectorUserItem';
 import { AdminInspectorEventItem } from './AdminInspectorEventItem';
+import { AdminInspectorBadgeItem } from './AdminInspectorBadgeItem';
 import { AdminUserEditModal } from '../AdminUserEditModal';
 import { AdminRelationPickerModal } from './AdminRelationPickerModal';
 import { AdminEventDetailsModal } from '../../events/AdminEventDetailsModal';
@@ -29,7 +30,12 @@ import {
   useAdminFollowUser,
   useAdminBlockUser,
 } from '@/api/admin/hooks/use-admin-social';
-import { useUpdateUserMutation } from '@/api/admin/hooks/use-admin-users';
+import {
+  useUpdateUserMutation,
+  useAdminUserQuery,
+  useAdminAddBadgeMutation,
+  useAdminRemoveBadgeMutation,
+} from '@/api/admin/hooks/use-admin-users';
 
 export function AdminUserInspectorModal({
   visible,
@@ -42,6 +48,7 @@ export function AdminUserInspectorModal({
 
   const userId = user?.id ?? '';
 
+  const { data: userData, isLoading: userLoading } = useAdminUserQuery(userId);
   const { data: wishesData, isLoading: wishesLoading } = useAdminUserWishedEvents(userId);
   const { data: participationsData, isLoading: participationsLoading } =
     useAdminUserParticipatedEvents(userId);
@@ -58,14 +65,20 @@ export function AdminUserInspectorModal({
   const followMutation = useAdminFollowUser();
   const unblockMutation = useAdminUnblockUser();
   const blockMutation = useAdminBlockUser();
+  const addBadgeMutation = useAdminAddBadgeMutation(userId);
+  const removeBadgeMutation = useAdminRemoveBadgeMutation(userId);
   const updateUserMutation = useUpdateUserMutation(() => {
     setSelectedUser(null);
   });
 
+  const badges = userData?.user?.badges ?? user?.badges ?? [];
+
   const handlePickerSelect = useCallback(
     (id: string) => {
       if (!pickerConfig) return;
-      if (pickerConfig.action === 'wishes') {
+      if (pickerConfig.action === 'badges') {
+        addBadgeMutation.mutate(id);
+      } else if (pickerConfig.action === 'wishes') {
         wishMutation.mutate({ userId, eventId: id });
       } else if (pickerConfig.action === 'participations') {
         participateMutation.mutate({ userId, eventId: id });
@@ -77,7 +90,15 @@ export function AdminUserInspectorModal({
       }
       setPickerConfig(null);
     },
-    [pickerConfig, userId, wishMutation, participateMutation, followMutation, blockMutation],
+    [
+      pickerConfig,
+      userId,
+      addBadgeMutation,
+      wishMutation,
+      participateMutation,
+      followMutation,
+      blockMutation,
+    ],
   );
 
   const handlePickerClose = useCallback(() => {
@@ -94,6 +115,9 @@ export function AdminUserInspectorModal({
   const postIds = (postsData?.ids ?? []).filter((id) => id !== 'null');
 
   const pickerExcludeIds: string[] = (() => {
+    if (pickerConfig?.mode === 'badges') {
+      return badges.map((b) => b.id);
+    }
     if (pickerConfig?.mode === 'events') {
       return pickerConfig.action === 'participations' ? participationIds : wishIds;
     }
@@ -109,6 +133,29 @@ export function AdminUserInspectorModal({
       scrollable={false}
     >
       <ScrollView style={styles.scrollContainer} contentContainerStyle={styles.scrollContent}>
+        {/* Badges attribués */}
+        <View style={styles.section}>
+          <AdminInspectorSectionHeader
+            title="Badges attribués"
+            count={badges.length}
+            onAdd={() => {
+              setPickerConfig({ mode: 'badges', action: 'badges' });
+            }}
+          />
+          <AdminInspectorSectionBody isLoading={userLoading} hasItems={badges.length > 0}>
+            {badges.map((badge) => (
+              <AdminInspectorBadgeItem
+                key={badge.id}
+                badge={badge}
+                onRemove={(badgeId) => {
+                  removeBadgeMutation.mutate(badgeId);
+                }}
+                removeLoading={removeBadgeMutation.isPending}
+              />
+            ))}
+          </AdminInspectorSectionBody>
+        </View>
+
         {/* Événements likés */}
         <View style={styles.section}>
           <AdminInspectorSectionHeader
@@ -132,6 +179,7 @@ export function AdminUserInspectorModal({
             ))}
           </AdminInspectorSectionBody>
         </View>
+
 
         {/* Événements participés */}
         <View style={styles.section}>
