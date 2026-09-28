@@ -6,10 +6,11 @@ export interface AdminUserInspectorModalProps {
   onClose: () => void;
 }
 
-export type PickerAction = 'wishes' | 'participations' | 'follows' | 'blocks';
-export type PickerMode = 'users' | 'events';
+export type PickerAction = 'wishes' | 'participations' | 'follows' | 'blocks' | 'badges';
+export type PickerMode = 'users' | 'events' | 'badges';
 
 export interface PickerConfig {
   mode: PickerMode;
   action: PickerAction;
 }
+

@@ -4,12 +4,18 @@ import { theme } from '@/shared/themes/theme';
 import { AppText } from '@/components/typography/AppText';
 import { AdminModal } from '@/components/admin/ui/AdminModal';
 import { AppIcons } from '@/components/media/AppIcons';
-import { useAdminUsersQuery, normalizeUsersList } from '@/api/admin/hooks/use-admin-users';
+import { Badge, resolveBadgeVariant } from '@/components/dataDisplay/badge';
+import {
+  useAdminUsersQuery,
+  normalizeUsersList,
+  useAdminBadgesQuery,
+  normalizeBadgesList,
+} from '@/api/admin/hooks/use-admin-users';
 import { useAdminEventsQuery, normalizeEventsList } from '@/api/admin/hooks/use-admin-events';
 
 interface AdminRelationPickerModalProps {
   visible: boolean;
-  mode: 'users' | 'events';
+  mode: 'users' | 'events' | 'badges';
   excludeIds: string[];
   onSelect: (id: string) => void;
   onClose: () => void;
@@ -19,6 +25,7 @@ interface PickerItem {
   id: string;
   title: string;
   subtitle: string;
+  slug?: string;
 }
 
 export function AdminRelationPickerModal({
@@ -32,8 +39,10 @@ export function AdminRelationPickerModal({
 
   const { data: usersData, isLoading: usersLoading } = useAdminUsersQuery();
   const { data: eventsData, isLoading: eventsLoading } = useAdminEventsQuery();
+  const { data: badgesData, isLoading: badgesLoading } = useAdminBadgesQuery();
 
-  const isLoading = mode === 'users' ? usersLoading : eventsLoading;
+  const isLoading =
+    mode === 'users' ? usersLoading : mode === 'events' ? eventsLoading : badgesLoading;
 
   const filteredItems: PickerItem[] = useMemo(() => {
     const excludeSet = new Set(excludeIds);
@@ -51,7 +60,7 @@ export function AdminRelationPickerModal({
         }
         return acc;
       }, []);
-    } else {
+    } else if (mode === 'events') {
       const events = normalizeEventsList(eventsData);
       return events.reduce<PickerItem[]>((acc, e) => {
         if (excludeSet.has(e.id)) return acc;
@@ -61,8 +70,31 @@ export function AdminRelationPickerModal({
         }
         return acc;
       }, []);
+    } else {
+      const badges = normalizeBadgesList(badgesData);
+      return badges.reduce<PickerItem[]>((acc, b) => {
+        if (excludeSet.has(b.id)) return acc;
+        const query = searchQuery.toLowerCase();
+        if (
+          b.name.toLowerCase().includes(query) ||
+          b.slug.toLowerCase().includes(query) ||
+          b.description.toLowerCase().includes(query) ||
+          b.id.includes(query)
+        ) {
+          acc.push({
+            id: b.id,
+            title: b.name,
+            subtitle:
+              typeof b.description === 'string' && b.description !== ''
+                ? `${b.slug} • ${b.description}`
+                : b.slug,
+            slug: b.slug,
+          });
+        }
+        return acc;
+      }, []);
     }
-  }, [mode, usersData, eventsData, excludeIds, searchQuery]);
+  }, [mode, usersData, eventsData, badgesData, excludeIds, searchQuery]);
 
   const handleSelect = useCallback(
     (id: string) => {
@@ -72,34 +104,53 @@ export function AdminRelationPickerModal({
   );
 
   const renderItem = useCallback(
-    ({ item }: { item: PickerItem }) => (
-      <Pressable
-        style={styles.itemCard}
-        onPress={() => {
-          handleSelect(item.id);
-        }}
-      >
-        <View style={styles.itemInfo}>
-          <AppText style={styles.itemTitle}>{item.title}</AppText>
-          <AppText style={styles.itemSubtitle}>{item.subtitle}</AppText>
-        </View>
-        <AppIcons icon="chevron-right" size={20} color={theme.colors.grey} />
-      </Pressable>
-    ),
-    [handleSelect],
+    ({ item }: { item: PickerItem }) => {
+      const variant =
+        typeof item.slug === 'string' && item.slug !== '' ? resolveBadgeVariant(item.slug) : null;
+      return (
+        <Pressable
+          style={styles.itemCard}
+          onPress={() => {
+            handleSelect(item.id);
+          }}
+        >
+          {mode === 'badges' && (
+            <View style={styles.badgeThumbnail}>
+              {variant != null ? (
+                <Badge variant={variant} size="sm" disableModal />
+              ) : (
+                <AppIcons icon="award" iconLibrary="Feather" size={20} color={theme.colors.primaryEco} />
+              )}
+            </View>
+          )}
+          <View style={styles.itemInfo}>
+            <AppText style={styles.itemTitle}>{item.title}</AppText>
+            <AppText style={styles.itemSubtitle}>{item.subtitle}</AppText>
+          </View>
+          <AppIcons
+            icon={mode === 'badges' ? 'plus' : 'chevron-right'}
+            size={20}
+            color={mode === 'badges' ? theme.colors.primarySocio : theme.colors.grey}
+          />
+        </Pressable>
+      );
+    },
+    [handleSelect, mode],
   );
 
   const handleClearSearch = useCallback(() => {
     setSearchQuery('');
   }, []);
 
+  const modalTitle =
+    mode === 'users'
+      ? 'Sélectionner un utilisateur'
+      : mode === 'events'
+        ? 'Sélectionner un événement'
+        : 'Attribuer un badge';
+
   return (
-    <AdminModal
-      visible={visible}
-      onClose={onClose}
-      title={mode === 'users' ? 'Sélectionner un utilisateur' : 'Sélectionner un événement'}
-      scrollable={false}
-    >
+    <AdminModal visible={visible} onClose={onClose} title={modalTitle} scrollable={false}>
       <View style={styles.searchContainer}>
         <AppIcons icon="search" size={20} color={theme.colors.grey} />
         <TextInput
@@ -166,6 +217,13 @@ const styles = StyleSheet.create({
     borderBottomWidth: 1,
     borderBottomColor: theme.colors.lightGrey + '50',
   },
+  badgeThumbnail: {
+    width: 36,
+    height: 36,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginRight: theme.spacing.sm,
+  },
   itemInfo: {
     flex: 1,
   },
@@ -186,3 +244,4 @@ const styles = StyleSheet.create({
     marginTop: theme.spacing.lg,
   },
 });
+
