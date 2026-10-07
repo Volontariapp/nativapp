@@ -18,10 +18,12 @@ import {
   type ICommentDeletedWebsocketPayload,
   type IPostLikedWebsocketPayload,
   type IPostUnlikedWebsocketPayload,
+  type IUserBadgeAwardedWebsocketPayload,
   WebsocketMessagingType,
 } from '@volontariapp/messaging';
 import { COMMENTS_LIST_QUERY_KEY } from '@/api/post/hooks/use-list-comments';
-import { syncPendingBus } from '../services/event-bus.service';
+import { PROFILE_QUERY_KEY } from '@/api/user/hooks/use-profile';
+import { badgeAwardedBus, syncPendingBus } from '../services/event-bus.service';
 
 export const useNotificationHandlers = (
   socket: Socket | null,
@@ -140,6 +142,18 @@ export const useNotificationHandlers = (
       notifyRef.current('La suppression du compte a échoué.');
     };
 
+    const handleUserBadgeAwarded = (data: IUserBadgeAwardedWebsocketPayload): void => {
+      void queryClient.invalidateQueries({
+        queryKey: PROFILE_QUERY_KEY,
+      });
+
+      if (data.badges.length > 0) {
+        badgeAwardedBus.emit(data.badges);
+        const badgeNames = data.badges.map((b) => b.name).join(', ');
+        notifyRef.current(`🎉 Félicitations ! Vous avez débloqué le badge : ${badgeNames}`);
+      }
+    };
+
     // Fallback events (optimistic offline sync success)
     const handleFallbackCreateEvent = (data: IFallbackCreateEventWebsocketPayload): void => {
       syncPendingBus.emit(false);
@@ -234,6 +248,7 @@ export const useNotificationHandlers = (
     socket.on(WebsocketMessagingType.USER_DELETED, handleUserDeleted);
     socket.on(WebsocketMessagingType.USER_CREATION_FAILED, handleUserFailed);
     socket.on(WebsocketMessagingType.USER_DELETION_FAILED, handleUserDeletionFailed);
+    socket.on(WebsocketMessagingType.USER_BADGE_AWARDED, handleUserBadgeAwarded);
 
     socket.on(WebsocketMessagingType.FALLBACK_CREATE_EVENT, handleFallbackCreateEvent);
     socket.on(WebsocketMessagingType.FALLBACK_UPDATE_EVENT, handleFallbackUpdateEvent);
@@ -266,6 +281,7 @@ export const useNotificationHandlers = (
       socket.off(WebsocketMessagingType.USER_DELETED, handleUserDeleted);
       socket.off(WebsocketMessagingType.USER_CREATION_FAILED, handleUserFailed);
       socket.off(WebsocketMessagingType.USER_DELETION_FAILED, handleUserDeletionFailed);
+      socket.off(WebsocketMessagingType.USER_BADGE_AWARDED, handleUserBadgeAwarded);
 
       socket.off(WebsocketMessagingType.FALLBACK_CREATE_EVENT, handleFallbackCreateEvent);
       socket.off(WebsocketMessagingType.FALLBACK_UPDATE_EVENT, handleFallbackUpdateEvent);
