@@ -13,9 +13,12 @@ import { AppText } from '@/components/typography/AppText';
 import { theme } from '@/shared/themes/theme';
 import { useSocket } from './SocketContext';
 import { useNotificationHandlers } from '../hooks/useNotificationHandlers';
-import { syncPendingBus } from '../services/event-bus.service';
+import { syncPendingBus, badgeAwardedBus } from '../services/event-bus.service';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { ActivityIndicator } from 'react-native';
+import { BadgeModal } from '@/components/dataDisplay/badge/badge-modal';
+import { BADGE_REGISTRY } from '@/components/dataDisplay/badge/badge.config';
+import type { BadgeVariant } from '@/components/dataDisplay/badge/badge.types';
 
 interface NotificationContextType {
   showNotification: (message: string) => void;
@@ -28,15 +31,26 @@ const NotificationContext = createContext<NotificationContextType>({
 export const NotificationProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [message, setMessage] = useState<string | null>(null);
   const [isSyncing, setIsSyncing] = useState<boolean>(false);
+  const [awardedBadge, setAwardedBadge] = useState<BadgeVariant | null>(null);
   const translateY = useSharedValue(-150);
   const { socket } = useSocket();
   const insets = useSafeAreaInsets();
 
   React.useEffect(() => {
-    const unsubscribe = syncPendingBus.subscribe((status) => {
+    const unsubscribeSync = syncPendingBus.subscribe((status) => {
       setIsSyncing(status);
     });
-    return unsubscribe;
+    const unsubscribeBadge = badgeAwardedBus.subscribe((badges) => {
+      const firstValidSlug = badges.find((b) => b.slug in BADGE_REGISTRY)?.slug as
+        BadgeVariant | undefined;
+      if (firstValidSlug) {
+        setAwardedBadge(firstValidSlug);
+      }
+    });
+    return () => {
+      unsubscribeSync();
+      unsubscribeBadge();
+    };
   }, []);
 
   const showNotification = useCallback(
@@ -83,6 +97,15 @@ export const NotificationProvider: React.FC<{ children: React.ReactNode }> = ({ 
           <ActivityIndicator size="small" color={theme.colors.white} />
           <AppText style={styles.syncText}>Synchronisation en cours...</AppText>
         </Animated.View>
+      )}
+      {awardedBadge != null && (
+        <BadgeModal
+          visible={true}
+          variant={awardedBadge}
+          onClose={() => {
+            setAwardedBadge(null);
+          }}
+        />
       )}
     </NotificationContext.Provider>
   );

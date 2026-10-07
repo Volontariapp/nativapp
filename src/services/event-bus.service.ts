@@ -1,3 +1,5 @@
+import type { IBadgePayload } from '@volontariapp/messaging';
+
 type EventCallback = () => void;
 
 class EventBus {
@@ -39,3 +41,4 @@ class DataEventBus<T> {
 }
 
 export const syncPendingBus = new DataEventBus<boolean>();
+export const badgeAwardedBus = new DataEventBus<IBadgePayload[]>();

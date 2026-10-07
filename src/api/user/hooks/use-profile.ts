@@ -1,7 +1,7 @@
 import { useQuery } from '@tanstack/react-query';
 import { userApi, type UserProfile } from '../user.api';
 
-const PROFILE_QUERY_KEY = ['profile'] as const;
+export const PROFILE_QUERY_KEY = ['profile'] as const;
 
 /**
  * Remplace le pattern useEffect + useState pour charger le profil utilisateur.
