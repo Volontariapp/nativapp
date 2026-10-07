@@ -1,5 +1,7 @@
 import { apiFetch } from '../client';
 import { EVENT_ENDPOINTS } from '../endpoints/event.endpoints';
+import { generateIdempotencyKey } from '@/shared/lib/idempotency.utils';
+import type { WithOptionalIdempotencyKey } from '../idempotency.types';
 import type {
   CreateEventRequest,
   GetEventResponse,
@@ -24,9 +26,13 @@ import type {
 
 export const adminEventApi = {
   async createEvent(
-    payload: CreateEventRequest,
+    input: WithOptionalIdempotencyKey<CreateEventRequest>,
     pathParams?: Record<string, string>,
   ): Promise<GetEventResponse> {
+    const payload: CreateEventRequest = {
+      ...input,
+      idempotencyKey: input.idempotencyKey ?? generateIdempotencyKey(),
+    };
     let finalPath: string = EVENT_ENDPOINTS.CREATE_EVENT.path;
     if (pathParams != null) {
       Object.entries(pathParams).forEach(([k, v]) => {

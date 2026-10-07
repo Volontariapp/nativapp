@@ -10,6 +10,7 @@ import Feather from 'react-native-vector-icons/Feather';
 
 import type { CreateEventRequest } from '@volontariapp/contracts';
 import { EventType } from '@volontariapp/contracts';
+import type { WithOptionalIdempotencyKey } from '@/api/idempotency.types';
 
 import { useForm, useFieldArray } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -86,7 +87,7 @@ export function EventFormScreen(): React.JSX.Element {
   const handleCreate50Events = React.useCallback(async (): Promise<void> => {
     setIsBatching(true);
     try {
-      const payload: CreateEventRequest = {
+      const payload: WithOptionalIdempotencyKey<CreateEventRequest> = {
         title: 'Batch Event',
         description: 'Évènement généré automatiquement pour des tests.',
         localisationName: 'Paris, France',

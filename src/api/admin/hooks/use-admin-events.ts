@@ -9,6 +9,7 @@ import type {
   GetEventResponse,
 } from '@volontariapp/contracts';
 import { EventState } from '@volontariapp/contracts';
+import type { WithOptionalIdempotencyKey } from '../../idempotency.types';
 
 const ADMIN_EVENTS_QUERY_KEY = ['admin', 'events'] as const;
 export const ADMIN_EVENTS_COUNT_QUERY_KEY = ['admin', 'events', 'count'] as const;
@@ -64,7 +65,8 @@ export const useCreateEventMutation = () => {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: async (payload: CreateEventRequest) => await adminEventApi.createEvent(payload),
+    mutationFn: async (payload: WithOptionalIdempotencyKey<CreateEventRequest>) =>
+      await adminEventApi.createEvent(payload),
     onSuccess: () => {
       void queryClient.invalidateQueries({ queryKey: ADMIN_EVENTS_QUERY_KEY });
       void queryClient.invalidateQueries({ queryKey: ADMIN_EVENTS_COUNT_QUERY_KEY });

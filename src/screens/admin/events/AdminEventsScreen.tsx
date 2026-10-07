@@ -12,6 +12,7 @@ import {
 } from '@/components/admin/events';
 import type { Event, CreateEventRequest, UpdateEventRequest } from '@volontariapp/contracts';
 import { EventState } from '@volontariapp/contracts';
+import type { WithOptionalIdempotencyKey } from '@/api/idempotency.types';
 import { areProtobufEnumsDifferent } from '@/shared/lib/protobuf.utils';
 import {
   useAdminEventsQuery,
@@ -95,7 +96,7 @@ export default function AdminEventsScreen(): React.JSX.Element {
   const changeStateMutation = useChangeEventStateMutation();
 
   const handleCreateEvent = useCallback(
-    (payload: CreateEventRequest): void => {
+    (payload: WithOptionalIdempotencyKey<CreateEventRequest>): void => {
       createEventMutation.mutate(payload, {
         onSuccess: () => {
           dispatch({ type: 'CLOSE_CREATE' });

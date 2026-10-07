@@ -11,6 +11,7 @@ import { FilterChip } from '@/components/ui/FilterChip';
 import { AdminModal } from '@/components/admin/ui/AdminModal';
 import { EventType } from '@volontariapp/contracts';
 import type { CreateEventRequest } from '@volontariapp/contracts';
+import type { WithOptionalIdempotencyKey } from '@/api/idempotency.types';
 
 const eventSchema = z.object({
   title: z.string().min(3, 'Le titre est requis'),
@@ -26,7 +27,7 @@ type EventFormData = z.infer<typeof eventSchema>;
 interface AdminEventFormModalProps {
   visible: boolean;
   onClose: () => void;
-  onSubmit: (data: CreateEventRequest) => void;
+  onSubmit: (data: WithOptionalIdempotencyKey<CreateEventRequest>) => void;
   isLoading?: boolean;
 }
 

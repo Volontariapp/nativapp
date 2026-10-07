@@ -1,5 +1,7 @@
 import { apiFetch } from '../client';
 import { USER_ENDPOINTS } from '../endpoints/user.endpoints';
+import { generateIdempotencyKey } from '@/shared/lib/idempotency.utils';
+import type { WithOptionalIdempotencyKey } from '../idempotency.types';
 import type {
   SignUpRequest,
   SignUpWebResponse,
@@ -75,9 +77,13 @@ export const adminUserApi = {
   },
 
   async createBadge(
-    payload: CreateBadgeRequest,
+    input: WithOptionalIdempotencyKey<CreateBadgeRequest>,
     pathParams?: Record<string, string>,
   ): Promise<BadgeWebResponse> {
+    const payload: CreateBadgeRequest = {
+      ...input,
+      idempotencyKey: input.idempotencyKey ?? generateIdempotencyKey(),
+    };
     let finalPath: string = USER_ENDPOINTS.CREATE_BADGE.path;
     if (pathParams != null) {
       Object.entries(pathParams).forEach(([k, v]) => {

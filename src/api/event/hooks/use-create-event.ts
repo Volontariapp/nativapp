@@ -2,6 +2,7 @@ import { Alert } from 'react-native';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { eventApi } from '../event.api';
 import type { CreateEventRequest } from '@volontariapp/contracts';
+import type { WithOptionalIdempotencyKey } from '../../idempotency.types';
 import type { EventFormValues } from '../event.schema';
 
 const EVENTS_QUERY_KEY = ['events'] as const;
@@ -11,7 +12,7 @@ export const useCreateEvent = () => {
 
   return useMutation({
     mutationFn: async (data: EventFormValues) => {
-      const payload: CreateEventRequest = {
+      const payload: WithOptionalIdempotencyKey<CreateEventRequest> = {
         title: data.title,
         description: data.description,
         localisationName: data.localisationName,

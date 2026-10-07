@@ -1,5 +1,7 @@
 import { apiFetch } from '../client';
 import { POST_ENDPOINTS, COMMENT_ENDPOINTS } from '../endpoints/post.endpoints';
+import { generateIdempotencyKey } from '@/shared/lib/idempotency.utils';
+import type { WithOptionalIdempotencyKey } from '../idempotency.types';
 import type {
   CreatePostRequest,
   CreatePostWebResponse,
@@ -10,9 +12,19 @@ import type {
   ListCommentsWebResponse,
 } from '@volontariapp/contracts';
 
+/** Création de post : `fileIds` vaut `[]` et `idempotencyKey` est générée quand elles sont absentes. */
+export type CreatePostInput = Omit<WithOptionalIdempotencyKey<CreatePostRequest>, 'fileIds'> & {
+  fileIds?: string[];
+};
+
 export const postApi = {
-  async createPost(payload: CreatePostRequest): Promise<CreatePostWebResponse> {
+  async createPost(input: CreatePostInput): Promise<CreatePostWebResponse> {
     try {
+      const payload: CreatePostRequest = {
+        ...input,
+        fileIds: input.fileIds ?? [],
+        idempotencyKey: input.idempotencyKey ?? generateIdempotencyKey(),
+      };
       console.log('[postApi.createPost] Sending payload:', payload);
 
       const response = await apiFetch<CreatePostWebResponse, CreatePostRequest>(

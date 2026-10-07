@@ -1,5 +1,7 @@
 import { apiFetch } from '../client';
 import { EVENT_ENDPOINTS } from '../endpoints';
+import { generateIdempotencyKey } from '@/shared/lib/idempotency.utils';
+import type { WithOptionalIdempotencyKey } from '../idempotency.types';
 import type {
   CreateEventRequest,
   EventType,
@@ -78,8 +80,14 @@ export const convertEventDtoToAppEvent = (event: EventDTO): AppEvent => {
 };
 
 export const eventApi = {
-  async createEvent(payload: CreateEventRequest): Promise<AppEvent | null> {
+  async createEvent(
+    input: WithOptionalIdempotencyKey<CreateEventRequest>,
+  ): Promise<AppEvent | null> {
     try {
+      const payload: CreateEventRequest = {
+        ...input,
+        idempotencyKey: input.idempotencyKey ?? generateIdempotencyKey(),
+      };
       console.log('[eventApi.createEvent] Sending payload:', payload);
       const response = await apiFetch<CreateEventResponse, CreateEventRequest>(
         EVENT_ENDPOINTS.CREATE_EVENT.path,
