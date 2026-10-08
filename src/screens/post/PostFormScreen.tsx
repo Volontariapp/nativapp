@@ -15,13 +15,9 @@ import { EventInput } from '@/components/inputs';
 import { useAppTheme, useStyles } from '@/context/ThemeContext';
 import type { AppTheme } from '@/shared/themes/theme';
 import { useCreatePost } from '@/api/post/hooks';
-import { useGetMyEvents } from '@/api/event/hooks/use-get-my-events';
 import { EventSelector } from '@/components/post/event-selector';
 import { useDebug } from '@/context/DebugContext';
 import { useQueryClient } from '@tanstack/react-query';
-import { mapEventType } from '@/shared/lib/event-mappers.utils';
-import { formatDate } from '@/shared/lib/format-date.utils';
-import { EventType } from '@volontariapp/contracts';
 
 const createPostSchema = z.object({
   title: z
@@ -37,88 +33,15 @@ const createPostSchema = z.object({
 
 type CreatePostFormData = z.infer<typeof createPostSchema>;
 
-interface CharacterCounterProps {
-  currentLength: number;
-  minLength: number;
-  maxLength: number;
-  itemLabel: string;
-}
-
-function CharacterCounter({
-  currentLength,
-  minLength,
-  maxLength,
-  itemLabel,
-}: CharacterCounterProps): React.JSX.Element {
-  const { theme } = useAppTheme();
-  const styles = useStyles(createStyles);
-
-  const percentage = Math.min(100, Math.max(0, (currentLength / maxLength) * 100));
-
-  let progressColor = theme.colors.grey;
-  let statusText = `Min. ${String(minLength)} caractères requis`;
-  let isSuccess = false;
-
-  if (currentLength > 0 && currentLength < minLength) {
-    statusText = `${String(minLength - currentLength)} caractère(s) manquant(s)`;
-    progressColor = theme.colors.warning;
-  } else if (currentLength >= minLength && currentLength <= maxLength * 0.85) {
-    statusText = `✓ ${itemLabel} valide`;
-    progressColor = theme.colors.primaryEco;
-    isSuccess = true;
-  } else if (currentLength > maxLength * 0.85 && currentLength < maxLength) {
-    statusText = 'Proche de la limite';
-    progressColor = theme.colors.warning;
-    isSuccess = true;
-  } else if (currentLength >= maxLength) {
-    statusText = 'Limite maximale atteinte';
-    progressColor = theme.colors.danger;
-  }
-
-  return (
-    <View style={styles.counterContainer}>
-      <View style={styles.progressBarTrack}>
-        <View
-          style={[
-            styles.progressBarFill,
-            {
-              width: `${String(percentage)}%` as `${number}%`,
-              backgroundColor: progressColor,
-            },
-          ]}
-        />
-      </View>
-      <View style={styles.counterLabelsRow}>
-        <AppText
-          style={[
-            styles.counterStatusText,
-            isSuccess && styles.counterStatusSuccess,
-            currentLength >= maxLength && styles.counterStatusDanger,
-          ]}
-        >
-          {statusText}
-        </AppText>
-        <AppText style={styles.counterValueText}>
-          {String(currentLength)} / {String(maxLength)}
-        </AppText>
-      </View>
-    </View>
-  );
-}
-
 export function PostFormScreen(): React.JSX.Element {
   const { theme } = useAppTheme();
   const styles = useStyles(createStyles);
-  const insets = useSafeAreaInsets();
 
   const navigation = useNavigation();
   const { mutateAsync: createPost, isPending } = useCreatePost();
   const { isDebugMode } = useDebug();
   const queryClient = useQueryClient();
-  const [isBatching, setIsBatching] = useState(false);
-  const [showPreview, setShowPreview] = useState(true);
-  const [titleFocused, setTitleFocused] = useState(false);
-  const [contentFocused, setContentFocused] = useState(false);
+  const [isBatching, setIsBatching] = React.useState(false);
 
   const {
     control,
@@ -133,19 +56,9 @@ export function PostFormScreen(): React.JSX.Element {
       content: '',
       eventId: undefined,
     },
-    mode: 'onChange',
   });
 
-  const watchedTitle = watch('title');
-  const watchedContent = watch('content');
   const selectedEventId = watch('eventId');
-
-  const { data: eventsData } = useGetMyEvents(100);
-  const selectedEvent = useMemo(() => {
-    if (selectedEventId === undefined || selectedEventId === '') return undefined;
-    const all = eventsData?.pages.flatMap((page) => page.events) ?? [];
-    return all.find((e) => e.id === selectedEventId);
-  }, [eventsData, selectedEventId]);
 
   const handleSelectEvent = useCallback(
     (eventId: string | undefined) => {
@@ -153,10 +66,6 @@ export function PostFormScreen(): React.JSX.Element {
     },
     [setValue],
   );
-
-  const isFormValid = useMemo(() => {
-    return watchedTitle.trim().length >= 3 && watchedContent.trim().length >= 10;
-  }, [watchedTitle, watchedContent]);
 
   const onSubmit = async (data: CreatePostFormData) => {
     try {
@@ -172,7 +81,7 @@ export function PostFormScreen(): React.JSX.Element {
     }
   };
 
-  const handleCreate50Posts = useCallback(async (): Promise<void> => {
+  const handleCreate50Posts = React.useCallback(async (): Promise<void> => {
     setIsBatching(true);
     try {
       const titles = [
@@ -222,11 +131,6 @@ export function PostFormScreen(): React.JSX.Element {
       setIsBatching(false);
     }
   }, [createPost, queryClient, navigation, selectedEventId]);
-
-  const isSelectedSocial =
-    selectedEvent !== undefined &&
-    (selectedEvent.type === EventType.EVENT_TYPE_SOCIAL ||
-      String(selectedEvent.type) === EventType[EventType.EVENT_TYPE_SOCIAL]);
 
   return (
     <View style={styles.container}>
