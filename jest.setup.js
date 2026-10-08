@@ -37,3 +37,27 @@ jest.mock('react-native-keyboard-controller', () =>
   require('react-native-keyboard-controller/jest'),
 );
 
+jest.mock('@expo/vector-icons', () => {
+  const { Text } = require('react-native');
+  const React = require('react');
+  return new Proxy(
+    {},
+    {
+      get: () => {
+        const IconComponent = (props) => React.createElement(Text, props, props.name || '');
+        IconComponent.displayName = 'MockExpoIcon';
+        return IconComponent;
+      },
+    },
+  );
+});
+
+jest.mock('react-native-vector-icons/Feather', () => {
+  const { Text } = require('react-native');
+  const React = require('react');
+  const FeatherIcon = (props) => React.createElement(Text, props, props.name || '');
+  FeatherIcon.displayName = 'MockFeatherIcon';
+  return FeatherIcon;
+});
+
+
