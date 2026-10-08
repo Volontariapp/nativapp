@@ -1,23 +1,17 @@
-import React, { useCallback, useMemo, useState } from 'react';
-import {
-  View,
-  StyleSheet,
-  ScrollView,
-  Alert,
-  TextInput,
-  Pressable,
-  type GestureResponderEvent,
-} from 'react-native';
+import React, { useCallback } from 'react';
+import { View, StyleSheet, TextInput, Alert, Pressable } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
-import { useForm, Controller } from 'react-hook-form';
+import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
-import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import Feather from 'react-native-vector-icons/Feather';
+
 import { AppText } from '@/components/typography/AppText';
 import { AppButton } from '@/components/buttons/AppButton';
 import AppHeader from '@/components/layout/AppHeader';
-import { AppKeyboardAvoidingView } from '@/components/layout/AppKeyboardAvoidingView';
+import { AppKeyboardScrollView } from '@/components/layout/AppKeyboardScrollView';
+import { AppFormController } from '@/components/forms';
+import { EventInput } from '@/components/inputs';
 import { useAppTheme, useStyles } from '@/context/ThemeContext';
 import type { AppTheme } from '@/shared/themes/theme';
 import { useCreatePost } from '@/api/post/hooks';
@@ -174,7 +168,7 @@ export function PostFormScreen(): React.JSX.Element {
       navigation.goBack();
     } catch (err) {
       console.error('Failed to create post:', err instanceof Error ? err.message : String(err));
-      Alert.alert('Erreur', 'Impossible de publier votre post. Veuillez réessayer.');
+      Alert.alert('Erreur', 'Impossible de publier votre post.');
     }
   };
 
@@ -237,318 +231,86 @@ export function PostFormScreen(): React.JSX.Element {
   return (
     <View style={styles.container}>
       <AppHeader showBack />
+      <AppKeyboardScrollView
+        contentContainerStyle={styles.scrollContent}
+        contentInsetAdjustmentBehavior="automatic"
+        bottomOffset={16}
+      >
+        <AppText style={styles.title}>Créer un Post</AppText>
 
-      <AppKeyboardAvoidingView style={styles.keyboardAvoiding}>
-        <ScrollView
-          contentContainerStyle={styles.scrollContent}
-          showsVerticalScrollIndicator={false}
-          keyboardShouldPersistTaps="handled"
+        {/* Image Placeholder */}
+        <Pressable
+          style={styles.imagePlaceholder}
+          onPress={() => {
+            Alert.alert('Info', "L'ajout d'image n'est pas encore disponible.");
+          }}
         >
-          {/* Hero Banner */}
-          <View style={styles.heroBanner}>
-            <View style={styles.heroIconBadge}>
-              <Feather name="edit-3" size={24} color={theme.colors.primaryEco} />
-            </View>
-            <View style={styles.heroTextContainer}>
-              <AppText style={styles.heroTitle}>Créer une publication</AppText>
-              <AppText style={styles.heroSubtitle}>
-                Partagez vos actions, vos réussites et inspirez la communauté bénévole.
-              </AppText>
-            </View>
-          </View>
+          <Feather name="plus" size={32} color={theme.colors.grey} />
+          <AppText style={styles.imagePlaceholderText}>Ajouter une image</AppText>
+        </Pressable>
 
-          {/* Card: Inputs Section */}
-          <View style={styles.formCard}>
-            <View style={styles.cardHeaderRow}>
-              <Feather name="message-square" size={18} color={theme.colors.primaryEco} />
-              <AppText style={styles.cardSectionTitle}>Votre message</AppText>
-            </View>
-
-            {/* Field: Title */}
-            <View style={styles.fieldGroup}>
-              <View style={styles.labelRow}>
-                <AppText style={styles.inputLabel}>Titre de la publication</AppText>
-                <AppText style={styles.requiredMark}>*</AppText>
-              </View>
-
-              <Controller
-                control={control}
-                name="title"
-                render={({ field: { onChange, onBlur, value } }) => (
-                  <View
-                    style={[
-                      styles.inputWrapper,
-                      titleFocused && styles.inputWrapperFocused,
-                      errors.title?.message !== undefined && styles.inputWrapperError,
-                    ]}
-                  >
-                    <TextInput
-                      style={styles.textInput}
-                      placeholder="Ex: Grande collecte de printemps pour le quartier..."
-                      placeholderTextColor={theme.colors.grey}
-                      value={value}
-                      maxLength={100}
-                      onFocus={() => {
-                        setTitleFocused(true);
-                      }}
-                      onBlur={() => {
-                        setTitleFocused(false);
-                        onBlur();
-                      }}
-                      onChangeText={onChange}
-                    />
-                  </View>
-                )}
-              />
-
-              <CharacterCounter
-                currentLength={watchedTitle.length}
-                minLength={3}
-                maxLength={100}
-                itemLabel="Titre"
-              />
-
-              {errors.title?.message !== undefined && (
-                <AppText style={styles.fieldErrorMessage}>{errors.title.message}</AppText>
-              )}
-            </View>
-
-            {/* Field: Content */}
-            <View style={styles.fieldGroup}>
-              <View style={styles.labelRow}>
-                <AppText style={styles.inputLabel}>Contenu</AppText>
-                <AppText style={styles.requiredMark}>*</AppText>
-              </View>
-
-              <Controller
-                control={control}
-                name="content"
-                render={({ field: { onChange, onBlur, value } }) => (
-                  <View
-                    style={[
-                      styles.inputWrapper,
-                      styles.textAreaWrapper,
-                      contentFocused && styles.inputWrapperFocused,
-                      errors.content?.message !== undefined && styles.inputWrapperError,
-                    ]}
-                  >
-                    <TextInput
-                      style={[styles.textInput, styles.textAreaInput]}
-                      placeholder="Racontez votre expérience, les moments forts ou les prochaines étapes de l'action bénévole..."
-                      placeholderTextColor={theme.colors.grey}
-                      value={value}
-                      maxLength={1000}
-                      multiline
-                      numberOfLines={6}
-                      onFocus={() => {
-                        setContentFocused(true);
-                      }}
-                      onBlur={() => {
-                        setContentFocused(false);
-                        onBlur();
-                      }}
-                      onChangeText={onChange}
-                    />
-                  </View>
-                )}
-              />
-
-              <CharacterCounter
-                currentLength={watchedContent.length}
-                minLength={10}
-                maxLength={1000}
-                itemLabel="Contenu"
-              />
-
-              {errors.content?.message !== undefined && (
-                <AppText style={styles.fieldErrorMessage}>{errors.content.message}</AppText>
-              )}
-            </View>
-          </View>
-
-          {/* Section: Event Selector */}
-          <EventSelector onSelectEvent={handleSelectEvent} selectedEventId={selectedEventId} />
-
-          {/* Section: Live Feed Preview */}
-          <View style={styles.previewCard}>
-            <Pressable
-              style={styles.previewToggleHeader}
-              onPress={() => {
-                setShowPreview((prev) => !prev);
-              }}
-            >
-              <View style={styles.previewHeaderLeft}>
-                <Feather name="eye" size={18} color={theme.colors.primarySocio} />
-                <AppText style={styles.previewSectionTitle}>Aperçu en direct</AppText>
-              </View>
-              <View style={styles.previewToggleBadge}>
-                <AppText style={styles.previewToggleText}>
-                  {showPreview ? 'Masquer' : 'Afficher'}
-                </AppText>
-                <Feather
-                  name={showPreview ? 'chevron-up' : 'chevron-down'}
-                  size={16}
-                  color={theme.colors.primarySocio}
-                />
-              </View>
-            </Pressable>
-
-            {showPreview && (
-              <View style={styles.previewBody}>
-                {/* Simulated Feed Post */}
-                <View style={styles.simulatedPostCard}>
-                  {/* Post Author Header */}
-                  <View style={styles.simulatedAuthorRow}>
-                    <View style={styles.simulatedAvatar}>
-                      <Feather name="user" size={18} color={theme.colors.white} />
-                    </View>
-                    <View style={styles.simulatedAuthorMeta}>
-                      <AppText style={styles.simulatedAuthorName}>Vous</AppText>
-                      <AppText style={styles.simulatedAuthorTime}>À l&apos;instant • Public</AppText>
-                    </View>
-                    <Feather name="more-horizontal" size={18} color={theme.colors.grey} />
-                  </View>
-
-                  {/* Post Title */}
-                  <AppText
-                    style={[
-                      styles.simulatedTitle,
-                      watchedTitle.trim() === '' && styles.simulatedPlaceholder,
-                    ]}
-                  >
-                    {watchedTitle.trim() !== ''
-                      ? watchedTitle.trim()
-                      : 'Titre de votre publication...'}
-                  </AppText>
-
-                  {/* Post Content */}
-                  <AppText
-                    style={[
-                      styles.simulatedContent,
-                      watchedContent.trim() === '' && styles.simulatedPlaceholder,
-                    ]}
-                  >
-                    {watchedContent.trim() !== ''
-                      ? watchedContent.trim()
-                      : "Le message et les détails de votre action s'afficheront ici en temps réel..."}
-                  </AppText>
-
-                  {/* Attached Event Preview Inside Post */}
-                  {selectedEvent !== undefined && (
-                    <View style={styles.simulatedEventAttachment}>
-                      <View style={styles.simulatedEventHeader}>
-                        <View
-                          style={[
-                            styles.simulatedTypeBadge,
-                            isSelectedSocial
-                              ? styles.simulatedTypeBadgeSocial
-                              : styles.simulatedTypeBadgeEco,
-                          ]}
-                        >
-                          <AppText
-                            style={[
-                              styles.simulatedTypeBadgeText,
-                              isSelectedSocial
-                                ? styles.simulatedTypeBadgeTextSocial
-                                : styles.simulatedTypeBadgeTextEco,
-                            ]}
-                          >
-                            {mapEventType(selectedEvent.type)}
-                          </AppText>
-                        </View>
-                        <AppText style={styles.simulatedEventDate}>
-                          {formatDate(selectedEvent.startAt, {
-                            day: '2-digit',
-                            month: 'short',
-                          })}
-                        </AppText>
-                      </View>
-                      <AppText style={styles.simulatedEventTitle} numberOfLines={1}>
-                        {selectedEvent.title}
-                      </AppText>
-                      <View style={styles.simulatedEventLocation}>
-                        <Feather name="map-pin" size={12} color={theme.colors.grey} />
-                        <AppText style={styles.simulatedEventLocationText} numberOfLines={1}>
-                          {selectedEvent.localisationName}
-                        </AppText>
-                      </View>
-                    </View>
-                  )}
-
-                  {/* Simulated Social Interactions */}
-                  <View style={styles.simulatedActionsRow}>
-                    <View style={styles.simulatedActionItem}>
-                      <Feather name="heart" size={16} color={theme.colors.grey} />
-                      <AppText style={styles.simulatedActionText}>0 J&apos;aime</AppText>
-                    </View>
-                    <View style={styles.simulatedActionItem}>
-                      <Feather name="message-circle" size={16} color={theme.colors.grey} />
-                      <AppText style={styles.simulatedActionText}>0 Commentaire</AppText>
-                    </View>
-                    <View style={styles.simulatedActionItem}>
-                      <Feather name="share-2" size={16} color={theme.colors.grey} />
-                      <AppText style={styles.simulatedActionText}>Partager</AppText>
-                    </View>
-                  </View>
-                </View>
-              </View>
-            )}
-          </View>
-
-          {/* Section: Debug Tools */}
-          {isDebugMode && (
-            <View style={styles.testSection}>
-              <View style={styles.testHeaderRow}>
-                <Feather name="tool" size={14} color={theme.colors.text} />
-                <AppText style={styles.testTitle}>Debug: Outils de test</AppText>
-              </View>
-              <AppButton
-                text={isBatching ? 'Création en cours...' : 'Créer 50 posts de test'}
-                variant="socio"
-                onPress={() => {
-                  void handleCreate50Posts();
-                }}
-                disabled={isPending || isBatching}
-              />
-            </View>
+        <AppFormController
+          control={control}
+          name="title"
+          label="Titre de la publication"
+          errors={errors}
+          render={({ field: { onChange, value } }) => (
+            <EventInput
+              value={value}
+              onChangeText={onChange}
+              placeholder="Ex: Belle initiative ce matin..."
+            />
           )}
-        </ScrollView>
+        />
 
-        {/* Sticky Premium Bottom Action Bar */}
-        <View
-          style={[
-            styles.stickyFooter,
-            { paddingBottom: Math.max(insets.bottom, theme.spacing.md) },
-          ]}
-        >
-          <View style={styles.footerStatusRow}>
-            {isFormValid ? (
-              <View style={styles.statusPillValid}>
-                <Feather name="check-circle" size={13} color={theme.colors.primaryEco} />
-                <AppText style={styles.statusPillValidText}>Prêt à être publié</AppText>
-              </View>
-            ) : (
-              <View style={styles.statusPillInfo}>
-                <Feather name="info" size={13} color={theme.colors.grey} />
-                <AppText style={styles.statusPillInfoText}>
-                  Titre (min. 3) et message (min. 10) requis
-                </AppText>
-              </View>
-            )}
-          </View>
+        <AppFormController
+          control={control}
+          name="content"
+          label="Contenu"
+          errors={errors}
+          render={({ field: { onChange, value } }) => (
+            <TextInput
+              style={[styles.input, styles.textArea]}
+              value={value}
+              onChangeText={onChange}
+              multiline
+              numberOfLines={5}
+              placeholder="Partagez votre retour d'expérience, une annonce ou des nouvelles..."
+              placeholderTextColor={theme.colors.grey}
+            />
+          )}
+        />
 
+        <EventSelector onSelectEvent={handleSelectEvent} selectedEventId={selectedEventId} />
+
+        <View style={styles.publishContainer}>
           <AppButton
-            text={isPending || isBatching ? 'Publication en cours...' : 'Publier le post'}
-            icon="send"
-            variant="eco"
-            onPress={(e?: GestureResponderEvent) => {
-              void handleSubmit(onSubmit)(e);
+            text={isPending || isBatching ? 'Publication...' : 'Publier le post'}
+            variant="socio"
+            onPress={() => {
+              void handleSubmit(onSubmit)();
             }}
-            disabled={!isFormValid || isPending || isBatching}
-            style={styles.submitButton}
+            disabled={isPending || isBatching}
+            style={styles.publishButton}
           />
         </View>
-      </AppKeyboardAvoidingView>
+
+        {isDebugMode && (
+          <View style={styles.testSection}>
+            <AppText style={styles.testTitle}>Debug: Outils de test</AppText>
+            <AppButton
+              text={isBatching ? 'Création en cours...' : 'Créer 50 posts'}
+              variant="socio"
+              onPress={() => {
+                void handleCreate50Posts();
+              }}
+              disabled={isPending || isBatching}
+            />
+          </View>
+        )}
+
+        <View style={styles.bottomSpacer} />
+      </AppKeyboardScrollView>
     </View>
   );
 }
@@ -559,324 +321,53 @@ const createStyles = (theme: AppTheme) =>
       flex: 1,
       backgroundColor: theme.colors.background,
     },
-    keyboardAvoiding: {
-      flex: 1,
-    },
     scrollContent: {
-      paddingHorizontal: theme.spacing.lg,
-      paddingTop: theme.spacing.md,
-      paddingBottom: 120,
+      padding: theme.spacing.xl,
     },
-    heroBanner: {
-      flexDirection: 'row',
-      alignItems: 'center',
-      backgroundColor: theme.colors.white,
-      borderRadius: theme.radius.lg,
-      padding: theme.spacing.lg,
-      marginBottom: theme.spacing.lg,
-      borderWidth: 1,
-      borderColor: theme.colors.lightGrey,
-      gap: theme.spacing.md,
-    },
-    heroIconBadge: {
-      width: 48,
-      height: 48,
+    imagePlaceholder: {
+      width: '100%',
+      height: 180,
       borderRadius: theme.radius.md,
-      backgroundColor: theme.colors.badgeEcoBackground,
+      borderWidth: 2,
+      borderColor: theme.colors.lightGrey,
+      borderStyle: 'dashed',
       justifyContent: 'center',
       alignItems: 'center',
+      backgroundColor: theme.colors.white,
+      marginBottom: theme.spacing.xl,
     },
-    heroTextContainer: {
-      flex: 1,
+    imagePlaceholderText: {
+      marginTop: theme.spacing.sm,
+      color: theme.colors.grey,
+      fontSize: 14,
+      fontWeight: '500',
     },
-    heroTitle: {
-      fontSize: 20,
+    title: {
+      fontSize: 28,
       fontWeight: 'bold',
       color: theme.colors.text,
-      letterSpacing: -0.5,
-      marginBottom: 2,
+      marginBottom: theme.spacing.xl,
     },
-    heroSubtitle: {
-      fontSize: 13,
-      color: theme.colors.grey,
-      lineHeight: 18,
-    },
-    formCard: {
+    input: {
       backgroundColor: theme.colors.white,
-      borderRadius: theme.radius.lg,
-      padding: theme.spacing.lg,
-      marginBottom: theme.spacing.lg,
       borderWidth: 1,
       borderColor: theme.colors.lightGrey,
-    },
-    cardHeaderRow: {
-      flexDirection: 'row',
-      alignItems: 'center',
-      gap: theme.spacing.sm,
-      marginBottom: theme.spacing.md,
-      paddingBottom: theme.spacing.sm,
-      borderBottomWidth: 1,
-      borderBottomColor: theme.colors.lightGrey,
-    },
-    cardSectionTitle: {
-      fontSize: 15,
-      fontWeight: '600',
-      color: theme.colors.text,
-      textTransform: 'uppercase',
-      letterSpacing: 0.5,
-    },
-    fieldGroup: {
-      marginBottom: theme.spacing.lg,
-    },
-    labelRow: {
-      flexDirection: 'row',
-      alignItems: 'center',
-      marginBottom: theme.spacing.xs,
-    },
-    inputLabel: {
-      fontSize: 14,
-      fontWeight: '600',
-      color: theme.colors.text,
-    },
-    requiredMark: {
-      fontSize: 14,
-      fontWeight: 'bold',
-      color: theme.colors.danger,
-      marginLeft: 4,
-    },
-    inputWrapper: {
-      backgroundColor: theme.colors.background,
-      borderWidth: 1.5,
-      borderColor: theme.colors.lightGrey,
       borderRadius: theme.radius.md,
-      paddingHorizontal: theme.spacing.md,
-      paddingVertical: theme.spacing.sm,
-    },
-    inputWrapperFocused: {
-      borderColor: theme.colors.primaryEco,
-      backgroundColor: theme.colors.white,
-    },
-    inputWrapperError: {
-      borderColor: theme.colors.danger,
-    },
-    textAreaWrapper: {
-      paddingVertical: theme.spacing.sm,
-    },
-    textInput: {
-      fontSize: 15,
+      padding: theme.spacing.md,
+      fontSize: 16,
       color: theme.colors.text,
-      padding: 0,
     },
-    textAreaInput: {
+    textArea: {
       height: 120,
       textAlignVertical: 'top',
     },
-    fieldErrorMessage: {
-      fontSize: 12,
-      color: theme.colors.danger,
-      marginTop: 4,
-      fontWeight: '500',
-    },
-    counterContainer: {
-      marginTop: theme.spacing.xs,
-    },
-    progressBarTrack: {
-      height: 4,
-      backgroundColor: theme.colors.lightGrey + '80',
-      borderRadius: theme.radius.full,
-      overflow: 'hidden',
-      marginBottom: 4,
-    },
-    progressBarFill: {
-      height: '100%',
-      borderRadius: theme.radius.full,
-    },
-    counterLabelsRow: {
-      flexDirection: 'row',
-      justifyContent: 'space-between',
+    publishContainer: {
+      marginTop: theme.spacing.xl,
       alignItems: 'center',
+      width: '100%',
     },
-    counterStatusText: {
-      fontSize: 11,
-      color: theme.colors.grey,
-    },
-    counterStatusSuccess: {
-      color: theme.colors.primaryEco,
-      fontWeight: '600',
-    },
-    counterStatusDanger: {
-      color: theme.colors.danger,
-      fontWeight: '600',
-    },
-    counterValueText: {
-      fontSize: 11,
-      fontWeight: '600',
-      color: theme.colors.grey,
-    },
-    previewCard: {
-      backgroundColor: theme.colors.white,
-      borderRadius: theme.radius.lg,
-      borderWidth: 1,
-      borderColor: theme.colors.lightGrey,
-      marginBottom: theme.spacing.lg,
-      overflow: 'hidden',
-    },
-    previewToggleHeader: {
-      flexDirection: 'row',
-      justifyContent: 'space-between',
-      alignItems: 'center',
-      padding: theme.spacing.md,
-      backgroundColor: theme.colors.badgeSocioBackground + '40',
-    },
-    previewHeaderLeft: {
-      flexDirection: 'row',
-      alignItems: 'center',
-      gap: theme.spacing.sm,
-    },
-    previewSectionTitle: {
-      fontSize: 14,
-      fontWeight: '600',
-      color: theme.colors.primarySocio,
-      textTransform: 'uppercase',
-      letterSpacing: 0.5,
-    },
-    previewToggleBadge: {
-      flexDirection: 'row',
-      alignItems: 'center',
-      gap: 4,
-    },
-    previewToggleText: {
-      fontSize: 12,
-      fontWeight: '600',
-      color: theme.colors.primarySocio,
-    },
-    previewBody: {
-      padding: theme.spacing.md,
-      backgroundColor: theme.colors.background,
-    },
-    simulatedPostCard: {
-      backgroundColor: theme.colors.white,
-      borderRadius: theme.radius.md,
-      padding: theme.spacing.md,
-      borderWidth: 1,
-      borderColor: theme.colors.lightGrey,
-      shadowColor: '#000',
-      shadowOffset: { width: 0, height: 2 },
-      shadowOpacity: 0.05,
-      shadowRadius: 6,
-      elevation: 2,
-    },
-    simulatedAuthorRow: {
-      flexDirection: 'row',
-      alignItems: 'center',
-      marginBottom: theme.spacing.md,
-    },
-    simulatedAvatar: {
-      width: 36,
-      height: 36,
-      borderRadius: 18,
-      backgroundColor: theme.colors.primaryEco,
-      justifyContent: 'center',
-      alignItems: 'center',
-      marginRight: theme.spacing.sm,
-    },
-    simulatedAuthorMeta: {
-      flex: 1,
-    },
-    simulatedAuthorName: {
-      fontSize: 14,
-      fontWeight: 'bold',
-      color: theme.colors.text,
-    },
-    simulatedAuthorTime: {
-      fontSize: 11,
-      color: theme.colors.grey,
-    },
-    simulatedTitle: {
-      fontSize: 16,
-      fontWeight: 'bold',
-      color: theme.colors.text,
-      marginBottom: theme.spacing.xs,
-    },
-    simulatedContent: {
-      fontSize: 14,
-      color: theme.colors.text,
-      lineHeight: 20,
-      marginBottom: theme.spacing.md,
-    },
-    simulatedPlaceholder: {
-      color: theme.colors.grey,
-      fontStyle: 'italic',
-    },
-    simulatedEventAttachment: {
-      backgroundColor: theme.colors.background,
-      borderRadius: theme.radius.sm,
-      padding: theme.spacing.sm,
-      marginBottom: theme.spacing.md,
-      borderLeftWidth: 3,
-      borderLeftColor: theme.colors.primaryEco,
-    },
-    simulatedEventHeader: {
-      flexDirection: 'row',
-      justifyContent: 'space-between',
-      alignItems: 'center',
-      marginBottom: 2,
-    },
-    simulatedTypeBadge: {
-      paddingHorizontal: 6,
-      paddingVertical: 2,
-      borderRadius: theme.radius.full,
-    },
-    simulatedTypeBadgeEco: {
-      backgroundColor: theme.colors.badgeEcoBackground,
-    },
-    simulatedTypeBadgeSocial: {
-      backgroundColor: theme.colors.badgeSocioBackground,
-    },
-    simulatedTypeBadgeText: {
-      fontSize: 10,
-      fontWeight: '600',
-    },
-    simulatedTypeBadgeTextEco: {
-      color: theme.colors.primaryEco,
-    },
-    simulatedTypeBadgeTextSocial: {
-      color: theme.colors.primarySocio,
-    },
-    simulatedEventDate: {
-      fontSize: 11,
-      color: theme.colors.grey,
-    },
-    simulatedEventTitle: {
-      fontSize: 13,
-      fontWeight: '600',
-      color: theme.colors.text,
-      marginBottom: 2,
-    },
-    simulatedEventLocation: {
-      flexDirection: 'row',
-      alignItems: 'center',
-      gap: 4,
-    },
-    simulatedEventLocationText: {
-      fontSize: 11,
-      color: theme.colors.grey,
-    },
-    simulatedActionsRow: {
-      flexDirection: 'row',
-      justifyContent: 'space-between',
-      borderTopWidth: 1,
-      borderTopColor: theme.colors.lightGrey,
-      paddingTop: theme.spacing.sm,
-    },
-    simulatedActionItem: {
-      flexDirection: 'row',
-      alignItems: 'center',
-      gap: 4,
-    },
-    simulatedActionText: {
-      fontSize: 12,
-      color: theme.colors.grey,
+    publishButton: {
+      width: '100%',
     },
     testSection: {
       marginTop: theme.spacing.md,
@@ -887,58 +378,14 @@ const createStyles = (theme: AppTheme) =>
       borderColor: theme.colors.lightGrey,
       borderStyle: 'dashed',
     },
-    testHeaderRow: {
-      flexDirection: 'row',
-      alignItems: 'center',
-      gap: 6,
-      marginBottom: theme.spacing.sm,
-    },
     testTitle: {
       fontSize: 12,
-      color: theme.colors.text,
+      color: theme.colors.grey,
+      marginBottom: theme.spacing.sm,
       fontWeight: 'bold',
       textTransform: 'uppercase',
     },
-    stickyFooter: {
-      position: 'absolute',
-      bottom: 0,
-      left: 0,
-      right: 0,
-      backgroundColor: theme.colors.white,
-      borderTopWidth: 1,
-      borderTopColor: theme.colors.lightGrey,
-      paddingHorizontal: theme.spacing.lg,
-      paddingTop: theme.spacing.sm,
-      shadowColor: '#000',
-      shadowOffset: { width: 0, height: -4 },
-      shadowOpacity: 0.08,
-      shadowRadius: 10,
-      elevation: 10,
-    },
-    footerStatusRow: {
-      alignItems: 'center',
-      marginBottom: theme.spacing.xs,
-    },
-    statusPillValid: {
-      flexDirection: 'row',
-      alignItems: 'center',
-      gap: 4,
-    },
-    statusPillValidText: {
-      fontSize: 12,
-      fontWeight: '600',
-      color: theme.colors.primaryEco,
-    },
-    statusPillInfo: {
-      flexDirection: 'row',
-      alignItems: 'center',
-      gap: 4,
-    },
-    statusPillInfoText: {
-      fontSize: 12,
-      color: theme.colors.grey,
-    },
-    submitButton: {
-      width: '100%',
+    bottomSpacer: {
+      height: theme.spacing.xxl,
     },
   });
