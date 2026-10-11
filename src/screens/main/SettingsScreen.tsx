@@ -9,6 +9,7 @@ import { useAppTheme, useStyles } from '@/context/ThemeContext';
 import type { AppTheme } from '@/shared/themes/theme';
 import { TokenService } from '@/services/token.service';
 import { useDebug } from '@/context/DebugContext';
+import { useDeleteAccount } from '@/api/user/hooks/use-delete-account';
 
 const handleOpenLocationSettings = () => {
   if (Platform.OS === 'ios') {
@@ -23,6 +24,24 @@ export function SettingsScreen() {
   const { isDebugMode, toggleDebugMode } = useDebug();
   const { themeMode, toggleTheme, theme } = useAppTheme();
   const styles = useStyles(createStyles);
+  const deleteAccountMutation = useDeleteAccount();
+
+  const handleDeleteAccount = () => {
+    Alert.alert(
+      'Supprimer mon compte',
+      'Êtes-vous sûr de vouloir supprimer définitivement votre compte ? Cette action est irréversible et supprimera vos événements, publications et données associées.',
+      [
+        { text: 'Annuler', style: 'cancel' },
+        {
+          text: 'Supprimer',
+          style: 'destructive',
+          onPress: () => {
+            deleteAccountMutation.mutate();
+          },
+        },
+      ],
+    );
+  };
 
   return (
     <View style={styles.container}>
@@ -92,6 +111,37 @@ export function SettingsScreen() {
               thumbColor={theme.colors.white}
             />
           </View>
+        </View>
+
+        {/* Account Section */}
+        <View style={{ marginTop: theme.spacing.xl }}>
+          <AppText style={styles.settingTitle}>Compte</AppText>
+          <Pressable
+            style={[
+              styles.settingCard,
+              {
+                marginTop: theme.spacing.md,
+                marginBottom: theme.spacing.sm,
+                backgroundColor: theme.colors.lightGrey,
+              },
+            ]}
+            onPress={handleDeleteAccount}
+            disabled={deleteAccountMutation.isPending}
+          >
+            <View style={styles.settingInfo}>
+              <View style={[styles.iconContainer, { backgroundColor: theme.colors.danger }]}>
+                <AppIcons icon="user-x" size={20} color={theme.colors.white} />
+              </View>
+              <View style={styles.settingTextContainer}>
+                <AppText style={[styles.settingTitle, { color: theme.colors.danger }]}>
+                  Supprimer mon compte
+                </AppText>
+                <AppText style={styles.settingDescription}>
+                  Supprimer définitivement votre compte et vos données
+                </AppText>
+              </View>
+            </View>
+          </Pressable>
         </View>
 
         {/* Debug Section */}
