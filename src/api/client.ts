@@ -133,6 +133,8 @@ export const apiFetch = async <TResponse, TRequest = undefined>(
 
         // If refresh failed or no refresh token, emit auth expired
         authExpiredBus.emit();
+      } else if ((status === 401 || status === 403) && endpoint.includes('/users/refresh')) {
+        authExpiredBus.emit();
       }
 
       throw createApiError(status, message, data);

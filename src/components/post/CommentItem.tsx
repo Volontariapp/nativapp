@@ -12,6 +12,7 @@ import { useNavigation } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import type { MainStackParamList } from '@/navigation/stacks/MainStack';
 import type { CommentWebResponse } from '@volontariapp/contracts';
+import { DELETED_USER_ID } from '@volontariapp/shared';
 
 interface CommentItemProps {
   comment: CommentWebResponse;
@@ -21,15 +22,16 @@ export function CommentItem({ comment }: CommentItemProps) {
   const { theme } = useAppTheme();
   const styles = useStyles(createStyles);
   const { userId } = useAuth();
-  const { data: author } = useGetPublicUser(comment.authorId);
+  const isDeletedUser = comment.authorId === DELETED_USER_ID;
+  const { data: author } = useGetPublicUser(isDeletedUser ? undefined : comment.authorId);
   const { mutate: deleteComment, isPending } = useDeleteComment(comment.postId);
   const navigation = useNavigation<NativeStackNavigationProp<MainStackParamList>>();
 
-  const pseudo = author?.pseudo ?? 'Auteur inconnu';
-  const seed = author?.pseudo ?? comment.authorId;
+  const pseudo = isDeletedUser ? 'Utilisateur supprimé' : (author?.pseudo ?? 'Auteur inconnu');
+  const seed = isDeletedUser ? 'deleted' : (author?.pseudo ?? comment.authorId);
   const avatarUrl = `https://i.pravatar.cc/150?u=${seed}`;
   const date = new Date(comment.createdAt).toLocaleDateString('fr-FR');
-  const isMine = userId === comment.authorId;
+  const isMine = !isDeletedUser && userId === comment.authorId;
 
   const handleDelete = () => {
     Alert.alert('Supprimer', 'Voulez-vous vraiment supprimer ce commentaire ?', [
@@ -49,8 +51,11 @@ export function CommentItem({ comment }: CommentItemProps) {
       <View style={styles.commentHeader}>
         <Pressable
           style={styles.authorContainer}
+          disabled={isDeletedUser}
           onPress={() => {
-            navigation.navigate('PublicProfile', { userId: comment.authorId });
+            if (!isDeletedUser) {
+              navigation.navigate('PublicProfile', { userId: comment.authorId });
+            }
           }}
         >
           <Image source={{ uri: avatarUrl }} style={styles.avatarImage} />

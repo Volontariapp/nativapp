@@ -23,7 +23,7 @@ import {
 } from '@volontariapp/messaging';
 import { COMMENTS_LIST_QUERY_KEY } from '@/api/post/hooks/use-list-comments';
 import { PROFILE_QUERY_KEY } from '@/api/user/hooks/use-profile';
-import { badgeAwardedBus, syncPendingBus } from '../services/event-bus.service';
+import { authExpiredBus, badgeAwardedBus, syncPendingBus } from '../services/event-bus.service';
 
 export const useNotificationHandlers = (
   socket: Socket | null,
@@ -132,6 +132,10 @@ export const useNotificationHandlers = (
       const msg =
         data.isEmitter === true ? 'Votre compte a été supprimé.' : 'Un compte a été supprimé.';
       notifyRef.current(msg);
+      if (data.isEmitter === true) {
+        queryClient.clear();
+        authExpiredBus.emit();
+      }
     };
 
     const handleUserFailed = (): void => {

@@ -3,6 +3,7 @@ import { Text, StyleSheet, Pressable } from 'react-native';
 import { Image } from 'expo-image';
 import { useGetPublicUser } from '@/api/user/hooks/use-get-public-user';
 import type { CommentWebResponse } from '@volontariapp/contracts';
+import { DELETED_USER_ID } from '@volontariapp/shared';
 import { useStyles } from '@/context/ThemeContext';
 import type { AppTheme } from '@/shared/themes/theme';
 import { useNavigation } from '@react-navigation/native';
@@ -17,16 +18,20 @@ export function PostCommentPreview({ comment }: PostCommentPreviewProps) {
   const styles = useStyles(createStyles);
   const navigation = useNavigation<NativeStackNavigationProp<MainStackParamList>>();
 
-  const { data: author } = useGetPublicUser(comment.authorId);
-  const pseudo = author?.pseudo ?? 'Auteur inconnu';
-  const seed = author?.pseudo ?? comment.authorId;
+  const isDeletedUser = comment.authorId === DELETED_USER_ID;
+  const { data: author } = useGetPublicUser(isDeletedUser ? undefined : comment.authorId);
+  const pseudo = isDeletedUser ? 'Utilisateur supprimé' : (author?.pseudo ?? 'Auteur inconnu');
+  const seed = isDeletedUser ? 'deleted' : (author?.pseudo ?? comment.authorId);
   const avatarUrl = `https://i.pravatar.cc/150?u=${seed}`;
 
   return (
     <Pressable
       style={styles.container}
+      disabled={isDeletedUser}
       onPress={() => {
-        navigation.navigate('PublicProfile', { userId: comment.authorId });
+        if (!isDeletedUser) {
+          navigation.navigate('PublicProfile', { userId: comment.authorId });
+        }
       }}
     >
       <Image source={{ uri: avatarUrl }} style={styles.avatarImage} />

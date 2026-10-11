@@ -7,6 +7,7 @@ import type {
   UpdateUserRequest,
   UserWebResponse,
   ListUsersWebResponse,
+  ActionSuccessWebResponse,
 } from '@volontariapp/contracts';
 
 export interface UserProfile {
@@ -139,6 +140,22 @@ export const userApi = {
     } catch (error) {
       console.error(
         '[userApi.updateMe] Error details:',
+        error instanceof Error ? error.message : String(error),
+      );
+      throw error;
+    }
+  },
+
+  async deleteMe(): Promise<ActionSuccessWebResponse> {
+    try {
+      const response = await apiFetch<ActionSuccessWebResponse>(USER_ENDPOINTS.DELETE_ME.path, {
+        method: USER_ENDPOINTS.DELETE_ME.method,
+        requiresAuth: USER_ENDPOINTS.DELETE_ME.requiresAuth,
+      });
+      return response;
+    } catch (error) {
+      console.error(
+        '[userApi.deleteMe] Error details:',
         error instanceof Error ? error.message : String(error),
       );
       throw error;
