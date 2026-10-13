@@ -13,11 +13,11 @@ export interface ProfileBadgesProps {
 }
 
 const DEMO_BADGES: (BadgeWeb | string)[] = [
-//   'EVENT_PARTICIPATION_TIER_4',
-//   'EVENT_HYBRID_ECO_SOCIAL_TIER_1',
-//   'EVENT_SOCIAL_TIER_2',
-//   'SOCIAL_LIKE_COUNT_10',
-//   'EVENT_HOST_COUNT_1',
+  //   'EVENT_PARTICIPATION_TIER_4',
+  //   'EVENT_HYBRID_ECO_SOCIAL_TIER_1',
+  //   'EVENT_SOCIAL_TIER_2',
+  //   'SOCIAL_LIKE_COUNT_10',
+  //   'EVENT_HOST_COUNT_1',
 ];
 
 /**

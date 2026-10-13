@@ -50,6 +50,15 @@ export const AdminUserCard = ({
           <Pressable
             hitSlop={8}
             onPress={() => {
+              onInspect(user);
+            }}
+            style={({ pressed }) => [styles.actionButton, { opacity: pressed ? 0.5 : 1 }]}
+          >
+            <AppIcons icon="award" iconLibrary="Feather" size={18} color={theme.colors.primaryEco} />
+          </Pressable>
+          <Pressable
+            hitSlop={8}
+            onPress={() => {
               onEdit(user);
             }}
             style={({ pressed }) => [styles.actionButton, { opacity: pressed ? 0.5 : 1 }]}
@@ -79,6 +88,15 @@ export const AdminUserCard = ({
           <AppIcons icon="star" iconLibrary="Feather" size={12} color={theme.colors.primaryEco} />
           <AppText style={styles.scoreText}>{user.totalImpactScore} pts</AppText>
         </View>
+
+        {user.badges.length > 0 && (
+          <View style={styles.scoreBadge}>
+            <AppIcons icon="award" iconLibrary="Feather" size={12} color={theme.colors.primaryEco} />
+            <AppText style={styles.scoreText}>
+              {user.badges.length} badge{user.badges.length > 1 ? 's' : ''}
+            </AppText>
+          </View>
+        )}
       </View>
     </Pressable>
   );

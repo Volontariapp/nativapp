@@ -6,10 +6,14 @@ import type {
   UserWeb,
   SignUpRequest,
   UpdateUserRequest,
+  ListBadgesWebResponse,
+  BadgeWeb,
+  UserWebResponse,
 } from '@volontariapp/contracts';
 
 const ADMIN_USERS_QUERY_KEY = ['admin', 'users'] as const;
 export const ADMIN_USERS_COUNT_QUERY_KEY = ['admin', 'users', 'count'] as const;
+export const ADMIN_BADGES_QUERY_KEY = ['admin', 'badges'] as const;
 
 // ---------------------------------------------------------------------------
 // Query
@@ -18,7 +22,22 @@ export const ADMIN_USERS_COUNT_QUERY_KEY = ['admin', 'users', 'count'] as const;
 export const useAdminUsersQuery = () => {
   return useQuery<ListUsersWebResponse>({
     queryKey: ADMIN_USERS_QUERY_KEY,
-    queryFn: async () => await adminUserApi.listUsers({ pagination: { page: 1, limit: 200 } }),
+    queryFn: async () => await adminUserApi.listUsers({ pagination: { page: 1, limit: 500 } }),
+  });
+};
+
+export const useAdminUserQuery = (userId: string) => {
+  return useQuery<UserWebResponse>({
+    queryKey: ['admin-user', userId],
+    queryFn: async () => await adminUserApi.getUser({ id: userId }),
+    enabled: !!userId && userId !== 'null',
+  });
+};
+
+export const useAdminBadgesQuery = () => {
+  return useQuery<ListBadgesWebResponse>({
+    queryKey: ADMIN_BADGES_QUERY_KEY,
+    queryFn: async () => await adminUserApi.listBadges({}),
   });
 };
 
@@ -31,6 +50,14 @@ export const normalizeUsersList = (data: ListUsersWebResponse | undefined): User
   if (data == null) return [];
   if (Array.isArray(data)) return data as UserWeb[];
   if (Array.isArray(data.users)) return data.users;
+  return [];
+};
+
+/** Normalise la réponse API en tableau de BadgeWeb. */
+export const normalizeBadgesList = (data: ListBadgesWebResponse | undefined): BadgeWeb[] => {
+  if (data == null) return [];
+  if (Array.isArray(data)) return data as BadgeWeb[];
+  if (Array.isArray(data.badges)) return data.badges;
   return [];
 };
 
@@ -61,8 +88,9 @@ export const useUpdateUserMutation = (onSuccess?: () => void) => {
   return useMutation({
     mutationFn: async ({ userId, payload }: { userId: string; payload: UpdateUserRequest }) =>
       await adminUserApi.updateUser(payload, { id: userId }),
-    onSuccess: () => {
+    onSuccess: (_data, variables) => {
       void queryClient.invalidateQueries({ queryKey: ADMIN_USERS_QUERY_KEY });
+      void queryClient.invalidateQueries({ queryKey: ['admin-user', variables.userId] });
       onSuccess?.();
       Alert.alert('Succès', 'Utilisateur modifié avec succès !');
     },
@@ -89,3 +117,42 @@ export const useDeleteUserMutation = () => {
     },
   });
 };
+
+export const useAdminAddBadgeMutation = (userId: string, onSuccess?: () => void) => {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async (badgeId: string) => {
+      await adminUserApi.addBadge({ badgeId }, { id: userId });
+    },
+    onSuccess: () => {
+      void queryClient.invalidateQueries({ queryKey: ['admin-user', userId] });
+      void queryClient.invalidateQueries({ queryKey: ADMIN_USERS_QUERY_KEY });
+      onSuccess?.();
+      Alert.alert('Succès', 'Badge attribué avec succès !');
+    },
+    onError: (error: Error) => {
+      Alert.alert('Erreur', error.message || "Impossible d'attribuer le badge");
+    },
+  });
+};
+
+export const useAdminRemoveBadgeMutation = (userId: string, onSuccess?: () => void) => {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async (badgeId: string) => {
+      await adminUserApi.removeBadge({ id: userId, badgeId });
+    },
+    onSuccess: () => {
+      void queryClient.invalidateQueries({ queryKey: ['admin-user', userId] });
+      void queryClient.invalidateQueries({ queryKey: ADMIN_USERS_QUERY_KEY });
+      onSuccess?.();
+      Alert.alert('Succès', 'Badge retiré avec succès.');
+    },
+    onError: (error: Error) => {
+      Alert.alert('Erreur', error.message || 'Impossible de retirer le badge');
+    },
+  });
+};
+
