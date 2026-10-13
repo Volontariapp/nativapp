@@ -146,6 +146,8 @@ export function EventFormScreen(): React.JSX.Element {
         contentInsetAdjustmentBehavior="automatic"
         bottomOffset={16}
       >
+        <AppText style={styles.title}>Créer un Évènement</AppText>
+
         <Pressable
           style={styles.imagePlaceholder}
           onPress={() => {
@@ -155,8 +157,6 @@ export function EventFormScreen(): React.JSX.Element {
           <Feather name="plus" size={32} color={theme.colors.grey} />
           <AppText style={styles.imagePlaceholderText}>Ajouter une image</AppText>
         </Pressable>
-
-        <AppText style={styles.title}>Créer un Évènement</AppText>
 
         <AppFormController
           control={control}

@@ -1,13 +1,17 @@
 import React, { useCallback } from 'react';
-import { View, StyleSheet, ScrollView, Alert, type GestureResponderEvent } from 'react-native';
+import { View, StyleSheet, TextInput, Alert, Pressable } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
-import { useForm, Controller } from 'react-hook-form';
+import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
+import Feather from 'react-native-vector-icons/Feather';
+
 import { AppText } from '@/components/typography/AppText';
-import { AppInput } from '@/components/inputs/AppInput';
 import { AppButton } from '@/components/buttons/AppButton';
 import AppHeader from '@/components/layout/AppHeader';
+import { AppKeyboardScrollView } from '@/components/layout/AppKeyboardScrollView';
+import { AppFormController } from '@/components/forms';
+import { EventInput } from '@/components/inputs';
 import { useAppTheme, useStyles } from '@/context/ThemeContext';
 import type { AppTheme } from '@/shared/themes/theme';
 import { useCreatePost } from '@/api/post/hooks';
@@ -16,8 +20,14 @@ import { useDebug } from '@/context/DebugContext';
 import { useQueryClient } from '@tanstack/react-query';
 
 const createPostSchema = z.object({
-  title: z.string().min(3, 'Le titre doit faire au moins 3 caractères').max(100),
-  content: z.string().min(10, 'Le contenu doit faire au moins 10 caractères').max(1000),
+  title: z
+    .string()
+    .min(3, 'Le titre doit faire au moins 3 caractères')
+    .max(100, 'Le titre ne peut pas dépasser 100 caractères'),
+  content: z
+    .string()
+    .min(10, 'Le contenu doit faire au moins 10 caractères')
+    .max(1000, 'Le contenu ne peut pas dépasser 1000 caractères'),
   eventId: z.string().optional(),
 });
 
@@ -60,13 +70,14 @@ export function PostFormScreen(): React.JSX.Element {
   const onSubmit = async (data: CreatePostFormData) => {
     try {
       await createPost({
-        title: data.title,
-        content: data.content,
+        title: data.title.trim(),
+        content: data.content.trim(),
         eventId: data.eventId,
       });
       navigation.goBack();
     } catch (err) {
       console.error('Failed to create post:', err instanceof Error ? err.message : String(err));
+      Alert.alert('Erreur', 'Impossible de publier votre post.');
     }
   };
 
@@ -123,55 +134,70 @@ export function PostFormScreen(): React.JSX.Element {
 
   return (
     <View style={styles.container}>
-      <AppHeader />
-      <ScrollView contentContainerStyle={styles.content}>
-        <AppText style={{ fontSize: 24, fontWeight: 'bold', marginBottom: theme.spacing.lg }}>
-          Créer un post
-        </AppText>
+      <AppHeader showBack />
+      <AppKeyboardScrollView
+        contentContainerStyle={styles.scrollContent}
+        contentInsetAdjustmentBehavior="automatic"
+        bottomOffset={16}
+      >
+        <AppText style={styles.title}>Créer un Post</AppText>
 
-        <Controller
+        {/* Image Placeholder */}
+        <Pressable
+          style={styles.imagePlaceholder}
+          onPress={() => {
+            Alert.alert('Info', "L'ajout d'image n'est pas encore disponible.");
+          }}
+        >
+          <Feather name="plus" size={32} color={theme.colors.grey} />
+          <AppText style={styles.imagePlaceholderText}>Ajouter une image</AppText>
+        </Pressable>
+
+        <AppFormController
           control={control}
           name="title"
-          render={({ field: { onChange, onBlur, value } }) => (
-            <AppInput
-              label="Titre du post"
-              placeholder="Mon super post"
-              onBlur={onBlur}
-              onChangeText={onChange}
+          label="Titre de la publication"
+          errors={errors}
+          render={({ field: { onChange, value } }) => (
+            <EventInput
               value={value}
-              errorMessage={errors.title?.message}
+              onChangeText={onChange}
+              placeholder="Ex: Belle initiative ce matin..."
             />
           )}
         />
 
-        <Controller
+        <AppFormController
           control={control}
           name="content"
-          render={({ field: { onChange, onBlur, value } }) => (
-            <AppInput
-              label="Contenu"
-              placeholder="Exprimez-vous..."
-              onBlur={onBlur}
-              onChangeText={onChange}
+          label="Contenu"
+          errors={errors}
+          render={({ field: { onChange, value } }) => (
+            <TextInput
+              style={[styles.input, styles.textArea]}
               value={value}
-              errorMessage={errors.content?.message}
+              onChangeText={onChange}
               multiline
-              numberOfLines={6}
-              style={{ height: 120, textAlignVertical: 'top' }}
+              numberOfLines={5}
+              placeholder="Partagez votre retour d'expérience, une annonce ou des nouvelles..."
+              placeholderTextColor={theme.colors.grey}
             />
           )}
         />
 
         <EventSelector onSelectEvent={handleSelectEvent} selectedEventId={selectedEventId} />
 
-        <AppButton
-          text={isPending || isBatching ? 'Publication en cours...' : 'Publier'}
-          onPress={(e?: GestureResponderEvent) => {
-            void handleSubmit(onSubmit)(e);
-          }}
-          disabled={isPending || isBatching}
-          style={styles.submitButton}
-        />
+        <View style={styles.publishContainer}>
+          <AppButton
+            text={isPending || isBatching ? 'Publication...' : 'Publier le post'}
+            variant="socio"
+            onPress={() => {
+              void handleSubmit(onSubmit)();
+            }}
+            disabled={isPending || isBatching}
+            style={styles.publishButton}
+          />
+        </View>
 
         {isDebugMode && (
           <View style={styles.testSection}>
@@ -186,7 +212,9 @@ export function PostFormScreen(): React.JSX.Element {
             />
           </View>
         )}
-      </ScrollView>
+
+        <View style={styles.bottomSpacer} />
+      </AppKeyboardScrollView>
     </View>
   );
 }
@@ -197,33 +225,71 @@ const createStyles = (theme: AppTheme) =>
       flex: 1,
       backgroundColor: theme.colors.background,
     },
-    content: {
-      padding: theme.spacing.lg,
+    scrollContent: {
+      padding: theme.spacing.xl,
     },
-    label: {
-      fontSize: 16,
+    imagePlaceholder: {
+      width: '100%',
+      height: 180,
+      borderRadius: theme.radius.md,
+      borderWidth: 2,
+      borderColor: theme.colors.lightGrey,
+      borderStyle: 'dashed',
+      justifyContent: 'center',
+      alignItems: 'center',
+      backgroundColor: theme.colors.white,
+      marginBottom: theme.spacing.xl,
+    },
+    imagePlaceholderText: {
+      marginTop: theme.spacing.sm,
+      color: theme.colors.grey,
+      fontSize: 14,
+      fontWeight: '500',
+    },
+    title: {
+      fontSize: 28,
       fontWeight: 'bold',
-      marginBottom: theme.spacing.xs,
-      marginTop: theme.spacing.md,
+      color: theme.colors.text,
+      marginBottom: theme.spacing.xl,
     },
-    submitButton: {
+    input: {
+      backgroundColor: theme.colors.white,
+      borderWidth: 1,
+      borderColor: theme.colors.lightGrey,
+      borderRadius: theme.radius.md,
+      padding: theme.spacing.md,
+      fontSize: 16,
+      color: theme.colors.text,
+    },
+    textArea: {
+      height: 120,
+      textAlignVertical: 'top',
+    },
+    publishContainer: {
       marginTop: theme.spacing.xl,
+      alignItems: 'center',
+      width: '100%',
+    },
+    publishButton: {
+      width: '100%',
     },
     testSection: {
-      marginTop: theme.spacing.xxl,
+      marginTop: theme.spacing.md,
       padding: theme.spacing.md,
       backgroundColor: theme.colors.white,
       borderRadius: theme.radius.md,
       borderWidth: 1,
       borderColor: theme.colors.lightGrey,
       borderStyle: 'dashed',
-      marginBottom: theme.spacing.xl,
     },
     testTitle: {
       fontSize: 12,
-      color: theme.colors.text,
+      color: theme.colors.grey,
       marginBottom: theme.spacing.sm,
       fontWeight: 'bold',
       textTransform: 'uppercase',
+    },
+    bottomSpacer: {
+      height: theme.spacing.xxl,
     },
   });
