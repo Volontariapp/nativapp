@@ -12,7 +12,7 @@ import { useNavigation } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import type { MainStackParamList } from '@/navigation/stacks/MainStack';
 import type { CommentWebResponse } from '@volontariapp/contracts';
-import { DELETED_USER_ID } from '@volontariapp/shared';
+import { DELETED_USER_ID } from '@/shared/lib/user.constants';
 
 interface CommentItemProps {
   comment: CommentWebResponse;

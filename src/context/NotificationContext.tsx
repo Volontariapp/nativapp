@@ -16,7 +16,7 @@ import { useNotificationHandlers } from '../hooks/useNotificationHandlers';
 import { syncPendingBus, badgeAwardedBus } from '../services/event-bus.service';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { ActivityIndicator } from 'react-native';
-import { BadgeModal } from '@/components/dataDisplay/badge/badge-modal';
+import { BadgeCelebrationModal } from '@/components/feedback/BadgeCelebrationModal';
 import { BADGE_REGISTRY } from '@/components/dataDisplay/badge/badge.config';
 import type { BadgeVariant } from '@/components/dataDisplay/badge/badge.types';
 
@@ -99,7 +99,7 @@ export const NotificationProvider: React.FC<{ children: React.ReactNode }> = ({ 
         </Animated.View>
       )}
       {awardedBadge != null && (
-        <BadgeModal
+        <BadgeCelebrationModal
           visible={true}
           variant={awardedBadge}
           onClose={() => {
