@@ -6,6 +6,7 @@ import {
   SettingsScreen,
   PublicProfileScreen,
   StorageDebugScreen,
+  EventManagementScreen,
 } from '@/screens';
 import type { AppEvent } from '@/api/event/event.api';
 
@@ -15,11 +16,12 @@ export type MainStackParamList = {
   Settings: undefined;
   PublicProfile: { userId: string };
   StorageDebug: undefined;
+  EventManagement: { eventId: string; initialEvent?: AppEvent };
 };
 
 const Stack = createNativeStackNavigator<MainStackParamList>();
 
-export default function MainStack() {
+export default function MainStack(): React.JSX.Element {
   return (
     <Stack.Navigator screenOptions={{ headerShown: false }}>
       <Stack.Screen name="MainTabs" component={MainAppNavigator} />
@@ -27,6 +29,7 @@ export default function MainStack() {
       <Stack.Screen name="Settings" component={SettingsScreen} />
       <Stack.Screen name="PublicProfile" component={PublicProfileScreen} />
       <Stack.Screen name="StorageDebug" component={StorageDebugScreen} />
+      <Stack.Screen name="EventManagement" component={EventManagementScreen} />
     </Stack.Navigator>
   );
 }

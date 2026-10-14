@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useCallback, useEffect } from 'react';
 import type { ListRenderItemInfo } from 'react-native';
 import { View, StyleSheet, FlatList, ActivityIndicator } from 'react-native';
 import { AppText } from '@/components/typography/AppText';
@@ -7,35 +7,56 @@ import { useAppTheme, useStyles } from '@/context/ThemeContext';
 import type { AppTheme } from '@/shared/themes/theme';
 import { useGetMyEvents } from '@/api/event/hooks/use-get-my-events';
 import type { AppEvent } from '@/api/event/event.api';
+import { useNavigation } from '@react-navigation/native';
+import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
+import type { MainStackParamList } from '@/navigation/stacks/MainStack';
 import { EventCard } from '@/components/dataDisplay/EventCard';
-
-const renderItem = ({ item }: ListRenderItemInfo<AppEvent>) => <EventCard event={item} />;
 
 export function MyEventsScreen(): React.JSX.Element {
   const { theme } = useAppTheme();
   const styles = useStyles(createStyles);
+  const rootNavigation = useNavigation<NativeStackNavigationProp<MainStackParamList>>();
+
   const { data, isLoading, isError, error, hasNextPage, fetchNextPage, isFetchingNextPage } =
     useGetMyEvents(10);
 
   const events = data?.pages.flatMap((page) => page.events) ?? [];
 
-  React.useEffect(() => {
-    console.log(
-      `[MyEventsScreen] State updated. isLoading: ${String(isLoading)}, isError: ${String(isError)}, events loaded: ${String(events.length)}`,
-    );
+  const handleEventPress = useCallback(
+    (event: AppEvent) => {
+      rootNavigation.navigate('EventDetail', { event });
+    },
+    [rootNavigation],
+  );
+
+  const renderItem = useCallback(
+    ({ item }: ListRenderItemInfo<AppEvent>) => (
+      <EventCard
+        event={item}
+        onPress={() => {
+          handleEventPress(item);
+        }}
+      />
+    ),
+    [handleEventPress],
+  );
+
+  const keyExtractor = useCallback((item: AppEvent) => item.id, []);
+
+  useEffect(() => {
     if (isError) {
       console.error(
         '[MyEventsScreen] Details erreur :',
         error instanceof Error ? error.message : String(error),
       );
     }
-  }, [isLoading, isError, error, events.length]);
+  }, [isError, error]);
 
-  const handleLoadMore = () => {
+  const handleLoadMore = useCallback(() => {
     if (hasNextPage && !isFetchingNextPage) {
       void fetchNextPage();
     }
-  };
+  }, [hasNextPage, isFetchingNextPage, fetchNextPage]);
 
   return (
     <View style={styles.container}>
@@ -49,7 +70,7 @@ export function MyEventsScreen(): React.JSX.Element {
       ) : (
         <FlatList
           data={events}
-          keyExtractor={(item) => item.id}
+          keyExtractor={keyExtractor}
           renderItem={renderItem}
           contentContainerStyle={styles.listContent}
           onEndReached={handleLoadMore}

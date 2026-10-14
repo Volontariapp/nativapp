@@ -14,9 +14,10 @@ import { getFakeEcologyImage } from '@/utils/fake-images.util';
 
 export interface EventCardProps {
   event: AppEvent;
+  onPress?: () => void;
 }
 
-export function EventCard({ event }: EventCardProps): React.JSX.Element {
+export function EventCard({ event, onPress }: EventCardProps): React.JSX.Element {
   const navigation = useNavigation<NativeStackNavigationProp<MainStackParamList>>();
 
   const isEcology =
@@ -55,7 +56,13 @@ export function EventCard({ event }: EventCardProps): React.JSX.Element {
     <TouchableOpacity
       style={styles.card}
       activeOpacity={0.8}
-      onPress={() => { navigation.navigate('EventDetail', { event }); }}
+      onPress={() => {
+        if (onPress) {
+          onPress();
+        } else {
+          navigation.navigate('EventDetail', { event });
+        }
+      }}
     >
       <View style={[styles.imageContainer, { backgroundColor: typeBg }]}>
         <Image

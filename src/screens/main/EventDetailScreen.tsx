@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import {
   View,
   StyleSheet,
@@ -15,6 +15,7 @@ import type {
   NativeStackNavigationProp,
 } from '@react-navigation/native-stack';
 import type { MainStackParamList } from '../../navigation/stacks/MainStack';
+import Feather from 'react-native-vector-icons/Feather';
 
 import { AppText } from '@/components/typography/AppText';
 import { AppIcons } from '@/components/media/AppIcons';
@@ -38,27 +39,33 @@ import AppMap from '@/components/map/AppMap';
 
 type Props = NativeStackScreenProps<MainStackParamList, 'EventDetail'>;
 
-export function EventDetailScreen({ route }: Props) {
+export function EventDetailScreen({ route }: Props): React.JSX.Element {
   const { theme } = useAppTheme();
   const styles = useStyles(createStyles);
   const event: AppEvent = route.params.event;
   const navigation = useNavigation<NativeStackNavigationProp<MainStackParamList>>();
 
-  const isJoinable =
-    event.state === EventState.EVENT_STATE_PUBLISHED ||
-    String(event.state) === EventState[EventState.EVENT_STATE_PUBLISHED] ||
-    event.state === EventState.EVENT_STATE_DRAFT ||
-    String(event.state) === EventState[EventState.EVENT_STATE_DRAFT];
+  const isJoinable = useMemo(
+    () =>
+      event.state === EventState.EVENT_STATE_PUBLISHED ||
+      String(event.state) === EventState[EventState.EVENT_STATE_PUBLISHED] ||
+      event.state === EventState.EVENT_STATE_DRAFT ||
+      String(event.state) === EventState[EventState.EVENT_STATE_DRAFT],
+    [event.state],
+  );
 
   const { participate, isParticipating, unparticipate, isUnparticipating } = useUserSocialActions();
   const { data: participations } = useUserParticipations(100);
   const { data: profile } = useProfile();
 
-  const isJoined = participations?.pages.flatMap((p) => p.ids).includes(event.id) ?? false;
+  const isJoined = useMemo(
+    () => participations?.pages.flatMap((p) => p.ids).includes(event.id) ?? false,
+    [participations?.pages, event.id],
+  );
 
-  const [optimisticEvent, setOptimisticEvent] = React.useState<AppEvent>(event);
+  const [optimisticEvent, setOptimisticEvent] = useState<AppEvent>(event);
 
-  React.useEffect(() => {
+  useEffect(() => {
     if (isJoined && profile && profile.id !== event.organizerId) {
       setOptimisticEvent((prev) => {
         if (prev.currentParticipants < 2) {
@@ -67,9 +74,34 @@ export function EventDetailScreen({ route }: Props) {
         return prev;
       });
     }
-  }, [isJoined, profile?.id, event.organizerId]);
+  }, [isJoined, profile, event.organizerId]);
 
-  const handleJoin = () => {
+  const isOrganizer = useMemo(
+    () =>
+      profile?.id !== undefined &&
+      profile.id !== '' &&
+      (event.organizerId === profile.id || optimisticEvent.organizerId === profile.id),
+    [profile?.id, event.organizerId, optimisticEvent.organizerId],
+  );
+
+  const handleBack = useCallback(() => {
+    navigation.goBack();
+  }, [navigation]);
+
+  const handleEdit = useCallback(() => {
+    navigation.navigate('EventManagement', {
+      eventId: optimisticEvent.id,
+      initialEvent: optimisticEvent,
+    });
+  }, [navigation, optimisticEvent]);
+
+  const handleShare = useCallback(() => {
+    void Share.share({
+      message: `Rejoins-moi pour l'événement "${optimisticEvent.title}" sur Volontariapp !`,
+    });
+  }, [optimisticEvent.title]);
+
+  const handleJoin = useCallback(() => {
     participate(event.id)
       .then(() => {
         setOptimisticEvent((prev) => ({
@@ -82,9 +114,9 @@ export function EventDetailScreen({ route }: Props) {
       .catch(() => {
         Alert.alert('Erreur', 'Impossible de rejoindre cet événement.');
       });
-  };
+  }, [participate, event.id, navigation]);
 
-  const handleUnjoin = () => {
+  const handleUnjoin = useCallback(() => {
     unparticipate(event.id)
       .then(() => {
         setOptimisticEvent((prev) => ({
@@ -96,7 +128,7 @@ export function EventDetailScreen({ route }: Props) {
       .catch(() => {
         Alert.alert('Erreur', 'Impossible de quitter cet événement.');
       });
-  };
+  }, [unparticipate, event.id]);
 
   return (
     <View style={styles.container}>
@@ -104,25 +136,37 @@ export function EventDetailScreen({ route }: Props) {
       <SafeAreaView edges={['top']} style={styles.topBar}>
         <Pressable
           style={styles.backButton}
-          onPress={() => {
-            navigation.goBack();
-          }}
+          onPress={handleBack}
+          accessibilityRole="button"
+          accessibilityLabel="Retour"
         >
           <AppIcons icon="arrow-left" size={24} color={theme.colors.black} />
         </Pressable>
         <AppText style={styles.topBarTitle} numberOfLines={1}>
-          {event.title}
+          {optimisticEvent.title}
         </AppText>
-        <Pressable
-          style={styles.backButton}
-          onPress={() => {
-            void Share.share({
-              message: `Rejoins-moi pour l'événement "${event.title}" sur Volontariapp !`,
-            });
-          }}
-        >
-          <AppIcons icon="share-2" iconLibrary="Feather" size={24} color={theme.colors.black} />
-        </Pressable>
+        <View style={styles.topBarActions}>
+          {isOrganizer && (
+            <Pressable
+              style={styles.actionButton}
+              onPress={handleEdit}
+              accessibilityRole="button"
+              accessibilityLabel="Modifier l'événement"
+              testID="event-detail-edit-button"
+            >
+              <Feather name="edit-2" size={20} color={theme.colors.black} />
+            </Pressable>
+          )}
+          <Pressable
+            style={styles.actionButton}
+            onPress={handleShare}
+            accessibilityRole="button"
+            accessibilityLabel="Partager l'événement"
+            testID="event-detail-share-button"
+          >
+            <AppIcons icon="share-2" iconLibrary="Feather" size={22} color={theme.colors.black} />
+          </Pressable>
+        </View>
       </SafeAreaView>
 
       <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
@@ -240,6 +284,16 @@ const createStyles = (theme: AppTheme) =>
       flex: 1,
       textAlign: 'center',
       marginHorizontal: theme.spacing.md,
+    },
+    topBarActions: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: theme.spacing.sm,
+    },
+    actionButton: {
+      padding: theme.spacing.xs,
+      justifyContent: 'center',
+      alignItems: 'center',
     },
     placeholderAvatar: {
       width: 32,
