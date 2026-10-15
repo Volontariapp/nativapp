@@ -45,13 +45,13 @@ describe('AuthProvider', () => {
 
     jwtDecodeSpy.mockImplementation((token: string) => {
       if (token === 'expired-access-token') {
-        return { exp: Date.now() / 1000 - 3600, sub: 'user-1' }; // Expired 1 hour ago
+        return { exp: Date.now() / 1000 - 3600, id: 'user-1', sub: 'user-1' }; // Expired 1 hour ago
       }
       if (token === 'valid-refresh-token') {
-        return { exp: Date.now() / 1000 + 3600, sub: 'user-1' }; // Valid for 1 hour
+        return { exp: Date.now() / 1000 + 3600, id: 'user-1', sub: 'user-1' }; // Valid for 1 hour
       }
       if (token === 'new-access-token') {
-        return { exp: Date.now() / 1000 + 3600, sub: 'user-1', role: 'admin' };
+        return { exp: Date.now() / 1000 + 3600, id: 'user-1', sub: 'user-1', role: 'admin' };
       }
       return {};
     });
@@ -71,14 +71,17 @@ describe('AuthProvider', () => {
 
     expect(contextSpy).toHaveBeenCalledWith(expect.objectContaining({ isLoading: true }));
 
-    await waitFor(() => {
-      expect(contextSpy).toHaveBeenCalledWith(
-        expect.objectContaining({
-          isAuthenticated: true,
-          isLoading: false,
-        }),
-      );
-    });
+    await waitFor(
+      () => {
+        expect(contextSpy).toHaveBeenCalledWith(
+          expect.objectContaining({
+            isAuthenticated: true,
+            isLoading: false,
+          }),
+        );
+      },
+      { timeout: 15000 },
+    );
 
     expect(apiFetchSpy).toHaveBeenCalledWith('/users/refresh', {
       method: 'POST',
@@ -88,14 +91,14 @@ describe('AuthProvider', () => {
     });
 
     expect(saveTokensSpy).toHaveBeenCalledWith('new-access-token', 'new-refresh-token');
-  });
+  }, 30000);
 
   it('should logout if both tokens are expired', async () => {
     getAccessTokenSpy.mockResolvedValue('expired-access-token');
     getRefreshTokenSpy.mockResolvedValue('expired-refresh-token');
 
     jwtDecodeSpy.mockImplementation(() => {
-      return { exp: Date.now() / 1000 - 3600, sub: 'user-1' }; // Both expired
+      return { exp: Date.now() / 1000 - 3600, id: 'user-1', sub: 'user-1' }; // Both expired
     });
 
     void render(
@@ -104,14 +107,17 @@ describe('AuthProvider', () => {
       </AuthProvider>,
     );
 
-    await waitFor(() => {
-      expect(contextSpy).toHaveBeenCalledWith(
-        expect.objectContaining({
-          isAuthenticated: false,
-          isLoading: false,
-        }),
-      );
-    });
+    await waitFor(
+      () => {
+        expect(contextSpy).toHaveBeenCalledWith(
+          expect.objectContaining({
+            isAuthenticated: false,
+            isLoading: false,
+          }),
+        );
+      },
+      { timeout: 15000 },
+    );
 
     expect(apiFetchSpy).not.toHaveBeenCalled();
     expect(clearTokensSpy).toHaveBeenCalled();

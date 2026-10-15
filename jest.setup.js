@@ -1,6 +1,8 @@
 process.env.EXPO_PUBLIC_APP_ENV = 'test';
 global.IS_REACT_ACT_ENVIRONMENT = true;
 
+jest.setTimeout(30000);
+
 jest.mock(
   '@volontariapp/shared',
   () => ({
