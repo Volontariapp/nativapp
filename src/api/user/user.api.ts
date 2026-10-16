@@ -18,6 +18,7 @@ export interface UserProfile {
   totalImpactScore: number;
   bio?: string;
   logoPath?: string;
+  avatarUrl?: string;
   badges: BadgeWeb[];
 }
 
@@ -27,6 +28,7 @@ export interface UserPublicProfile {
   totalImpactScore: number;
   bio?: string;
   logoPath?: string;
+  avatarUrl?: string;
   badges: BadgeWeb[];
 }
 
@@ -50,6 +52,7 @@ export const userApi = {
         totalImpactScore: response.user.totalImpactScore,
         bio: response.user.bio,
         logoPath: response.user.logoPath,
+        avatarUrl: response.user.avatarUrl,
         badges: response.user.badges,
       };
     } catch (error) {
@@ -83,6 +86,7 @@ export const userApi = {
         totalImpactScore: response.user.totalImpactScore,
         bio: response.user.bio,
         logoPath: response.user.logoPath,
+        avatarUrl: response.user.avatarUrl,
         badges: response.user.badges,
       };
     } catch (error) {
@@ -114,6 +118,7 @@ export const userApi = {
         totalImpactScore: response.user.totalImpactScore,
         bio: response.user.bio,
         logoPath: response.user.logoPath,
+        avatarUrl: response.user.avatarUrl,
         badges: response.user.badges,
       };
     } catch (error) {
@@ -187,6 +192,7 @@ export const userApi = {
           totalImpactScore: u.totalImpactScore,
           bio: u.bio,
           logoPath: u.logoPath,
+          avatarUrl: u.avatarUrl,
           badges: u.badges,
         })),
         totalCount: response.pagination?.total ?? 0,

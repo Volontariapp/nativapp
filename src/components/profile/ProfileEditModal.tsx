@@ -1,10 +1,9 @@
-import React from 'react';
-import { View, StyleSheet, Modal, Pressable, ScrollView, Alert } from 'react-native';
+import React, { useEffect } from 'react';
+import { View, StyleSheet, Modal, Pressable, ScrollView } from 'react-native';
 import { useForm, Controller } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import Icon from 'react-native-vector-icons/Feather';
-import * as ImagePicker from 'expo-image-picker';
 import { AppText } from '@/components/typography/AppText';
 import { AppButton } from '@/components/buttons/AppButton';
 import { AppInput } from '@/components/inputs/AppInput';
@@ -12,6 +11,10 @@ import { AppKeyboardAvoidingView } from '@/components/layout/AppKeyboardAvoiding
 import { useAppTheme, useStyles } from '@/context/ThemeContext';
 import type { AppTheme } from '@/shared/themes/theme';
 import type { UserProfile } from '@/api/user/user.api';
+import { resolveAvatarUrl } from '@/api/user/resolve-avatar-url';
+import { useAvatarUpload } from '@/api/user/hooks/use-avatar-upload';
+import { AvatarUploadSection } from './AvatarUploadSection';
+import type { ProfileSubmitData } from './profile-edit.types';
 
 const profileSchema = z.object({
   pseudo: z.string().min(3, 'Le pseudo doit contenir au moins 3 caractères'),
@@ -21,36 +24,10 @@ const profileSchema = z.object({
 
 type ProfileFormData = z.infer<typeof profileSchema>;
 
-/**
- * Pure helper function moved outside the component to avoid re-allocation on every render.
- * This function doesn't depend on component-local state or props.
- */
-const handlePickImage = async () => {
-  const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
-  if (status !== ImagePicker.PermissionStatus.GRANTED) {
-    Alert.alert(
-      'Permission refusée',
-      'Nous avons besoin de votre permission pour accéder à vos photos.',
-    );
-    return;
-  }
-
-  const result = await ImagePicker.launchImageLibraryAsync({
-    mediaTypes: ['images'],
-    allowsEditing: true,
-    aspect: [1, 1],
-    quality: 0.8,
-  });
-
-  if (!result.canceled) {
-    Alert.alert('Coming soon', "L'upload de photo sera bientôt disponible ! 📸");
-  }
-};
-
 interface ProfileEditModalProps {
   visible: boolean;
   onClose: () => void;
-  onSubmit: (data: ProfileFormData) => void;
+  onSubmit: (data: ProfileSubmitData) => void;
   profile: UserProfile | undefined;
   isLoading?: boolean;
 }
@@ -64,6 +41,8 @@ export const ProfileEditModal = ({
 }: ProfileEditModalProps): React.JSX.Element | null => {
   const { theme } = useAppTheme();
   const styles = useStyles(createStyles);
+  const avatarUpload = useAvatarUpload();
+  const { reset: resetAvatarUpload } = avatarUpload;
   const {
     control,
     handleSubmit,
@@ -77,7 +56,19 @@ export const ProfileEditModal = ({
     },
   });
 
+  useEffect(() => {
+    if (!visible) resetAvatarUpload();
+  }, [visible, resetAvatarUpload]);
+
   if (profile === undefined) return null;
+
+  const submit = handleSubmit((data) => {
+    onSubmit(
+      avatarUpload.avatarFileId === undefined
+        ? data
+        : { ...data, avatarFileId: avatarUpload.avatarFileId },
+    );
+  });
 
   return (
     <Modal animationType="slide" transparent visible={visible} onRequestClose={onClose}>
@@ -91,17 +82,11 @@ export const ProfileEditModal = ({
           </View>
 
           <ScrollView style={styles.content} showsVerticalScrollIndicator={false}>
-            <View style={styles.imagePickerSection}>
-              <AppText style={styles.inputLabel}>Photo de profil</AppText>
-              <AppButton
-                text="Choisir une image"
-                variant="eco"
-                icon="image"
-                onPress={() => {
-                  void handlePickImage();
-                }}
-              />
-            </View>
+            <AvatarUploadSection
+              upload={avatarUpload}
+              currentAvatarUrl={resolveAvatarUrl(profile)}
+              disabled={isLoading}
+            />
 
             <Controller
               control={control}
@@ -159,9 +144,9 @@ export const ProfileEditModal = ({
                 text="Enregistrer"
                 variant="eco"
                 onPress={() => {
-                  void handleSubmit(onSubmit)();
+                  void submit();
                 }}
-                disabled={isLoading}
+                disabled={isLoading || avatarUpload.isUploading}
               />
             </View>
           </ScrollView>
@@ -204,15 +189,6 @@ const createStyles = (theme: AppTheme) =>
     },
     content: {
       padding: theme.spacing.lg,
-    },
-    inputLabel: {
-      fontSize: 14,
-      fontWeight: '600',
-      color: theme.colors.text,
-      marginBottom: theme.spacing.sm,
-    },
-    imagePickerSection: {
-      marginBottom: theme.spacing.lg,
     },
     actions: {
       flexDirection: 'row',

@@ -2240,7 +2240,7 @@ __metadata:
     "@types/react-native-vector-icons": "npm:^6.4.18"
     "@types/react-test-renderer": "npm:^19.1.0"
     "@volontariapp/config": "npm:^3.3.1"
-    "@volontariapp/contracts": "npm:^4.5.0"
+    "@volontariapp/contracts": "npm:^4.6.0"
     "@volontariapp/errors": "npm:^0.6.4"
     "@volontariapp/logger": "npm:^0.3.1"
     "@volontariapp/messaging": "npm:^2.25.1"
@@ -4293,13 +4293,13 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@volontariapp/contracts@npm:^4.5.0":
-  version: 4.5.0
-  resolution: "@volontariapp/contracts@npm:4.5.0"
+"@volontariapp/contracts@npm:^4.6.0":
+  version: 4.6.0
+  resolution: "@volontariapp/contracts@npm:4.6.0"
   dependencies:
     "@volontariapp/logger": "npm:0.4.0"
     protobufjs: "npm:^7.5.8"
-  checksum: 10c0/91eca135b8558b83b8dee74b5a745f9696a8ca0524fe1ffc4c4482034459113c383c197b849f4b4c1ba7ff9707db99c67b2cc72de571dbc10a76698e4c4dbcac
+  checksum: 10c0/11f137ab5d5e22b55c5c3168fdadcb4994821348568066b54d80d4a8913bb80dba359961498c3a864f8c9dd90dfb750ca117deabb69f0384d7edf603c9f7636d
   languageName: node
   linkType: hard
 

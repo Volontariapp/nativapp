@@ -12,6 +12,7 @@ import {
   AppCalendar,
 } from '@/components';
 import { useAuth } from '@/context/AuthContext';
+import { resolveAvatarUrl } from '@/api/user/resolve-avatar-url';
 import { useAppTheme, useStyles } from '@/context/ThemeContext';
 import type { AppTheme } from '@/shared/themes/theme';
 import { useProfile } from '@/api/user/hooks/use-profile';
@@ -94,7 +95,7 @@ export function ProfileScreen(): React.JSX.Element {
 
         <ProfileLayout
           pseudo={profile.pseudo}
-          avatarUrl={profile.logoPath}
+          avatarUrl={resolveAvatarUrl(profile)}
           bio={profile.bio}
           badges={profile.badges}
           stats={[
