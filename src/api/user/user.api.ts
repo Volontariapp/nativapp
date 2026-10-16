@@ -7,6 +7,7 @@ import type {
   UpdateUserRequest,
   UserWebResponse,
   ListUsersWebResponse,
+  UserWeb,
   ActionSuccessWebResponse,
 } from '@volontariapp/contracts';
 
@@ -18,6 +19,7 @@ export interface UserProfile {
   totalImpactScore: number;
   bio?: string;
   logoPath?: string;
+  avatarUrl?: string;
   badges: BadgeWeb[];
 }
 
@@ -27,8 +29,19 @@ export interface UserPublicProfile {
   totalImpactScore: number;
   bio?: string;
   logoPath?: string;
+  avatarUrl?: string;
   badges: BadgeWeb[];
 }
+
+const toUserPublicProfile = (user: UserWeb): UserPublicProfile => ({
+  id: user.id,
+  pseudo: user.pseudo,
+  totalImpactScore: user.totalImpactScore,
+  bio: user.bio,
+  logoPath: user.logoPath,
+  avatarUrl: user.avatarUrl,
+  badges: user.badges,
+});
 
 export const userApi = {
   async getMe(): Promise<UserProfile> {
@@ -50,6 +63,7 @@ export const userApi = {
         totalImpactScore: response.user.totalImpactScore,
         bio: response.user.bio,
         logoPath: response.user.logoPath,
+        avatarUrl: response.user.avatarUrl,
         badges: response.user.badges,
       };
     } catch (error) {
@@ -83,6 +97,7 @@ export const userApi = {
         totalImpactScore: response.user.totalImpactScore,
         bio: response.user.bio,
         logoPath: response.user.logoPath,
+        avatarUrl: response.user.avatarUrl,
         badges: response.user.badges,
       };
     } catch (error) {
@@ -114,6 +129,7 @@ export const userApi = {
         totalImpactScore: response.user.totalImpactScore,
         bio: response.user.bio,
         logoPath: response.user.logoPath,
+        avatarUrl: response.user.avatarUrl,
         badges: response.user.badges,
       };
     } catch (error) {
@@ -127,6 +143,34 @@ export const userApi = {
         totalImpactScore: 0,
         badges: [],
       };
+    }
+  },
+
+  async getEventParticipants(
+    eventId: string,
+    params?: { page?: number; limit?: number },
+  ): Promise<UserPublicProfile[]> {
+    try {
+      const query = new URLSearchParams();
+      if (params?.page !== undefined) query.append('pagination[page]', params.page.toString());
+      if (params?.limit !== undefined) query.append('pagination[limit]', params.limit.toString());
+
+      const queryString = query.toString();
+      const rawPath = USER_ENDPOINTS.GET_EVENT_PARTICIPANTS.path.replace(':eventId', eventId);
+      const path = queryString ? `${rawPath}?${queryString}` : rawPath;
+
+      const response = await apiFetch<ListUsersWebResponse>(path, {
+        method: USER_ENDPOINTS.GET_EVENT_PARTICIPANTS.method,
+        requiresAuth: USER_ENDPOINTS.GET_EVENT_PARTICIPANTS.requiresAuth,
+      });
+
+      return response.users.map(toUserPublicProfile);
+    } catch (error) {
+      console.error(
+        '[userApi.getEventParticipants] Error details:',
+        error instanceof Error ? error.message : String(error),
+      );
+      throw error;
     }
   },
 
@@ -181,14 +225,7 @@ export const userApi = {
       });
 
       return {
-        users: response.users.map((u) => ({
-          id: u.id,
-          pseudo: u.pseudo,
-          totalImpactScore: u.totalImpactScore,
-          bio: u.bio,
-          logoPath: u.logoPath,
-          badges: u.badges,
-        })),
+        users: response.users.map(toUserPublicProfile),
         totalCount: response.pagination?.total ?? 0,
       };
     } catch (error) {

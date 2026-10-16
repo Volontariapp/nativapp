@@ -4,6 +4,7 @@ import { AppText, AppHeader, AppLoader, ProfileLayout, AppButton } from '@/compo
 import { useAppTheme, useStyles } from '@/context/ThemeContext';
 import type { AppTheme } from '@/shared/themes/theme';
 import { useAuth } from '@/context/AuthContext';
+import { resolveAvatarUrl } from '@/api/user/resolve-avatar-url';
 import { useGetPublicUser } from '@/api/user/hooks/use-get-public-user';
 import { useGetEvents } from '@/api/event/hooks/use-get-events';
 import { useOptimisticFollow } from '@/api/social/hooks/use-optimistic-follow';
@@ -68,7 +69,7 @@ export function PublicProfileScreen(): React.JSX.Element {
         >
           <ProfileLayout
             pseudo={user.pseudo}
-            avatarUrl={user.logoPath}
+            avatarUrl={resolveAvatarUrl(user)}
             bio={user.bio}
             badges={user.badges}
             stats={[

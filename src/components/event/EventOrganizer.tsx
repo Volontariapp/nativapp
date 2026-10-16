@@ -1,5 +1,6 @@
 import { View, StyleSheet, ActivityIndicator, Pressable } from 'react-native';
-import { Image } from 'expo-image';
+import { UserAvatar } from '@/components/media/UserAvatar';
+import { resolveAvatarUrl } from '@/api/user/resolve-avatar-url';
 import { AppText } from '@/components/typography/AppText';
 import { useAppTheme, useStyles } from '@/context/ThemeContext';
 import type { AppTheme } from '@/shared/themes/theme';
@@ -33,12 +34,7 @@ export function EventOrganizer({ organizerId }: EventOrganizerProps) {
           <ActivityIndicator size="small" color={theme.colors.primarySocio} />
         ) : (
           <>
-            <Image
-              source={{
-                uri: user?.logoPath ?? `https://i.pravatar.cc/150?u=${organizerId}`,
-              }}
-              style={styles.avatar}
-            />
+            <UserAvatar uri={resolveAvatarUrl(user)} size={40} style={styles.avatarSpacing} />
             <View style={styles.info}>
               <AppText style={styles.name}>{user?.pseudo ?? 'Utilisateur inconnu'}</AppText>
               {user?.totalImpactScore !== undefined && (
@@ -74,12 +70,8 @@ const createStyles = (theme: AppTheme) =>
       alignItems: 'center',
       minHeight: 40,
     },
-    avatar: {
-      width: 40,
-      height: 40,
-      borderRadius: 20,
+    avatarSpacing: {
       marginRight: theme.spacing.md,
-      backgroundColor: theme.colors.lightGrey,
     },
     info: {
       flex: 1,

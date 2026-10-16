@@ -1,23 +1,21 @@
 import { Text, StyleSheet, Pressable } from 'react-native';
-import { Image } from 'expo-image';
+import { UserAvatar } from '@/components/media/UserAvatar';
 import { useStyles } from '@/context/ThemeContext';
 import type { AppTheme } from '@/shared/themes/theme';
 
 interface PostAuthorHeaderProps {
   pseudo?: string | null;
   authorId?: string;
+  avatarUrl?: string;
   onPress?: () => void;
 }
 
-export function PostAuthorHeader({ pseudo, authorId, onPress }: PostAuthorHeaderProps) {
+export function PostAuthorHeader({ pseudo, avatarUrl, onPress }: PostAuthorHeaderProps) {
   const styles = useStyles(createStyles);
-
-  const seed = pseudo ?? authorId ?? 'default';
-  const avatarUrl = `https://i.pravatar.cc/150?u=${seed}`;
 
   return (
     <Pressable style={styles.container} onPress={onPress} disabled={onPress == null}>
-      <Image source={{ uri: avatarUrl }} style={styles.avatarImage} />
+      <UserAvatar uri={avatarUrl} size={32} style={styles.avatarSpacing} />
       <Text style={styles.authorName}>{pseudo ?? 'Auteur inconnu'}</Text>
     </Pressable>
   );
@@ -33,10 +31,7 @@ const createStyles = (theme: AppTheme) =>
       borderBottomWidth: 1,
       borderBottomColor: theme.colors.lightGrey,
     },
-    avatarImage: {
-      width: 32,
-      height: 32,
-      borderRadius: 16,
+    avatarSpacing: {
       marginRight: theme.spacing.md,
     },
     avatar: {
