@@ -1,6 +1,7 @@
 import React from 'react';
 import { Text, StyleSheet, Pressable } from 'react-native';
-import { Image } from 'expo-image';
+import { UserAvatar } from '@/components/media/UserAvatar';
+import { resolveAvatarUrl } from '@/api/user/resolve-avatar-url';
 import { useGetPublicUser } from '@/api/user/hooks/use-get-public-user';
 import type { CommentWebResponse } from '@volontariapp/contracts';
 import { DELETED_USER_ID } from '@/shared/lib/user.constants';
@@ -21,8 +22,6 @@ export function PostCommentPreview({ comment }: PostCommentPreviewProps) {
   const isDeletedUser = comment.authorId === DELETED_USER_ID;
   const { data: author } = useGetPublicUser(isDeletedUser ? undefined : comment.authorId);
   const pseudo = isDeletedUser ? 'Utilisateur supprimé' : (author?.pseudo ?? 'Auteur inconnu');
-  const seed = isDeletedUser ? 'deleted' : (author?.pseudo ?? comment.authorId);
-  const avatarUrl = `https://i.pravatar.cc/150?u=${seed}`;
 
   return (
     <Pressable
@@ -34,7 +33,7 @@ export function PostCommentPreview({ comment }: PostCommentPreviewProps) {
         }
       }}
     >
-      <Image source={{ uri: avatarUrl }} style={styles.avatarImage} />
+      <UserAvatar uri={resolveAvatarUrl(author)} size={20} style={styles.avatarSpacing} />
       <Text style={styles.text} numberOfLines={2}>
         <Text style={styles.author}>@{pseudo}</Text> {comment.content}
       </Text>
@@ -49,10 +48,7 @@ const createStyles = (theme: AppTheme) =>
       alignItems: 'flex-start',
       marginBottom: theme.spacing.xs,
     },
-    avatarImage: {
-      width: 20,
-      height: 20,
-      borderRadius: 10,
+    avatarSpacing: {
       marginRight: theme.spacing.xs,
       marginTop: 2,
     },

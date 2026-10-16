@@ -1,6 +1,7 @@
 import React from 'react';
 import { View, StyleSheet, Pressable, Alert } from 'react-native';
-import { Image } from 'expo-image';
+import { UserAvatar } from '@/components/media/UserAvatar';
+import { resolveAvatarUrl } from '@/api/user/resolve-avatar-url';
 import Icon from 'react-native-vector-icons/Feather';
 import { AppText } from '@/components/typography/AppText';
 import { useAppTheme, useStyles } from '@/context/ThemeContext';
@@ -28,8 +29,6 @@ export function CommentItem({ comment }: CommentItemProps) {
   const navigation = useNavigation<NativeStackNavigationProp<MainStackParamList>>();
 
   const pseudo = isDeletedUser ? 'Utilisateur supprimé' : (author?.pseudo ?? 'Auteur inconnu');
-  const seed = isDeletedUser ? 'deleted' : (author?.pseudo ?? comment.authorId);
-  const avatarUrl = `https://i.pravatar.cc/150?u=${seed}`;
   const date = new Date(comment.createdAt).toLocaleDateString('fr-FR');
   const isMine = !isDeletedUser && userId === comment.authorId;
 
@@ -58,7 +57,7 @@ export function CommentItem({ comment }: CommentItemProps) {
             }
           }}
         >
-          <Image source={{ uri: avatarUrl }} style={styles.avatarImage} />
+          <UserAvatar uri={resolveAvatarUrl(author)} size={24} style={styles.avatarSpacing} />
           <AppText style={styles.author}>{pseudo}</AppText>
         </Pressable>
         <View style={styles.actionsContainer}>
@@ -94,10 +93,7 @@ const createStyles = (theme: AppTheme) =>
       flexDirection: 'row',
       alignItems: 'center',
     },
-    avatarImage: {
-      width: 24,
-      height: 24,
-      borderRadius: 12,
+    avatarSpacing: {
       marginRight: theme.spacing.sm,
     },
     author: {

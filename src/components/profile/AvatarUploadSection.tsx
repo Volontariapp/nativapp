@@ -1,9 +1,9 @@
 import React from 'react';
-import { View, StyleSheet } from 'react-native';
+import { View, StyleSheet, ActivityIndicator } from 'react-native';
 import { Image } from 'expo-image';
 import { AppText } from '@/components/typography/AppText';
 import { AppButton } from '@/components/buttons/AppButton';
-import { useStyles } from '@/context/ThemeContext';
+import { useAppTheme, useStyles } from '@/context/ThemeContext';
 import type { AppTheme } from '@/shared/themes/theme';
 import type { AvatarUpload } from '@/api/user/hooks/use-avatar-upload';
 
@@ -19,6 +19,7 @@ export const AvatarUploadSection = ({
   currentAvatarUrl,
   disabled = false,
 }: AvatarUploadSectionProps): React.JSX.Element => {
+  const { theme } = useAppTheme();
   const styles = useStyles(createStyles);
   const previewUri = upload.previewUri ?? currentAvatarUrl;
 
@@ -42,7 +43,16 @@ export const AvatarUploadSection = ({
           void upload.choosePhoto();
         }}
       />
-      {upload.isUploading && <AppText style={styles.info}>Envoi de la photo...</AppText>}
+      {upload.isUploading && (
+        <View style={styles.uploadStatus} accessibilityLiveRegion="polite">
+          <ActivityIndicator
+            testID="avatar-upload-spinner"
+            size="small"
+            color={theme.colors.primarySocio}
+          />
+          <AppText style={styles.info}>Envoi de la photo...</AppText>
+        </View>
+      )}
       {upload.message !== undefined && <AppText style={styles.error}>{upload.message}</AppText>}
       {upload.canRetry && <AppButton text="Réessayer" variant="socio" onPress={upload.retry} />}
     </View>
@@ -65,6 +75,12 @@ const createStyles = (theme: AppTheme) =>
       height: 96,
       borderRadius: theme.radius.full,
       alignSelf: 'center',
+    },
+    uploadStatus: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      justifyContent: 'center',
+      gap: theme.spacing.sm,
     },
     info: {
       color: theme.colors.grey,

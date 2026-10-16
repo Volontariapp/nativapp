@@ -7,6 +7,7 @@ import type {
   UpdateUserRequest,
   UserWebResponse,
   ListUsersWebResponse,
+  UserWeb,
   ActionSuccessWebResponse,
 } from '@volontariapp/contracts';
 
@@ -31,6 +32,16 @@ export interface UserPublicProfile {
   avatarUrl?: string;
   badges: BadgeWeb[];
 }
+
+const toUserPublicProfile = (user: UserWeb): UserPublicProfile => ({
+  id: user.id,
+  pseudo: user.pseudo,
+  totalImpactScore: user.totalImpactScore,
+  bio: user.bio,
+  logoPath: user.logoPath,
+  avatarUrl: user.avatarUrl,
+  badges: user.badges,
+});
 
 export const userApi = {
   async getMe(): Promise<UserProfile> {
@@ -135,6 +146,34 @@ export const userApi = {
     }
   },
 
+  async getEventParticipants(
+    eventId: string,
+    params?: { page?: number; limit?: number },
+  ): Promise<UserPublicProfile[]> {
+    try {
+      const query = new URLSearchParams();
+      if (params?.page !== undefined) query.append('pagination[page]', params.page.toString());
+      if (params?.limit !== undefined) query.append('pagination[limit]', params.limit.toString());
+
+      const queryString = query.toString();
+      const rawPath = USER_ENDPOINTS.GET_EVENT_PARTICIPANTS.path.replace(':eventId', eventId);
+      const path = queryString ? `${rawPath}?${queryString}` : rawPath;
+
+      const response = await apiFetch<ListUsersWebResponse>(path, {
+        method: USER_ENDPOINTS.GET_EVENT_PARTICIPANTS.method,
+        requiresAuth: USER_ENDPOINTS.GET_EVENT_PARTICIPANTS.requiresAuth,
+      });
+
+      return response.users.map(toUserPublicProfile);
+    } catch (error) {
+      console.error(
+        '[userApi.getEventParticipants] Error details:',
+        error instanceof Error ? error.message : String(error),
+      );
+      throw error;
+    }
+  },
+
   async updateMe(payload: UpdateUserRequest): Promise<void> {
     try {
       await apiFetch<UserWebResponse, UpdateUserRequest>(USER_ENDPOINTS.UPDATE_ME.path, {
@@ -186,15 +225,7 @@ export const userApi = {
       });
 
       return {
-        users: response.users.map((u) => ({
-          id: u.id,
-          pseudo: u.pseudo,
-          totalImpactScore: u.totalImpactScore,
-          bio: u.bio,
-          logoPath: u.logoPath,
-          avatarUrl: u.avatarUrl,
-          badges: u.badges,
-        })),
+        users: response.users.map(toUserPublicProfile),
         totalCount: response.pagination?.total ?? 0,
       };
     } catch (error) {
