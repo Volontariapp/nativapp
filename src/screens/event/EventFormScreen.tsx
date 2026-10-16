@@ -42,6 +42,14 @@ const EVENT_TYPE_OPTIONS: AppChipOption<EventType>[] = [
   },
 ];
 
+function getDefaultEventDates(): { startAt: Date; endAt: Date } {
+  const startAt = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000);
+  startAt.setHours(10, 0, 0, 0);
+  const endAt = new Date(startAt);
+  endAt.setHours(18, 0, 0, 0);
+  return { startAt, endAt };
+}
+
 export function EventFormScreen(): React.JSX.Element {
   const { theme } = useAppTheme();
   const styles = useStyles(createStyles);
@@ -51,6 +59,8 @@ export function EventFormScreen(): React.JSX.Element {
   const navigation = useNavigation();
   const { isDebugMode } = useDebug();
   const [isBatching, setIsBatching] = React.useState(false);
+
+  const defaultDates = React.useMemo(() => getDefaultEventDates(), []);
 
   const {
     control,
@@ -65,8 +75,8 @@ export function EventFormScreen(): React.JSX.Element {
       type: EventType.EVENT_TYPE_UNSPECIFIED,
       awardedImpactScore: 100,
       maxParticipants: 50,
-      startAt: new Date('2026-06-01T10:00:00Z'),
-      endAt: new Date('2026-06-01T18:00:00Z'),
+      startAt: defaultDates.startAt,
+      endAt: defaultDates.endAt,
       requirements: [],
     },
   });
