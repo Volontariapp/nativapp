@@ -1,4 +1,5 @@
 import React from 'react';
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { fireEvent, render, waitFor } from '@testing-library/react-native';
 import type { MediaLibraryPermissionResponse } from 'expo-image-picker';
 // Les mocks doivent etre charges avant l'ecran, qui importe les modules mockes ci-dessous
@@ -9,6 +10,7 @@ import {
   mockGetUploadUrl,
   mockLaunchPicker,
   mockRequestPermission,
+  mockUploadImage,
   mockUploadToPresignedPost,
   pickedAsset,
   pickerResult,
@@ -38,6 +40,7 @@ jest.mock('@/api/storage/storage.api', () => ({
 jest.mock('@/api/storage/storage-upload', () => ({
   uploadToPresignedPost: mockUploadToPresignedPost,
 }));
+jest.mock('@/api/storage/upload-image', () => ({ uploadImage: mockUploadImage }));
 
 const mockGoBack = jest.fn();
 jest.mock('@react-navigation/native', () => ({
@@ -47,8 +50,17 @@ jest.mock('@react-navigation/native', () => ({
 const granted = { status: 'granted' } as MediaLibraryPermissionResponse;
 const denied = { status: 'denied' } as MediaLibraryPermissionResponse;
 
+const renderScreen = () =>
+  render(
+    <QueryClientProvider
+      client={new QueryClient({ defaultOptions: { mutations: { retry: false } } })}
+    >
+      <StorageDebugScreen />
+    </QueryClientProvider>,
+  );
+
 const renderWithImage = async () => {
-  const screen = render(<StorageDebugScreen />);
+  const screen = renderScreen();
   fireEvent.press(screen.getByText('Choisir une image'));
   await screen.findByText('Type : image/jpeg');
   return screen;
@@ -70,7 +82,7 @@ describe('StorageDebugScreen', () => {
 
   describe('layout', () => {
     it('shows the title and the available actions', () => {
-      const { getByText } = render(<StorageDebugScreen />);
+      const { getByText } = renderScreen();
 
       expect(getByText('Test du stockage')).toBeTruthy();
       expect(getByText('Choisir une image')).toBeTruthy();
@@ -79,7 +91,7 @@ describe('StorageDebugScreen', () => {
     });
 
     it('goes back from the top bar', () => {
-      const { getByLabelText } = render(<StorageDebugScreen />);
+      const { getByLabelText } = renderScreen();
 
       fireEvent.press(getByLabelText('Retour'));
 
@@ -96,7 +108,7 @@ describe('StorageDebugScreen', () => {
 
     it('keeps the empty state when the picker is cancelled', async () => {
       mockLaunchPicker.mockResolvedValue(pickerResult(null));
-      const { getByText } = render(<StorageDebugScreen />);
+      const { getByText } = renderScreen();
 
       fireEvent.press(getByText('Choisir une image'));
 
@@ -108,7 +120,7 @@ describe('StorageDebugScreen', () => {
 
     it('reports a denied permission without opening the picker', async () => {
       mockRequestPermission.mockResolvedValue(denied);
-      const { getByText, findByText } = render(<StorageDebugScreen />);
+      const { getByText, findByText } = renderScreen();
 
       fireEvent.press(getByText('Choisir une image'));
 
@@ -119,7 +131,7 @@ describe('StorageDebugScreen', () => {
 
   describe('steps', () => {
     it('does not call the API before an image is chosen', () => {
-      const { getByText } = render(<StorageDebugScreen />);
+      const { getByText } = renderScreen();
 
       fireEvent.press(getByText('Tout enchaîner'));
       fireEvent.press(getByText('1. URL présignée'));
@@ -128,7 +140,7 @@ describe('StorageDebugScreen', () => {
     });
 
     it('declares the image for the entity type selected with the chips', async () => {
-      const { getByText } = render(<StorageDebugScreen />);
+      const { getByText } = renderScreen();
 
       fireEvent.press(getByText('Post'));
       fireEvent.press(getByText('Choisir une image'));
@@ -161,6 +173,42 @@ describe('StorageDebugScreen', () => {
       fireEvent.press(getByText('1. URL présignée'));
 
       expect(await findByText('400 type non autorisé')).toBeTruthy();
+    });
+  });
+
+  describe('upload with the useFileUpload hook', () => {
+    it('uploads the picked image, resized, and shows the clean result', async () => {
+      mockUploadImage.mockResolvedValue({
+        fileId: FILE_ID,
+        state: 'CLEAN',
+        publicUrl: 'https://s3.cyrus-ag.com/volontariapp-public/user-avatar/x.webp',
+      });
+      const { getByText, findByText } = await renderWithImage();
+
+      fireEvent.press(getByText('Upload complet (hook useFileUpload)'));
+
+      expect(await findByText(`CLEAN · ${FILE_ID}`)).toBeTruthy();
+      expect(mockUploadImage).toHaveBeenCalledWith(
+        mockContracts.EntityType.ENTITY_TYPE_USER_AVATAR,
+        { uri: pickedAsset.uri, width: 256, height: 256 },
+      );
+    });
+
+    it('shows the error of a failed upload', async () => {
+      mockUploadImage.mockRejectedValue(new Error('503 stockage indisponible'));
+      const { getByText, findByText } = await renderWithImage();
+
+      fireEvent.press(getByText('Upload complet (hook useFileUpload)'));
+
+      expect(await findByText('503 stockage indisponible')).toBeTruthy();
+    });
+
+    it('does nothing before an image is chosen', () => {
+      const { getByText } = renderScreen();
+
+      fireEvent.press(getByText('Upload complet (hook useFileUpload)'));
+
+      expect(mockUploadImage).not.toHaveBeenCalled();
     });
   });
 

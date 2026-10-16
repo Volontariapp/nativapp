@@ -9,6 +9,7 @@ import { useAppTheme, useStyles } from '@/context/ThemeContext';
 import type { AppTheme } from '@/shared/themes/theme';
 import { StorageDebugFileCard } from './components/storage-debug-file-card';
 import { StorageDebugLogs } from './components/storage-debug-logs';
+import { StorageDebugUploadHook } from './components/storage-debug-upload-hook';
 import { useStorageDebug } from './hooks/use-storage-debug';
 import { ENTITY_OPTIONS } from './storage-debug.constants';
 
@@ -98,6 +99,9 @@ export function StorageDebugScreen(): React.JSX.Element {
           onPress={() => void debug.runAll()}
           style={styles.runAll}
         />
+
+        <AppText style={styles.section}>Hook de production</AppText>
+        <StorageDebugUploadHook file={debug.file} entityType={debug.entityType} />
 
         <StorageDebugLogs logs={debug.logs} onClear={debug.clearLogs} />
       </ScrollView>
