@@ -1,6 +1,6 @@
-import { Alert } from 'react-native';
 import * as ImagePicker from 'expo-image-picker';
 import type { PickedImage } from './file-upload.types';
+import { ensureGalleryPermission } from './gallery-permission';
 
 interface PickGalleryImageOptions {
   /** Recadrage imposé (ex. [1, 1] pour un avatar) ; sans valeur, l'image est prise telle quelle. */
@@ -14,12 +14,7 @@ interface PickGalleryImageOptions {
 export const pickGalleryImage = async ({ aspect }: PickGalleryImageOptions = {}): Promise<
   PickedImage | undefined
 > => {
-  const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
-  if (status !== ImagePicker.PermissionStatus.GRANTED) {
-    Alert.alert(
-      'Permission refusée',
-      'Nous avons besoin de votre permission pour accéder à vos photos.',
-    );
+  if (!(await ensureGalleryPermission())) {
     return undefined;
   }
 

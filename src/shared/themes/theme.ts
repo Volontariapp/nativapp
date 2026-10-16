@@ -23,6 +23,7 @@ export type AppThemeColors = {
   whiteOverlay: string;
   adminActive: string;
   adminInactive: string;
+  tabIconInactive: string;
   separator: string;
   blackOverlay: string;
   bronze: string;
@@ -77,6 +78,7 @@ export const lightTheme = {
     whiteOverlay: 'rgba(255, 255, 255, 0.2)',
     adminActive: '#1a73e8',
     adminInactive: '#5f6368',
+    tabIconInactive: '#374151',
     separator: '#f0f0f0',
     blackOverlay: 'rgba(0, 0, 0, 0.4)',
     bronze: '#CD7F32',
@@ -180,6 +182,7 @@ export const darkTheme: AppTheme = {
     white: '#1e1e1e',
     black: '#ffffff',
     grey: '#a0aab5',
+    tabIconInactive: '#d1d5db',
     lightGrey: '#2c2c2c',
     separator: '#333333',
     whiteOverlay: 'rgba(255, 255, 255, 0.1)',

@@ -7,6 +7,8 @@ import { useAuth } from '@/context/AuthContext';
 import { resolveAvatarUrl } from '@/api/user/resolve-avatar-url';
 import { useGetPublicUser } from '@/api/user/hooks/use-get-public-user';
 import { useGetEvents } from '@/api/event/hooks/use-get-events';
+import { useListPosts } from '@/api/post/hooks/use-list-all-posts';
+import { ProfilePosts } from '@/components/profile/profile-posts';
 import { useOptimisticFollow } from '@/api/social/hooks/use-optimistic-follow';
 import { useRoute, type RouteProp } from '@react-navigation/native';
 import type { MainStackParamList } from '@/navigation/stacks/MainStack';
@@ -37,6 +39,14 @@ export function PublicProfileScreen(): React.JSX.Element {
   });
 
   const {
+    data: userPostsData,
+    isLoading: isUserPostsLoading,
+    hasNextPage: hasNextUserPosts,
+    fetchNextPage: fetchNextUserPosts,
+    isFetchingNextPage: isFetchingNextUserPosts,
+  } = useListPosts({ authorId: params.userId, limit: 5 });
+
+  const {
     isFollowing,
     localFollowersCount,
     followsCount,
@@ -48,6 +58,7 @@ export function PublicProfileScreen(): React.JSX.Element {
   const isPageLoading = isLoading;
 
   const allUserEvents = userEventsData?.pages.flatMap((page) => page.events) ?? [];
+  const allUserPosts = userPostsData?.pages.flatMap((page) => page.posts) ?? [];
 
   return (
     <View style={styles.container}>
@@ -118,7 +129,17 @@ export function PublicProfileScreen(): React.JSX.Element {
                 isFetchingNextPage: isFetchingNextUserEvents,
               },
             }}
-          />
+          >
+            <ProfilePosts
+              posts={allUserPosts}
+              isLoading={isUserPostsLoading}
+              hasNextPage={hasNextUserPosts}
+              fetchNextPage={() => {
+                void fetchNextUserPosts();
+              }}
+              isFetchingNextPage={isFetchingNextUserPosts}
+            />
+          </ProfileLayout>
         </ScrollView>
       )}
     </View>

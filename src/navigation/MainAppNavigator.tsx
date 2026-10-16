@@ -19,7 +19,7 @@ export default function MainAppNavigator(): React.JSX.Element {
       screenOptions={{
         headerShown: true,
         tabBarActiveTintColor: theme.colors.text,
-        tabBarInactiveTintColor: theme.colors.grey,
+        tabBarInactiveTintColor: theme.colors.tabIconInactive,
       }}
       tabBar={Platform.OS === 'ios' ? (props) => <LiquidTabBar {...props} /> : undefined}
     >
@@ -29,12 +29,12 @@ export default function MainAppNavigator(): React.JSX.Element {
         options={{
           title: 'Accueil',
           headerShown: false,
-          tabBarIcon: ({ focused }) => (
+          tabBarIcon: ({ focused, color }) => (
             <AppIcons
               icon={focused ? 'home' : 'home-outline'}
               iconLibrary={'MaterialDesignIcons'}
               size={30}
-              color={focused ? theme.colors.text : theme.colors.grey}
+              color={color}
             />
           ),
         }}
@@ -46,12 +46,12 @@ export default function MainAppNavigator(): React.JSX.Element {
         options={{
           title: 'Swipe',
           headerShown: false,
-          tabBarIcon: ({ focused }) => (
+          tabBarIcon: ({ focused, color }) => (
             <AppIcons
               icon={focused ? 'cards' : 'cards-outline'}
               iconLibrary={'MaterialDesignIcons'}
               size={30}
-              color={focused ? theme.colors.text : theme.colors.grey}
+              color={color}
             />
           ),
         }}
@@ -84,12 +84,12 @@ export default function MainAppNavigator(): React.JSX.Element {
         options={{
           title: 'Explorer',
           headerShown: false,
-          tabBarIcon: ({ focused }) => (
+          tabBarIcon: ({ focused, color }) => (
             <AppIcons
               icon={focused ? 'map' : 'map-outline'}
               iconLibrary={'MaterialDesignIcons'}
               size={30}
-              color={focused ? theme.colors.text : theme.colors.grey}
+              color={color}
             />
           ),
         }}
@@ -101,12 +101,12 @@ export default function MainAppNavigator(): React.JSX.Element {
         options={{
           title: 'Profil',
           headerShown: false,
-          tabBarIcon: ({ focused }) => (
+          tabBarIcon: ({ focused, color }) => (
             <AppIcons
               icon={focused ? 'person' : 'person-outline'}
               iconLibrary={'Ionicons'}
               size={30}
-              color={focused ? theme.colors.text : theme.colors.grey}
+              color={color}
             />
           ),
         }}

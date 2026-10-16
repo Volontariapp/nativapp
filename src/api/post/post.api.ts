@@ -4,7 +4,7 @@ import { generateIdempotencyKey } from '@/shared/lib/idempotency.utils';
 import type { WithOptionalIdempotencyKey } from '../idempotency.types';
 import type {
   CreatePostRequest,
-  CreatePostWebResponse,
+  PostWebResponse,
   ListPostsWebResponse,
   ActionSuccessWebResponse,
   CreateCommentRequest,
@@ -18,7 +18,7 @@ export type CreatePostInput = Omit<WithOptionalIdempotencyKey<CreatePostRequest>
 };
 
 export const postApi = {
-  async createPost(input: CreatePostInput): Promise<CreatePostWebResponse> {
+  async createPost(input: CreatePostInput): Promise<PostWebResponse> {
     try {
       const payload: CreatePostRequest = {
         ...input,
@@ -27,7 +27,7 @@ export const postApi = {
       };
       console.log('[postApi.createPost] Sending payload:', payload);
 
-      const response = await apiFetch<CreatePostWebResponse, CreatePostRequest>(
+      const response = await apiFetch<PostWebResponse, CreatePostRequest>(
         POST_ENDPOINTS.CREATE_POST.path,
         {
           method: POST_ENDPOINTS.CREATE_POST.method,

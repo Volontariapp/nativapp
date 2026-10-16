@@ -1,10 +1,9 @@
 import React, { useCallback } from 'react';
-import { View, StyleSheet, TextInput, Alert, Pressable } from 'react-native';
+import { View, StyleSheet, TextInput, Alert } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
-import Feather from 'react-native-vector-icons/Feather';
 
 import { AppText } from '@/components/typography/AppText';
 import { AppButton } from '@/components/buttons/AppButton';
@@ -16,8 +15,10 @@ import { useAppTheme, useStyles } from '@/context/ThemeContext';
 import type { AppTheme } from '@/shared/themes/theme';
 import { useCreatePost } from '@/api/post/hooks';
 import { EventSelector } from '@/components/post/event-selector';
-import { useDebug } from '@/context/DebugContext';
-import { useQueryClient } from '@tanstack/react-query';
+import { PostImagesPicker } from '@/components/post/post-images-picker';
+import { PostDebugTools } from '@/components/post/post-debug-tools';
+import { usePostImages } from '@/api/post/hooks/use-post-images';
+import { generateIdempotencyKey } from '@/shared/lib/idempotency.utils';
 
 const createPostSchema = z.object({
   title: z
@@ -33,14 +34,21 @@ const createPostSchema = z.object({
 
 type CreatePostFormData = z.infer<typeof createPostSchema>;
 
+const PENDING_TITLE = 'Post en cours de traitement';
+const PENDING_MESSAGE =
+  'Vos images sont en cours de vérification. Votre post sera visible des autres utilisateurs dès qu’elles seront validées.';
+const UPLOADING_HINT = 'Envoi des images en cours...';
+const BLOCKING_HINT = 'Retirez ou renvoyez les images en échec ou refusées avant de publier.';
+
 export function PostFormScreen(): React.JSX.Element {
   const { theme } = useAppTheme();
   const styles = useStyles(createStyles);
 
   const navigation = useNavigation();
   const { mutateAsync: createPost, isPending } = useCreatePost();
-  const { isDebugMode } = useDebug();
-  const queryClient = useQueryClient();
+  const postImages = usePostImages();
+  // Une seule clé par formulaire : un réessai après échec reste idempotent côté serveur.
+  const [idempotencyKey] = React.useState(generateIdempotencyKey);
   const [isBatching, setIsBatching] = React.useState(false);
 
   const {
@@ -67,70 +75,35 @@ export function PostFormScreen(): React.JSX.Element {
     [setValue],
   );
 
+  const isBusy = isPending || isBatching;
+  const cannotPublish = isBusy || postImages.isUploading || postImages.hasBlockingImage;
+
   const onSubmit = async (data: CreatePostFormData) => {
     try {
-      await createPost({
+      const response = await createPost({
         title: data.title.trim(),
         content: data.content.trim(),
         eventId: data.eventId,
+        fileIds: postImages.fileIds,
+        idempotencyKey,
       });
+      if (response.post.mediaStatus === 'PENDING') {
+        Alert.alert(PENDING_TITLE, PENDING_MESSAGE, [
+          {
+            text: 'OK',
+            onPress: () => {
+              navigation.goBack();
+            },
+          },
+        ]);
+        return;
+      }
       navigation.goBack();
     } catch (err) {
       console.error('Failed to create post:', err instanceof Error ? err.message : String(err));
       Alert.alert('Erreur', 'Impossible de publier votre post.');
     }
   };
-
-  const handleCreate50Posts = React.useCallback(async (): Promise<void> => {
-    setIsBatching(true);
-    try {
-      const titles = [
-        "Aujourd'hui on se bouge !",
-        'Super initiative dans le quartier',
-        "J'ai besoin de bras",
-        'Merci à tous les participants',
-        'Prochain événement la semaine prochaine',
-        "C'est quoi votre projet préféré ?",
-      ];
-
-      const contents = [
-        "On a fait du super boulot ce matin. N'hésitez pas à nous rejoindre pour la prochaine session. Plus on est de fous, plus on rit !",
-        "C'était intense mais tellement gratifiant. La planète vous dit merci.",
-        'Si des personnes sont motivées pour nous aider à trier les dons demain, envoyez-moi un message !',
-        "Un immense merci à la communauté pour votre générosité, ça fait chaud au cœur de voir autant d'entraide.",
-        "Je lance l'idée comme ça, mais qui serait chaud pour monter un groupe de nettoyage dans le centre-ville ?",
-        'Regardez-moi cette belle équipe ! Merci encore pour tout.',
-      ];
-
-      const promises = [];
-      for (let i = 0; i < 50; i++) {
-        const randomTitle = titles[Math.floor(Math.random() * titles.length)] ?? '';
-        const randomContent = contents[Math.floor(Math.random() * contents.length)] ?? '';
-        promises.push(
-          createPost({
-            title: `${randomTitle} #${String(i + 1)}`,
-            content: randomContent,
-            eventId: selectedEventId,
-          }),
-        );
-      }
-
-      await Promise.all(promises);
-      void queryClient.invalidateQueries({ queryKey: ['posts'] });
-      Alert.alert('Succès', 'Les 50 posts ont été créés avec succès !', [
-        {
-          text: 'OK',
-          onPress: () => {
-            navigation.goBack();
-          },
-        },
-      ]);
-    } catch {
-      Alert.alert('Erreur', 'Impossible de créer les posts.');
-    } finally {
-      setIsBatching(false);
-    }
-  }, [createPost, queryClient, navigation, selectedEventId]);
 
   return (
     <View style={styles.container}>
@@ -142,16 +115,15 @@ export function PostFormScreen(): React.JSX.Element {
       >
         <AppText style={styles.title}>Créer un Post</AppText>
 
-        {/* Image Placeholder */}
-        <Pressable
-          style={styles.imagePlaceholder}
-          onPress={() => {
-            Alert.alert('Info', "L'ajout d'image n'est pas encore disponible.");
+        <PostImagesPicker
+          images={postImages.images}
+          remainingSlots={postImages.remainingSlots}
+          onAdd={() => {
+            void postImages.addImages();
           }}
-        >
-          <Feather name="plus" size={32} color={theme.colors.grey} />
-          <AppText style={styles.imagePlaceholderText}>Ajouter une image</AppText>
-        </Pressable>
+          onRetry={postImages.retryImage}
+          onRemove={postImages.removeImage}
+        />
 
         <AppFormController
           control={control}
@@ -188,30 +160,28 @@ export function PostFormScreen(): React.JSX.Element {
         <EventSelector onSelectEvent={handleSelectEvent} selectedEventId={selectedEventId} />
 
         <View style={styles.publishContainer}>
+          {postImages.isUploading && <AppText style={styles.hint}>{UPLOADING_HINT}</AppText>}
+          {postImages.hasBlockingImage && (
+            <AppText style={styles.hintError}>{BLOCKING_HINT}</AppText>
+          )}
           <AppButton
-            text={isPending || isBatching ? 'Publication...' : 'Publier le post'}
+            text={isBusy ? 'Publication...' : 'Publier le post'}
             variant="socio"
             onPress={() => {
-              void handleSubmit(onSubmit)();
+              if (!cannotPublish) {
+                void handleSubmit(onSubmit)();
+              }
             }}
-            disabled={isPending || isBatching}
+            disabled={cannotPublish}
             style={styles.publishButton}
           />
         </View>
 
-        {isDebugMode && (
-          <View style={styles.testSection}>
-            <AppText style={styles.testTitle}>Debug: Outils de test</AppText>
-            <AppButton
-              text={isBatching ? 'Création en cours...' : 'Créer 50 posts'}
-              variant="socio"
-              onPress={() => {
-                void handleCreate50Posts();
-              }}
-              disabled={isPending || isBatching}
-            />
-          </View>
-        )}
+        <PostDebugTools
+          selectedEventId={selectedEventId}
+          disabled={isPending}
+          onBatchingChange={setIsBatching}
+        />
 
         <View style={styles.bottomSpacer} />
       </AppKeyboardScrollView>
@@ -227,24 +197,6 @@ const createStyles = (theme: AppTheme) =>
     },
     scrollContent: {
       padding: theme.spacing.xl,
-    },
-    imagePlaceholder: {
-      width: '100%',
-      height: 180,
-      borderRadius: theme.radius.md,
-      borderWidth: 2,
-      borderColor: theme.colors.lightGrey,
-      borderStyle: 'dashed',
-      justifyContent: 'center',
-      alignItems: 'center',
-      backgroundColor: theme.colors.white,
-      marginBottom: theme.spacing.xl,
-    },
-    imagePlaceholderText: {
-      marginTop: theme.spacing.sm,
-      color: theme.colors.grey,
-      fontSize: 14,
-      fontWeight: '500',
     },
     title: {
       fontSize: 28,
@@ -273,21 +225,15 @@ const createStyles = (theme: AppTheme) =>
     publishButton: {
       width: '100%',
     },
-    testSection: {
-      marginTop: theme.spacing.md,
-      padding: theme.spacing.md,
-      backgroundColor: theme.colors.white,
-      borderRadius: theme.radius.md,
-      borderWidth: 1,
-      borderColor: theme.colors.lightGrey,
-      borderStyle: 'dashed',
-    },
-    testTitle: {
-      fontSize: 12,
-      color: theme.colors.grey,
+    hint: {
       marginBottom: theme.spacing.sm,
-      fontWeight: 'bold',
-      textTransform: 'uppercase',
+      fontSize: 13,
+      color: theme.colors.grey,
+    },
+    hintError: {
+      marginBottom: theme.spacing.sm,
+      fontSize: 13,
+      color: theme.colors.danger,
     },
     bottomSpacer: {
       height: theme.spacing.xxl,

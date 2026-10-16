@@ -5,17 +5,19 @@ import { useStyles } from '@/context/ThemeContext';
 import type { AppTheme } from '@/shared/themes/theme';
 import { getFakeEcologyImage } from '@/utils/fake-images.util';
 
-interface PostImagePlaceholderProps {
+interface PostImageProps {
   postId: string;
+  /** URL de l'image du post ; sans elle, une image de remplacement stable par post est affichée. */
+  imageUrl: string | undefined;
 }
 
-export function PostImagePlaceholder({ postId }: PostImagePlaceholderProps) {
+export function PostImage({ postId, imageUrl }: PostImageProps): React.JSX.Element {
   const styles = useStyles(createStyles);
-  const imageUrl = getFakeEcologyImage(postId);
+  const uri = imageUrl ?? getFakeEcologyImage(postId);
 
   return (
     <View style={styles.container}>
-      <Image source={{ uri: imageUrl }} style={styles.image} contentFit="cover" />
+      <Image testID="post-image" source={{ uri }} style={styles.image} contentFit="cover" />
     </View>
   );
 }

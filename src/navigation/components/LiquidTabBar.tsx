@@ -119,7 +119,7 @@ export function LiquidTabBar({
                 <IconWrapper isFocused={isFocused} activeIndex={activeIndex} index={index}>
                   {options.tabBarIcon({
                     focused: isFocused,
-                    color: isFocused ? theme.colors.text : theme.colors.grey,
+                    color: isFocused ? theme.colors.text : theme.colors.tabIconInactive,
                     size: 26,
                   })}
                 </IconWrapper>
