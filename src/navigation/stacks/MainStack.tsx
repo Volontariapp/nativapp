@@ -1,7 +1,12 @@
 import React from 'react';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import MainAppNavigator from '../MainAppNavigator';
-import { EventDetailScreen, SettingsScreen, PublicProfileScreen } from '@/screens';
+import {
+  EventDetailScreen,
+  SettingsScreen,
+  PublicProfileScreen,
+  StorageDebugScreen,
+} from '@/screens';
 import type { AppEvent } from '@/api/event/event.api';
 
 export type MainStackParamList = {
@@ -9,6 +14,7 @@ export type MainStackParamList = {
   EventDetail: { event: AppEvent };
   Settings: undefined;
   PublicProfile: { userId: string };
+  StorageDebug: undefined;
 };
 
 const Stack = createNativeStackNavigator<MainStackParamList>();
@@ -20,6 +26,7 @@ export default function MainStack() {
       <Stack.Screen name="EventDetail" component={EventDetailScreen} />
       <Stack.Screen name="Settings" component={SettingsScreen} />
       <Stack.Screen name="PublicProfile" component={PublicProfileScreen} />
+      <Stack.Screen name="StorageDebug" component={StorageDebugScreen} />
     </Stack.Navigator>
   );
 }

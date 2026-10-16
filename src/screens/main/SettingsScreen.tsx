@@ -10,6 +10,7 @@ import type { AppTheme } from '@/shared/themes/theme';
 import { TokenService } from '@/services/token.service';
 import { useDebug } from '@/context/DebugContext';
 import { useDeleteAccount } from '@/api/user/hooks/use-delete-account';
+import { StorageDebugLink } from '@/screens/debug/components/storage-debug-link';
 
 const handleOpenLocationSettings = () => {
   if (Platform.OS === 'ios') {
@@ -176,6 +177,8 @@ export function SettingsScreen() {
               thumbColor={theme.colors.white}
             />
           </View>
+
+          {isDebugMode && <StorageDebugLink />}
 
           <AppText style={[styles.settingTitle, { marginTop: theme.spacing.lg }]}>
             Debug (Test Auth)

@@ -15,3 +15,4 @@ export * from './misc/SandBox';
 export * from './post/PostFormScreen';
 export * from './post/MyPostsScreen';
 export * from './main/EventDetailScreen';
+export * from './debug/storage-debug-screen';
