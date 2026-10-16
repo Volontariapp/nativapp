@@ -90,6 +90,8 @@ export const useStorageDebug = () => {
         name: asset.fileName ?? `debug-${String(Date.now())}.jpg`,
         type: asset.mimeType ?? 'image/jpeg',
         sizeBytes: asset.fileSize ?? (await readSize(asset.uri)),
+        width: asset.width,
+        height: asset.height,
       }),
       (value) => `${value.name} (${String(Math.round(value.sizeBytes / 1024))} Ko, ${value.type})`,
     );

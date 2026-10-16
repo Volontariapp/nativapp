@@ -7,6 +7,8 @@ export interface DebugFile {
   name: string;
   type: string;
   sizeBytes: number;
+  width: number;
+  height: number;
 }
 
 export interface DebugLogEntry {
