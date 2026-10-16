@@ -1,0 +1,82 @@
+import { useCallback, useRef, useState } from 'react';
+import { EntityType } from '@volontariapp/contracts';
+import { useFileUpload } from '@/api/storage/hooks/use-file-upload';
+import { pickGalleryImages } from '@/api/storage/pick-gallery-images';
+import type { PickedImage } from '@/api/storage/file-upload.types';
+import type { PostImage, PostImages } from '../post-images.types';
+import {
+  MAX_POST_IMAGES,
+  isBlocking,
+  selectFileIds,
+  toPostImageStatus,
+} from '../post-images.utils';
+
+export { MAX_POST_IMAGES } from '../post-images.utils';
+
+/** Choix des images d'un post (1 à 10) et envoi de chacune, avec un état par image. */
+export const usePostImages = (): PostImages => {
+  const { mutateAsync: uploadFile } = useFileUpload(EntityType.ENTITY_TYPE_POST);
+  const [images, setImages] = useState<PostImage[]>([]);
+  const nextId = useRef(0);
+
+  const patchImage = useCallback((id: string, patch: Partial<PostImage>): void => {
+    setImages((current) =>
+      current.map((image) => (image.id === id ? { ...image, ...patch } : image)),
+    );
+  }, []);
+
+  const startUpload = useCallback(
+    async (id: string, source: PickedImage): Promise<void> => {
+      patchImage(id, { status: 'uploading', fileId: undefined });
+      try {
+        const result = await uploadFile(source);
+        patchImage(id, { status: toPostImageStatus(result.state), fileId: result.fileId });
+      } catch {
+        patchImage(id, { status: 'failed', fileId: undefined });
+      }
+    },
+    [patchImage, uploadFile],
+  );
+
+  const remainingSlots = MAX_POST_IMAGES - images.length;
+
+  const addImages = useCallback(async (): Promise<void> => {
+    const picked = await pickGalleryImages({ limit: remainingSlots });
+    const added = picked.slice(0, remainingSlots).map((source): PostImage => {
+      nextId.current += 1;
+      return {
+        id: `post-image-${String(nextId.current)}`,
+        source,
+        status: 'uploading',
+        fileId: undefined,
+      };
+    });
+    setImages((current) => [...current, ...added]);
+    await Promise.all(added.map((image) => startUpload(image.id, image.source)));
+  }, [remainingSlots, startUpload]);
+
+  const retryImage = useCallback(
+    (id: string): void => {
+      const image = images.find((candidate) => candidate.id === id);
+      if (image !== undefined && isBlocking(image)) {
+        void startUpload(id, image.source);
+      }
+    },
+    [images, startUpload],
+  );
+
+  const removeImage = useCallback((id: string): void => {
+    setImages((current) => current.filter((image) => image.id !== id));
+  }, []);
+
+  return {
+    images,
+    remainingSlots,
+    isUploading: images.some(({ status }) => status === 'uploading'),
+    hasBlockingImage: images.some(isBlocking),
+    fileIds: selectFileIds(images),
+    addImages,
+    retryImage,
+    removeImage,
+  };
+};

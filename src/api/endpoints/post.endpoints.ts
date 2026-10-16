@@ -6,7 +6,6 @@ import type {
   ListPostsRequest,
   PostWebResponse,
   ListPostsWebResponse,
-  CreatePostWebResponse,
   ActionSuccessWebResponse,
   CreateCommentRequest,
   CommentWebResponse,
@@ -20,7 +19,7 @@ export const POST_ENDPOINTS = {
     method: 'POST',
     requiresAuth: true,
     roles: [UserRoles.ORGANIZATION, UserRoles.VOLUNTEER, UserRoles.ADMIN],
-  } as EndpointDefinition<CreatePostRequest, CreatePostWebResponse>,
+  } as EndpointDefinition<CreatePostRequest, PostWebResponse>,
   UPDATE_POST: {
     path: '/posts/:id',
     method: 'PATCH',
