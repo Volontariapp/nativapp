@@ -13,6 +13,7 @@ export interface AppDateTimePickerProps {
   mode?: 'date' | 'time' | 'datetime';
   inputStyle?: ViewStyle | ViewStyle[];
   hideIcon?: boolean;
+  minimumDate?: Date;
 }
 
 export const AppDateTimePicker = React.memo(function AppDateTimePicker({
@@ -22,6 +23,7 @@ export const AppDateTimePicker = React.memo(function AppDateTimePicker({
   mode = 'datetime',
   inputStyle,
   hideIcon = false,
+  minimumDate,
 }: AppDateTimePickerProps): React.JSX.Element {
   const [showPicker, setShowPicker] = useState(false);
   const [pickerMode, setPickerMode] = useState<'date' | 'time' | 'datetime'>(
@@ -136,6 +138,7 @@ export const AppDateTimePicker = React.memo(function AppDateTimePicker({
             type={webInputType}
             value={webInputValue}
             onChange={handleWebChange}
+            min={minimumDate ? minimumDate.toISOString().slice(0, 16) : undefined}
             style={{ position: 'absolute', opacity: 0, width: '100%', height: '100%' }}
             onBlur={closePicker}
           />
@@ -163,6 +166,7 @@ export const AppDateTimePicker = React.memo(function AppDateTimePicker({
                 themeVariant="light"
                 textColor={theme.colors.black}
                 style={styles.iosPicker}
+                minimumDate={minimumDate}
                 onChange={handleChange}
               />
             </View>
@@ -175,6 +179,7 @@ export const AppDateTimePicker = React.memo(function AppDateTimePicker({
             mode={pickerMode}
             locale="fr-FR"
             display="default"
+            minimumDate={minimumDate}
             onChange={handleChange}
           />
         )

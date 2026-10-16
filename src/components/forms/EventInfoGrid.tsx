@@ -13,6 +13,12 @@ interface EventInfoGridProps {
 }
 
 export function EventInfoGrid({ control, errors }: EventInfoGridProps): React.JSX.Element {
+  const today = React.useMemo(() => {
+    const d = new Date();
+    d.setHours(0, 0, 0, 0);
+    return d;
+  }, []);
+
   return (
     <View style={styles.infoGrid}>
       <View style={styles.infoRow}>
@@ -31,6 +37,7 @@ export function EventInfoGrid({ control, errors }: EventInfoGridProps): React.JS
                   value={value}
                   onChange={onChange}
                   mode="datetime"
+                  minimumDate={today}
                   inputStyle={styles.cleanInputWrapper}
                   hideIcon
                 />
@@ -56,6 +63,7 @@ export function EventInfoGrid({ control, errors }: EventInfoGridProps): React.JS
                   value={value}
                   onChange={onChange}
                   mode="datetime"
+                  minimumDate={today}
                   inputStyle={styles.cleanInputWrapper}
                   hideIcon
                 />

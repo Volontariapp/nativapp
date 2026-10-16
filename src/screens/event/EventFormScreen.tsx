@@ -26,11 +26,6 @@ import { useDebug } from '@/context/DebugContext';
 
 const EVENT_TYPE_OPTIONS: AppChipOption<EventType>[] = [
   {
-    value: EventType.EVENT_TYPE_UNSPECIFIED,
-    label: mapEventType(EventType.EVENT_TYPE_UNSPECIFIED),
-    color: '#9CA3AF', // grey
-  },
-  {
     value: EventType.EVENT_TYPE_ECOLOGY,
     label: mapEventType(EventType.EVENT_TYPE_ECOLOGY),
     color: '#22C55E', // primaryEco
@@ -72,7 +67,7 @@ export function EventFormScreen(): React.JSX.Element {
       title: 'Nettoyage de la plage',
       description: 'Rejoignez-nous pour nettoyer la plage et protéger notre environnement !',
       localisationName: 'Plage du Prado, Marseille',
-      type: EventType.EVENT_TYPE_UNSPECIFIED,
+      type: undefined as unknown as EventType,
       awardedImpactScore: 100,
       maxParticipants: 50,
       startAt: defaultDates.startAt,
