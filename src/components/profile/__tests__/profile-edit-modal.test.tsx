@@ -1,6 +1,6 @@
 import React from 'react';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
-import { fireEvent, render, waitFor } from '@testing-library/react-native';
+import { fireEvent, render, waitFor, within } from '@testing-library/react-native';
 import type { MediaLibraryPermissionResponse } from 'expo-image-picker';
 // Les mocks doivent etre charges avant le composant, qui importe les modules mockes ci-dessous
 import * as mockContracts from '@/api/storage/__tests__/contracts.mock';
@@ -64,7 +64,9 @@ describe('ProfileEditModal avatar upload', () => {
       await pickPhoto(screen);
 
       expect(await screen.findByText('Envoi de la photo...')).toBeTruthy();
-      expect(screen.getByTestId('avatar-upload-spinner')).toBeTruthy();
+      expect(
+        within(screen.getByTestId('choose-avatar-button')).getByTestId('app-button-spinner'),
+      ).toBeTruthy();
       fireEvent.press(screen.getByText('Enregistrer'));
       await waitFor(() => {
         expect(screen.onSubmit).not.toHaveBeenCalled();
@@ -72,11 +74,11 @@ describe('ProfileEditModal avatar upload', () => {
     });
   });
 
-  describe('the upload spinner', () => {
+  describe('the spinner of the photo button', () => {
     it('is not shown before a photo is chosen', () => {
       const screen = renderModal();
 
-      expect(screen.queryByTestId('avatar-upload-spinner')).toBeNull();
+      expect(screen.queryByTestId('app-button-spinner')).toBeNull();
     });
 
     it('goes away once the photo is uploaded', async () => {
@@ -86,7 +88,7 @@ describe('ProfileEditModal avatar upload', () => {
       await pickPhoto(screen);
       await screen.findByTestId('avatar-preview');
 
-      expect(screen.queryByTestId('avatar-upload-spinner')).toBeNull();
+      expect(screen.queryByTestId('app-button-spinner')).toBeNull();
     });
 
     it('goes away when the upload fails', async () => {
@@ -96,7 +98,7 @@ describe('ProfileEditModal avatar upload', () => {
       await pickPhoto(screen);
       await screen.findByText("L'envoi de la photo a échoué. Réessaie.");
 
-      expect(screen.queryByTestId('avatar-upload-spinner')).toBeNull();
+      expect(screen.queryByTestId('app-button-spinner')).toBeNull();
     });
   });
 

@@ -1,5 +1,13 @@
 import type { ReactNode } from 'react';
-import { Text, Pressable, StyleSheet, View, type ViewStyle, type TextStyle } from 'react-native';
+import {
+  Text,
+  Pressable,
+  StyleSheet,
+  View,
+  ActivityIndicator,
+  type ViewStyle,
+  type TextStyle,
+} from 'react-native';
 import { BUTTON_VARIANTS } from '@/shared/themes/buttonVariants';
 import { useAppTheme, useStyles } from '@/context/ThemeContext';
 import type { AppTheme } from '@/shared/themes/theme';
@@ -13,6 +21,9 @@ interface AppButtonProps {
   iconLibrary?: IconLibrary;
   onPress?: () => void;
   disabled?: boolean;
+  /** Remplace l'icône par un spinner et ignore les appuis (action en cours déclenchée par ce bouton). */
+  loading?: boolean;
+  testID?: string;
   style?: ViewStyle;
   textStyle?: TextStyle;
   size?: 'default' | 'small';
@@ -25,6 +36,8 @@ export const AppButton = ({
   iconLibrary = 'Feather',
   onPress,
   disabled = false,
+  loading = false,
+  testID,
   style,
   textStyle,
   size = 'default',
@@ -33,11 +46,14 @@ export const AppButton = ({
   const styles = useStyles(createStyles);
   const stylesVariant = BUTTON_VARIANTS[variant];
   const isSmall = size === 'small';
+  const isDisabled = disabled || loading;
 
   return (
     <Pressable
+      testID={testID}
       onPress={onPress}
-      disabled={disabled}
+      disabled={isDisabled}
+      accessibilityState={loading ? { busy: true, disabled: true } : undefined}
       style={({ pressed }) => [
         styles.button,
         isSmall && styles.buttonSmall,
@@ -45,19 +61,27 @@ export const AppButton = ({
           backgroundColor: stylesVariant.backgroundColor,
           borderColor: stylesVariant.borderColor,
           borderWidth: 1,
-          opacity: disabled ? 0.6 : pressed ? 0.8 : 1,
+          opacity: isDisabled ? 0.6 : pressed ? 0.8 : 1,
         },
         style,
       ]}
     >
       <View style={styles.content}>
-        {icon != null && (
-          <AppIcons
-            icon={icon}
-            iconLibrary={iconLibrary}
-            size={isSmall ? 16 : 20}
+        {loading ? (
+          <ActivityIndicator
+            testID="app-button-spinner"
+            size="small"
             color={stylesVariant.textColor}
           />
+        ) : (
+          icon != null && (
+            <AppIcons
+              icon={icon}
+              iconLibrary={iconLibrary}
+              size={isSmall ? 16 : 20}
+              color={stylesVariant.textColor}
+            />
+          )
         )}
         <Text
           style={[
