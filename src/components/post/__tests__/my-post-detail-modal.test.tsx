@@ -41,10 +41,10 @@ describe('MyPostDetailModal', () => {
       <MyPostDetailModal visible post={null} onClose={mockOnClose} onDelete={mockOnDelete} />,
     );
 
-    expect(queryByLabelText('Fermer')).toBeNull();
+    expect(queryByLabelText('Fermer la vue')).toBeNull();
   });
 
-  it('closes on demand', () => {
+  it('closes with the cross at the top', () => {
     const { getByLabelText } = render(
       <MyPostDetailModal
         visible
@@ -54,7 +54,22 @@ describe('MyPostDetailModal', () => {
       />,
     );
 
-    fireEvent.press(getByLabelText('Fermer'));
+    fireEvent.press(getByLabelText('Fermer la vue'));
+
+    expect(mockOnClose).toHaveBeenCalledTimes(1);
+  });
+
+  it('also closes with the button at the bottom, always reachable', () => {
+    const { getByText } = render(
+      <MyPostDetailModal
+        visible
+        post={createPostWeb()}
+        onClose={mockOnClose}
+        onDelete={mockOnDelete}
+      />,
+    );
+
+    fireEvent.press(getByText('Fermer'));
 
     expect(mockOnClose).toHaveBeenCalledTimes(1);
   });

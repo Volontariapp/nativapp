@@ -1,6 +1,6 @@
 import React from 'react';
 import { Alert, Modal, Pressable, ScrollView, StyleSheet, View } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
+import { SafeAreaProvider, SafeAreaView } from 'react-native-safe-area-context';
 import Feather from 'react-native-vector-icons/Feather';
 import type { PostWeb } from '@volontariapp/contracts';
 import { AppButton } from '@/components/buttons/AppButton';
@@ -43,20 +43,32 @@ export function MyPostDetailModal({
   };
 
   return (
-    <Modal visible={visible} animationType="slide" onRequestClose={onClose}>
-      <SafeAreaView style={styles.container}>
-        <View style={styles.header}>
-          <Pressable accessibilityLabel="Fermer" onPress={onClose} style={styles.closeButton}>
-            <Feather name="x" size={24} color={theme.colors.text} />
-          </Pressable>
-        </View>
-        <ScrollView showsVerticalScrollIndicator={false}>
-          <AppPost post={post} />
-          <View style={styles.actions}>
-            <AppButton text="Supprimer" variant="danger" onPress={confirmDelete} />
+    <Modal
+      visible={visible}
+      animationType="slide"
+      presentationStyle="pageSheet"
+      onRequestClose={onClose}
+    >
+      <SafeAreaProvider>
+        <SafeAreaView style={styles.container}>
+          <View style={styles.header}>
+            <Pressable
+              accessibilityLabel="Fermer la vue"
+              onPress={onClose}
+              style={styles.closeButton}
+            >
+              <Feather name="x" size={24} color={theme.colors.text} />
+            </Pressable>
           </View>
-        </ScrollView>
-      </SafeAreaView>
+          <ScrollView showsVerticalScrollIndicator={false}>
+            <AppPost post={post} />
+            <View style={styles.actions}>
+              <AppButton text="Supprimer" variant="danger" onPress={confirmDelete} />
+              <AppButton text="Fermer" variant="secondary" onPress={onClose} />
+            </View>
+          </ScrollView>
+        </SafeAreaView>
+      </SafeAreaProvider>
     </Modal>
   );
 }
@@ -78,5 +90,6 @@ const createStyles = (theme: AppTheme) =>
     },
     actions: {
       padding: theme.spacing.lg,
+      gap: theme.spacing.md,
     },
   });
