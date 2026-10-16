@@ -4,7 +4,9 @@ import {
   AVATAR_FILE_ID,
   AVATAR_URL,
   createGetUserResponse,
+  createListUsersResponse,
   createPublicUserResponse,
+  createUserWeb,
 } from './user.factory';
 
 jest.mock('../../client', () => ({ apiFetch: jest.fn() }));
@@ -45,6 +47,40 @@ describe('userApi avatar exposure', () => {
       const profile = await userApi.getPublicUser('someone');
 
       expect(profile.avatarUrl).toBe(AVATAR_URL);
+    });
+  });
+
+  describe('getEventParticipants', () => {
+    it('lists the first participants of the event with their avatar URL', async () => {
+      apiFetchMock.mockResolvedValue(
+        createListUsersResponse([
+          createUserWeb({ id: 'p1', avatarUrl: AVATAR_URL }),
+          createUserWeb({ id: 'p2' }),
+        ]),
+      );
+
+      const participants = await userApi.getEventParticipants('event-1', { page: 1, limit: 5 });
+
+      expect(apiFetchMock).toHaveBeenCalledWith(
+        '/users/event/event-1/participants?pagination%5Bpage%5D=1&pagination%5Blimit%5D=5',
+        {
+          method: 'GET',
+          requiresAuth: true,
+        },
+      );
+      expect(participants.map((p) => p.avatarUrl)).toEqual([AVATAR_URL, undefined]);
+    });
+  });
+
+  describe('getPostLikers', () => {
+    it('keeps the avatar URL of every liker', async () => {
+      apiFetchMock.mockResolvedValue(
+        createListUsersResponse([createUserWeb({ id: 'p1', avatarUrl: AVATAR_URL })]),
+      );
+
+      const { users } = await userApi.getPostLikers('post-1');
+
+      expect(users[0]?.avatarUrl).toBe(AVATAR_URL);
     });
   });
 });

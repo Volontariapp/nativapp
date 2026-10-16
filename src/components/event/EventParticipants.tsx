@@ -1,11 +1,15 @@
 import React, { useMemo } from 'react';
 import { View, StyleSheet, Pressable } from 'react-native';
-import { Image } from 'expo-image';
 import type { DimensionValue } from 'react-native';
 import { AppText } from '@/components/typography/AppText';
-import { useStyles } from '@/context/ThemeContext';
+import { UserAvatar } from '@/components/media/UserAvatar';
+import { useAppTheme, useStyles } from '@/context/ThemeContext';
+import { useEventParticipants } from '@/api/user/hooks/use-event-participants';
+import { resolveAvatarUrl } from '@/api/user/resolve-avatar-url';
 import type { AppTheme } from '@/shared/themes/theme';
 import type { AppEvent } from '@/api/event/event.api';
+
+const MAX_DISPLAYED_AVATARS = 5;
 
 interface EventParticipantsProps {
   event: AppEvent;
@@ -16,7 +20,9 @@ export const EventParticipants = React.memo(function EventParticipants({
   event,
   onSeeMorePress,
 }: EventParticipantsProps): React.JSX.Element {
+  const { theme } = useAppTheme();
   const styles = useStyles(createStyles);
+  const { data: participants } = useEventParticipants(event.id);
   const { currentPart, maxPart, fillPercentage } = useMemo(() => {
     const current = Math.max(1, event.currentParticipants);
     const max = event.maxParticipants;
@@ -29,17 +35,9 @@ export const EventParticipants = React.memo(function EventParticipants({
     };
   }, [event.currentParticipants, event.maxParticipants]);
 
-  const { avatars, remaining } = useMemo(() => {
-    const displayCount = Math.min(currentPart, 5);
-    const generatedAvatars = Array.from({ length: displayCount }).map((_, i) => {
-      const url = `https://i.pravatar.cc/150?u=${event.id}-${i.toString()}`;
-      return url;
-    });
-    return {
-      avatars: generatedAvatars,
-      remaining: currentPart - displayCount,
-    };
-  }, [currentPart, event.id]);
+  const displayCount = Math.min(currentPart, MAX_DISPLAYED_AVATARS);
+  const remaining = currentPart - displayCount;
+  const slots = Array.from({ length: displayCount }, (_, i) => participants?.[i]);
 
   return (
     <View style={styles.section}>
@@ -59,14 +57,12 @@ export const EventParticipants = React.memo(function EventParticipants({
 
       <View style={styles.contentRow}>
         <View style={styles.avatarsContainer}>
-          {avatars.map((url, i) => (
-            <Image
-              key={`${url}-${i.toString()}`}
-              source={{ uri: url }}
-              style={[styles.avatar, i > 0 && styles.avatarOverlap, { zIndex: 10 - i }]}
-              contentFit="cover"
-              cachePolicy="memory-disk"
-              accessibilityIgnoresInvertColors
+          {slots.map((participant, i) => (
+            <UserAvatar
+              key={participant?.id ?? `empty-${i.toString()}`}
+              uri={resolveAvatarUrl(participant)}
+              size={theme.components.avatar.md}
+              style={[styles.avatarBorder, i > 0 && styles.avatarOverlap, { zIndex: 10 - i }]}
             />
           ))}
           {remaining > 0 && (
@@ -138,13 +134,9 @@ const createStyles = (theme: AppTheme) =>
       alignItems: 'center',
       // Suppression complète des bidouilles en position absolute et width magique
     },
-    avatar: {
-      width: theme.components.avatar.md,
-      height: theme.components.avatar.md,
-      borderRadius: theme.radius.full,
+    avatarBorder: {
       borderWidth: 2,
       borderColor: theme.colors.white,
-      backgroundColor: theme.colors.skeletonGrey, // skeleton en attente du load expo-image
     },
     avatarOverlap: {
       marginLeft: -theme.spacing.md, // Token flexbox propre au lieu du calcul left: i * 20

@@ -5,5 +5,8 @@ interface AvatarSource {
 }
 
 /** URL de l'avatar à afficher : la nouvelle (avatarUrl), sinon l'ancienne (logoPath). */
-export const resolveAvatarUrl = ({ avatarUrl, logoPath }: AvatarSource): string | undefined =>
-  avatarUrl !== undefined && avatarUrl !== '' ? avatarUrl : logoPath;
+export const resolveAvatarUrl = (source?: AvatarSource | null): string | undefined => {
+  if (source === undefined || source === null) return undefined;
+  const { avatarUrl, logoPath } = source;
+  return avatarUrl !== undefined && avatarUrl !== '' ? avatarUrl : logoPath;
+};

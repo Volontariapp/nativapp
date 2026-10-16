@@ -21,4 +21,9 @@ describe('resolveAvatarUrl', () => {
   it('returns undefined when the user has no image at all', () => {
     expect(resolveAvatarUrl({})).toBeUndefined();
   });
+
+  it('returns undefined when there is no user yet', () => {
+    expect(resolveAvatarUrl(undefined)).toBeUndefined();
+    expect(resolveAvatarUrl(null)).toBeUndefined();
+  });
 });

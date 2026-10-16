@@ -8,6 +8,7 @@ import type { PostWeb } from '@volontariapp/contracts';
 import { useGetPublicUser } from '@/api/user/hooks/use-get-public-user';
 import { useListComments } from '@/api/post/hooks/use-list-comments';
 import { PostAuthorHeader } from './PostAuthorHeader';
+import { resolveAvatarUrl } from '@/api/user/resolve-avatar-url';
 import { PostImagePlaceholder } from './PostImagePlaceholder';
 import { PostActions } from './PostActions';
 import { PostCommentsModal } from './PostCommentsModal';
@@ -116,6 +117,7 @@ export default function AppPost({ post }: PostCardProps) {
       <PostAuthorHeader
         pseudo={author?.pseudo}
         authorId={post.authorId}
+        avatarUrl={resolveAvatarUrl(author)}
         onPress={() => {
           navigation.navigate('PublicProfile', { userId: post.authorId });
         }}
