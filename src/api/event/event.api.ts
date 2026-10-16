@@ -1,6 +1,7 @@
 import { apiFetch } from '../client';
-import { EVENT_ENDPOINTS } from '../endpoints';
+import { EVENT_ENDPOINTS, USER_ENDPOINTS } from '../endpoints';
 import { generateIdempotencyKey } from '@/shared/lib/idempotency.utils';
+import { normalizeEventState, normalizeEventType } from '@/shared/lib/event-mappers.utils';
 import type { WithOptionalIdempotencyKey } from '../idempotency.types';
 import type {
   CreateEventRequest,
@@ -10,11 +11,18 @@ import type {
   SearchEventsResponse,
   AddRequirementRequest,
   EventDTO,
+  Event,
   Tag,
   Requirement,
   ManageRequirementsResponse,
   SearchEventsRequest,
+  GetEventResponse,
+  UpdateEventRequest,
+  ListUsersWebResponse,
+  UserWeb,
 } from '@volontariapp/contracts';
+
+export type EventParticipant = UserWeb;
 
 export interface AppEvent {
   id: string;
@@ -51,19 +59,24 @@ const formatTimestamp = (ts: GrpcTimestamp | string | Date | undefined | null): 
     const seconds = Number(ts.seconds);
     return new Date(seconds * 1000).toISOString();
   }
-  return new Date(ts).toISOString();
+  return new Date().toISOString();
 };
 
-export const convertEventDtoToAppEvent = (event: EventDTO): AppEvent => {
+export const convertEventDtoToAppEvent = (
+  event: EventDTO | Event,
+): AppEvent => {
+  const rawStart = event.startAt as unknown as (GrpcTimestamp | string | Date | undefined | null);
+  const rawEnd = event.endAt as unknown as (GrpcTimestamp | string | Date | undefined | null);
+
   return {
     id: event.id,
     title: event.title,
     description: event.description,
-    startAt: formatTimestamp(event.startAt),
-    endAt: formatTimestamp(event.endAt),
+    startAt: formatTimestamp(rawStart),
+    endAt: formatTimestamp(rawEnd),
     localisationName: event.localisationName,
-    type: event.type,
-    state: event.state,
+    type: normalizeEventType(event.type),
+    state: normalizeEventState(event.state),
     awardedImpactScore: event.awardedImpactScore,
     maxParticipants: event.maxParticipants,
     currentParticipants: event.currentParticipants,
@@ -105,25 +118,7 @@ export const eventApi = {
         return null;
       }
 
-      return {
-        id: response.event.id,
-        title: response.event.title,
-        description: response.event.description,
-        startAt: formatTimestamp(response.event.startAt),
-        endAt: formatTimestamp(response.event.endAt),
-        localisationName: response.event.localisationName,
-        type: response.event.type,
-        state: response.event.state,
-        awardedImpactScore: response.event.awardedImpactScore,
-        maxParticipants: response.event.maxParticipants,
-        currentParticipants: response.event.currentParticipants,
-        location: response.event.location
-          ? {
-              latitude: response.event.location.latitude,
-              longitude: response.event.location.longitude,
-            }
-          : undefined,
-      };
+      return convertEventDtoToAppEvent(response.event);
     } catch (error) {
       console.error('[eventApi.createEvent] Error details:', error);
       throw error;
@@ -161,25 +156,7 @@ export const eventApi = {
     });
 
     return {
-      events: response.events.map((ev) => ({
-        id: ev.id,
-        title: ev.title,
-        description: ev.description,
-        startAt: formatTimestamp(ev.startAt),
-        endAt: formatTimestamp(ev.endAt),
-        localisationName: ev.localisationName,
-        type: ev.type,
-        state: ev.state,
-        awardedImpactScore: ev.awardedImpactScore,
-        maxParticipants: ev.maxParticipants,
-        currentParticipants: ev.currentParticipants,
-        location: ev.location
-          ? {
-              latitude: ev.location.latitude,
-              longitude: ev.location.longitude,
-            }
-          : undefined,
-      })),
+      events: response.events.map(convertEventDtoToAppEvent),
       totalCount: response.totalCount,
     };
   },
@@ -203,25 +180,7 @@ export const eventApi = {
     });
 
     return {
-      events: response.events.map((ev) => ({
-        id: ev.id,
-        title: ev.title,
-        description: ev.description,
-        startAt: formatTimestamp(ev.startAt),
-        endAt: formatTimestamp(ev.endAt),
-        localisationName: ev.localisationName,
-        type: ev.type,
-        state: ev.state,
-        awardedImpactScore: ev.awardedImpactScore,
-        maxParticipants: ev.maxParticipants,
-        currentParticipants: ev.currentParticipants,
-        location: ev.location
-          ? {
-              latitude: ev.location.latitude,
-              longitude: ev.location.longitude,
-            }
-          : undefined,
-      })),
+      events: response.events.map(convertEventDtoToAppEvent),
       totalCount: response.totalCount,
     };
   },
@@ -245,25 +204,7 @@ export const eventApi = {
     });
 
     return {
-      events: response.events.map((ev) => ({
-        id: ev.id,
-        title: ev.title,
-        description: ev.description,
-        startAt: formatTimestamp(ev.startAt),
-        endAt: formatTimestamp(ev.endAt),
-        localisationName: ev.localisationName,
-        type: ev.type,
-        state: ev.state,
-        awardedImpactScore: ev.awardedImpactScore,
-        maxParticipants: ev.maxParticipants,
-        currentParticipants: ev.currentParticipants,
-        location: ev.location
-          ? {
-              latitude: ev.location.latitude,
-              longitude: ev.location.longitude,
-            }
-          : undefined,
-      })),
+      events: response.events.map(convertEventDtoToAppEvent),
       totalCount: response.totalCount,
     };
   },
@@ -280,26 +221,105 @@ export const eventApi = {
     });
 
     return {
-      events: response.events.map((ev) => ({
-        id: ev.id,
-        title: ev.title,
-        description: ev.description,
-        startAt: formatTimestamp(ev.startAt),
-        endAt: formatTimestamp(ev.endAt),
-        localisationName: ev.localisationName,
-        type: ev.type,
-        state: ev.state,
-        awardedImpactScore: ev.awardedImpactScore,
-        maxParticipants: ev.maxParticipants,
-        currentParticipants: ev.currentParticipants,
-        location: ev.location
-          ? {
-              latitude: ev.location.latitude,
-              longitude: ev.location.longitude,
-            }
-          : undefined,
-      })),
+      events: response.events.map(convertEventDtoToAppEvent),
       totalCount: response.totalCount,
     };
   },
+
+  async getEvent(id: string): Promise<AppEvent | null> {
+    try {
+      const path = EVENT_ENDPOINTS.GET_EVENT.path.replace(':id', id);
+      const response = await apiFetch<GetEventResponse>(path, {
+        method: EVENT_ENDPOINTS.GET_EVENT.method,
+        requiresAuth: EVENT_ENDPOINTS.GET_EVENT.requiresAuth,
+      });
+
+      if (!response.event) return null;
+      return convertEventDtoToAppEvent(response.event);
+    } catch (error) {
+      console.error(
+        `[eventApi.getEvent] Error fetching event ${id}:`,
+        error instanceof Error ? error.message : String(error),
+      );
+      throw error;
+    }
+  },
+
+  async updateEvent(
+    id: string,
+    payload: Partial<UpdateEventRequest>,
+  ): Promise<AppEvent | null> {
+    try {
+      const path = EVENT_ENDPOINTS.UPDATE_EVENT.path.replace(':id', id);
+      const response = await apiFetch<GetEventResponse, Partial<UpdateEventRequest>>(path, {
+        method: EVENT_ENDPOINTS.UPDATE_EVENT.method,
+        requiresAuth: EVENT_ENDPOINTS.UPDATE_EVENT.requiresAuth,
+        body: payload,
+      });
+
+      if (!response.event) return null;
+      return convertEventDtoToAppEvent(response.event);
+    } catch (error) {
+      console.error(
+        `[eventApi.updateEvent] Error updating event ${id}:`,
+        error instanceof Error ? error.message : String(error),
+      );
+      throw error;
+    }
+  },
+
+  async changeEventState(id: string, newState: EventState): Promise<AppEvent | null> {
+    try {
+      const path = EVENT_ENDPOINTS.CHANGE_EVENT_STATE.path.replace(':id', id);
+      const response = await apiFetch<GetEventResponse, { newState: EventState }>(path, {
+        method: EVENT_ENDPOINTS.CHANGE_EVENT_STATE.method,
+        requiresAuth: EVENT_ENDPOINTS.CHANGE_EVENT_STATE.requiresAuth,
+        body: { newState },
+      });
+
+      if (!response.event) return null;
+      return convertEventDtoToAppEvent(response.event);
+    } catch (error) {
+      console.error(
+        `[eventApi.changeEventState] Error changing state for event ${id}:`,
+        error instanceof Error ? error.message : String(error),
+      );
+      throw error;
+    }
+  },
+
+  async getEventParticipants(
+    eventId: string,
+    params?: { page?: number; limit?: number },
+  ): Promise<{ participants: UserWeb[]; totalCount: number }> {
+    try {
+      const query = new URLSearchParams();
+      if (params?.page !== undefined) query.append('page', params.page.toString());
+      if (params?.limit !== undefined) query.append('limit', params.limit.toString());
+
+      const queryString = query.toString();
+      const rawPath = USER_ENDPOINTS.GET_EVENT_PARTICIPANTS.path.replace(':eventId', eventId);
+      const path = queryString ? `${rawPath}?${queryString}` : rawPath;
+
+      const response = await apiFetch<ListUsersWebResponse>(path, {
+        method: USER_ENDPOINTS.GET_EVENT_PARTICIPANTS.method,
+        requiresAuth: USER_ENDPOINTS.GET_EVENT_PARTICIPANTS.requiresAuth,
+      });
+
+      return {
+        participants: response.users,
+        totalCount: response.pagination?.total ?? response.users.length,
+      };
+    } catch (error) {
+      console.error(
+        `[eventApi.getEventParticipants] Error fetching participants for event ${eventId}:`,
+        error instanceof Error ? error.message : String(error),
+      );
+      return {
+        participants: [],
+        totalCount: 0,
+      };
+    }
+  },
 };
+

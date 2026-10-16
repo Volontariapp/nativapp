@@ -14,6 +14,7 @@ interface ProfileLayoutProps {
   badges?: (BadgeWeb | string)[];
   eventsTabs?: {
     participated?: PaginatedEventListData;
+    finished?: PaginatedEventListData;
     created?: PaginatedEventListData;
     wished?: PaginatedEventListData;
   };
@@ -57,6 +58,7 @@ export const ProfileLayout = ({
       {eventsTabs && (
         <ProfileEventsTabs
           participated={eventsTabs.participated}
+          finished={eventsTabs.finished}
           created={eventsTabs.created}
           wished={eventsTabs.wished}
         />

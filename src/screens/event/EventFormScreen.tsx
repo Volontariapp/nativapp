@@ -26,11 +26,6 @@ import { useDebug } from '@/context/DebugContext';
 
 const EVENT_TYPE_OPTIONS: AppChipOption<EventType>[] = [
   {
-    value: EventType.EVENT_TYPE_UNSPECIFIED,
-    label: mapEventType(EventType.EVENT_TYPE_UNSPECIFIED),
-    color: '#9CA3AF', // grey
-  },
-  {
     value: EventType.EVENT_TYPE_ECOLOGY,
     label: mapEventType(EventType.EVENT_TYPE_ECOLOGY),
     color: '#22C55E', // primaryEco
@@ -42,6 +37,14 @@ const EVENT_TYPE_OPTIONS: AppChipOption<EventType>[] = [
   },
 ];
 
+function getDefaultEventDates(): { startAt: Date; endAt: Date } {
+  const startAt = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000);
+  startAt.setHours(10, 0, 0, 0);
+  const endAt = new Date(startAt);
+  endAt.setHours(18, 0, 0, 0);
+  return { startAt, endAt };
+}
+
 export function EventFormScreen(): React.JSX.Element {
   const { theme } = useAppTheme();
   const styles = useStyles(createStyles);
@@ -51,6 +54,8 @@ export function EventFormScreen(): React.JSX.Element {
   const navigation = useNavigation();
   const { isDebugMode } = useDebug();
   const [isBatching, setIsBatching] = React.useState(false);
+
+  const defaultDates = React.useMemo(() => getDefaultEventDates(), []);
 
   const {
     control,
@@ -62,11 +67,11 @@ export function EventFormScreen(): React.JSX.Element {
       title: 'Nettoyage de la plage',
       description: 'Rejoignez-nous pour nettoyer la plage et protéger notre environnement !',
       localisationName: 'Plage du Prado, Marseille',
-      type: EventType.EVENT_TYPE_UNSPECIFIED,
+      type: undefined as unknown as EventType,
       awardedImpactScore: 100,
       maxParticipants: 50,
-      startAt: new Date('2026-06-01T10:00:00Z'),
-      endAt: new Date('2026-06-01T18:00:00Z'),
+      startAt: defaultDates.startAt,
+      endAt: defaultDates.endAt,
       requirements: [],
     },
   });

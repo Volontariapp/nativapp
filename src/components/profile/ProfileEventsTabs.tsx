@@ -16,18 +16,19 @@ export interface PaginatedEventListData {
 
 interface ProfileEventsTabsProps {
   participated?: PaginatedEventListData;
+  finished?: PaginatedEventListData;
   created?: PaginatedEventListData;
   wished?: PaginatedEventListData;
 }
 
-export function ProfileEventsTabs({ participated, created, wished }: ProfileEventsTabsProps) {
+export function ProfileEventsTabs({ participated, finished, created, wished }: ProfileEventsTabsProps) {
   const { theme } = useAppTheme();
   const styles = useStyles(createStyles);
 
-  const defaultTab = participated ? 'participated' : created ? 'created' : 'wished';
-  const [activeTab, setActiveTab] = useState<'participated' | 'created' | 'wished'>(defaultTab);
+  const defaultTab = participated ? 'participated' : finished ? 'finished' : created ? 'created' : 'wished';
+  const [activeTab, setActiveTab] = useState<'participated' | 'finished' | 'created' | 'wished'>(defaultTab);
 
-  const availableTabsCount = [participated, created, wished].filter(Boolean).length;
+  const availableTabsCount = [participated, finished, created, wished].filter(Boolean).length;
 
   return (
     <>
@@ -41,6 +42,17 @@ export function ProfileEventsTabs({ participated, created, wished }: ProfileEven
               iconColor={activeTab === 'participated' ? theme.colors.white : theme.colors.grey}
               onPress={() => {
                 setActiveTab('participated');
+              }}
+            />
+          )}
+          {finished && (
+            <AppIconsButton
+              icon="check-circle"
+              size={48}
+              variant={activeTab === 'finished' ? 'eco' : 'white'}
+              iconColor={activeTab === 'finished' ? theme.colors.white : theme.colors.grey}
+              onPress={() => {
+                setActiveTab('finished');
               }}
             />
           )}
@@ -94,6 +106,35 @@ export function ProfileEventsTabs({ participated, created, wished }: ProfileEven
             </View>
           ) : (
             <AppText style={styles.emptyText}>Aucun événement à venir pour le moment.</AppText>
+          )}
+        </ProfileSection>
+      )}
+
+      {activeTab === 'finished' && finished && (
+        <ProfileSection title="Événements terminés">
+          {finished.isLoading ? (
+            <ActivityIndicator color={theme.colors.primaryEco} />
+          ) : finished.events.length > 0 ? (
+            <View>
+              {finished.events.map((event) => (
+                <EventCard key={event.id} event={event} />
+              ))}
+              {finished.hasNextPage && (
+                <View style={styles.seeMoreContainer}>
+                  <AppButton
+                    variant="eco"
+                    size="small"
+                    text={finished.isFetchingNextPage ? 'Chargement...' : 'Voir plus'}
+                    onPress={() => {
+                      finished.fetchNextPage();
+                    }}
+                    disabled={finished.isFetchingNextPage}
+                  />
+                </View>
+              )}
+            </View>
+          ) : (
+            <AppText style={styles.emptyText}>Aucun événement terminé pour le moment.</AppText>
           )}
         </ProfileSection>
       )}

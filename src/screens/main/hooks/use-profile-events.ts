@@ -1,15 +1,26 @@
 import { useMemo } from 'react';
 import type { CalendarProps } from 'react-native-calendars';
+import { EventState } from '@volontariapp/contracts';
 import { useGetMyEvents } from '@/api/event/hooks/use-get-my-events';
 import { useGetParticipatedEvents } from '@/api/event/hooks/use-get-participated-events';
 import { useGetWishedEvents } from '@/api/event/hooks/use-get-wished-events';
 import type { AppTheme } from '@/shared/themes/theme';
 import type { AppEvent } from '@/api/event/event.api';
+import { normalizeEventState } from '@/shared/lib/event-mappers.utils';
+import { isEventDatePast } from '@/components/event/event-status.utils';
 
 type MarkedDates = NonNullable<CalendarProps['markedDates']>;
 
 interface ProfileEventsHookReturn {
   participated: {
+    events: AppEvent[];
+    isLoading: boolean;
+    hasNextPage: boolean;
+    fetchNextPage: () => void;
+    isFetchingNextPage: boolean;
+    totalCount: number;
+  };
+  finished: {
     events: AppEvent[];
     isLoading: boolean;
     hasNextPage: boolean;
@@ -73,6 +84,25 @@ export function useProfileEvents(theme: AppTheme): ProfileEventsHookReturn {
     [wishedEventsData],
   );
 
+  const upcomingParticipatedEvents = useMemo(() => {
+    return allParticipatedEvents.filter((event) => {
+      const state = normalizeEventState(event.state);
+      const isPast = isEventDatePast(event.endAt, event.startAt);
+      return (
+        state !== EventState.EVENT_STATE_FINISHED &&
+        state !== EventState.EVENT_STATE_CANCELLED &&
+        !isPast
+      );
+    });
+  }, [allParticipatedEvents]);
+
+  const finishedParticipatedEvents = useMemo(() => {
+    return allParticipatedEvents.filter((event) => {
+      const state = normalizeEventState(event.state);
+      return state === EventState.EVENT_STATE_FINISHED;
+    });
+  }, [allParticipatedEvents]);
+
   const markedDates = useMemo(() => {
     const dates: MarkedDates = {};
 
@@ -123,14 +153,24 @@ export function useProfileEvents(theme: AppTheme): ProfileEventsHookReturn {
 
   return {
     participated: {
-      events: allParticipatedEvents,
+      events: upcomingParticipatedEvents,
       isLoading: isParticipatedEventsLoading,
       hasNextPage: hasNextParticipatedEvents,
       fetchNextPage: () => {
         void fetchNextParticipatedEvents();
       },
       isFetchingNextPage: isFetchingNextParticipatedEvents,
-      totalCount: participatedEventsData?.pages[0]?.totalCount ?? 0,
+      totalCount: upcomingParticipatedEvents.length,
+    },
+    finished: {
+      events: finishedParticipatedEvents,
+      isLoading: isParticipatedEventsLoading,
+      hasNextPage: hasNextParticipatedEvents,
+      fetchNextPage: () => {
+        void fetchNextParticipatedEvents();
+      },
+      isFetchingNextPage: isFetchingNextParticipatedEvents,
+      totalCount: finishedParticipatedEvents.length,
     },
     created: {
       events: allMyEvents,
