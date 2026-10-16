@@ -27,6 +27,7 @@ import { mapEventType } from '@/shared/lib/event-mappers.utils';
 import { useUserSocialActions } from '@/api/social/hooks/use-user-social-actions';
 import { useUserParticipations } from '@/api/social/hooks/use-user-participations';
 import { useProfile } from '@/api/user/hooks/use-profile';
+import { useAuth } from '@/context/AuthContext';
 
 import { EventCover } from '../../components/event/EventCover';
 import { EventInfoCards } from '../../components/event/EventInfoCards';
@@ -54,6 +55,7 @@ export function EventDetailScreen({ route }: Props): React.JSX.Element {
     [event.state],
   );
 
+  const { userId } = useAuth();
   const { participate, isParticipating, unparticipate, isUnparticipating } = useUserSocialActions();
   const { data: participations } = useUserParticipations(100);
   const { data: profile } = useProfile();
@@ -76,13 +78,13 @@ export function EventDetailScreen({ route }: Props): React.JSX.Element {
     }
   }, [isJoined, profile, event.organizerId]);
 
-  const isOrganizer = useMemo(
-    () =>
-      profile?.id !== undefined &&
-      profile.id !== '' &&
-      (event.organizerId === profile.id || optimisticEvent.organizerId === profile.id),
-    [profile?.id, event.organizerId, optimisticEvent.organizerId],
-  );
+  const isOrganizer = useMemo(() => {
+    const currentId = userId ?? profile?.id;
+    if (currentId === undefined || currentId.length === 0) {
+      return false;
+    }
+    return event.organizerId === currentId || optimisticEvent.organizerId === currentId;
+  }, [userId, profile?.id, event.organizerId, optimisticEvent.organizerId]);
 
   const handleBack = useCallback(() => {
     navigation.goBack();
@@ -102,6 +104,9 @@ export function EventDetailScreen({ route }: Props): React.JSX.Element {
   }, [optimisticEvent.title]);
 
   const handleJoin = useCallback(() => {
+    if (isOrganizer) {
+      return;
+    }
     participate(event.id)
       .then(() => {
         setOptimisticEvent((prev) => ({
@@ -114,7 +119,7 @@ export function EventDetailScreen({ route }: Props): React.JSX.Element {
       .catch(() => {
         Alert.alert('Erreur', 'Impossible de rejoindre cet événement.');
       });
-  }, [participate, event.id, navigation]);
+  }, [participate, event.id, navigation, isOrganizer]);
 
   const handleUnjoin = useCallback(() => {
     unparticipate(event.id)
@@ -217,7 +222,7 @@ export function EventDetailScreen({ route }: Props): React.JSX.Element {
         </View>
       </ScrollView>
 
-      {isJoinable && !isJoined && (
+      {!isOrganizer && isJoinable && !isJoined && (
         <View style={styles.bottomBar}>
           <Pressable style={styles.joinButton} onPress={handleJoin} disabled={isParticipating}>
             {isParticipating ? (
@@ -237,7 +242,7 @@ export function EventDetailScreen({ route }: Props): React.JSX.Element {
         </View>
       )}
 
-      {isJoinable && isJoined && (
+      {!isOrganizer && isJoinable && isJoined && (
         <View style={styles.bottomBar}>
           <Pressable
             style={[styles.joinButton, styles.joinedButton]}

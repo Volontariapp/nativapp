@@ -5,10 +5,10 @@ import Feather from 'react-native-vector-icons/Feather';
 import { AppText } from '@/components/typography/AppText';
 import { useAppTheme, useStyles } from '@/context/ThemeContext';
 import type { AppTheme } from '@/shared/themes/theme';
-import type { EventParticipant } from '@/api/event/event.api';
+import type { UserWeb } from '@volontariapp/contracts';
 
 export interface ParticipantCardProps {
-  participant: EventParticipant;
+  participant: UserWeb;
   onPress?: () => void;
   style?: ViewStyle;
   testID?: string;
@@ -23,20 +23,7 @@ export function ParticipantCard({
   const { theme } = useAppTheme();
   const styles = useStyles(createStyles);
 
-  const isConfirmed = participant.status === 'CONFIRMED';
-  const statusColor = isConfirmed ? theme.colors.primaryEco : theme.colors.warning;
-  const statusBg = isConfirmed ? theme.colors.badgeGreenBackground : theme.colors.goldBackground;
-  const statusLabel = isConfirmed ? 'Confirmé' : 'En attente';
-
-  const avatarUri = participant.avatarUrl ?? `https://i.pravatar.cc/150?u=${participant.id}`;
-
-  const formattedDate =
-    participant.registeredAt !== undefined && participant.registeredAt.length > 0
-      ? new Date(participant.registeredAt).toLocaleDateString('fr-FR', {
-          day: 'numeric',
-          month: 'short',
-        })
-      : undefined;
+  const avatarUri = participant.logoPath ?? `https://i.pravatar.cc/150?u=${participant.id}`;
 
   return (
     <Pressable
@@ -49,7 +36,7 @@ export function ParticipantCard({
       disabled={!onPress}
       testID={testID}
       accessibilityRole="button"
-      accessibilityLabel={`Participant ${participant.pseudo}, statut ${statusLabel}`}
+      accessibilityLabel={`Participant ${participant.pseudo}`}
     >
       <Image source={{ uri: avatarUri }} style={styles.avatar} />
 
@@ -58,16 +45,10 @@ export function ParticipantCard({
           <AppText style={styles.pseudo} numberOfLines={1}>
             {participant.pseudo}
           </AppText>
-
-          <View style={[styles.statusBadge, { backgroundColor: statusBg }]}>
-            <AppText style={[styles.statusText, { color: statusColor }]}>
-              {statusLabel}
-            </AppText>
-          </View>
         </View>
 
         <View style={styles.bottomRow}>
-          {participant.totalImpactScore !== undefined && participant.totalImpactScore > 0 ? (
+          {participant.totalImpactScore > 0 ? (
             <View style={styles.scoreRow}>
               <Feather name="award" size={12} color={theme.colors.goldText} />
               <AppText style={styles.scoreText}>
@@ -78,8 +59,10 @@ export function ParticipantCard({
             <AppText style={styles.infoText}>Bénévole</AppText>
           )}
 
-          {formattedDate !== undefined && (
-            <AppText style={styles.dateText}>Inscrit le {formattedDate}</AppText>
+          {Boolean((participant.email as string | undefined)?.length) && (
+            <AppText style={styles.emailText} numberOfLines={1}>
+              {participant.email}
+            </AppText>
           )}
         </View>
       </View>
@@ -123,17 +106,6 @@ const createStyles = (theme: AppTheme) =>
       fontWeight: theme.typography.fontWeight.semibold,
       color: theme.colors.black,
       flex: 1,
-      marginRight: theme.spacing.sm,
-    },
-    statusBadge: {
-      paddingHorizontal: theme.spacing.sm,
-      paddingVertical: 2,
-      borderRadius: theme.radius.full,
-    },
-    statusText: {
-      fontSize: 10,
-      fontWeight: theme.typography.fontWeight.bold,
-      textTransform: 'uppercase',
     },
     bottomRow: {
       flexDirection: 'row',
@@ -154,8 +126,9 @@ const createStyles = (theme: AppTheme) =>
       fontSize: theme.typography.fontSize.xs,
       color: theme.colors.grey,
     },
-    dateText: {
+    emailText: {
       fontSize: 11,
       color: theme.colors.grey,
     },
   });
+

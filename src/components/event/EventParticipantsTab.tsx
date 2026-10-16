@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useMemo, useCallback } from 'react';
 import { View, StyleSheet, FlatList, RefreshControl, ActivityIndicator } from 'react-native';
 
-import { SearchBar, FilterChip } from '@/components/ui';
+import { SearchBar } from '@/components/ui';
 import {
   ParticipantGauge,
   ParticipantCard,
@@ -9,13 +9,12 @@ import {
 } from '@/components/event';
 import { useAppTheme, useStyles } from '@/context/ThemeContext';
 import type { AppTheme } from '@/shared/themes/theme';
-import type { EventParticipant, AppEvent } from '@/api/event/event.api';
-
-type ParticipantFilter = 'ALL' | 'CONFIRMED' | 'PENDING';
+import type { AppEvent } from '@/api/event/event.api';
+import type { UserWeb } from '@volontariapp/contracts';
 
 export interface EventParticipantsTabProps {
   currentEvent?: AppEvent;
-  participants: EventParticipant[];
+  participants: UserWeb[];
   totalRegistered: number;
   isLoading: boolean;
   isRefetching: boolean;
@@ -37,7 +36,6 @@ export function EventParticipantsTab({
 
   const [searchQuery, setSearchQuery] = useState('');
   const [debouncedQuery, setDebouncedQuery] = useState('');
-  const [participantFilter, setParticipantFilter] = useState<ParticipantFilter>('ALL');
 
   useEffect(() => {
     const handler = setTimeout(() => {
@@ -49,24 +47,20 @@ export function EventParticipantsTab({
   }, [searchQuery]);
 
   const filteredParticipants = useMemo(() => {
-    return rawParticipants.filter((p: EventParticipant) => {
-      const matchesSearch =
-        debouncedQuery.length === 0 ||
-        p.pseudo.toLowerCase().includes(debouncedQuery) ||
-        (p.email?.toLowerCase().includes(debouncedQuery) ?? false);
-
-      const matchesFilter =
-        participantFilter === 'ALL' ||
-        (participantFilter === 'CONFIRMED' && p.status === 'CONFIRMED') ||
-        (participantFilter === 'PENDING' && p.status === 'PENDING');
-
-      return matchesSearch && matchesFilter;
+    if (debouncedQuery.length === 0) {
+      return rawParticipants;
+    }
+    return rawParticipants.filter((p: UserWeb) => {
+      const partial = p as Partial<UserWeb>;
+      const pseudoMatch = partial.pseudo?.toLowerCase().includes(debouncedQuery) ?? false;
+      const emailMatch = partial.email?.toLowerCase().includes(debouncedQuery) ?? false;
+      return pseudoMatch || emailMatch;
     });
-  }, [rawParticipants, debouncedQuery, participantFilter]);
+  }, [rawParticipants, debouncedQuery]);
 
   const keyExtractor = useCallback(
-    (item: EventParticipant, index: number): string =>
-      item.id || (item.userId ?? '') || String(index),
+    (item: UserWeb, index: number): string =>
+      item.id || String(index),
     [],
   );
 
@@ -78,11 +72,11 @@ export function EventParticipantsTab({
   );
 
   const renderItem = useCallback(
-    ({ item }: { item: EventParticipant }): React.JSX.Element => (
+    ({ item }: { item: UserWeb }): React.JSX.Element => (
       <ParticipantCard
         participant={item}
         onPress={() => {
-          handleRowPress(item.id || (item.userId ?? ''));
+          handleRowPress(item.id);
         }}
       />
     ),
@@ -133,34 +127,6 @@ export function EventParticipantsTab({
           placeholder="Rechercher par nom ou email..."
           style={styles.searchBar}
         />
-
-        {/* Filter Chips */}
-        <View style={styles.filterRow}>
-          <FilterChip
-            label="Tous"
-            selected={participantFilter === 'ALL'}
-            color={theme.colors.primaryEco}
-            onPress={() => {
-              setParticipantFilter('ALL');
-            }}
-          />
-          <FilterChip
-            label="Confirmés"
-            selected={participantFilter === 'CONFIRMED'}
-            color={theme.colors.primaryEco}
-            onPress={() => {
-              setParticipantFilter('CONFIRMED');
-            }}
-          />
-          <FilterChip
-            label="En attente"
-            selected={participantFilter === 'PENDING'}
-            color={theme.colors.warning}
-            onPress={() => {
-              setParticipantFilter('PENDING');
-            }}
-          />
-        </View>
       </View>
 
       {/* List */}
@@ -192,11 +158,6 @@ const createStyles = (theme: AppTheme) =>
     searchBar: {
       marginBottom: theme.spacing.sm,
     },
-    filterRow: {
-      flexDirection: 'row',
-      gap: theme.spacing.sm,
-      marginBottom: theme.spacing.sm,
-    },
     listContent: {
       paddingHorizontal: theme.spacing.lg,
       paddingBottom: theme.spacing.xxl * 2,
@@ -205,3 +166,4 @@ const createStyles = (theme: AppTheme) =>
       marginVertical: theme.spacing.xxl,
     },
   });
+

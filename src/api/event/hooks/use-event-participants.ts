@@ -1,5 +1,6 @@
 import { useQuery } from '@tanstack/react-query';
-import { eventApi, type EventParticipant } from '../event.api';
+import type { UserWeb } from '@volontariapp/contracts';
+import { eventApi } from '../event.api';
 
 interface UseEventParticipantsParams {
   page?: number;
@@ -10,7 +11,7 @@ export const useEventParticipants = (
   eventId?: string,
   params?: UseEventParticipantsParams,
 ) => {
-  return useQuery<{ participants: EventParticipant[]; totalCount: number }>({
+  return useQuery<{ participants: UserWeb[]; totalCount: number }>({
     queryKey: ['event-participants', eventId, params?.page, params?.limit],
     queryFn: async () => {
       if (eventId === undefined || eventId.length === 0) {

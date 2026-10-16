@@ -45,7 +45,7 @@ export function ProfileScreen(): React.JSX.Element {
     Boolean(profile?.id),
   );
 
-  const { participated, created, wished, markedDates } = useProfileEvents(theme);
+  const { participated, finished, created, wished, markedDates } = useProfileEvents(theme);
 
   const isLoading = isProfileLoading;
 
@@ -117,6 +117,7 @@ export function ProfileScreen(): React.JSX.Element {
           ]}
           eventsTabs={{
             participated,
+            finished,
             created,
             wished,
           }}

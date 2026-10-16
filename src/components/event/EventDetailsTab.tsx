@@ -64,6 +64,91 @@ export function EventDetailsTab({
       showsVerticalScrollIndicator={false}
       refreshControl={refreshControl}
     >
+      {/* Form Card */}
+      <View style={styles.card}>
+        <View style={styles.cardHeader}>
+          <Feather name="file-text" size={18} color={theme.colors.primaryEco} />
+          <AppText style={styles.cardTitle}>Modifier les informations</AppText>
+        </View>
+
+        <View style={styles.formContent}>
+          <Controller
+            control={control}
+            name="title"
+            render={({ field: { onChange, value } }) => (
+              <AppInput
+                label="Titre de l’événement"
+                variant="outlined"
+                value={value}
+                onChangeText={onChange}
+                errorMessage={errors.title?.message}
+                placeholder="Ex: Nettoyage de la plage"
+              />
+            )}
+          />
+
+          <Controller
+            control={control}
+            name="description"
+            render={({ field: { onChange, value } }) => (
+              <AppInput
+                label="Description détaillée"
+                variant="outlined"
+                value={value}
+                onChangeText={onChange}
+                errorMessage={errors.description?.message}
+                placeholder="Précisez le déroulement, le matériel..."
+                multiline
+                numberOfLines={4}
+                style={styles.multilineInput}
+              />
+            )}
+          />
+
+          <Controller
+            control={control}
+            name="localisationName"
+            render={({ field: { onChange, value } }) => (
+              <AppInput
+                label="Lieu / Adresse"
+                variant="outlined"
+                value={value}
+                onChangeText={onChange}
+                errorMessage={errors.localisationName?.message}
+                placeholder="Ex: Parc Monceau, Paris"
+              />
+            )}
+          />
+
+          <Controller
+            control={control}
+            name="maxParticipants"
+            render={({ field: { onChange, value } }) => (
+              <AppInput
+                label="Nombre max de participants"
+                variant="outlined"
+                value={String(value ?? '')}
+                onChangeText={(txt) => {
+                  const num = parseInt(txt, 10);
+                  onChange(isNaN(num) ? 0 : num);
+                }}
+                errorMessage={errors.maxParticipants?.message}
+                keyboardType="numeric"
+                placeholder="Ex: 20"
+              />
+            )}
+          />
+
+          <AppButton
+            text={isSubmitting ? 'Enregistrement...' : 'Enregistrer les modifications'}
+            variant="eco"
+            disabled={!isDirty || isSubmitting}
+            onPress={onSave}
+            style={styles.submitButton}
+          />
+        </View>
+      </View>
+
       {/* Lifecycle Actions Card */}
       <View style={styles.card}>
         <View style={styles.cardHeader}>
@@ -151,91 +236,6 @@ export function EventDetailsTab({
               </AppText>
             </View>
           )}
-        </View>
-      </View>
-
-      {/* Form Card */}
-      <View style={styles.card}>
-        <View style={styles.cardHeader}>
-          <Feather name="file-text" size={18} color={theme.colors.primaryEco} />
-          <AppText style={styles.cardTitle}>Modifier les informations</AppText>
-        </View>
-
-        <View style={styles.formContent}>
-          <Controller
-            control={control}
-            name="title"
-            render={({ field: { onChange, value } }) => (
-              <AppInput
-                label="Titre de l’événement"
-                variant="outlined"
-                value={value}
-                onChangeText={onChange}
-                errorMessage={errors.title?.message}
-                placeholder="Ex: Nettoyage de la plage"
-              />
-            )}
-          />
-
-          <Controller
-            control={control}
-            name="description"
-            render={({ field: { onChange, value } }) => (
-              <AppInput
-                label="Description détaillée"
-                variant="outlined"
-                value={value}
-                onChangeText={onChange}
-                errorMessage={errors.description?.message}
-                placeholder="Précisez le déroulement, le matériel..."
-                multiline
-                numberOfLines={4}
-                style={styles.multilineInput}
-              />
-            )}
-          />
-
-          <Controller
-            control={control}
-            name="localisationName"
-            render={({ field: { onChange, value } }) => (
-              <AppInput
-                label="Lieu / Adresse"
-                variant="outlined"
-                value={value}
-                onChangeText={onChange}
-                errorMessage={errors.localisationName?.message}
-                placeholder="Ex: Parc Monceau, Paris"
-              />
-            )}
-          />
-
-          <Controller
-            control={control}
-            name="maxParticipants"
-            render={({ field: { onChange, value } }) => (
-              <AppInput
-                label="Nombre max de participants"
-                variant="outlined"
-                value={String(value ?? '')}
-                onChangeText={(txt) => {
-                  const num = parseInt(txt, 10);
-                  onChange(isNaN(num) ? 0 : num);
-                }}
-                errorMessage={errors.maxParticipants?.message}
-                keyboardType="numeric"
-                placeholder="Ex: 20"
-              />
-            )}
-          />
-
-          <AppButton
-            text={isSubmitting ? 'Enregistrement...' : 'Enregistrer les modifications'}
-            variant="eco"
-            disabled={!isDirty || isSubmitting}
-            onPress={onSave}
-            style={styles.submitButton}
-          />
         </View>
       </View>
     </ScrollView>

@@ -19,19 +19,10 @@ import type {
   GetEventResponse,
   UpdateEventRequest,
   ListUsersWebResponse,
+  UserWeb,
 } from '@volontariapp/contracts';
 
-export interface EventParticipant {
-  id: string;
-  userId?: string;
-  pseudo: string;
-  email?: string;
-  totalImpactScore?: number;
-  bio?: string;
-  avatarUrl?: string;
-  status: 'CONFIRMED' | 'PENDING' | 'ATTENDED';
-  registeredAt?: string;
-}
+export type EventParticipant = UserWeb;
 
 export interface AppEvent {
   id: string;
@@ -300,7 +291,7 @@ export const eventApi = {
   async getEventParticipants(
     eventId: string,
     params?: { page?: number; limit?: number },
-  ): Promise<{ participants: EventParticipant[]; totalCount: number }> {
+  ): Promise<{ participants: UserWeb[]; totalCount: number }> {
     try {
       const query = new URLSearchParams();
       if (params?.page !== undefined) query.append('page', params.page.toString());
@@ -315,20 +306,9 @@ export const eventApi = {
         requiresAuth: USER_ENDPOINTS.GET_EVENT_PARTICIPANTS.requiresAuth,
       });
 
-      const participants: EventParticipant[] = response.users.map((user, idx) => ({
-        id: user.id,
-        pseudo: user.pseudo,
-        email: user.email,
-        totalImpactScore: user.totalImpactScore,
-        bio: user.bio,
-        avatarUrl: user.logoPath ?? `https://i.pravatar.cc/150?u=${user.id}`,
-        status: idx % 4 === 3 ? 'PENDING' : 'CONFIRMED',
-        registeredAt: new Date(Date.now() - idx * 3600000 * 24).toISOString(),
-      }));
-
       return {
-        participants,
-        totalCount: response.pagination?.total ?? participants.length,
+        participants: response.users,
+        totalCount: response.pagination?.total ?? response.users.length,
       };
     } catch (error) {
       console.error(
