@@ -64,10 +64,39 @@ describe('ProfileEditModal avatar upload', () => {
       await pickPhoto(screen);
 
       expect(await screen.findByText('Envoi de la photo...')).toBeTruthy();
+      expect(screen.getByTestId('avatar-upload-spinner')).toBeTruthy();
       fireEvent.press(screen.getByText('Enregistrer'));
       await waitFor(() => {
         expect(screen.onSubmit).not.toHaveBeenCalled();
       });
+    });
+  });
+
+  describe('the upload spinner', () => {
+    it('is not shown before a photo is chosen', () => {
+      const screen = renderModal();
+
+      expect(screen.queryByTestId('avatar-upload-spinner')).toBeNull();
+    });
+
+    it('goes away once the photo is uploaded', async () => {
+      mockUploadImage.mockResolvedValue({ fileId: FILE_ID, state: 'CLEAN', publicUrl: PUBLIC_URL });
+      const screen = renderModal();
+
+      await pickPhoto(screen);
+      await screen.findByTestId('avatar-preview');
+
+      expect(screen.queryByTestId('avatar-upload-spinner')).toBeNull();
+    });
+
+    it('goes away when the upload fails', async () => {
+      mockUploadImage.mockRejectedValue(new Error('network'));
+      const screen = renderModal();
+
+      await pickPhoto(screen);
+      await screen.findByText("L'envoi de la photo a échoué. Réessaie.");
+
+      expect(screen.queryByTestId('avatar-upload-spinner')).toBeNull();
     });
   });
 
