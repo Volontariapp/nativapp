@@ -1,36 +1,31 @@
 import React from 'react';
-import {
-  View,
-  StyleSheet,
-  FlatList,
-  ActivityIndicator,
-  Alert,
-  Pressable,
-  type GestureResponderEvent,
-} from 'react-native';
+import { View, StyleSheet, FlatList, ActivityIndicator, Alert } from 'react-native';
 import { AppText } from '@/components/typography/AppText';
 import AppHeader from '@/components/layout/AppHeader';
-import { AppButton } from '@/components/buttons/AppButton';
-import { PostDetailModal } from '@/components/post/PostDetailModal';
+import { PostGridTile } from '@/components/post/post-grid-tile';
+import { MyPostDetailModal } from '@/components/post/my-post-detail-modal';
 import { useAppTheme, useStyles } from '@/context/ThemeContext';
 import type { AppTheme } from '@/shared/themes/theme';
 import { useGetMyPosts, useDeletePost } from '@/api/post/hooks';
 import type { PostWeb } from '@volontariapp/contracts';
 
+const GRID_COLUMNS = 3;
+const PAGE_SIZE = GRID_COLUMNS * 4;
+
 export function MyPostsScreen(): React.JSX.Element {
   const { theme } = useAppTheme();
   const styles = useStyles(createStyles);
-  const { data, isLoading, fetchNextPage, hasNextPage, isFetchingNextPage } = useGetMyPosts(10);
+  const { data, isLoading, fetchNextPage, hasNextPage, isFetchingNextPage } =
+    useGetMyPosts(PAGE_SIZE);
   const { mutateAsync: deletePost } = useDeletePost();
   const [selectedPost, setSelectedPost] = React.useState<PostWeb | null>(null);
-  const [detailModalVisible, setDetailModalVisible] = React.useState(false);
 
   const posts = data?.pages.flatMap((page) => page.posts) ?? [];
 
   const handleDelete = async (id: string) => {
     try {
       await deletePost(id);
-      setDetailModalVisible(false);
+      setSelectedPost(null);
     } catch (err) {
       const message = err instanceof Error ? err.message : String(err);
       console.error('Failed to delete post:', message);
@@ -38,53 +33,22 @@ export function MyPostsScreen(): React.JSX.Element {
     }
   };
 
-  const handlePostPress = (post: PostWeb) => {
-    setSelectedPost(post);
-    setDetailModalVisible(true);
-  };
-
-  const renderItem = ({ item }: { item: PostWeb }) => (
-    <Pressable
-      style={styles.postCard}
-      onPress={() => {
-        handlePostPress(item);
-      }}
-    >
-      <View style={styles.postHeader}>
-        <AppText style={styles.postTitle}>{item.title}</AppText>
-      </View>
-      <AppText style={styles.postContent} numberOfLines={2}>
-        {item.content}
-      </AppText>
-      <AppButton
-        text="Supprimer"
-        variant="secondary"
-        onPress={(e?: GestureResponderEvent) => {
-          e?.stopPropagation();
-          void handleDelete(item.id);
-        }}
-        style={styles.deleteButton}
-      />
-    </Pressable>
-  );
-
   return (
     <>
       <View style={styles.container}>
         <AppHeader />
-        <AppText style={{ fontSize: 24, fontWeight: 'bold', margin: theme.spacing.md }}>
-          Mes posts
-        </AppText>
+        <AppText style={styles.title}>Mes posts</AppText>
         {isLoading ? (
           <View style={styles.center}>
             <ActivityIndicator size="large" color={theme.colors.primaryEco} />
           </View>
         ) : (
           <FlatList
+            testID="my-posts-grid"
             data={posts}
             keyExtractor={(item) => item.id}
-            renderItem={renderItem}
-            contentContainerStyle={styles.listContent}
+            numColumns={GRID_COLUMNS}
+            renderItem={({ item }) => <PostGridTile post={item} onPress={setSelectedPost} />}
             onEndReached={() => {
               if (hasNextPage && !isFetchingNextPage) {
                 void fetchNextPage();
@@ -99,16 +63,16 @@ export function MyPostsScreen(): React.JSX.Element {
         )}
       </View>
 
-      {selectedPost && (
-        <PostDetailModal
-          visible={detailModalVisible}
-          post={selectedPost}
-          onClose={() => {
-            setDetailModalVisible(false);
-            setSelectedPost(null);
-          }}
-        />
-      )}
+      <MyPostDetailModal
+        visible={selectedPost !== null}
+        post={selectedPost}
+        onClose={() => {
+          setSelectedPost(null);
+        }}
+        onDelete={(id) => {
+          void handleDelete(id);
+        }}
+      />
     </>
   );
 }
@@ -119,39 +83,15 @@ const createStyles = (theme: AppTheme) =>
       flex: 1,
       backgroundColor: theme.colors.background,
     },
+    title: {
+      fontSize: 24,
+      fontWeight: 'bold',
+      margin: theme.spacing.md,
+    },
     center: {
       flex: 1,
       justifyContent: 'center',
       alignItems: 'center',
-    },
-    listContent: {
-      padding: theme.spacing.md,
-    },
-    postCard: {
-      backgroundColor: theme.colors.white,
-      padding: theme.spacing.md,
-      borderRadius: theme.radius.md,
-      marginBottom: theme.spacing.md,
-      boxShadow: '0 2px 4px rgba(0,0,0,0.1)',
-    },
-    postHeader: {
-      flexDirection: 'row',
-      justifyContent: 'space-between',
-      marginBottom: theme.spacing.sm,
-    },
-    postTitle: {
-      fontSize: 18,
-      fontWeight: 'bold',
-      flex: 1,
-    },
-    postContent: {
-      fontSize: 14,
-      color: theme.colors.grey,
-      marginBottom: theme.spacing.md,
-    },
-    deleteButton: {
-      alignSelf: 'flex-end',
-      width: 120,
     },
     emptyText: {
       textAlign: 'center',
