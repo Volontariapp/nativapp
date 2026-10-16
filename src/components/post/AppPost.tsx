@@ -9,7 +9,8 @@ import { useGetPublicUser } from '@/api/user/hooks/use-get-public-user';
 import { useListComments } from '@/api/post/hooks/use-list-comments';
 import { PostAuthorHeader } from './PostAuthorHeader';
 import { resolveAvatarUrl } from '@/api/user/resolve-avatar-url';
-import { PostImagePlaceholder } from './PostImagePlaceholder';
+import { PostImage } from './post-image';
+import { resolvePostImageUrl } from '@/api/post/resolve-post-image-url';
 import { PostActions } from './PostActions';
 import { PostCommentsModal } from './PostCommentsModal';
 import { PostCommentPreview } from './PostCommentPreview';
@@ -125,7 +126,7 @@ export default function AppPost({ post }: PostCardProps) {
 
       <GestureDetector gesture={doubleTapGesture}>
         <View style={styles.imageWrapper}>
-          <PostImagePlaceholder postId={post.id} />
+          <PostImage postId={post.id} imageUrl={resolvePostImageUrl(post)} />
           <Animated.View style={[styles.floatingHeart, animatedHeartStyle]} pointerEvents="none">
             <Ionicons name="heart" size={100} color={theme.colors.danger} />
           </Animated.View>
