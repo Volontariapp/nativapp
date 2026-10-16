@@ -6,7 +6,6 @@ import { AppText } from '@/components/typography/AppText';
 import { useAppTheme, useStyles } from '@/context/ThemeContext';
 import type { AppTheme } from '@/shared/themes/theme';
 import type { PostImage, PostImageStatus } from '@/api/post/post-images.types';
-import { MAX_POST_IMAGES } from '@/api/post/post-images.utils';
 
 const STATUS_LABELS: Record<PostImageStatus, string | undefined> = {
   uploading: 'Envoi...',
@@ -33,6 +32,7 @@ export function PostImagesPicker({
 }: PostImagesPickerProps): React.JSX.Element {
   const { theme } = useAppTheme();
   const styles = useStyles(createStyles);
+  const maxImages = images.length + remainingSlots;
 
   return (
     <View style={styles.container}>
@@ -78,7 +78,9 @@ export function PostImagesPicker({
           <Pressable style={styles.addTile} accessibilityLabel="Ajouter une image" onPress={onAdd}>
             <Feather name="plus" size={28} color={theme.colors.grey} />
             <AppText style={styles.addText}>
-              {`Ajouter une image (${String(images.length)}/${String(MAX_POST_IMAGES)})`}
+              {maxImages > 1
+                ? `Ajouter une image (${String(images.length)}/${String(maxImages)})`
+                : 'Ajouter une image'}
             </AppText>
           </Pressable>
         )}

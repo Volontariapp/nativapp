@@ -30,7 +30,6 @@ jest.mock('@/components/post/event-selector', () => ({ EventSelector: () => null
 jest.mock('expo-image', () => ({ Image: 'Image' }));
 
 const FILE_A = '11111111-1111-4111-8111-111111111111';
-const FILE_B = '22222222-2222-4222-8222-222222222222';
 
 const renderScreen = () =>
   render(
@@ -95,13 +94,11 @@ describe('PostFormScreen images', () => {
     expect(mockForm.mockGoBack).toHaveBeenCalled();
   });
 
-  it('sends the uploaded images as fileIds in the selection order', async () => {
-    mockImages.uploadImage
-      .mockResolvedValueOnce(createUploadResult({ fileId: FILE_A }))
-      .mockResolvedValueOnce(createUploadResult({ fileId: FILE_B }));
+  it('sends the uploaded image as the only fileId of the post', async () => {
+    mockImages.uploadImage.mockResolvedValueOnce(createUploadResult({ fileId: FILE_A }));
     const screen = renderScreen();
     fillForm(screen);
-    await addImages(screen, 2);
+    await addImages(screen, 1);
     await waitFor(() => {
       expect(screen.queryByText('Envoi...')).toBeNull();
     });
@@ -110,9 +107,21 @@ describe('PostFormScreen images', () => {
 
     await waitFor(() => {
       expect(mockForm.mockCreatePost).toHaveBeenCalledWith(
-        expect.objectContaining({ fileIds: [FILE_A, FILE_B] }),
+        expect.objectContaining({ fileIds: [FILE_A] }),
       );
     });
+  });
+
+  it('allows a single image: the add button is gone once an image is chosen', async () => {
+    mockImages.uploadImage.mockResolvedValueOnce(createUploadResult({ fileId: FILE_A }));
+    const screen = renderScreen();
+    await addImages(screen, 1);
+
+    expect(screen.queryByLabelText('Ajouter une image')).toBeNull();
+
+    fireEvent.press(screen.getByLabelText("Retirer l'image 1"));
+
+    expect(screen.getByLabelText('Ajouter une image')).toBeTruthy();
   });
 
   it('keeps the same idempotency key when the user retries after a failure', async () => {

@@ -9,6 +9,7 @@ import {
 import * as mockDeps from './post-images.mock';
 import { createDeferred, createUploadResult } from './post-images.factory';
 import { MAX_POST_IMAGES, usePostImages } from '../hooks/use-post-images';
+import type { UsePostImagesOptions } from '../post-images.types';
 
 jest.mock('@volontariapp/contracts', () => mockContracts, { virtual: true });
 jest.mock('@/api/storage/pick-gallery-images', () => ({
@@ -21,12 +22,15 @@ jest.mock('@/api/storage/upload-image', () => ({
 const FILE_A = '11111111-1111-4111-8111-111111111111';
 const FILE_B = '22222222-2222-4222-8222-222222222222';
 
-const renderPostImages = () => {
+// Le plafond produit est de 1 image par défaut ; les cas multi-images passent un plafond explicite.
+const MULTI = { maxImages: 10 };
+
+const renderPostImages = (options?: UsePostImagesOptions) => {
   const client = new QueryClient({ defaultOptions: { mutations: { retry: false } } });
   const wrapper = ({ children }: { children: React.ReactNode }): React.JSX.Element => (
     <QueryClientProvider client={client}>{children}</QueryClientProvider>
   );
-  return renderHook(() => usePostImages(), { wrapper });
+  return renderHook(() => usePostImages(options), { wrapper });
 };
 
 describe('usePostImages', () => {
@@ -34,10 +38,25 @@ describe('usePostImages', () => {
     jest.resetAllMocks();
   });
 
+  it('accepts a single image per post by default', async () => {
+    mockDeps.pickGalleryImages.mockResolvedValue(createPickedImages(2));
+    mockDeps.uploadImage.mockResolvedValue(createUploadResult({ fileId: FILE_A }));
+    const { result } = renderPostImages();
+
+    await act(async () => {
+      await result.current.addImages();
+    });
+
+    expect(MAX_POST_IMAGES).toBe(1);
+    expect(mockDeps.pickGalleryImages).toHaveBeenCalledWith({ limit: 1 });
+    expect(result.current.images).toHaveLength(1);
+    expect(result.current.remainingSlots).toBe(0);
+  });
+
   it('uploads the picked images for a post and exposes their file ids', async () => {
     mockDeps.pickGalleryImages.mockResolvedValue(createPickedImages(1));
     mockDeps.uploadImage.mockResolvedValue(createUploadResult({ fileId: FILE_A }));
-    const { result } = renderPostImages();
+    const { result } = renderPostImages(MULTI);
 
     await act(async () => {
       await result.current.addImages();
@@ -58,7 +77,7 @@ describe('usePostImages', () => {
     const second = createDeferred<ReturnType<typeof createUploadResult>>();
     mockDeps.pickGalleryImages.mockResolvedValue(createPickedImages(2));
     mockDeps.uploadImage.mockReturnValueOnce(first.promise).mockReturnValueOnce(second.promise);
-    const { result } = renderPostImages();
+    const { result } = renderPostImages(MULTI);
 
     act(() => {
       void result.current.addImages();
@@ -87,7 +106,7 @@ describe('usePostImages', () => {
     mockDeps.uploadImage.mockResolvedValue(
       createUploadResult({ fileId: FILE_A, state: 'SCANNING' }),
     );
-    const { result } = renderPostImages();
+    const { result } = renderPostImages(MULTI);
 
     await act(async () => {
       await result.current.addImages();
@@ -105,7 +124,7 @@ describe('usePostImages', () => {
     mockDeps.uploadImage.mockResolvedValue(
       createUploadResult({ fileId: FILE_A, state: 'REJECTED' }),
     );
-    const { result } = renderPostImages();
+    const { result } = renderPostImages(MULTI);
 
     await act(async () => {
       await result.current.addImages();
@@ -123,7 +142,7 @@ describe('usePostImages', () => {
     mockDeps.uploadImage
       .mockRejectedValueOnce(new Error('network'))
       .mockResolvedValueOnce(createUploadResult({ fileId: FILE_A }));
-    const { result } = renderPostImages();
+    const { result } = renderPostImages(MULTI);
 
     await act(async () => {
       await result.current.addImages();
@@ -148,7 +167,7 @@ describe('usePostImages', () => {
   it('removes an image and frees its slot for the next selection', async () => {
     mockDeps.pickGalleryImages.mockResolvedValueOnce(createPickedImages(4));
     mockDeps.uploadImage.mockResolvedValue(createUploadResult({ fileId: FILE_A }));
-    const { result } = renderPostImages();
+    const { result } = renderPostImages(MULTI);
     await act(async () => {
       await result.current.addImages();
     });
@@ -161,11 +180,11 @@ describe('usePostImages', () => {
     });
 
     expect(result.current.images).toHaveLength(3);
-    expect(result.current.remainingSlots).toBe(MAX_POST_IMAGES - 3);
+    expect(result.current.remainingSlots).toBe(MULTI.maxImages - 3);
     mockDeps.pickGalleryImages.mockResolvedValueOnce([createPickedImage()]);
     await act(async () => {
       await result.current.addImages();
     });
-    expect(mockDeps.pickGalleryImages).toHaveBeenLastCalledWith({ limit: MAX_POST_IMAGES - 3 });
+    expect(mockDeps.pickGalleryImages).toHaveBeenLastCalledWith({ limit: MULTI.maxImages - 3 });
   });
 });

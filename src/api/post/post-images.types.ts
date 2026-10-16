@@ -14,6 +14,11 @@ export interface PostImage {
   fileId: string | undefined;
 }
 
+export interface UsePostImagesOptions {
+  /** Nombre maximal d'images du post ; vaut MAX_POST_IMAGES par défaut. */
+  maxImages?: number;
+}
+
 export interface PostImages {
   images: PostImage[];
   remainingSlots: number;

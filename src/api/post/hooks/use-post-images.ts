@@ -3,7 +3,7 @@ import { EntityType } from '@volontariapp/contracts';
 import { useFileUpload } from '@/api/storage/hooks/use-file-upload';
 import { pickGalleryImages } from '@/api/storage/pick-gallery-images';
 import type { PickedImage } from '@/api/storage/file-upload.types';
-import type { PostImage, PostImages } from '../post-images.types';
+import type { PostImage, PostImages, UsePostImagesOptions } from '../post-images.types';
 import {
   MAX_POST_IMAGES,
   isBlocking,
@@ -13,8 +13,10 @@ import {
 
 export { MAX_POST_IMAGES } from '../post-images.utils';
 
-/** Choix des images d'un post (1 à 10) et envoi de chacune, avec un état par image. */
-export const usePostImages = (): PostImages => {
+/** Choix des images d'un post et envoi de chacune, avec un état par image. */
+export const usePostImages = ({
+  maxImages = MAX_POST_IMAGES,
+}: UsePostImagesOptions = {}): PostImages => {
   const { mutateAsync: uploadFile } = useFileUpload(EntityType.ENTITY_TYPE_POST);
   const [images, setImages] = useState<PostImage[]>([]);
   const nextId = useRef(0);
@@ -38,7 +40,7 @@ export const usePostImages = (): PostImages => {
     [patchImage, uploadFile],
   );
 
-  const remainingSlots = MAX_POST_IMAGES - images.length;
+  const remainingSlots = maxImages - images.length;
 
   const addImages = useCallback(async (): Promise<void> => {
     const picked = await pickGalleryImages({ limit: remainingSlots });

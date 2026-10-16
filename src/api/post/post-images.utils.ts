@@ -1,7 +1,11 @@
 import type { UploadState } from '@/api/storage/storage-status';
 import type { PostImage, PostImageStatus } from './post-images.types';
 
-export const MAX_POST_IMAGES = 10;
+/**
+ * Règle produit : un post n'a qu'une seule image. Le back accepte jusqu'à 10 fichiers
+ * (`maxPerEntity` de POST) : relever cette valeur suffit à rouvrir la sélection multiple.
+ */
+export const MAX_POST_IMAGES = 1;
 
 /** Un état inconnu ou en attente d'envoi n'est jamais pris pour un fichier utilisable. */
 export const toPostImageStatus = (state: UploadState): PostImageStatus => {
