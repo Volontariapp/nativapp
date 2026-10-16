@@ -3,7 +3,7 @@ import { Text, StyleSheet, Pressable } from 'react-native';
 import { Image } from 'expo-image';
 import { useGetPublicUser } from '@/api/user/hooks/use-get-public-user';
 import type { CommentWebResponse } from '@volontariapp/contracts';
-import { DELETED_USER_ID } from '@volontariapp/shared';
+import { DELETED_USER_ID } from '@/shared/lib/user.constants';
 import { useStyles } from '@/context/ThemeContext';
 import type { AppTheme } from '@/shared/themes/theme';
 import { useNavigation } from '@react-navigation/native';
