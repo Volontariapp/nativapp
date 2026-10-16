@@ -181,6 +181,23 @@ describe('StorageDebugScreen', () => {
       expect(mockGetFileMetadata).toHaveBeenCalledWith(FILE_ID);
     });
 
+    it('reads enums sent by the gateway as names, not only as numbers', async () => {
+      // La gateway serialise les enums en noms (loader gRPC `enums: String`), alors que
+      // les types de contracts les declarent numeriques.
+      const wireFile = Object.assign(createFileMetadataResponse().file, {
+        scanStatus: 'SCAN_STATUS_CLEAN',
+        validationMode: 'VALIDATION_MODE_SYNC',
+      });
+      mockConfirmUpload.mockResolvedValue({ file: wireFile });
+      mockGetFileMetadata.mockResolvedValue({ file: wireFile });
+      const { getByText, findAllByText } = await renderWithImage();
+
+      fireEvent.press(getByText('Tout enchaîner'));
+
+      // fiche du fichier + journal de la confirmation + journal des metadonnees
+      expect(await findAllByText('scan CLEAN, mode SYNC, URL publique absente')).toHaveLength(3);
+    });
+
     it('stops at the first failing step', async () => {
       mockUploadToPresignedPost.mockRejectedValue(new Error('403'));
       const { getByText, findByText } = await renderWithImage();
