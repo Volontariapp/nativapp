@@ -40,6 +40,13 @@ export function MyPostsScreen(): React.JSX.Element {
     }
   };
 
+  const renderItem = React.useCallback(
+    ({ item }: { item: PostWeb }) => (
+      <PostGridTile post={item} size={tileSize} onPress={setSelectedPost} />
+    ),
+    [tileSize],
+  );
+
   return (
     <>
       <View style={styles.container}>
@@ -58,9 +65,7 @@ export function MyPostsScreen(): React.JSX.Element {
             contentContainerStyle={[styles.gridContent, tabBarInset]}
             columnWrapperStyle={styles.gridRow}
             ItemSeparatorComponent={RowSeparator}
-            renderItem={({ item }) => (
-              <PostGridTile post={item} size={tileSize} onPress={setSelectedPost} />
-            )}
+            renderItem={renderItem}
             onEndReached={() => {
               if (hasNextPage && !isFetchingNextPage) {
                 void fetchNextPage();

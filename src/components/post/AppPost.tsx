@@ -214,7 +214,6 @@ const createStyles = (theme: AppTheme) =>
       justifyContent: 'center',
       alignItems: 'center',
       zIndex: 10,
-      elevation: 10,
     },
     titleContainer: {
       paddingHorizontal: theme.spacing.lg,

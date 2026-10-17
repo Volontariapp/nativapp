@@ -40,17 +40,256 @@ type EventManagementRouteProp = RouteProp<
 
 type TabKey = 'details' | 'participants';
 
+function useStateChangeModal(eventId: string) {
+  const [modalTargetState, setModalTargetState] = useState<EventState | null>(null);
+  const stateMutation = useChangeEventState();
+
+  const handleConfirmStateChange = async (): Promise<void> => {
+    if (modalTargetState === null) return;
+    try {
+      await stateMutation.mutateAsync({ id: eventId, newState: modalTargetState });
+      setModalTargetState(null);
+      Alert.alert('Statut mis à jour', 'Le statut de l’événement a été actualisé.');
+    } catch (err) {
+      Alert.alert('Erreur de transition', errorMessageOf(err, 'Impossible de changer le statut.'));
+    }
+  };
+
+  return {
+    modalTargetState,
+    setModalTargetState,
+    handleConfirmStateChange,
+    isStatePending: stateMutation.isPending,
+  };
+}
+
+interface EventDetailsFormParams {
+  eventId: string;
+  currentEvent: AppEvent | undefined;
+  eventCover: ReturnType<typeof useEventCover>;
+}
+
+const EMPTY_FORM_VALUES: UpdateEventFormValues = {
+  title: '',
+  description: '',
+  localisationName: '',
+  maxParticipants: 10,
+};
+
+const toFormValues = (event: AppEvent | undefined): UpdateEventFormValues =>
+  event === undefined
+    ? EMPTY_FORM_VALUES
+    : {
+        title: event.title,
+        description: event.description,
+        localisationName: event.localisationName,
+        maxParticipants: event.maxParticipants,
+      };
+
+const errorMessageOf = (error: unknown, fallback: string): string =>
+  error instanceof Error ? error.message : fallback;
+
+type UpdateEventMutation = ReturnType<typeof useUpdateEvent>;
+
+async function saveEventDetails(
+  values: UpdateEventFormValues,
+  { eventId, eventCover }: Pick<EventDetailsFormParams, 'eventId' | 'eventCover'>,
+  updateMutation: UpdateEventMutation,
+): Promise<void> {
+  try {
+    await updateMutation.mutateAsync({
+      id: eventId,
+      payload: { ...values, coverFileId: eventCover.coverFileId },
+    });
+
+    if (eventCover.cover !== undefined) {
+      eventCover.removeImage(eventCover.cover.id);
+    }
+    Alert.alert('Succès', 'Les informations de votre événement ont été mises à jour.');
+  } catch (err) {
+    Alert.alert('Erreur', errorMessageOf(err, 'Une erreur réseau est survenue.'));
+  }
+}
+
+function useEventDetailsForm({ eventId, currentEvent, eventCover }: EventDetailsFormParams) {
+  const updateMutation = useUpdateEvent();
+
+  const {
+    control,
+    handleSubmit,
+    reset,
+    formState: { errors, isDirty },
+  } = useForm<UpdateEventFormValues>({
+    resolver: zodResolver(updateEventSchema),
+    defaultValues: toFormValues(currentEvent),
+  });
+
+  useEffect(() => {
+    if (currentEvent) {
+      reset(toFormValues(currentEvent));
+    }
+  }, [currentEvent, reset]);
+
+  const onSaveDetails = handleSubmit((values) =>
+    saveEventDetails(values, { eventId, eventCover }, updateMutation),
+  );
+
+  return { control, errors, isDirty, onSaveDetails, isSaving: updateMutation.isPending };
+}
+
+function EventLoadingState(): React.JSX.Element {
+  const { theme } = useAppTheme();
+  const styles = useStyles(createStyles);
+
+  return (
+    <View style={styles.loadingContainer}>
+      <AppHeader showBack />
+      <View style={styles.centerBox}>
+        <ActivityIndicator size="large" color={theme.colors.primaryEco} />
+        <AppText style={styles.loadingText}>Chargement de l'événement...</AppText>
+      </View>
+    </View>
+  );
+}
+
+function EventErrorState({ onRetry }: { onRetry: () => void }): React.JSX.Element {
+  const { theme } = useAppTheme();
+  const styles = useStyles(createStyles);
+
+  return (
+    <View style={styles.loadingContainer}>
+      <AppHeader showBack />
+      <View style={styles.centerBox}>
+        <Feather name="alert-circle" size={40} color={theme.colors.danger} />
+        <AppText style={styles.errorTitle}>Événement introuvable</AppText>
+        <AppButton text="Réessayer" onPress={onRetry} style={styles.retryBtn} />
+      </View>
+    </View>
+  );
+}
+
+interface TabBarItem {
+  key: TabKey;
+  icon: string;
+  label: string;
+}
+
+const TAB_ITEMS: TabBarItem[] = [
+  { key: 'details', icon: 'edit', label: 'Informations' },
+  { key: 'participants', icon: 'users', label: 'Participants' },
+];
+
+interface EventManagementTabBarProps {
+  activeTab: TabKey;
+  onChange: (tab: TabKey) => void;
+  participantsCount: number | undefined;
+}
+
+const countSuffix = (key: TabKey, count: number | undefined): string =>
+  key === 'participants' && count !== undefined ? ` (${String(count)})` : '';
+
+interface TabButtonProps {
+  item: TabBarItem;
+  isActive: boolean;
+  suffix: string;
+  onPress: () => void;
+}
+
+function TabButton({ item, isActive, suffix, onPress }: TabButtonProps): React.JSX.Element {
+  const { theme } = useAppTheme();
+  const styles = useStyles(createStyles);
+
+  return (
+    <Pressable
+      style={[styles.tabItem, isActive && styles.tabItemActive]}
+      onPress={onPress}
+      accessibilityRole="tab"
+      accessibilityState={{ selected: isActive }}
+    >
+      <Feather
+        name={item.icon}
+        size={15}
+        color={isActive ? theme.colors.primaryEco : theme.colors.grey}
+      />
+      <AppText style={[styles.tabLabel, isActive && styles.tabLabelActive]}>
+        {item.label}
+        {suffix}
+      </AppText>
+    </Pressable>
+  );
+}
+
+function EventManagementTabBar({
+  activeTab,
+  onChange,
+  participantsCount,
+}: EventManagementTabBarProps): React.JSX.Element {
+  const styles = useStyles(createStyles);
+
+  return (
+    <View style={styles.tabBar}>
+      {TAB_ITEMS.map((item) => (
+        <TabButton
+          key={item.key}
+          item={item}
+          isActive={activeTab === item.key}
+          suffix={countSuffix(item.key, participantsCount)}
+          onPress={() => {
+            onChange(item.key);
+          }}
+        />
+      ))}
+    </View>
+  );
+}
+
+interface EventManagementHeaderProps {
+  event: AppEvent | undefined;
+  activeTab: TabKey;
+  onChangeTab: (tab: TabKey) => void;
+  participantsCount: number | undefined;
+}
+
+function EventManagementHeader({
+  event,
+  activeTab,
+  onChangeTab,
+  participantsCount,
+}: EventManagementHeaderProps): React.JSX.Element {
+  const styles = useStyles(createStyles);
+
+  return (
+    <View style={styles.header}>
+      <View style={styles.headerTop}>
+        <View style={styles.titleCol}>
+          <AppText style={styles.subtitle}>Espace organisateur</AppText>
+          <AppText style={styles.screenTitle} numberOfLines={1}>
+            {event?.title ?? 'Gestion d’événement'}
+          </AppText>
+        </View>
+        {event && (
+          <EventStatusBadge state={event.state} endDate={event.endAt} startDate={event.startAt} />
+        )}
+      </View>
+
+      <EventManagementTabBar
+        activeTab={activeTab}
+        onChange={onChangeTab}
+        participantsCount={participantsCount}
+      />
+    </View>
+  );
+}
+
 export function EventManagementScreen(): React.JSX.Element {
   const route = useRoute<EventManagementRouteProp>();
   const rootNavigation = useNavigation<NativeStackNavigationProp<MainStackParamList>>();
-  const { theme } = useAppTheme();
   const styles = useStyles(createStyles);
 
   const eventId = route.params.eventId;
   const initialEvent = route.params.initialEvent;
 
   const [activeTab, setActiveTab] = useState<TabKey>('details');
-  const [modalTargetState, setModalTargetState] = useState<EventState | null>(null);
 
   // Queries & Mutations
   const {
@@ -74,75 +313,14 @@ export function EventManagementScreen(): React.JSX.Element {
   const eventCover = useEventCover({ adjustImage: coverAdjuster.adjustImage });
   const hasNewCover = eventCover.cover !== undefined;
 
-  const updateMutation = useUpdateEvent();
-  const stateMutation = useChangeEventState();
+  const { modalTargetState, setModalTargetState, handleConfirmStateChange, isStatePending } =
+    useStateChangeModal(eventId);
 
-  // Form setup
-  const {
-    control,
-    handleSubmit,
-    reset,
-    formState: { errors, isDirty },
-  } = useForm<UpdateEventFormValues>({
-    resolver: zodResolver(updateEventSchema),
-    defaultValues: {
-      title: currentEvent?.title ?? '',
-      description: currentEvent?.description ?? '',
-      localisationName: currentEvent?.localisationName ?? '',
-      maxParticipants: currentEvent?.maxParticipants ?? 10,
-    },
+  const { control, errors, isDirty, onSaveDetails, isSaving } = useEventDetailsForm({
+    eventId,
+    currentEvent,
+    eventCover,
   });
-
-  useEffect(() => {
-    if (currentEvent) {
-      reset({
-        title: currentEvent.title,
-        description: currentEvent.description,
-        localisationName: currentEvent.localisationName,
-        maxParticipants: currentEvent.maxParticipants,
-      });
-    }
-  }, [currentEvent, reset]);
-
-  // Handle Form Submit
-  const onSaveDetails = handleSubmit(async (values) => {
-    try {
-      await updateMutation.mutateAsync({
-        id: eventId,
-        payload: {
-          title: values.title,
-          description: values.description,
-          localisationName: values.localisationName,
-          maxParticipants: values.maxParticipants,
-          coverFileId: eventCover.coverFileId,
-        },
-      });
-
-      if (eventCover.cover !== undefined) {
-        eventCover.removeImage(eventCover.cover.id);
-      }
-      Alert.alert('Succès', 'Les informations de votre événement ont été mises à jour.');
-    } catch (err) {
-      const msg = err instanceof Error ? err.message : 'Une erreur réseau est survenue.';
-      Alert.alert('Erreur', msg);
-    }
-  });
-
-  // Handle State Change Confirm
-  const handleConfirmStateChange = async () => {
-    if (modalTargetState === null) return;
-    try {
-      await stateMutation.mutateAsync({
-        id: eventId,
-        newState: modalTargetState,
-      });
-      setModalTargetState(null);
-      Alert.alert('Statut mis à jour', 'Le statut de l’événement a été actualisé.');
-    } catch (err) {
-      const msg = err instanceof Error ? err.message : 'Impossible de changer le statut.';
-      Alert.alert('Erreur de transition', msg);
-    }
-  };
 
   const handleParticipantPress = useCallback(
     (userId: string) => {
@@ -152,33 +330,16 @@ export function EventManagementScreen(): React.JSX.Element {
   );
 
   if (isEventLoading && !currentEvent) {
-    return (
-      <View style={styles.loadingContainer}>
-        <AppHeader showBack />
-        <View style={styles.centerBox}>
-          <ActivityIndicator size="large" color={theme.colors.primaryEco} />
-          <AppText style={styles.loadingText}>Chargement de l'événement...</AppText>
-        </View>
-      </View>
-    );
+    return <EventLoadingState />;
   }
 
   if (isEventError && !currentEvent) {
     return (
-      <View style={styles.loadingContainer}>
-        <AppHeader showBack />
-        <View style={styles.centerBox}>
-          <Feather name="alert-circle" size={40} color={theme.colors.danger} />
-          <AppText style={styles.errorTitle}>Événement introuvable</AppText>
-          <AppButton
-            text="Réessayer"
-            onPress={() => {
-              void refetchEvent();
-            }}
-            style={styles.retryBtn}
-          />
-        </View>
-      </View>
+      <EventErrorState
+        onRetry={() => {
+          void refetchEvent();
+        }}
+      />
     );
   }
 
@@ -186,67 +347,12 @@ export function EventManagementScreen(): React.JSX.Element {
     <View style={styles.container}>
       <AppHeader showBack />
 
-      {/* Screen Title & Status Banner */}
-      <View style={styles.header}>
-        <View style={styles.headerTop}>
-          <View style={styles.titleCol}>
-            <AppText style={styles.subtitle}>Espace organisateur</AppText>
-            <AppText style={styles.screenTitle} numberOfLines={1}>
-              {currentEvent?.title ?? 'Gestion d’événement'}
-            </AppText>
-          </View>
-          {currentEvent && (
-            <EventStatusBadge
-              state={currentEvent.state}
-              endDate={currentEvent.endAt}
-              startDate={currentEvent.startAt}
-            />
-          )}
-        </View>
-
-        {/* Tab switcher */}
-        <View style={styles.tabBar}>
-          <Pressable
-            style={[styles.tabItem, activeTab === 'details' && styles.tabItemActive]}
-            onPress={() => {
-              setActiveTab('details');
-            }}
-            accessibilityRole="tab"
-            accessibilityState={{ selected: activeTab === 'details' }}
-          >
-            <Feather
-              name="edit"
-              size={15}
-              color={activeTab === 'details' ? theme.colors.primaryEco : theme.colors.grey}
-            />
-            <AppText style={[styles.tabLabel, activeTab === 'details' && styles.tabLabelActive]}>
-              Informations
-            </AppText>
-          </Pressable>
-
-          <Pressable
-            style={[styles.tabItem, activeTab === 'participants' && styles.tabItemActive]}
-            onPress={() => {
-              setActiveTab('participants');
-            }}
-            accessibilityRole="tab"
-            accessibilityState={{ selected: activeTab === 'participants' }}
-          >
-            <Feather
-              name="users"
-              size={15}
-              color={activeTab === 'participants' ? theme.colors.primaryEco : theme.colors.grey}
-            />
-            <AppText
-              style={[styles.tabLabel, activeTab === 'participants' && styles.tabLabelActive]}
-            >
-              Participants
-              {participantsData?.participants &&
-                ` (${String(participantsData.participants.length)})`}
-            </AppText>
-          </Pressable>
-        </View>
-      </View>
+      <EventManagementHeader
+        event={currentEvent}
+        activeTab={activeTab}
+        onChangeTab={setActiveTab}
+        participantsCount={participantsData?.participants.length}
+      />
 
       {/* Tab 1: Informations & Cycle de vie */}
       {activeTab === 'details' ? (
@@ -255,7 +361,7 @@ export function EventManagementScreen(): React.JSX.Element {
           control={control}
           errors={errors}
           isDirty={isDirty || hasNewCover}
-          isSubmitting={updateMutation.isPending || eventCover.isUploading}
+          isSubmitting={isSaving || eventCover.isUploading}
           saveDisabled={eventCover.hasBlockingImage}
           coverSection={
             currentEvent !== undefined && !isEventEditable(currentEvent) ? undefined : (
@@ -305,7 +411,7 @@ export function EventManagementScreen(): React.JSX.Element {
         visible={modalTargetState !== null}
         targetState={modalTargetState}
         eventTitle={currentEvent?.title ?? ''}
-        isPending={stateMutation.isPending}
+        isPending={isStatePending}
         onConfirm={() => {
           void handleConfirmStateChange();
         }}

@@ -16,6 +16,41 @@ export interface AppDateTimePickerProps {
   minimumDate?: Date;
 }
 
+type PickerMode = NonNullable<AppDateTimePickerProps['mode']>;
+
+const DEFAULT_LABELS: Record<PickerMode, string> = {
+  time: 'Heure',
+  date: 'Date',
+  datetime: 'Date et heure',
+};
+
+const WEB_INPUT_TYPES: Record<PickerMode, 'time' | 'date' | 'datetime-local'> = {
+  time: 'time',
+  date: 'date',
+  datetime: 'datetime-local',
+};
+
+// Formatage hors du composant : calcul pur, sans dépendance au rendu
+const formatDisplay = (value: Date, mode: PickerMode): string => {
+  if (mode === 'date') return value.toLocaleDateString('fr-FR');
+  if (mode === 'time') {
+    return value.toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' });
+  }
+  return value.toLocaleString('fr-FR', {
+    day: '2-digit',
+    month: '2-digit',
+    year: 'numeric',
+    hour: '2-digit',
+    minute: '2-digit',
+  });
+};
+
+const formatWebInputValue = (value: Date, mode: PickerMode): string => {
+  if (mode === 'time') return value.toTimeString().slice(0, 5);
+  if (mode === 'date') return value.toISOString().slice(0, 10);
+  return value.toISOString().slice(0, 16);
+};
+
 export const AppDateTimePicker = React.memo(function AppDateTimePicker({
   value,
   onChange,
@@ -83,29 +118,10 @@ export const AppDateTimePicker = React.memo(function AppDateTimePicker({
     [onChange],
   );
 
-  // Mémoïsation du formatage pour ne pas recalculer à chaque interaction UI
-  const displayFormat = useMemo(() => {
-    if (mode === 'date') return value.toLocaleDateString('fr-FR');
-    if (mode === 'time')
-      return value.toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' });
-    return value.toLocaleString('fr-FR', {
-      day: '2-digit',
-      month: '2-digit',
-      year: 'numeric',
-      hour: '2-digit',
-      minute: '2-digit',
-    });
-  }, [value, mode]);
-
-  const webInputValue = useMemo(() => {
-    if (mode === 'time') return value.toTimeString().slice(0, 5);
-    if (mode === 'date') return value.toISOString().slice(0, 10);
-    return value.toISOString().slice(0, 16);
-  }, [value, mode]);
-
-  const webAriaLabel =
-    label ?? (mode === 'time' ? 'Heure' : mode === 'date' ? 'Date' : 'Date et heure');
-  const webInputType = mode === 'time' ? 'time' : mode === 'date' ? 'date' : 'datetime-local';
+  const displayFormat = useMemo(() => formatDisplay(value, mode), [value, mode]);
+  const webInputValue = useMemo(() => formatWebInputValue(value, mode), [value, mode]);
+  const webAriaLabel = label ?? DEFAULT_LABELS[mode];
+  const webInputType = WEB_INPUT_TYPES[mode];
 
   return (
     <View style={styles.container}>

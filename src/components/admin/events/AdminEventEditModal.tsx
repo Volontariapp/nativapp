@@ -32,6 +32,82 @@ interface AdminEventEditModalProps {
   isLoading?: boolean;
 }
 
+interface ChipOption {
+  label: string;
+  value: number;
+  name: string;
+  color: string;
+}
+
+const TYPE_OPTIONS: ChipOption[] = [
+  {
+    label: '🤝  Social',
+    value: EventType.EVENT_TYPE_SOCIAL,
+    name: EventType[EventType.EVENT_TYPE_SOCIAL],
+    color: theme.colors.primarySocio,
+  },
+  {
+    label: '🌿  Écologie',
+    value: EventType.EVENT_TYPE_ECOLOGY,
+    name: EventType[EventType.EVENT_TYPE_ECOLOGY],
+    color: theme.colors.primaryEco,
+  },
+];
+
+const STATE_OPTIONS: ChipOption[] = [
+  {
+    label: 'Brouillon',
+    value: EventState.EVENT_STATE_DRAFT,
+    name: EventState[EventState.EVENT_STATE_DRAFT],
+    color: theme.colors.grey,
+  },
+  {
+    label: 'Publié',
+    value: EventState.EVENT_STATE_PUBLISHED,
+    name: EventState[EventState.EVENT_STATE_PUBLISHED],
+    color: theme.colors.primaryEco,
+  },
+  {
+    label: 'Annulé',
+    value: EventState.EVENT_STATE_CANCELLED,
+    name: EventState[EventState.EVENT_STATE_CANCELLED],
+    color: theme.colors.danger,
+  },
+];
+
+const NUMERIC_FIELDS = [
+  { name: 'maxParticipants', label: 'Participants Max *', placeholder: '10' },
+  { name: 'awardedImpactScore', label: "Score d'impact *", placeholder: '100' },
+] as const;
+
+interface ChipGroupProps {
+  label: string;
+  options: ChipOption[];
+  value: unknown;
+  onChange: (value: number) => void;
+}
+
+function ChipGroup({ label, options, value, onChange }: ChipGroupProps): React.JSX.Element {
+  return (
+    <View style={styles.inputGroup}>
+      <AppText style={styles.label}>{label}</AppText>
+      <View style={styles.themeChips}>
+        {options.map((option) => (
+          <FilterChip
+            key={option.name}
+            label={option.label}
+            selected={value === option.value || String(value) === option.name}
+            color={option.color}
+            onPress={() => {
+              onChange(option.value);
+            }}
+          />
+        ))}
+      </View>
+    </View>
+  );
+}
+
 export function AdminEventEditModal({
   visible,
   event,
@@ -147,33 +223,12 @@ export function AdminEventEditModal({
         control={control}
         name="type"
         render={({ field: { onChange, value } }) => (
-          <View style={styles.inputGroup}>
-            <AppText style={styles.label}>Thématique *</AppText>
-            <View style={styles.themeChips}>
-              <FilterChip
-                label="🤝  Social"
-                selected={
-                  value === EventType.EVENT_TYPE_SOCIAL ||
-                  String(value) === EventType[EventType.EVENT_TYPE_SOCIAL]
-                }
-                color={theme.colors.primarySocio}
-                onPress={() => {
-                  onChange(EventType.EVENT_TYPE_SOCIAL);
-                }}
-              />
-              <FilterChip
-                label="🌿  Écologie"
-                selected={
-                  value === EventType.EVENT_TYPE_ECOLOGY ||
-                  String(value) === EventType[EventType.EVENT_TYPE_ECOLOGY]
-                }
-                color={theme.colors.primaryEco}
-                onPress={() => {
-                  onChange(EventType.EVENT_TYPE_ECOLOGY);
-                }}
-              />
-            </View>
-          </View>
+          <ChipGroup
+            label="Thématique *"
+            options={TYPE_OPTIONS}
+            value={value}
+            onChange={onChange}
+          />
         )}
       />
 
@@ -181,82 +236,30 @@ export function AdminEventEditModal({
         control={control}
         name="state"
         render={({ field: { onChange, value } }) => (
-          <View style={styles.inputGroup}>
-            <AppText style={styles.label}>Statut *</AppText>
-            <View style={styles.themeChips}>
-              <FilterChip
-                label="Brouillon"
-                selected={
-                  value === EventState.EVENT_STATE_DRAFT ||
-                  String(value) === EventState[EventState.EVENT_STATE_DRAFT]
-                }
-                color={theme.colors.grey}
-                onPress={() => {
-                  onChange(EventState.EVENT_STATE_DRAFT);
-                }}
-              />
-              <FilterChip
-                label="Publié"
-                selected={
-                  value === EventState.EVENT_STATE_PUBLISHED ||
-                  String(value) === EventState[EventState.EVENT_STATE_PUBLISHED]
-                }
-                color={theme.colors.primaryEco}
-                onPress={() => {
-                  onChange(EventState.EVENT_STATE_PUBLISHED);
-                }}
-              />
-              <FilterChip
-                label="Annulé"
-                selected={
-                  value === EventState.EVENT_STATE_CANCELLED ||
-                  String(value) === EventState[EventState.EVENT_STATE_CANCELLED]
-                }
-                color={theme.colors.danger}
-                onPress={() => {
-                  onChange(EventState.EVENT_STATE_CANCELLED);
-                }}
-              />
-            </View>
-          </View>
+          <ChipGroup label="Statut *" options={STATE_OPTIONS} value={value} onChange={onChange} />
         )}
       />
 
       <View style={styles.rowInputs}>
-        <View style={styles.flex1}>
-          <Controller
-            control={control}
-            name="maxParticipants"
-            render={({ field: { onChange, onBlur, value } }) => (
-              <AppInput
-                label="Participants Max *"
-                onBlur={onBlur}
-                onChangeText={onChange}
-                value={value}
-                errorMessage={errors.maxParticipants?.message}
-                placeholder="10"
-                keyboardType="numeric"
-              />
-            )}
-          />
-        </View>
-        <View style={styles.flex1}>
-          <Controller
-            control={control}
-            name="awardedImpactScore"
-            render={({ field: { onChange, onBlur, value } }) => (
-              <AppInput
-                label="Score d'impact *"
-                onBlur={onBlur}
-                onChangeText={onChange}
-                value={value}
-                errorMessage={errors.awardedImpactScore?.message}
-                placeholder="100"
-                keyboardType="numeric"
-              />
-            )}
-          />
-        </View>
+        {NUMERIC_FIELDS.map((field) => (
+          <View key={field.name} style={styles.flex1}>
+            <Controller
+              control={control}
+              name={field.name}
+              render={({ field: { onChange, onBlur, value } }) => (
+                <AppInput
+                  label={field.label}
+                  onBlur={onBlur}
+                  onChangeText={onChange}
+                  value={value}
+                  errorMessage={errors[field.name]?.message}
+                  placeholder={field.placeholder}
+                  keyboardType="numeric"
+                />
+              )}
+            />
+          </View>
+        ))}
       </View>
 
       <View style={styles.modalActions}>

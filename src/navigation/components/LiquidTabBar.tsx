@@ -171,11 +171,7 @@ const createStyles = (theme: AppTheme) =>
       alignSelf: 'center',
       width: TAB_BAR_WIDTH,
       height: TAB_BAR_HEIGHT,
-      elevation: 10,
-      shadowColor: '#000',
-      shadowOffset: { width: 0, height: 10 },
-      shadowOpacity: 0.4,
-      shadowRadius: 20,
+      boxShadow: '0 10px 20px rgba(0, 0, 0, 0.4)',
       zIndex: 100,
     },
     backgroundPill: {
@@ -210,10 +206,7 @@ const createStyles = (theme: AppTheme) =>
       zIndex: 1,
       borderWidth: 1.5,
       borderColor: 'rgba(255, 255, 255, 0.4)',
-      shadowColor: '#5BC0F8', // subtle blue/white glow
-      shadowOffset: { width: 0, height: 0 },
-      shadowOpacity: 0.6,
-      shadowRadius: 8,
+      boxShadow: '0 0 8px rgba(91, 192, 248, 0.6)', // subtle blue/white glow
     },
     indicatorInner: {
       width: '100%',

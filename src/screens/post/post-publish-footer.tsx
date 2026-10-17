@@ -15,7 +15,7 @@ interface PostPublishFooterProps {
   onPublish: () => void;
 }
 
-export const isPublishBlocked = ({
+const isPublishBlocked = ({
   isBusy,
   isUploading,
   hasBlockingImage,

@@ -1,4 +1,4 @@
-import { useCallback, useMemo, useRef, useState } from 'react';
+import { useCallback, useLayoutEffect, useMemo, useRef, useState } from 'react';
 import { useNavigation } from '@react-navigation/native';
 import type { CompositeNavigationProp } from '@react-navigation/native';
 import type { BottomTabNavigationProp } from '@react-navigation/bottom-tabs';
@@ -81,7 +81,9 @@ export function useSwipeScreen(): UseSwipeScreenResult {
   const isEndReached = currentIndex >= events.length && !hasNextPage && !isFetchingNextPage;
 
   const swipeStateRef = useRef({ events, hasNextPage, isFetchingNextPage, fetchNextPage, wish });
-  swipeStateRef.current = { events, hasNextPage, isFetchingNextPage, fetchNextPage, wish };
+  useLayoutEffect(() => {
+    swipeStateRef.current = { events, hasNextPage, isFetchingNextPage, fetchNextPage, wish };
+  }, [events, hasNextPage, isFetchingNextPage, fetchNextPage, wish]);
 
   const handleSwipeRight = useCallback((cardIndex: number): void => {
     const { events: currentEvents, wish: currentWish } = swipeStateRef.current;

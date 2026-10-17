@@ -45,12 +45,7 @@ export function EventPreviewModal({
           {/* Header */}
           <View style={styles.header}>
             <View style={styles.headerLeft}>
-              <View
-                style={[
-                  styles.badge,
-                  isSocial ? styles.badgeSocial : styles.badgeEco,
-                ]}
-              >
+              <View style={[styles.badge, isSocial ? styles.badgeSocial : styles.badgeEco]}>
                 <Feather
                   name={isSocial ? 'users' : 'globe'}
                   size={12}
@@ -183,11 +178,7 @@ const createStyles = (theme: AppTheme) =>
       maxHeight: '85%',
       width: '100%',
       maxWidth: 480,
-      shadowColor: '#000',
-      shadowOffset: { width: 0, height: 8 },
-      shadowOpacity: 0.15,
-      shadowRadius: 20,
-      elevation: 8,
+      boxShadow: '0 8px 20px rgba(0, 0, 0, 0.15)',
     },
     header: {
       flexDirection: 'row',

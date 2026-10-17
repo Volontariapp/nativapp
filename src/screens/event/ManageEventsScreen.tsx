@@ -253,11 +253,7 @@ const createStyles = (theme: AppTheme) =>
       padding: theme.spacing.lg,
       borderWidth: 1,
       borderColor: theme.colors.lightGrey,
-      shadowColor: '#000',
-      shadowOffset: { width: 0, height: 2 },
-      shadowOpacity: 0.04,
-      shadowRadius: 8,
-      elevation: 2,
+      boxShadow: '0 2px 8px rgba(0, 0, 0, 0.04)',
     },
     sectionHeaderRow: {
       flexDirection: 'row',
