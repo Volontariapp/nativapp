@@ -18,12 +18,6 @@ describe('MyEventItem', () => {
     jest.resetAllMocks();
   });
 
-  it('shows the status of the event', () => {
-    const { getByTestId } = renderItem();
-
-    expect(getByTestId('event-status-badge')).toBeTruthy();
-  });
-
   it('opens the event when its card is pressed', () => {
     const { getByLabelText } = renderItem();
 

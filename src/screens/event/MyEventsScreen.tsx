@@ -10,7 +10,7 @@ import type { AppEvent } from '@/api/event/event.api';
 import { useNavigation } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import type { MainStackParamList } from '@/navigation/stacks/MainStack';
-import { groupEventsByType, type EventGroup } from '@/api/event/group-events';
+import { groupEventsByStatus, type EventStatusGroup } from '@/api/event/group-events-by-status';
 import { MyEventItem } from '@/components/event/my-event-item';
 
 export function MyEventsScreen(): React.JSX.Element {
@@ -22,7 +22,7 @@ export function MyEventsScreen(): React.JSX.Element {
     useGetMyEvents(10);
 
   const sections = useMemo(
-    () => groupEventsByType(data?.pages.flatMap((page) => page.events) ?? []),
+    () => groupEventsByStatus(data?.pages.flatMap((page) => page.events) ?? []),
     [data],
   );
 
@@ -41,7 +41,7 @@ export function MyEventsScreen(): React.JSX.Element {
   );
 
   const renderItem = useCallback(
-    ({ item }: SectionListRenderItemInfo<AppEvent, EventGroup>) => (
+    ({ item }: SectionListRenderItemInfo<AppEvent, EventStatusGroup>) => (
       <MyEventItem
         event={item}
         onPress={() => {
