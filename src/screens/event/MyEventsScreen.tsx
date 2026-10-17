@@ -12,6 +12,7 @@ import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import type { MainStackParamList } from '@/navigation/stacks/MainStack';
 import { groupEventsByStatus, type EventStatusGroup } from '@/api/event/group-events-by-status';
 import { MyEventItem } from '@/components/event/my-event-item';
+import { EventStatusSectionHeader } from '@/components/event/event-status-section-header';
 
 export function MyEventsScreen(): React.JSX.Element {
   const { theme } = useAppTheme();
@@ -87,9 +88,7 @@ export function MyEventsScreen(): React.JSX.Element {
           keyExtractor={keyExtractor}
           renderItem={renderItem}
           renderSectionHeader={({ section }) => (
-            <AppText style={styles.sectionTitle}>
-              {section.title} ({String(section.data.length)})
-            </AppText>
+            <EventStatusSectionHeader title={section.title} count={section.data.length} />
           )}
           stickySectionHeadersEnabled={false}
           contentContainerStyle={styles.listContent}
@@ -119,13 +118,6 @@ const createStyles = (theme: AppTheme) =>
       color: theme.colors.text,
       marginHorizontal: theme.spacing.xl,
       marginVertical: theme.spacing.md,
-    },
-    sectionTitle: {
-      fontSize: 18,
-      fontWeight: 'bold',
-      color: theme.colors.text,
-      marginTop: theme.spacing.lg,
-      marginBottom: theme.spacing.sm,
     },
     listContent: {
       paddingHorizontal: theme.spacing.xl,
