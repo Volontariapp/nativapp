@@ -32,7 +32,7 @@ export const IMPACT_RANKS: readonly ImpactRank[] = [
   { name: 'COMMUNITY RANGER', minPoints: 300, tagline: 'Tu fédères, la communauté avance.' },
   { name: 'IMPACT WARRIOR', minPoints: 700, tagline: 'Chaque mission change quelque chose.' },
   { name: 'CHANGE MAKER', minPoints: 1500, tagline: 'Tu protèges ce que les autres oublient.' },
-  { name: 'IMPACT MASTER', minPoints: 3000, tagline: 'Aucune mission ne te résiste.' },
+  { name: 'CLEANER MASTER', minPoints: 3000, tagline: 'Aucune mission ne te résiste.' },
   { name: 'HOPE GUARDIAN', minPoints: 5500, tagline: 'Tu veilles, les autres te le rendent.' },
   { name: 'WORLD DEFENDER', minPoints: 9000, tagline: 'Ton impact se voit depuis l’espace.' },
   {

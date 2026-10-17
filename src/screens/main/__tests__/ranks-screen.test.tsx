@@ -33,7 +33,7 @@ describe('RanksScreen', () => {
       ['COMMUNITY RANGER', '300 pts'],
       ['IMPACT WARRIOR', '700 pts'],
       ['CHANGE MAKER', '1 500 pts'],
-      ['IMPACT MASTER', '3 000 pts'],
+      ['CLEANER MASTER', '3 000 pts'],
       ['HOPE GUARDIAN', '5 500 pts'],
       ['WORLD DEFENDER', '9 000 pts'],
       ['LIVING LEGEND', '15 000 pts'],

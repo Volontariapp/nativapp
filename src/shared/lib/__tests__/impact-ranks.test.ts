@@ -20,7 +20,7 @@ describe('IMPACT_RANKS', () => {
       { name: 'COMMUNITY RANGER', minPoints: 300 },
       { name: 'IMPACT WARRIOR', minPoints: 700 },
       { name: 'CHANGE MAKER', minPoints: 1500 },
-      { name: 'IMPACT MASTER', minPoints: 3000 },
+      { name: 'CLEANER MASTER', minPoints: 3000 },
       { name: 'HOPE GUARDIAN', minPoints: 5500 },
       { name: 'WORLD DEFENDER', minPoints: 9000 },
       { name: 'LIVING LEGEND', minPoints: 15000 },
@@ -67,7 +67,7 @@ describe('getImpactRankStatus', () => {
     },
     {
       points: 3000,
-      current: 'IMPACT MASTER',
+      current: 'CLEANER MASTER',
       next: 'HOPE GUARDIAN',
       pointsToNext: 2500,
       ratio: 0,
