@@ -21,181 +21,149 @@ interface ProfileEventsTabsProps {
   wished?: PaginatedEventListData;
 }
 
-export function ProfileEventsTabs({ participated, finished, created, wished }: ProfileEventsTabsProps) {
+type TabKey = 'participated' | 'finished' | 'created' | 'wished';
+
+interface TabConfig {
+  key: TabKey;
+  icon: string;
+  activeVariant: 'socio' | 'eco' | 'danger';
+  title: string;
+  emptyText: string;
+}
+
+/** Ordre d'affichage des onglets dans la barre. */
+const TABS: TabConfig[] = [
+  {
+    key: 'participated',
+    icon: 'calendar',
+    activeVariant: 'socio',
+    title: 'Événements à venir',
+    emptyText: 'Aucun événement à venir pour le moment.',
+  },
+  {
+    key: 'finished',
+    icon: 'check-circle',
+    activeVariant: 'eco',
+    title: 'Événements terminés',
+    emptyText: 'Aucun événement terminé pour le moment.',
+  },
+  {
+    key: 'wished',
+    icon: 'heart',
+    activeVariant: 'danger',
+    title: 'Wishlist',
+    emptyText: 'Aucun événement dans votre wishlist.',
+  },
+  {
+    key: 'created',
+    icon: 'plus',
+    activeVariant: 'eco',
+    title: 'Mes événements créés',
+    emptyText: 'Aucun événement créé pour le moment.',
+  },
+];
+
+interface EventTabContentProps {
+  tab: TabConfig;
+  data: PaginatedEventListData;
+}
+
+function SeeMoreButton({ data }: { data: PaginatedEventListData }): React.JSX.Element {
+  const styles = useStyles(createStyles);
+
+  return (
+    <View style={styles.seeMoreContainer}>
+      <AppButton
+        variant="eco"
+        size="small"
+        text={data.isFetchingNextPage ? 'Chargement...' : 'Voir plus'}
+        onPress={() => {
+          data.fetchNextPage();
+        }}
+        disabled={data.isFetchingNextPage}
+      />
+    </View>
+  );
+}
+
+function EventList({ tab, data }: EventTabContentProps): React.JSX.Element {
+  const Card = tab.key === 'wished' ? WishedEventCard : EventCard;
+
+  return (
+    <View>
+      {data.events.map((event) => (
+        <Card key={event.id} event={event} />
+      ))}
+      {data.hasNextPage && <SeeMoreButton data={data} />}
+    </View>
+  );
+}
+
+function EventTabContent({ tab, data }: EventTabContentProps): React.JSX.Element {
   const { theme } = useAppTheme();
   const styles = useStyles(createStyles);
 
-  const defaultTab = participated ? 'participated' : finished ? 'finished' : created ? 'created' : 'wished';
-  const [activeTab, setActiveTab] = useState<'participated' | 'finished' | 'created' | 'wished'>(defaultTab);
+  return (
+    <ProfileSection title={tab.title}>
+      {data.isLoading ? (
+        <ActivityIndicator color={theme.colors.primaryEco} />
+      ) : data.events.length > 0 ? (
+        <EventList tab={tab} data={data} />
+      ) : (
+        <AppText style={styles.emptyText}>{tab.emptyText}</AppText>
+      )}
+    </ProfileSection>
+  );
+}
 
-  const availableTabsCount = [participated, finished, created, wished].filter(Boolean).length;
+export function ProfileEventsTabs({
+  participated,
+  finished,
+  created,
+  wished,
+}: ProfileEventsTabsProps) {
+  const { theme } = useAppTheme();
+  const styles = useStyles(createStyles);
+
+  const dataByTab: Record<TabKey, PaginatedEventListData | undefined> = {
+    participated,
+    finished,
+    created,
+    wished,
+  };
+  const availableTabs = TABS.filter((tab) => dataByTab[tab.key] !== undefined);
+
+  const defaultTab = (['participated', 'finished', 'created', 'wished'] as const).find(
+    (key) => dataByTab[key] !== undefined,
+  );
+  const [activeTab, setActiveTab] = useState<TabKey>(defaultTab ?? 'wished');
+
+  const activeConfig = TABS.find((tab) => tab.key === activeTab);
+  const activeData = dataByTab[activeTab];
 
   return (
     <>
-      {availableTabsCount > 1 && (
+      {availableTabs.length > 1 && (
         <View style={styles.tabBar}>
-          {participated && (
-            <AppIconsButton
-              icon="calendar"
-              size={48}
-              variant={activeTab === 'participated' ? 'socio' : 'white'}
-              iconColor={activeTab === 'participated' ? theme.colors.white : theme.colors.grey}
-              onPress={() => {
-                setActiveTab('participated');
-              }}
-            />
-          )}
-          {finished && (
-            <AppIconsButton
-              icon="check-circle"
-              size={48}
-              variant={activeTab === 'finished' ? 'eco' : 'white'}
-              iconColor={activeTab === 'finished' ? theme.colors.white : theme.colors.grey}
-              onPress={() => {
-                setActiveTab('finished');
-              }}
-            />
-          )}
-          {wished && (
-            <AppIconsButton
-              icon="heart"
-              size={48}
-              variant={activeTab === 'wished' ? 'danger' : 'white'}
-              iconColor={activeTab === 'wished' ? theme.colors.white : theme.colors.grey}
-              onPress={() => {
-                setActiveTab('wished');
-              }}
-            />
-          )}
-          {created && (
-            <AppIconsButton
-              icon="plus"
-              size={48}
-              variant={activeTab === 'created' ? 'eco' : 'white'}
-              iconColor={activeTab === 'created' ? theme.colors.white : theme.colors.grey}
-              onPress={() => {
-                setActiveTab('created');
-              }}
-            />
-          )}
+          {availableTabs.map((tab) => {
+            const isActive = activeTab === tab.key;
+            return (
+              <AppIconsButton
+                key={tab.key}
+                icon={tab.icon}
+                size={48}
+                variant={isActive ? tab.activeVariant : 'white'}
+                iconColor={isActive ? theme.colors.white : theme.colors.grey}
+                onPress={() => {
+                  setActiveTab(tab.key);
+                }}
+              />
+            );
+          })}
         </View>
       )}
 
-      {activeTab === 'participated' && participated && (
-        <ProfileSection title="Événements à venir">
-          {participated.isLoading ? (
-            <ActivityIndicator color={theme.colors.primaryEco} />
-          ) : participated.events.length > 0 ? (
-            <View>
-              {participated.events.map((event) => (
-                <EventCard key={event.id} event={event} />
-              ))}
-              {participated.hasNextPage && (
-                <View style={styles.seeMoreContainer}>
-                  <AppButton
-                    variant="eco"
-                    size="small"
-                    text={participated.isFetchingNextPage ? 'Chargement...' : 'Voir plus'}
-                    onPress={() => {
-                      participated.fetchNextPage();
-                    }}
-                    disabled={participated.isFetchingNextPage}
-                  />
-                </View>
-              )}
-            </View>
-          ) : (
-            <AppText style={styles.emptyText}>Aucun événement à venir pour le moment.</AppText>
-          )}
-        </ProfileSection>
-      )}
-
-      {activeTab === 'finished' && finished && (
-        <ProfileSection title="Événements terminés">
-          {finished.isLoading ? (
-            <ActivityIndicator color={theme.colors.primaryEco} />
-          ) : finished.events.length > 0 ? (
-            <View>
-              {finished.events.map((event) => (
-                <EventCard key={event.id} event={event} />
-              ))}
-              {finished.hasNextPage && (
-                <View style={styles.seeMoreContainer}>
-                  <AppButton
-                    variant="eco"
-                    size="small"
-                    text={finished.isFetchingNextPage ? 'Chargement...' : 'Voir plus'}
-                    onPress={() => {
-                      finished.fetchNextPage();
-                    }}
-                    disabled={finished.isFetchingNextPage}
-                  />
-                </View>
-              )}
-            </View>
-          ) : (
-            <AppText style={styles.emptyText}>Aucun événement terminé pour le moment.</AppText>
-          )}
-        </ProfileSection>
-      )}
-
-      {activeTab === 'created' && created && (
-        <ProfileSection title="Mes événements créés">
-          {created.isLoading ? (
-            <ActivityIndicator color={theme.colors.primaryEco} />
-          ) : created.events.length > 0 ? (
-            <View>
-              {created.events.map((event) => (
-                <EventCard key={event.id} event={event} />
-              ))}
-              {created.hasNextPage && (
-                <View style={styles.seeMoreContainer}>
-                  <AppButton
-                    variant="eco"
-                    size="small"
-                    text={created.isFetchingNextPage ? 'Chargement...' : 'Voir plus'}
-                    onPress={() => {
-                      created.fetchNextPage();
-                    }}
-                    disabled={created.isFetchingNextPage}
-                  />
-                </View>
-              )}
-            </View>
-          ) : (
-            <AppText style={styles.emptyText}>Aucun événement créé pour le moment.</AppText>
-          )}
-        </ProfileSection>
-      )}
-
-      {activeTab === 'wished' && wished && (
-        <ProfileSection title="Wishlist">
-          {wished.isLoading ? (
-            <ActivityIndicator color={theme.colors.primaryEco} />
-          ) : wished.events.length > 0 ? (
-            <View>
-              {wished.events.map((event) => (
-                <WishedEventCard key={event.id} event={event} />
-              ))}
-              {wished.hasNextPage && (
-                <View style={styles.seeMoreContainer}>
-                  <AppButton
-                    variant="eco"
-                    size="small"
-                    text={wished.isFetchingNextPage ? 'Chargement...' : 'Voir plus'}
-                    onPress={() => {
-                      wished.fetchNextPage();
-                    }}
-                    disabled={wished.isFetchingNextPage}
-                  />
-                </View>
-              )}
-            </View>
-          ) : (
-            <AppText style={styles.emptyText}>Aucun événement dans votre wishlist.</AppText>
-          )}
-        </ProfileSection>
-      )}
+      {activeConfig && activeData && <EventTabContent tab={activeConfig} data={activeData} />}
     </>
   );
 }

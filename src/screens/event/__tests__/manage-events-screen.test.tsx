@@ -11,7 +11,6 @@ import * as getMyPostsHook from '@/api/post/hooks/use-get-my-posts';
 import type * as ReactNavigationNative from '@react-navigation/native';
 import type * as ReactNative from 'react-native';
 
-
 jest.mock('@react-navigation/native', () => {
   const actual = jest.requireActual<typeof ReactNavigationNative>('@react-navigation/native');
   return {

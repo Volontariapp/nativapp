@@ -133,7 +133,7 @@ export const EventCard = React.memo(function EventCard({
               <View style={styles.participants}>
                 {avatars.map((url, i) => (
                   <Image
-                    key={`${url}-${String(i)}`}
+                    key={url}
                     source={{ uri: url }}
                     style={[styles.avatar, i > 0 && styles.avatarOverlap, { zIndex: 10 - i }]}
                     contentFit="cover"

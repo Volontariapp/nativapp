@@ -9,6 +9,7 @@ import Animated, {
 import { AppText } from '@/components/typography/AppText';
 import { useAppTheme, useStyles } from '@/context/ThemeContext';
 import type { AppTheme } from '@/shared/themes/theme';
+import type { Socket } from 'socket.io-client';
 import { useSocket } from '@/context/SocketContext';
 import { useNavigation } from '@react-navigation/native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -23,6 +24,28 @@ interface WsEvent {
 }
 
 const EVENT_NAMES = ['ws.user.created', 'ws.event.created', 'unauthorized', 'connect_error'];
+
+/** Écoute tous les évènements suivis et renvoie la fonction qui les retire. */
+function listenToEvents(socket: Socket, onEvent: (event: WsEvent) => void): () => void {
+  const listeners = EVENT_NAMES.map((name) => {
+    const listener = (payload: unknown): void => {
+      onEvent({
+        id: `${Date.now().toString()}-${Math.random().toString()}`,
+        eventName: name,
+        payload,
+        receivedAt: new Date(),
+      });
+    };
+    socket.on(name, listener);
+    return { name, listener };
+  });
+
+  return (): void => {
+    for (const { name, listener } of listeners) {
+      socket.off(name, listener);
+    }
+  };
+}
 
 const EVENT_COLORS: Record<string, string> = {
   'ws.user.created': '#2f6e3e',
@@ -87,27 +110,9 @@ export function WsFeedbackScreen(): React.JSX.Element {
   useEffect(() => {
     if (!socket) return;
 
-    const handlers: Array<{ name: string; fn: (payload: unknown) => void }> = [];
-
-    for (const name of EVENT_NAMES) {
-      const fn = (payload: unknown): void => {
-        const newEvent: WsEvent = {
-          id: `${Date.now().toString()}-${Math.random().toString()}`,
-          eventName: name,
-          payload,
-          receivedAt: new Date(),
-        };
-        setEvents((prev) => [newEvent, ...prev].slice(0, 50));
-      };
-      socket.on(name, fn);
-      handlers.push({ name, fn });
-    }
-
-    return (): void => {
-      for (const { name, fn } of handlers) {
-        socket.off(name, fn);
-      }
-    };
+    return listenToEvents(socket, (newEvent) => {
+      setEvents((prev) => [newEvent, ...prev].slice(0, 50));
+    });
   }, [socket]);
 
   const clearEvents = (): void => {

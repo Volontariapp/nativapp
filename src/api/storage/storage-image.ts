@@ -28,7 +28,11 @@ export const prepareImageForUpload = async (
   }
   const rendered = await context.renderAsync();
   const saved = await rendered.saveAsync({ format: SaveFormat.JPEG, compress: JPEG_QUALITY });
-  const sizeBytes = (await (await fetch(saved.uri)).blob()).size;
+  const savedResponse = await fetch(saved.uri);
+  if (savedResponse.status >= 400) {
+    throw new Error(`Lecture de l'image préparée impossible (${String(savedResponse.status)})`);
+  }
+  const sizeBytes = (await savedResponse.blob()).size;
 
   return {
     uri: saved.uri,

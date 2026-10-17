@@ -314,5 +314,5 @@ export const useNotificationHandlers = (
       socket.off(WebsocketMessagingType.FALLBACK_UPDATE_TAG, handleFallbackUpdateTag);
       socket.off(WebsocketMessagingType.FALLBACK_DELETE_TAG, handleFallbackDeleteTag);
     };
-  }, [socket]);
+  }, [socket, queryClient]);
 };

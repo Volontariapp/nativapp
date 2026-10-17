@@ -30,9 +30,12 @@ export function HomeScreen(): React.JSX.Element {
   const handleRefresh = useCallback(async () => {
     setIsRefreshing(true);
     randomSortMap.current = {};
-    await refetch();
-    setRefreshCount((c) => c + 1);
-    setIsRefreshing(false);
+    try {
+      await refetch();
+      setRefreshCount((c) => c + 1);
+    } finally {
+      setIsRefreshing(false);
+    }
   }, [refetch]);
 
   const posts = useMemo(() => {

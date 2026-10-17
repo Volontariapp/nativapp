@@ -213,5 +213,3 @@ export function useExploreScreen(): UseExploreScreenResult {
     handleMapPress,
   };
 }
-
-

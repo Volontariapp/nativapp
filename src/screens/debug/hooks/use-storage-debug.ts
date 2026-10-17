@@ -12,7 +12,13 @@ import type { DebugFile, DebugLogEntry, DebugStep } from '../storage-debug.types
 
 const hostOf = (url: string): string => /^https?:\/\/([^/]+)/i.exec(url)?.[1] ?? url;
 
-const readSize = async (uri: string): Promise<number> => (await (await fetch(uri)).blob()).size;
+const readSize = async (uri: string): Promise<number> => {
+  const response = await fetch(uri);
+  if (response.status >= 400) {
+    throw new Error(`Lecture du fichier impossible (${String(response.status)})`);
+  }
+  return (await response.blob()).size;
+};
 
 const errorMessage = (error: unknown): string =>
   error instanceof Error ? error.message : String(error);

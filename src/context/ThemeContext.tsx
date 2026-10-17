@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useEffect, useState, useMemo } from 'react';
+import React, { createContext, useCallback, useContext, useEffect, useState, useMemo } from 'react';
 import * as SecureStore from 'expo-secure-store';
 import { Platform } from 'react-native';
 import { lightTheme, darkTheme, type AppTheme } from '@/shared/themes/theme';
@@ -60,26 +60,23 @@ export const ThemeProvider = ({ children }: { children: React.ReactNode }) => {
     void loadTheme();
   }, []);
 
-  const setThemeMode = (mode: ThemeMode) => {
+  const setThemeMode = useCallback((mode: ThemeMode) => {
     setThemeModeState(mode);
     void saveThemePreference(mode);
-  };
+  }, []);
 
-  const toggleTheme = () => {
-    setThemeModeState((prevMode: ThemeMode) => {
-      const newMode = prevMode === 'light' ? 'dark' : 'light';
-      void saveThemePreference(newMode);
-      return newMode;
-    });
-  };
+  const toggleTheme = useCallback(() => {
+    setThemeMode(themeMode === 'light' ? 'dark' : 'light');
+  }, [themeMode, setThemeMode]);
 
   const theme = themeMode === 'light' ? lightTheme : darkTheme;
 
-  return (
-    <ThemeContext.Provider value={{ theme, themeMode, toggleTheme, setThemeMode }}>
-      {children}
-    </ThemeContext.Provider>
+  const value = useMemo(
+    () => ({ theme, themeMode, toggleTheme, setThemeMode }),
+    [theme, themeMode, toggleTheme, setThemeMode],
   );
+
+  return <ThemeContext.Provider value={value}>{children}</ThemeContext.Provider>;
 };
 
 export const useAppTheme = () => useContext(ThemeContext);

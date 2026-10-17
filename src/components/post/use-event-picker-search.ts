@@ -24,7 +24,7 @@ interface EventPickerSearch {
  * serveur (`searchTerm`) apres un court delai de saisie.
  */
 export const useEventPickerSearch = (query: string): EventPickerSearch => {
-  const [debouncedQuery, setDebouncedQuery] = useState(query.trim());
+  const [debouncedQuery, setDebouncedQuery] = useState(() => query.trim());
 
   useEffect(() => {
     const timer = setTimeout(() => {

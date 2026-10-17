@@ -255,8 +255,7 @@ const createStyles = (theme: AppTheme) =>
       height: '100%',
       backgroundColor: 'transparent',
       borderWidth: 0,
-      elevation: 0,
-      shadowOpacity: 0,
+      boxShadow: '0 0 0 rgba(0, 0, 0, 0)',
     },
     buttonsContainer: {
       position: 'absolute',

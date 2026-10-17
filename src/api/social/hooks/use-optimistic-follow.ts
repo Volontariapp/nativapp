@@ -1,9 +1,15 @@
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { Alert } from 'react-native';
 import { useGetIsFollowing } from './use-get-is-following';
 import { useGetFollows } from './use-get-follows';
 import { useGetFollowers } from './use-get-followers';
 import { useUserSocialActions } from './use-user-social-actions';
+
+/** Valeur affichée en attendant le serveur ; ignorée dès que le serveur change d'état. */
+interface FollowOverride {
+  value: boolean;
+  serverWas: boolean;
+}
 
 interface UseOptimisticFollowReturn {
   isFollowing: boolean;
@@ -13,6 +19,25 @@ interface UseOptimisticFollowReturn {
   isFollowActionPending: boolean;
   handleFollowPress: () => void;
 }
+
+interface Paginated {
+  pagination?: { total?: number };
+}
+
+const totalOf = (data: Paginated | undefined): number => data?.pagination?.total ?? 0;
+
+const resolveFollowState = (
+  override: FollowOverride | null,
+  serverIsFollowing: boolean,
+): { isFollowing: boolean; followersDelta: number } => {
+  if (override?.serverWas !== serverIsFollowing) {
+    return { isFollowing: serverIsFollowing, followersDelta: 0 };
+  }
+  return {
+    isFollowing: override.value,
+    followersDelta: Number(override.value) - Number(serverIsFollowing),
+  };
+};
 
 export function useOptimisticFollow(
   userId: string,
@@ -27,35 +52,19 @@ export function useOptimisticFollow(
   const { data: followersData } = useGetFollowers(userId, { page: 1, limit: 1 });
   const { follow, unfollow, isFollowingPending, isUnfollowingPending } = useUserSocialActions();
 
-  const [followOverride, setFollowOverride] = useState<boolean | null>(null);
+  const [followOverride, setFollowOverride] = useState<FollowOverride | null>(null);
   const serverIsFollowing = isFollowingData?.isFollowing ?? false;
-  const isFollowing = followOverride ?? serverIsFollowing;
+  const { isFollowing, followersDelta } = resolveFollowState(followOverride, serverIsFollowing);
   const isFollowActionPending = isFollowingPending || isUnfollowingPending;
-
-  const [localFollowersCount, setLocalFollowersCount] = useState<number>(0);
-
-  useEffect(() => {
-    if (followersData?.pagination?.total !== undefined) {
-      setLocalFollowersCount(followersData.pagination.total);
-    }
-  }, [followersData?.pagination?.total]);
-
-  useEffect(() => {
-    if (followOverride !== null && serverIsFollowing === followOverride) {
-      setFollowOverride(null);
-    }
-  }, [serverIsFollowing, followOverride]);
+  const localFollowersCount = Math.max(0, totalOf(followersData) + followersDelta);
 
   const handleFollowPress = () => {
     const nextIsFollowing = !isFollowing;
-    setFollowOverride(nextIsFollowing);
-
-    setLocalFollowersCount((prev) => (nextIsFollowing ? prev + 1 : Math.max(0, prev - 1)));
+    setFollowOverride({ value: nextIsFollowing, serverWas: serverIsFollowing });
 
     const mutate = nextIsFollowing ? follow : unfollow;
     void mutate(userId).catch(() => {
-      setFollowOverride(!nextIsFollowing);
-      setLocalFollowersCount((prev) => (!nextIsFollowing ? prev + 1 : Math.max(0, prev - 1)));
+      setFollowOverride(null);
       Alert.alert('Erreur', "Cette action n'a pas pu être effectuée. Réessaie plus tard.");
     });
   };
@@ -63,7 +72,7 @@ export function useOptimisticFollow(
   return {
     isFollowing,
     localFollowersCount,
-    followsCount: followsData?.pagination?.total ?? 0,
+    followsCount: totalOf(followsData),
     isMyFollowsLoading,
     isFollowActionPending,
     handleFollowPress,
