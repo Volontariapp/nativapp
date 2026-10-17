@@ -84,11 +84,7 @@ export const createEventSelectorStyles = (theme: AppTheme) =>
       borderColor: theme.colors.primaryEco,
       borderRadius: theme.radius.lg,
       padding: theme.spacing.md,
-      shadowColor: theme.colors.primaryEco,
-      shadowOffset: { width: 0, height: 2 },
-      shadowOpacity: 0.08,
-      shadowRadius: 8,
-      elevation: 2,
+      boxShadow: `0 2px 8px ${theme.colors.primaryEco}14`,
     },
     selectedCardHeader: {
       flexDirection: 'row',

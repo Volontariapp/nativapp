@@ -103,7 +103,7 @@
     "jest-expo": "~54.0.18",
     "lint-staged": "^15.4.3",
     "prettier": "^3.5.2",
-    "react-doctor": "^0.4.0",
+    "react-doctor": "^0.9.18",
     "react-test-renderer": "19.1.0",
     "typescript": "~5.9.2",
     "typescript-eslint": "^8.19.1"

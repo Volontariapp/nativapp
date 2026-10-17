@@ -1,5 +1,5 @@
 import type { ReactNode } from 'react';
-import React, { createContext, useContext, useState } from 'react';
+import React, { createContext, useCallback, useContext, useMemo, useState } from 'react';
 
 interface DebugContextType {
   isDebugMode: boolean;
@@ -11,15 +11,13 @@ const DebugContext = createContext<DebugContextType | undefined>(undefined);
 export function DebugProvider({ children }: { children: ReactNode }): React.JSX.Element {
   const [isDebugMode, setIsDebugMode] = useState(false);
 
-  const toggleDebugMode = () => {
+  const toggleDebugMode = useCallback(() => {
     setIsDebugMode((prev) => !prev);
-  };
+  }, []);
 
-  return (
-    <DebugContext.Provider value={{ isDebugMode, toggleDebugMode }}>
-      {children}
-    </DebugContext.Provider>
-  );
+  const value = useMemo(() => ({ isDebugMode, toggleDebugMode }), [isDebugMode, toggleDebugMode]);
+
+  return <DebugContext.Provider value={value}>{children}</DebugContext.Provider>;
 }
 
 export function useDebug(): DebugContextType {

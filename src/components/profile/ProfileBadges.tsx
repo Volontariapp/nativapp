@@ -64,15 +64,12 @@ export const ProfileBadges = ({ badges }: ProfileBadgesProps): React.JSX.Element
     [styles, theme.colors.grey],
   );
 
-  const keyExtractor = useCallback(
-    (item: BadgeWeb | string, index: number) => {
-      const indexStr = String(index);
-      if (typeof item === 'string') return `${item}-${indexStr}`;
-      const obj = item as { id?: string; slug?: string; name?: string };
-      return obj.id ?? obj.slug ?? obj.name ?? `badge-${indexStr}`;
-    },
-    [],
-  );
+  const keyExtractor = useCallback((item: BadgeWeb | string, index: number) => {
+    const indexStr = String(index);
+    if (typeof item === 'string') return `${item}-${indexStr}`;
+    const obj = item as { id?: string; slug?: string; name?: string };
+    return obj.id ?? obj.slug ?? obj.name ?? `badge-${indexStr}`;
+  }, []);
 
   if (badgesList.length === 0) {
     return (

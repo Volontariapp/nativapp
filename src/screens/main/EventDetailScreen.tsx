@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback, useMemo } from 'react';
+import React, { useState, useCallback, useMemo } from 'react';
 import {
   View,
   StyleSheet,
@@ -40,6 +40,141 @@ import AppMap from '@/components/map/AppMap';
 
 type Props = NativeStackScreenProps<MainStackParamList, 'EventDetail'>;
 
+function EventDescription({ event }: { event: AppEvent }): React.JSX.Element {
+  const styles = useStyles(createStyles);
+
+  return (
+    <View style={styles.section}>
+      <AppText style={styles.sectionTitle}>Description</AppText>
+      <AppText style={styles.descriptionText}>{event.description}</AppText>
+
+      {event.tags && event.tags.length > 0 && <EventTags tags={event.tags} />}
+    </View>
+  );
+}
+
+function EventLocation({ event }: { event: AppEvent }): React.JSX.Element {
+  const styles = useStyles(createStyles);
+
+  return (
+    <View style={styles.mapSection}>
+      <AppText style={styles.sectionTitle}>Lieu</AppText>
+      <View style={styles.mapContainer}>
+        <AppMap
+          events={[event]}
+          initialCenter={event.location}
+          scrollEnabled={false}
+          zoomEnabled={false}
+        />
+      </View>
+    </View>
+  );
+}
+
+function EventExtras({ event }: { event: AppEvent }): React.JSX.Element {
+  return (
+    <>
+      {event.requirements && event.requirements.length > 0 && (
+        <EventRequirements requirements={event.requirements} />
+      )}
+      {event.location && <EventLocation event={event} />}
+    </>
+  );
+}
+
+function EventDetailBody({ event }: { event: AppEvent }): React.JSX.Element {
+  const styles = useStyles(createStyles);
+
+  return (
+    <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
+      <EventCover event={event} />
+
+      <View style={styles.content}>
+        <AppText style={styles.categoryTitle}>{mapEventType(event.type)}</AppText>
+        <AppText style={styles.title}>{event.title}</AppText>
+        {event.awardedImpactScore > 0 && (
+          <ImpactScoreBadge score={event.awardedImpactScore} style={{ marginBottom: 16 }} />
+        )}
+
+        <EventOrganizer organizerId={event.organizerId} />
+        <EventInfoCards event={event} />
+        <EventDescription event={event} />
+        <EventParticipants event={event} />
+        <EventExtras event={event} />
+      </View>
+    </ScrollView>
+  );
+}
+
+interface BottomActionProps {
+  icon: string;
+  label: string;
+  isPending: boolean;
+  onPress: () => void;
+  highlighted?: boolean;
+}
+
+function BottomAction({
+  icon,
+  label,
+  isPending,
+  onPress,
+  highlighted = false,
+}: BottomActionProps): React.JSX.Element {
+  const { theme } = useAppTheme();
+  const styles = useStyles(createStyles);
+
+  return (
+    <View style={styles.bottomBar}>
+      <Pressable
+        style={[styles.joinButton, highlighted && styles.joinedButton]}
+        onPress={onPress}
+        disabled={isPending}
+      >
+        {isPending ? (
+          <ActivityIndicator color={theme.colors.white} />
+        ) : (
+          <>
+            <AppIcons icon={icon} iconLibrary="Feather" size={20} color={theme.colors.white} />
+            <AppText style={styles.joinButtonText}>{label}</AppText>
+          </>
+        )}
+      </Pressable>
+    </View>
+  );
+}
+
+interface JoinBarProps {
+  isJoined: boolean;
+  isPending: boolean;
+  onJoin: () => void;
+  onUnjoin: () => void;
+}
+
+function JoinBar({ isJoined, isPending, onJoin, onUnjoin }: JoinBarProps): React.JSX.Element {
+  return isJoined ? (
+    <BottomAction
+      icon="x"
+      label="Ne plus y participer"
+      isPending={isPending}
+      onPress={onUnjoin}
+      highlighted
+    />
+  ) : (
+    <BottomAction icon="user-plus" label="Rejoindre" isPending={isPending} onPress={onJoin} />
+  );
+}
+
+const isJoinedByVisitor = (
+  isJoined: boolean,
+  profile: { id: string } | undefined,
+  organizerId: string | undefined,
+): boolean => isJoined && profile !== undefined && profile.id !== organizerId;
+
+/** Un visiteur inscrit compte forcément avec l'organisateur : au moins 2 participants. */
+const applyJoinFloor = (count: number, joinedByVisitor: boolean): number =>
+  joinedByVisitor && count < 2 ? Math.max(2, count + 1) : count;
+
 export function EventDetailScreen({ route }: Props): React.JSX.Element {
   const { theme } = useAppTheme();
   const styles = useStyles(createStyles);
@@ -65,18 +200,14 @@ export function EventDetailScreen({ route }: Props): React.JSX.Element {
     [participations?.pages, event.id],
   );
 
-  const [optimisticEvent, setOptimisticEvent] = useState<AppEvent>(event);
+  const [participantsDelta, setParticipantsDelta] = useState(0);
 
-  useEffect(() => {
-    if (isJoined && profile && profile.id !== event.organizerId) {
-      setOptimisticEvent((prev) => {
-        if (prev.currentParticipants < 2) {
-          return { ...prev, currentParticipants: Math.max(2, prev.currentParticipants + 1) };
-        }
-        return prev;
-      });
-    }
-  }, [isJoined, profile, event.organizerId]);
+  const optimisticEvent = useMemo<AppEvent>(() => {
+    const baseCount = Math.max(0, event.currentParticipants + participantsDelta);
+    const joinedByVisitor = isJoinedByVisitor(isJoined, profile, event.organizerId);
+    const currentParticipants = applyJoinFloor(baseCount, joinedByVisitor);
+    return { ...event, currentParticipants };
+  }, [event, participantsDelta, isJoined, profile]);
 
   const isOrganizer = useMemo(() => {
     const currentId = userId ?? profile?.id;
@@ -109,10 +240,7 @@ export function EventDetailScreen({ route }: Props): React.JSX.Element {
     }
     participate(event.id)
       .then(() => {
-        setOptimisticEvent((prev) => ({
-          ...prev,
-          currentParticipants: prev.currentParticipants + 1,
-        }));
+        setParticipantsDelta((prev) => prev + 1);
         Alert.alert('Succès', 'Vous participez maintenant à cet événement !');
         navigation.navigate('MainTabs', { screen: 'profil' });
       })
@@ -124,10 +252,7 @@ export function EventDetailScreen({ route }: Props): React.JSX.Element {
   const handleUnjoin = useCallback(() => {
     unparticipate(event.id)
       .then(() => {
-        setOptimisticEvent((prev) => ({
-          ...prev,
-          currentParticipants: Math.max(0, prev.currentParticipants - 1),
-        }));
+        setParticipantsDelta((prev) => prev - 1);
         Alert.alert('Succès', 'Vous ne participez plus à cet événement.');
       })
       .catch(() => {
@@ -174,91 +299,15 @@ export function EventDetailScreen({ route }: Props): React.JSX.Element {
         </View>
       </SafeAreaView>
 
-      <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
-        <EventCover event={optimisticEvent} />
+      <EventDetailBody event={optimisticEvent} />
 
-        <View style={styles.content}>
-          <AppText style={styles.categoryTitle}>{mapEventType(optimisticEvent.type)}</AppText>
-          <AppText style={styles.title}>{optimisticEvent.title}</AppText>
-          {optimisticEvent.awardedImpactScore > 0 && (
-            <ImpactScoreBadge
-              score={optimisticEvent.awardedImpactScore}
-              style={{ marginBottom: 16 }}
-            />
-          )}
-
-          <EventOrganizer organizerId={optimisticEvent.organizerId} />
-
-          <EventInfoCards event={optimisticEvent} />
-
-          <View style={styles.section}>
-            <AppText style={styles.sectionTitle}>Description</AppText>
-            <AppText style={styles.descriptionText}>{optimisticEvent.description}</AppText>
-
-            {optimisticEvent.tags && optimisticEvent.tags.length > 0 && (
-              <EventTags tags={optimisticEvent.tags} />
-            )}
-          </View>
-
-          <EventParticipants event={optimisticEvent} />
-
-          {optimisticEvent.requirements && optimisticEvent.requirements.length > 0 && (
-            <EventRequirements requirements={optimisticEvent.requirements} />
-          )}
-
-          {optimisticEvent.location && (
-            <View style={styles.mapSection}>
-              <AppText style={styles.sectionTitle}>Lieu</AppText>
-              <View style={styles.mapContainer}>
-                <AppMap
-                  events={[optimisticEvent]}
-                  initialCenter={optimisticEvent.location}
-                  scrollEnabled={false}
-                  zoomEnabled={false}
-                />
-              </View>
-            </View>
-          )}
-        </View>
-      </ScrollView>
-
-      {!isOrganizer && isJoinable && !isJoined && (
-        <View style={styles.bottomBar}>
-          <Pressable style={styles.joinButton} onPress={handleJoin} disabled={isParticipating}>
-            {isParticipating ? (
-              <ActivityIndicator color={theme.colors.white} />
-            ) : (
-              <>
-                <AppIcons
-                  icon="user-plus"
-                  iconLibrary="Feather"
-                  size={20}
-                  color={theme.colors.white}
-                />
-                <AppText style={styles.joinButtonText}>Rejoindre</AppText>
-              </>
-            )}
-          </Pressable>
-        </View>
-      )}
-
-      {!isOrganizer && isJoinable && isJoined && (
-        <View style={styles.bottomBar}>
-          <Pressable
-            style={[styles.joinButton, styles.joinedButton]}
-            onPress={handleUnjoin}
-            disabled={isUnparticipating}
-          >
-            {isUnparticipating ? (
-              <ActivityIndicator color={theme.colors.white} />
-            ) : (
-              <>
-                <AppIcons icon="x" iconLibrary="Feather" size={20} color={theme.colors.white} />
-                <AppText style={styles.joinButtonText}>Ne plus y participer</AppText>
-              </>
-            )}
-          </Pressable>
-        </View>
+      {!isOrganizer && isJoinable && (
+        <JoinBar
+          isJoined={isJoined}
+          isPending={isJoined ? isUnparticipating : isParticipating}
+          onJoin={handleJoin}
+          onUnjoin={handleUnjoin}
+        />
       )}
     </View>
   );

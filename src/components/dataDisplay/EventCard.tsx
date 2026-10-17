@@ -20,6 +20,23 @@ export interface EventCardProps {
   onEdit?: () => void;
 }
 
+interface DetailRowProps {
+  icon: string;
+  numberOfLines?: number;
+  children: React.ReactNode;
+}
+
+function DetailRow({ icon, numberOfLines, children }: DetailRowProps): React.JSX.Element {
+  return (
+    <View style={styles.detailRow}>
+      <Feather name={icon} size={14} color={theme.colors.grey} />
+      <AppText style={styles.detailText} numberOfLines={numberOfLines}>
+        {children}
+      </AppText>
+    </View>
+  );
+}
+
 export function EventCard({ event, onPress, onEdit }: EventCardProps): React.JSX.Element {
   const navigation = useNavigation<NativeStackNavigationProp<MainStackParamList>>();
 
@@ -88,19 +105,13 @@ export function EventCard({ event, onPress, onEdit }: EventCardProps): React.JSX
           {event.title}
         </AppText>
 
-        <View style={styles.detailRow}>
-          <Feather name="map-pin" size={14} color={theme.colors.grey} />
-          <AppText style={styles.detailText} numberOfLines={1}>
-            {event.localisationName}
-          </AppText>
-        </View>
+        <DetailRow icon="map-pin" numberOfLines={1}>
+          {event.localisationName}
+        </DetailRow>
 
-        <View style={styles.detailRow}>
-          <Feather name="calendar" size={14} color={theme.colors.grey} />
-          <AppText style={styles.detailText}>
-            {formattedDate} - {formattedTime}
-          </AppText>
-        </View>
+        <DetailRow icon="calendar">
+          {formattedDate} - {formattedTime}
+        </DetailRow>
       </View>
 
       {onEdit !== undefined && (

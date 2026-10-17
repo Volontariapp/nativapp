@@ -19,6 +19,52 @@ const PUBLIC_EVENT_STATUSES = [
   EventState.EVENT_STATE_IN_PROGRESS,
 ];
 
+interface ProfileActionsProps {
+  isFollowing: boolean;
+  isLoading: boolean;
+  isPending: boolean;
+  onFollowPress: () => void;
+}
+
+const FOLLOW_BUTTON = { variant: 'eco', icon: 'user-plus', label: 'Suivre' } as const;
+const UNFOLLOW_BUTTON = { variant: 'danger', icon: 'user-minus', label: 'Ne plus suivre' } as const;
+
+function ProfileActions({
+  isFollowing,
+  isLoading,
+  isPending,
+  onFollowPress,
+}: ProfileActionsProps): React.JSX.Element {
+  const styles = useStyles(createStyles);
+  const button = isFollowing ? UNFOLLOW_BUTTON : FOLLOW_BUTTON;
+
+  return (
+    <View style={styles.followButtonContainer}>
+      <View style={styles.buttonWrapper}>
+        <AppButton
+          variant={button.variant}
+          size="small"
+          icon={button.icon}
+          text={isLoading ? '...' : button.label}
+          disabled={isLoading || isPending}
+          onPress={onFollowPress}
+        />
+      </View>
+      <View style={styles.buttonWrapper}>
+        <AppButton
+          variant="secondary"
+          size="small"
+          icon="message-circle"
+          text="Message"
+          onPress={() => {
+            Alert.alert('Message', 'Bientôt disponible 💬');
+          }}
+        />
+      </View>
+    </View>
+  );
+}
+
 export function PublicProfileScreen(): React.JSX.Element {
   const { theme } = useAppTheme();
   const styles = useStyles(createStyles);
@@ -99,29 +145,12 @@ export function PublicProfileScreen(): React.JSX.Element {
             ]}
             headerAction={
               currentUserId === params.userId ? null : (
-                <View style={styles.followButtonContainer}>
-                  <View style={styles.buttonWrapper}>
-                    <AppButton
-                      variant={isFollowing ? 'danger' : 'eco'}
-                      size="small"
-                      icon={isFollowing ? 'user-minus' : 'user-plus'}
-                      text={isMyFollowsLoading ? '...' : isFollowing ? 'Ne plus suivre' : 'Suivre'}
-                      disabled={isMyFollowsLoading || isFollowActionPending}
-                      onPress={handleFollowPress}
-                    />
-                  </View>
-                  <View style={styles.buttonWrapper}>
-                    <AppButton
-                      variant="secondary"
-                      size="small"
-                      icon="message-circle"
-                      text="Message"
-                      onPress={() => {
-                        Alert.alert('Message', 'Bientôt disponible 💬');
-                      }}
-                    />
-                  </View>
-                </View>
+                <ProfileActions
+                  isFollowing={isFollowing}
+                  isLoading={isMyFollowsLoading}
+                  isPending={isFollowActionPending}
+                  onFollowPress={handleFollowPress}
+                />
               )
             }
             eventsTabs={{
