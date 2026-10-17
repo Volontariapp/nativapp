@@ -96,7 +96,7 @@ export function PostImagesPicker({
         ))}
         {remainingSlots > 0 && (
           <Pressable style={styles.addTile} accessibilityLabel="Ajouter une image" onPress={onAdd}>
-            <Feather name="plus" size={28} color={theme.colors.grey} />
+            <Feather name="image" size={40} color={theme.colors.grey} />
             <AppText style={styles.addText}>
               {maxImages > 1
                 ? `Ajouter une image (${String(images.length)}/${String(maxImages)})`
@@ -109,7 +109,7 @@ export function PostImagesPicker({
   );
 }
 
-const TILE_SIZE = 96;
+const ZONE_HEIGHT = 220;
 
 const createStyles = (theme: AppTheme) =>
   StyleSheet.create({
@@ -123,11 +123,11 @@ const createStyles = (theme: AppTheme) =>
       gap: theme.spacing.md,
     },
     tile: {
-      width: TILE_SIZE,
+      width: '100%',
     },
     thumbnail: {
-      width: TILE_SIZE,
-      height: TILE_SIZE,
+      width: '100%',
+      height: ZONE_HEIGHT,
       borderRadius: theme.radius.md,
       backgroundColor: theme.colors.lightGrey,
     },
@@ -156,8 +156,8 @@ const createStyles = (theme: AppTheme) =>
       color: theme.colors.primarySocio,
     },
     addTile: {
-      width: TILE_SIZE,
-      height: TILE_SIZE,
+      width: '100%',
+      height: ZONE_HEIGHT,
       borderRadius: theme.radius.md,
       borderWidth: 2,
       borderColor: theme.colors.lightGrey,
@@ -170,7 +170,7 @@ const createStyles = (theme: AppTheme) =>
     addText: {
       marginTop: theme.spacing.xs,
       textAlign: 'center',
-      fontSize: 11,
+      fontSize: theme.typography.fontSize.sm,
       color: theme.colors.grey,
     },
   });
