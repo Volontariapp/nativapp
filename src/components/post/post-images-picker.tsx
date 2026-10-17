@@ -15,6 +15,54 @@ const STATUS_LABELS: Record<PostImageStatus, string | undefined> = {
   failed: 'Échec',
 };
 
+function ImageStatus({ status }: { status: PostImageStatus }): React.JSX.Element | null {
+  const styles = useStyles(createStyles);
+  const label = STATUS_LABELS[status];
+  const isProblem = status === 'rejected' || status === 'failed';
+
+  if (label === undefined) return null;
+
+  return <AppText style={[styles.status, isProblem && styles.statusProblem]}>{label}</AppText>;
+}
+
+interface PostImageTileProps {
+  image: PostImage;
+  index: number;
+  onRetry: (id: string) => void;
+  onRemove: (id: string) => void;
+}
+
+function PostImageTile({ image, index, onRetry, onRemove }: PostImageTileProps): React.JSX.Element {
+  const { theme } = useAppTheme();
+  const styles = useStyles(createStyles);
+
+  return (
+    <View style={styles.tile}>
+      <Image source={{ uri: image.source.uri }} style={styles.thumbnail} contentFit="cover" />
+      <Pressable
+        style={styles.removeButton}
+        accessibilityLabel={`Retirer l'image ${String(index + 1)}`}
+        onPress={() => {
+          onRemove(image.id);
+        }}
+      >
+        <Feather name="x" size={14} color={theme.colors.text} />
+      </Pressable>
+      <ImageStatus status={image.status} />
+      {image.status === 'failed' && (
+        <Pressable
+          accessibilityLabel={`Renvoyer l'image ${String(index + 1)}`}
+          onPress={() => {
+            onRetry(image.id);
+          }}
+        >
+          <AppText style={styles.retry}>Réessayer</AppText>
+        </Pressable>
+      )}
+    </View>
+  );
+}
+
 interface PostImagesPickerProps {
   images: PostImage[];
   remainingSlots: number;
@@ -37,43 +85,15 @@ export function PostImagesPicker({
   return (
     <View style={styles.container}>
       <View style={styles.grid}>
-        {images.map((image, index) => {
-          const label = STATUS_LABELS[image.status];
-          const isProblem = image.status === 'rejected' || image.status === 'failed';
-          return (
-            <View key={image.id} style={styles.tile}>
-              <Image
-                source={{ uri: image.source.uri }}
-                style={styles.thumbnail}
-                contentFit="cover"
-              />
-              <Pressable
-                style={styles.removeButton}
-                accessibilityLabel={`Retirer l'image ${String(index + 1)}`}
-                onPress={() => {
-                  onRemove(image.id);
-                }}
-              >
-                <Feather name="x" size={14} color={theme.colors.text} />
-              </Pressable>
-              {label !== undefined && (
-                <AppText style={[styles.status, isProblem && styles.statusProblem]}>
-                  {label}
-                </AppText>
-              )}
-              {image.status === 'failed' && (
-                <Pressable
-                  accessibilityLabel={`Renvoyer l'image ${String(index + 1)}`}
-                  onPress={() => {
-                    onRetry(image.id);
-                  }}
-                >
-                  <AppText style={styles.retry}>Réessayer</AppText>
-                </Pressable>
-              )}
-            </View>
-          );
-        })}
+        {images.map((image, index) => (
+          <PostImageTile
+            key={image.id}
+            image={image}
+            index={index}
+            onRetry={onRetry}
+            onRemove={onRemove}
+          />
+        ))}
         {remainingSlots > 0 && (
           <Pressable style={styles.addTile} accessibilityLabel="Ajouter une image" onPress={onAdd}>
             <Feather name="plus" size={28} color={theme.colors.grey} />
@@ -99,6 +119,7 @@ const createStyles = (theme: AppTheme) =>
     grid: {
       flexDirection: 'row',
       flexWrap: 'wrap',
+      justifyContent: 'center',
       gap: theme.spacing.md,
     },
     tile: {
