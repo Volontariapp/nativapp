@@ -1,6 +1,6 @@
-import React, { useCallback, useEffect } from 'react';
-import type { ListRenderItemInfo } from 'react-native';
-import { View, StyleSheet, FlatList, ActivityIndicator } from 'react-native';
+import React, { useCallback, useEffect, useMemo } from 'react';
+import type { SectionListRenderItemInfo } from 'react-native';
+import { View, StyleSheet, SectionList, ActivityIndicator } from 'react-native';
 import { AppText } from '@/components/typography/AppText';
 import AppHeader from '@/components/layout/AppHeader';
 import { useAppTheme, useStyles } from '@/context/ThemeContext';
@@ -10,6 +10,7 @@ import type { AppEvent } from '@/api/event/event.api';
 import { useNavigation } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import type { MainStackParamList } from '@/navigation/stacks/MainStack';
+import { groupEventsByType, type EventGroup } from '@/api/event/group-events';
 import { MyEventItem } from '@/components/event/my-event-item';
 
 export function MyEventsScreen(): React.JSX.Element {
@@ -20,7 +21,10 @@ export function MyEventsScreen(): React.JSX.Element {
   const { data, isLoading, isError, error, hasNextPage, fetchNextPage, isFetchingNextPage } =
     useGetMyEvents(10);
 
-  const events = data?.pages.flatMap((page) => page.events) ?? [];
+  const sections = useMemo(
+    () => groupEventsByType(data?.pages.flatMap((page) => page.events) ?? []),
+    [data],
+  );
 
   const handleEventPress = useCallback(
     (event: AppEvent) => {
@@ -37,7 +41,7 @@ export function MyEventsScreen(): React.JSX.Element {
   );
 
   const renderItem = useCallback(
-    ({ item }: ListRenderItemInfo<AppEvent>) => (
+    ({ item }: SectionListRenderItemInfo<AppEvent, EventGroup>) => (
       <MyEventItem
         event={item}
         onPress={() => {
@@ -78,10 +82,16 @@ export function MyEventsScreen(): React.JSX.Element {
       ) : isError ? (
         <AppText style={styles.errorText}>Erreur lors du chargement de vos événements.</AppText>
       ) : (
-        <FlatList
-          data={events}
+        <SectionList
+          sections={sections}
           keyExtractor={keyExtractor}
           renderItem={renderItem}
+          renderSectionHeader={({ section }) => (
+            <AppText style={styles.sectionTitle}>
+              {section.title} ({String(section.data.length)})
+            </AppText>
+          )}
+          stickySectionHeadersEnabled={false}
           contentContainerStyle={styles.listContent}
           onEndReached={handleLoadMore}
           onEndReachedThreshold={0.5}
@@ -109,6 +119,13 @@ const createStyles = (theme: AppTheme) =>
       color: theme.colors.text,
       marginHorizontal: theme.spacing.xl,
       marginVertical: theme.spacing.md,
+    },
+    sectionTitle: {
+      fontSize: 18,
+      fontWeight: 'bold',
+      color: theme.colors.text,
+      marginTop: theme.spacing.lg,
+      marginBottom: theme.spacing.sm,
     },
     listContent: {
       paddingHorizontal: theme.spacing.xl,
