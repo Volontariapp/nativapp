@@ -1,21 +1,21 @@
 import React, { useCallback } from 'react';
-import { View, StyleSheet, TextInput, Alert } from 'react-native';
-import { useNavigation } from '@react-navigation/native';
+import { View, StyleSheet, TextInput } from 'react-native';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 
 import { AppText } from '@/components/typography/AppText';
-import { AppButton } from '@/components/buttons/AppButton';
 import AppHeader from '@/components/layout/AppHeader';
 import { AppKeyboardScrollView } from '@/components/layout/AppKeyboardScrollView';
 import { AppFormController } from '@/components/forms';
 import { EventInput } from '@/components/inputs';
 import { useAppTheme, useStyles } from '@/context/ThemeContext';
 import type { AppTheme } from '@/shared/themes/theme';
-import { useCreatePost } from '@/api/post/hooks';
 import { EventSelector } from '@/components/post/event-selector';
 import { PostImagesPicker } from '@/components/post/post-images-picker';
+import { PostPublishFooter } from './post-publish-footer';
+import { usePostSubmission } from './use-post-submission';
+import { PostFormPreview, type PostDraft } from './post-form-preview';
 import { PostDebugTools } from '@/components/post/post-debug-tools';
 import { usePostImages } from '@/api/post/hooks/use-post-images';
 import { generateIdempotencyKey } from '@/shared/lib/idempotency.utils';
@@ -35,23 +35,16 @@ const createPostSchema = z.object({
 
 type CreatePostFormData = z.infer<typeof createPostSchema>;
 
-const PENDING_TITLE = 'Post en cours de traitement';
-const PENDING_MESSAGE =
-  'Vos images sont en cours de vérification. Votre post sera visible des autres utilisateurs dès qu’elles seront validées.';
-const UPLOADING_HINT = 'Envoi des images en cours...';
-const BLOCKING_HINT = 'Retirez ou renvoyez les images en échec ou refusées avant de publier.';
-
 export function PostFormScreen(): React.JSX.Element {
   const { theme } = useAppTheme();
   const styles = useStyles(createStyles);
   const tabBarInset = useTabBarContentInset();
 
-  const navigation = useNavigation();
-  const { mutateAsync: createPost, isPending } = useCreatePost();
   const postImages = usePostImages();
   // Une seule clé par formulaire : un réessai après échec reste idempotent côté serveur.
   const [idempotencyKey] = React.useState(generateIdempotencyKey);
   const [isBatching, setIsBatching] = React.useState(false);
+  const [draft, setDraft] = React.useState<PostDraft | null>(null);
 
   const {
     control,
@@ -77,35 +70,14 @@ export function PostFormScreen(): React.JSX.Element {
     [setValue],
   );
 
+  const { submit, isPending } = usePostSubmission({
+    fileIds: postImages.fileIds,
+    idempotencyKey,
+    onPublished: () => {
+      setDraft(null);
+    },
+  });
   const isBusy = isPending || isBatching;
-  const cannotPublish = isBusy || postImages.isUploading || postImages.hasBlockingImage;
-
-  const onSubmit = async (data: CreatePostFormData) => {
-    try {
-      const response = await createPost({
-        title: data.title.trim(),
-        content: data.content.trim(),
-        eventId: data.eventId,
-        fileIds: postImages.fileIds,
-        idempotencyKey,
-      });
-      if (response.post.mediaStatus === 'PENDING') {
-        Alert.alert(PENDING_TITLE, PENDING_MESSAGE, [
-          {
-            text: 'OK',
-            onPress: () => {
-              navigation.goBack();
-            },
-          },
-        ]);
-        return;
-      }
-      navigation.goBack();
-    } catch (err) {
-      console.error('Failed to create post:', err instanceof Error ? err.message : String(err));
-      Alert.alert('Erreur', 'Impossible de publier votre post.');
-    }
-  };
 
   return (
     <View style={styles.container}>
@@ -161,23 +133,26 @@ export function PostFormScreen(): React.JSX.Element {
 
         <EventSelector onSelectEvent={handleSelectEvent} selectedEventId={selectedEventId} />
 
-        <View style={styles.publishContainer}>
-          {postImages.isUploading && <AppText style={styles.hint}>{UPLOADING_HINT}</AppText>}
-          {postImages.hasBlockingImage && (
-            <AppText style={styles.hintError}>{BLOCKING_HINT}</AppText>
-          )}
-          <AppButton
-            text={isBusy ? 'Publication...' : 'Publier le post'}
-            variant="socio"
-            onPress={() => {
-              if (!cannotPublish) {
-                void handleSubmit(onSubmit)();
-              }
-            }}
-            disabled={cannotPublish}
-            style={styles.publishButton}
-          />
-        </View>
+        <PostPublishFooter
+          isBusy={isBusy}
+          isUploading={postImages.isUploading}
+          hasBlockingImage={postImages.hasBlockingImage}
+          onPublish={() => {
+            void handleSubmit(setDraft)();
+          }}
+        />
+
+        <PostFormPreview
+          draft={draft}
+          images={postImages.images}
+          isPublishing={isBusy}
+          onEdit={() => {
+            setDraft(null);
+          }}
+          onConfirm={(confirmed) => {
+            void submit(confirmed);
+          }}
+        />
 
         <PostDebugTools
           selectedEventId={selectedEventId}
@@ -218,24 +193,6 @@ const createStyles = (theme: AppTheme) =>
     textArea: {
       height: 120,
       textAlignVertical: 'top',
-    },
-    publishContainer: {
-      marginTop: theme.spacing.xl,
-      alignItems: 'center',
-      width: '100%',
-    },
-    publishButton: {
-      width: '100%',
-    },
-    hint: {
-      marginBottom: theme.spacing.sm,
-      fontSize: 13,
-      color: theme.colors.grey,
-    },
-    hintError: {
-      marginBottom: theme.spacing.sm,
-      fontSize: 13,
-      color: theme.colors.danger,
     },
     bottomSpacer: {
       height: theme.spacing.xxl,

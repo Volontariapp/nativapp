@@ -2,3 +2,4 @@
 export const mockGoBack = jest.fn();
 export const mockCreatePost = jest.fn();
 export const mockDebug = { isDebugMode: false };
+export const mockProfile = { pseudo: 'victor', avatarUrl: undefined, logoPath: undefined };

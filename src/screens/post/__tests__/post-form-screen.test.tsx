@@ -28,6 +28,12 @@ jest.mock('@/context/DebugContext', () => ({ useDebug: () => mockForm.mockDebug 
 jest.mock('@/components/layout/AppHeader', () => ({ __esModule: true, default: () => null }));
 jest.mock('@/components/post/event-selector', () => ({ EventSelector: () => null }));
 jest.mock('expo-image', () => ({ Image: 'Image' }));
+jest.mock('@/api/user/hooks/use-profile', () => ({
+  useProfile: () => ({ data: mockForm.mockProfile }),
+}));
+jest.mock('@/api/event/hooks/use-get-event', () => ({
+  useGetEvent: () => ({ data: undefined }),
+}));
 
 const FILE_A = '11111111-1111-4111-8111-111111111111';
 
@@ -61,8 +67,13 @@ const addImages = async (screen: ReturnType<typeof renderScreen>, count: number)
   });
 };
 
-const publish = (screen: ReturnType<typeof renderScreen>): void => {
+const openPreview = (screen: ReturnType<typeof renderScreen>): void => {
   fireEvent.press(screen.getByText('Publier le post'));
+};
+
+const publish = async (screen: ReturnType<typeof renderScreen>): Promise<void> => {
+  openPreview(screen);
+  fireEvent.press(await screen.findByText('Confirmer et publier'));
 };
 
 describe('PostFormScreen images', () => {
@@ -80,7 +91,7 @@ describe('PostFormScreen images', () => {
     const screen = renderScreen();
     fillForm(screen);
 
-    publish(screen);
+    await publish(screen);
 
     await waitFor(() => {
       expect(mockForm.mockCreatePost).toHaveBeenCalledWith(
@@ -103,7 +114,7 @@ describe('PostFormScreen images', () => {
       expect(screen.queryByText('Envoi...')).toBeNull();
     });
 
-    publish(screen);
+    await publish(screen);
 
     await waitFor(() => {
       expect(mockForm.mockCreatePost).toHaveBeenCalledWith(
@@ -131,11 +142,11 @@ describe('PostFormScreen images', () => {
     const screen = renderScreen();
     fillForm(screen);
 
-    publish(screen);
+    await publish(screen);
     await waitFor(() => {
       expect(Alert.alert).toHaveBeenCalledWith('Erreur', 'Impossible de publier votre post.');
     });
-    publish(screen);
+    await publish(screen);
 
     await waitFor(() => {
       expect(mockForm.mockCreatePost).toHaveBeenCalledTimes(2);
@@ -152,8 +163,9 @@ describe('PostFormScreen images', () => {
     await addImages(screen, 1);
     await screen.findByText('Envoi...');
 
-    publish(screen);
+    openPreview(screen);
 
+    expect(screen.queryByText('Aperçu de ton post')).toBeNull();
     expect(mockForm.mockCreatePost).not.toHaveBeenCalled();
     expect(screen.getByText('Envoi des images en cours...')).toBeTruthy();
   });
@@ -167,11 +179,12 @@ describe('PostFormScreen images', () => {
     await addImages(screen, 1);
     await screen.findByText('Refusée');
 
-    publish(screen);
+    openPreview(screen);
+    expect(screen.queryByText('Aperçu de ton post')).toBeNull();
     expect(mockForm.mockCreatePost).not.toHaveBeenCalled();
 
     fireEvent.press(screen.getByLabelText("Retirer l'image 1"));
-    publish(screen);
+    await publish(screen);
 
     await waitFor(() => {
       expect(mockForm.mockCreatePost).toHaveBeenCalledWith(
@@ -190,7 +203,7 @@ describe('PostFormScreen images', () => {
     await addImages(screen, 1);
     await screen.findByText('Analyse en cours');
 
-    publish(screen);
+    await publish(screen);
 
     await waitFor(() => {
       expect(Alert.alert).toHaveBeenCalledWith(
@@ -203,5 +216,39 @@ describe('PostFormScreen images', () => {
     const [, , buttons] = jest.mocked(Alert.alert).mock.calls.at(-1) ?? [];
     buttons?.[0]?.onPress?.();
     expect(mockForm.mockGoBack).toHaveBeenCalled();
+  });
+
+  it('shows a preview of the post and publishes nothing until the user confirms', async () => {
+    const screen = renderScreen();
+    fillForm(screen);
+
+    openPreview(screen);
+
+    expect(await screen.findByText('Aperçu de ton post')).toBeTruthy();
+    expect(screen.getByText('Mission Maraude Paris')).toBeTruthy();
+    expect(screen.getByText(/Besoin de 5 benevoles ce samedi/)).toBeTruthy();
+    expect(screen.getByText('victor')).toBeTruthy();
+    expect(mockForm.mockCreatePost).not.toHaveBeenCalled();
+  });
+
+  it('goes back to the form without publishing when the user wants to edit', async () => {
+    const screen = renderScreen();
+    fillForm(screen);
+    openPreview(screen);
+    await screen.findByText('Aperçu de ton post');
+
+    fireEvent.press(screen.getByText('Modifier'));
+
+    expect(screen.queryByText('Aperçu de ton post')).toBeNull();
+    expect(mockForm.mockCreatePost).not.toHaveBeenCalled();
+  });
+
+  it('does not open the preview while the form is invalid', async () => {
+    const screen = renderScreen();
+
+    openPreview(screen);
+
+    expect(await screen.findByText('Le titre doit faire au moins 3 caractères')).toBeTruthy();
+    expect(screen.queryByText('Aperçu de ton post')).toBeNull();
   });
 });

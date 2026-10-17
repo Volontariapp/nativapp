@@ -3,14 +3,14 @@ import { render, fireEvent } from '@testing-library/react-native';
 import { EventSelector } from '../event-selector';
 import { createMockAppEvent } from './event.factory';
 import { mockOnSelectEvent } from './event-selector.mock';
-import * as getMyEventsModule from '@/api/event/hooks/use-get-my-events';
+import * as getEventModule from '@/api/event/hooks/use-get-event';
 
 describe('EventSelector', () => {
-  let useGetMyEventsSpy: jest.SpyInstance;
+  let useGetEventSpy: jest.SpyInstance;
 
   beforeEach(() => {
     jest.clearAllMocks();
-    useGetMyEventsSpy = jest.spyOn(getMyEventsModule, 'useGetMyEvents');
+    useGetEventSpy = jest.spyOn(getEventModule, 'useGetEvent');
   });
 
   afterEach(() => {
@@ -18,13 +18,7 @@ describe('EventSelector', () => {
   });
 
   it('renders unselected state when selectedEventId is undefined', () => {
-    useGetMyEventsSpy.mockReturnValue({
-      data: {
-        pages: [{ events: [], totalCount: 0 }],
-        pageParams: [1],
-      },
-      isLoading: false,
-    });
+    useGetEventSpy.mockReturnValue({ data: undefined, isLoading: false });
 
     const { getByText } = render(
       <EventSelector onSelectEvent={mockOnSelectEvent} selectedEventId={undefined} />,
@@ -41,13 +35,7 @@ describe('EventSelector', () => {
       localisationName: 'Canal Saint-Martin',
     });
 
-    useGetMyEventsSpy.mockReturnValue({
-      data: {
-        pages: [{ events: [mockEvent], totalCount: 1 }],
-        pageParams: [1],
-      },
-      isLoading: false,
-    });
+    useGetEventSpy.mockReturnValue({ data: mockEvent, isLoading: false });
 
     const { getByText } = render(
       <EventSelector onSelectEvent={mockOnSelectEvent} selectedEventId="event-42" />,
@@ -67,13 +55,7 @@ describe('EventSelector', () => {
       title: 'Nettoyage des berges',
     });
 
-    useGetMyEventsSpy.mockReturnValue({
-      data: {
-        pages: [{ events: [mockEvent], totalCount: 1 }],
-        pageParams: [1],
-      },
-      isLoading: false,
-    });
+    useGetEventSpy.mockReturnValue({ data: mockEvent, isLoading: false });
 
     const { getByText } = render(
       <EventSelector onSelectEvent={mockOnSelectEvent} selectedEventId="event-42" />,
