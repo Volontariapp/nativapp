@@ -5,6 +5,7 @@ import { useAppTheme, useStyles } from '@/context/ThemeContext';
 import type { AppTheme } from '@/shared/themes/theme';
 import { AppText } from '@/components/typography/AppText';
 import { AppButton } from '@/components/buttons/AppButton';
+import AppHeader from '@/components/layout/AppHeader';
 import { PostAuthorHeader } from './PostAuthorHeader';
 import { PostImage } from './post-image';
 
@@ -55,6 +56,7 @@ export function PostPreviewModal({
   return (
     <Modal visible={visible} animationType="slide" onRequestClose={onEdit}>
       <View style={styles.container}>
+        <AppHeader />
         <AppText style={styles.heading}>Aperçu de ton post</AppText>
         <ScrollView contentContainerStyle={styles.scrollContent}>
           <PostAuthorHeader pseudo={pseudo} avatarUrl={avatarUrl} />
@@ -85,14 +87,13 @@ const createStyles = (theme: AppTheme) =>
     container: {
       flex: 1,
       backgroundColor: theme.colors.background,
-      paddingTop: theme.spacing.xxl,
     },
     heading: {
       fontSize: theme.typography.fontSize.xl,
       fontWeight: theme.typography.fontWeight.bold,
       color: theme.colors.text,
       textAlign: 'center',
-      marginBottom: theme.spacing.md,
+      marginVertical: theme.spacing.md,
     },
     scrollContent: {
       paddingBottom: theme.spacing.lg,
