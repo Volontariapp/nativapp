@@ -6,6 +6,7 @@ export * from './main/ProfileScreen';
 export * from './main/PublicProfileScreen';
 export * from './main/ExploreScreen';
 export * from './main/SettingsScreen';
+export * from './main/RanksScreen';
 export * from './main/SwipeScreen';
 export * from './main/WsFeedbackScreen';
 export * from './event/EventFormScreen';

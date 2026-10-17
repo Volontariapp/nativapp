@@ -7,7 +7,7 @@ import { useAppTheme, useStyles } from '@/context/ThemeContext';
 import type { AppTheme } from '@/shared/themes/theme';
 import { useListPosts } from '@/api/post/hooks/use-list-all-posts';
 import AppPost from '@/components/post/AppPost';
-import { ImpactCardContainer } from '@/components/impact/impact-card-container';
+import { ImpactRankBandContainer } from '@/components/impact/impact-rank-band-container';
 import Animated from 'react-native-reanimated';
 import { useScrollTabBar } from '@/navigation/hooks/useScrollTabBar';
 import { useTabBarContentInset } from '@/navigation/hooks/useTabBarContentInset';
@@ -98,7 +98,7 @@ export function HomeScreen(): React.JSX.Element {
               }
             }}
             onEndReachedThreshold={0.5}
-            ListHeaderComponent={<ImpactCardContainer />}
+            ListHeaderComponent={<ImpactRankBandContainer />}
             ListFooterComponent={
               <View style={styles.footerLoader}>
                 {isFetchingNextPage ? (
