@@ -19,6 +19,7 @@ import { PostImagesPicker } from '@/components/post/post-images-picker';
 import { PostDebugTools } from '@/components/post/post-debug-tools';
 import { usePostImages } from '@/api/post/hooks/use-post-images';
 import { generateIdempotencyKey } from '@/shared/lib/idempotency.utils';
+import { useTabBarContentInset } from '@/navigation/hooks/useTabBarContentInset';
 
 const createPostSchema = z.object({
   title: z
@@ -43,6 +44,7 @@ const BLOCKING_HINT = 'Retirez ou renvoyez les images en échec ou refusées ava
 export function PostFormScreen(): React.JSX.Element {
   const { theme } = useAppTheme();
   const styles = useStyles(createStyles);
+  const tabBarInset = useTabBarContentInset();
 
   const navigation = useNavigation();
   const { mutateAsync: createPost, isPending } = useCreatePost();
@@ -109,7 +111,7 @@ export function PostFormScreen(): React.JSX.Element {
     <View style={styles.container}>
       <AppHeader showBack />
       <AppKeyboardScrollView
-        contentContainerStyle={styles.scrollContent}
+        contentContainerStyle={[styles.scrollContent, tabBarInset]}
         contentInsetAdjustmentBehavior="automatic"
         bottomOffset={16}
       >

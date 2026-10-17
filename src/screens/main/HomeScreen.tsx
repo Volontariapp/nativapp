@@ -9,6 +9,7 @@ import { useListPosts } from '@/api/post/hooks/use-list-all-posts';
 import AppPost from '@/components/post/AppPost';
 import Animated from 'react-native-reanimated';
 import { useScrollTabBar } from '@/navigation/hooks/useScrollTabBar';
+import { useTabBarContentInset } from '@/navigation/hooks/useTabBarContentInset';
 
 export function HomeScreen(): React.JSX.Element {
   const { theme } = useAppTheme();
@@ -20,6 +21,7 @@ export function HomeScreen(): React.JSX.Element {
     });
 
   const scrollHandler = useScrollTabBar();
+  const tabBarInset = useTabBarContentInset();
   const randomSortMap = useRef<Record<string, number>>({});
   const [isRefreshing, setIsRefreshing] = React.useState(false);
   const [refreshCount, setRefreshCount] = React.useState(0);
@@ -72,7 +74,7 @@ export function HomeScreen(): React.JSX.Element {
             data={posts}
             keyExtractor={keyExtractor}
             renderItem={renderItem}
-            contentContainerStyle={styles.listContent}
+            contentContainerStyle={[styles.listContent, tabBarInset]}
             showsVerticalScrollIndicator={false}
             onScroll={scrollHandler}
             scrollEventThrottle={16}

@@ -13,12 +13,14 @@ import { useAppTheme, useStyles } from '@/context/ThemeContext';
 import type { AppTheme } from '@/shared/themes/theme';
 import { useGetMyPosts, useDeletePost } from '@/api/post/hooks';
 import type { PostWeb } from '@volontariapp/contracts';
+import { useTabBarContentInset } from '@/navigation/hooks/useTabBarContentInset';
 
 const PAGE_SIZE = POST_GRID_COLUMNS * 4;
 
 export function MyPostsScreen(): React.JSX.Element {
   const { theme } = useAppTheme();
   const styles = useStyles(createStyles);
+  const tabBarInset = useTabBarContentInset();
   const { data, isLoading, fetchNextPage, hasNextPage, isFetchingNextPage } =
     useGetMyPosts(PAGE_SIZE);
   const { mutateAsync: deletePost } = useDeletePost();
@@ -53,7 +55,7 @@ export function MyPostsScreen(): React.JSX.Element {
             data={posts}
             keyExtractor={(item) => item.id}
             numColumns={POST_GRID_COLUMNS}
-            contentContainerStyle={styles.gridContent}
+            contentContainerStyle={[styles.gridContent, tabBarInset]}
             columnWrapperStyle={styles.gridRow}
             ItemSeparatorComponent={RowSeparator}
             renderItem={({ item }) => (

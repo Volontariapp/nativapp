@@ -1,6 +1,15 @@
 import React from 'react';
-import { View, StyleSheet, Pressable, Linking, Platform, Alert, Switch } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
+import {
+  View,
+  StyleSheet,
+  Pressable,
+  Linking,
+  Platform,
+  Alert,
+  Switch,
+  ScrollView,
+} from 'react-native';
+import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useNavigation } from '@react-navigation/native';
 
 import { AppText } from '@/components/typography/AppText';
@@ -22,6 +31,7 @@ const handleOpenLocationSettings = () => {
 
 export function SettingsScreen() {
   const navigation = useNavigation();
+  const insets = useSafeAreaInsets();
   const { isDebugMode, toggleDebugMode } = useDebug();
   const { themeMode, toggleTheme, theme } = useAppTheme();
   const styles = useStyles(createStyles);
@@ -59,7 +69,13 @@ export function SettingsScreen() {
         <View style={{ width: 40 }} />
       </SafeAreaView>
 
-      <View style={styles.content}>
+      <ScrollView
+        contentContainerStyle={[
+          styles.content,
+          { paddingBottom: insets.bottom + theme.spacing.xl },
+        ]}
+        showsVerticalScrollIndicator={false}
+      >
         <View style={styles.settingCard}>
           <View style={styles.settingInfo}>
             <View style={styles.iconContainer}>
@@ -266,7 +282,7 @@ export function SettingsScreen() {
             </View>
           </Pressable>
         </View>
-      </View>
+      </ScrollView>
     </View>
   );
 }

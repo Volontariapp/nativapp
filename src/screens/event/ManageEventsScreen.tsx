@@ -11,6 +11,7 @@ import type { AppTheme } from '@/shared/themes/theme';
 import type { CreateEventStackParamList } from '@/navigation/stacks/CreateEventStack';
 import { useGetMyEvents } from '@/api/event/hooks/use-get-my-events';
 import { useGetMyPosts } from '@/api/post/hooks/use-get-my-posts';
+import { useTabBarContentInset } from '@/navigation/hooks/useTabBarContentInset';
 
 type ManageEventsNavigationProp = NativeStackNavigationProp<
   CreateEventStackParamList,
@@ -21,6 +22,7 @@ export function ManageEventsScreen(): React.JSX.Element {
   const { theme } = useAppTheme();
   const styles = useStyles(createStyles);
   const navigation = useNavigation<ManageEventsNavigationProp>();
+  const tabBarInset = useTabBarContentInset();
 
   const { data: eventsData } = useGetMyEvents(1);
   const { data: postsData } = useGetMyPosts(1);
@@ -37,7 +39,7 @@ export function ManageEventsScreen(): React.JSX.Element {
     <View style={styles.container}>
       <AppHeader />
       <ScrollView
-        contentContainerStyle={styles.scrollContent}
+        contentContainerStyle={[styles.scrollContent, tabBarInset]}
         showsVerticalScrollIndicator={false}
       >
         <View style={styles.centerWrapper}>
@@ -98,10 +100,7 @@ export function ManageEventsScreen(): React.JSX.Element {
 
               {/* Secondary Action Link: Mes événements créés */}
               <Pressable
-                style={({ pressed }) => [
-                  styles.secondaryLinkRow,
-                  pressed && styles.rowPressed,
-                ]}
+                style={({ pressed }) => [styles.secondaryLinkRow, pressed && styles.rowPressed]}
                 onPress={() => {
                   navigation.navigate('MyEvents');
                 }}
@@ -166,10 +165,7 @@ export function ManageEventsScreen(): React.JSX.Element {
 
               {/* Secondary Action Link: Mes posts créés */}
               <Pressable
-                style={({ pressed }) => [
-                  styles.secondaryLinkRow,
-                  pressed && styles.rowPressed,
-                ]}
+                style={({ pressed }) => [styles.secondaryLinkRow, pressed && styles.rowPressed]}
                 onPress={() => {
                   navigation.navigate('MyPosts');
                 }}
@@ -415,4 +411,3 @@ const createStyles = (theme: AppTheme) =>
       color: theme.colors.primarySocio,
     },
   });
-

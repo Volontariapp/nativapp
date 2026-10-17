@@ -28,6 +28,7 @@ import { EventCoverPicker } from '@/components/event/event-cover-picker';
 import { EventCoverCropper } from '@/components/event/event-cover-cropper';
 import { EventImagePreviews } from '@/components/event/event-image-previews';
 import { generateIdempotencyKey } from '@/shared/lib/idempotency.utils';
+import { useTabBarContentInset } from '@/navigation/hooks/useTabBarContentInset';
 
 const UPLOADING_HINT = 'Envoi de la photo en cours...';
 const BLOCKING_HINT = 'Retirez ou renvoyez la photo en échec ou refusée avant de publier.';
@@ -55,6 +56,7 @@ function getDefaultEventDates(): { startAt: Date; endAt: Date } {
 
 export function EventFormScreen(): React.JSX.Element {
   const styles = useStyles(createStyles);
+  const tabBarInset = useTabBarContentInset();
 
   const mutation = useCreateEvent();
   const queryClient = useQueryClient();
@@ -164,7 +166,7 @@ export function EventFormScreen(): React.JSX.Element {
     <View style={styles.container}>
       <AppHeader showBack />
       <AppKeyboardScrollView
-        contentContainerStyle={styles.scrollContent}
+        contentContainerStyle={[styles.scrollContent, tabBarInset]}
         contentInsetAdjustmentBehavior="automatic"
         bottomOffset={16}
       >

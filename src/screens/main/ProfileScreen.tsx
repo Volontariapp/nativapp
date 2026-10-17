@@ -22,11 +22,13 @@ import { useGetFollowers } from '@/api/social/hooks/use-get-followers';
 import { useNavigation } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import type { ProfileStackParamList } from '@/navigation/stacks/ProfileStack';
+import { useTabBarContentInset } from '@/navigation/hooks/useTabBarContentInset';
 import { useProfileEvents } from './hooks/use-profile-events';
 
 export function ProfileScreen(): React.JSX.Element {
   const { theme } = useAppTheme();
   const styles = useStyles(createStyles);
+  const tabBarInset = useTabBarContentInset();
 
   const [isEditModalVisible, setIsEditModalVisible] = useState(false);
   const { logout } = useAuth();
@@ -79,7 +81,7 @@ export function ProfileScreen(): React.JSX.Element {
 
       <ScrollView
         style={styles.scrollView}
-        contentContainerStyle={styles.scrollContent}
+        contentContainerStyle={[styles.scrollContent, tabBarInset]}
         showsVerticalScrollIndicator={false}
       >
         <View style={styles.settingsHeader}>

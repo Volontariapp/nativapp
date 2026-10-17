@@ -13,10 +13,12 @@ import type { MainStackParamList } from '@/navigation/stacks/MainStack';
 import { groupEventsByStatus, type EventStatusGroup } from '@/api/event/group-events-by-status';
 import { MyEventItem } from '@/components/event/my-event-item';
 import { EventStatusSectionHeader } from '@/components/event/event-status-section-header';
+import { useTabBarContentInset } from '@/navigation/hooks/useTabBarContentInset';
 
 export function MyEventsScreen(): React.JSX.Element {
   const { theme } = useAppTheme();
   const styles = useStyles(createStyles);
+  const tabBarInset = useTabBarContentInset();
   const rootNavigation = useNavigation<NativeStackNavigationProp<MainStackParamList>>();
 
   const { data, isLoading, isError, error, hasNextPage, fetchNextPage, isFetchingNextPage } =
@@ -91,7 +93,7 @@ export function MyEventsScreen(): React.JSX.Element {
             <EventStatusSectionHeader title={section.title} count={section.data.length} />
           )}
           stickySectionHeadersEnabled={false}
-          contentContainerStyle={styles.listContent}
+          contentContainerStyle={[styles.listContent, tabBarInset]}
           onEndReached={handleLoadMore}
           onEndReachedThreshold={0.5}
           ListEmptyComponent={<AppText style={styles.emptyText}>Aucun événement trouvé.</AppText>}

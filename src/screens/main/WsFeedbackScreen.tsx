@@ -13,6 +13,7 @@ import { useSocket } from '@/context/SocketContext';
 import { useNavigation } from '@react-navigation/native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { AppIcons } from '@/components/media/AppIcons';
+import { useTabBarContentInset } from '@/navigation/hooks/useTabBarContentInset';
 
 interface WsEvent {
   id: string;
@@ -79,6 +80,7 @@ export function WsFeedbackScreen(): React.JSX.Element {
   const { socket, isConnected } = useSocket();
   const { goBack } = useNavigation();
   const insets = useSafeAreaInsets();
+  const tabBarInset = useTabBarContentInset();
   const [events, setEvents] = useState<WsEvent[]>([]);
   const scrollRef = useRef<FlatList>(null);
 
@@ -170,7 +172,7 @@ export function WsFeedbackScreen(): React.JSX.Element {
         <FlatList
           ref={scrollRef}
           style={styles.list}
-          contentContainerStyle={styles.listContent}
+          contentContainerStyle={[styles.listContent, tabBarInset]}
           showsVerticalScrollIndicator={false}
           data={events}
           keyExtractor={(item) => item.id}
