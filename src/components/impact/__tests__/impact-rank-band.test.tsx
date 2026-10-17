@@ -1,6 +1,7 @@
 import React from 'react';
 import { StyleSheet, type StyleProp, type ViewStyle } from 'react-native';
 import { fireEvent, render } from '@testing-library/react-native';
+import { lightTheme } from '@/shared/themes/theme';
 import { getImpactRankStatus } from '@/shared/lib/impact-ranks';
 import { ImpactRankBand } from '../impact-rank-band';
 
@@ -13,14 +14,14 @@ describe('ImpactRankBand', () => {
   it('shows the current rank and the cumulated points', () => {
     const { getByText } = render(<ImpactRankBand status={getImpactRankStatus(1250)} />);
 
-    expect(getByText('ECO WARRIOR')).toBeTruthy();
+    expect(getByText('IMPACT WARRIOR')).toBeTruthy();
     expect(getByText('1 250 pts')).toBeTruthy();
   });
 
   it('explains how many points remain to reach the next rank', () => {
     const { getByText } = render(<ImpactRankBand status={getImpactRankStatus(1250)} />);
 
-    expect(getByText('Plus que 250 pts pour devenir EARTH GUARDIAN')).toBeTruthy();
+    expect(getByText('Plus que 250 pts pour devenir CHANGE MAKER')).toBeTruthy();
   });
 
   it('fills the progress bar according to the progress inside the current rank', () => {
@@ -34,7 +35,7 @@ describe('ImpactRankBand', () => {
       <ImpactRankBand status={getImpactRankStatus(30000)} />,
     );
 
-    expect(getByText('GAIA TITAN')).toBeTruthy();
+    expect(getByText('ATLAS TITAN')).toBeTruthy();
     expect(getByText('Rang maximum atteint, tu es au sommet')).toBeTruthy();
     expect(queryByText(/Plus que/)).toBeNull();
     expect(styleOf(getByTestId, 'impact-rank-progress-fill').width).toBe('100%');
@@ -58,5 +59,13 @@ describe('ImpactRankBand', () => {
     fireEvent.press(getByLabelText('Voir tous les rangs'));
 
     expect(onPress).toHaveBeenCalledTimes(1);
+  });
+
+  it('uses the green of the theme as background', () => {
+    const { getByTestId } = render(<ImpactRankBand status={getImpactRankStatus(1250)} />);
+
+    expect(styleOf(getByTestId, 'impact-rank-band').backgroundColor).toBe(
+      lightTheme.colors.primaryEco,
+    );
   });
 });

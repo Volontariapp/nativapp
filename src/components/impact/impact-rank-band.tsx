@@ -2,8 +2,8 @@ import React from 'react';
 import { Pressable, StyleSheet, View, type DimensionValue } from 'react-native';
 import { AppText } from '@/components/typography/AppText';
 import { AppIcons } from '@/components/media/AppIcons';
-import { useAppTheme, useStyles } from '@/context/ThemeContext';
-import type { AppTheme } from '@/shared/themes/theme';
+import { useStyles } from '@/context/ThemeContext';
+import { lightTheme, type AppTheme } from '@/shared/themes/theme';
 import { formatPoints, type ImpactRankStatus } from '@/shared/lib/impact-ranks';
 
 interface ImpactRankBandProps {
@@ -24,7 +24,6 @@ const getCaption = ({ next, pointsToNext }: ImpactRankStatus): string =>
  * suivant. Un appui ouvre la page de tous les rangs.
  */
 export const ImpactRankBand = ({ status, onPress }: ImpactRankBandProps): React.JSX.Element => {
-  const { theme } = useAppTheme();
   const styles = useStyles(createStyles);
 
   return (
@@ -44,7 +43,9 @@ export const ImpactRankBand = ({ status, onPress }: ImpactRankBandProps): React.
             {status.current.name}
           </AppText>
         </View>
-        <AppText variant="subtitle">{`${formatPoints(status.points)} pts`}</AppText>
+        <AppText variant="subtitle" style={styles.points}>
+          {`${formatPoints(status.points)} pts`}
+        </AppText>
       </View>
 
       <View style={styles.track}>
@@ -58,7 +59,7 @@ export const ImpactRankBand = ({ status, onPress }: ImpactRankBandProps): React.
         <AppText variant="caption" style={styles.caption}>
           {getCaption(status)}
         </AppText>
-        <AppIcons icon="chevron-right" size={16} color={theme.colors.grey} />
+        <AppIcons icon="chevron-right" size={16} color={lightTheme.colors.white} />
       </View>
     </Pressable>
   );
@@ -67,10 +68,7 @@ export const ImpactRankBand = ({ status, onPress }: ImpactRankBandProps): React.
 const createStyles = (theme: AppTheme) =>
   StyleSheet.create({
     band: {
-      backgroundColor: theme.colors.white,
-      borderTopWidth: 1,
-      borderBottomWidth: 1,
-      borderColor: theme.colors.separator,
+      backgroundColor: theme.colors.primaryEco,
       paddingHorizontal: theme.spacing.lg,
       paddingVertical: theme.spacing.md,
       gap: theme.spacing.sm,
@@ -81,31 +79,35 @@ const createStyles = (theme: AppTheme) =>
       justifyContent: 'space-between',
     },
     kicker: {
-      color: theme.colors.grey,
+      color: lightTheme.colors.white,
+      opacity: 0.8,
       letterSpacing: 2,
     },
     rankName: {
-      color: theme.colors.primaryEco,
+      color: lightTheme.colors.white,
       letterSpacing: 1,
     },
     track: {
       height: theme.spacing.sm,
       borderRadius: theme.radius.full,
-      backgroundColor: theme.colors.lightGrey,
+      backgroundColor: theme.colors.whiteOverlay,
       overflow: 'hidden',
     },
     fill: {
       height: '100%',
       borderRadius: theme.radius.full,
-      backgroundColor: theme.colors.primaryEco,
+      backgroundColor: theme.colors.gold,
     },
     footerRow: {
       flexDirection: 'row',
       alignItems: 'center',
       justifyContent: 'space-between',
     },
+    points: {
+      color: lightTheme.colors.white,
+    },
     caption: {
       flex: 1,
-      color: theme.colors.grey,
+      color: lightTheme.colors.white,
     },
   });

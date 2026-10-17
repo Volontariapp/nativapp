@@ -28,29 +28,29 @@ describe('RanksScreen', () => {
     const { getByText } = render(<RanksScreen />);
 
     [
-      ['ROOKIE CLEANER', '0 pts'],
-      ['STREET SWEEPER', '100 pts'],
-      ['GREEN RANGER', '300 pts'],
-      ['ECO WARRIOR', '700 pts'],
-      ['EARTH GUARDIAN', '1 500 pts'],
-      ['CLEANER MASTER', '3 000 pts'],
-      ['NATURE SENTINEL', '5 500 pts'],
-      ['PLANET DEFENDER', '9 000 pts'],
-      ['ECO LEGEND', '15 000 pts'],
-      ['GAIA TITAN', '25 000 pts'],
+      ['ROOKIE HELPER', '0 pts'],
+      ['FIELD VOLUNTEER', '100 pts'],
+      ['COMMUNITY RANGER', '300 pts'],
+      ['IMPACT WARRIOR', '700 pts'],
+      ['CHANGE MAKER', '1 500 pts'],
+      ['IMPACT MASTER', '3 000 pts'],
+      ['HOPE GUARDIAN', '5 500 pts'],
+      ['WORLD DEFENDER', '9 000 pts'],
+      ['LIVING LEGEND', '15 000 pts'],
+      ['ATLAS TITAN', '25 000 pts'],
     ].forEach(([name, threshold]) => {
       expect(getByText(name as string)).toBeTruthy();
       expect(getByText(threshold as string)).toBeTruthy();
     });
-    expect(getByText('Aucun terrain ne te résiste.')).toBeTruthy();
+    expect(getByText('Aucune mission ne te résiste.')).toBeTruthy();
   });
 
   it('tells which ranks are unlocked, which one is the current rank and which are locked', () => {
     const { getByLabelText, getAllByText } = render(<RanksScreen />);
 
-    expect(getByLabelText('STREET SWEEPER, débloqué')).toBeTruthy();
-    expect(getByLabelText('ECO WARRIOR, rang actuel')).toBeTruthy();
-    expect(getByLabelText('EARTH GUARDIAN, verrouillé')).toBeTruthy();
+    expect(getByLabelText('FIELD VOLUNTEER, débloqué')).toBeTruthy();
+    expect(getByLabelText('IMPACT WARRIOR, rang actuel')).toBeTruthy();
+    expect(getByLabelText('CHANGE MAKER, verrouillé')).toBeTruthy();
     expect(getAllByText('Débloqué')).toHaveLength(3);
     expect(getAllByText('Rang actuel')).toHaveLength(1);
     expect(getAllByText('Verrouillé')).toHaveLength(6);
@@ -67,6 +67,6 @@ describe('RanksScreen', () => {
 
     const { getByLabelText } = render(<RanksScreen />);
 
-    expect(getByLabelText('ROOKIE CLEANER, rang actuel')).toBeTruthy();
+    expect(getByLabelText('ROOKIE HELPER, rang actuel')).toBeTruthy();
   });
 });

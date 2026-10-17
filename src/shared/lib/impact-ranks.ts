@@ -16,10 +16,10 @@ export interface ImpactRankStatus {
   isMax: boolean;
 }
 
-const ROOKIE_CLEANER: ImpactRank = {
-  name: 'ROOKIE CLEANER',
+const ROOKIE_HELPER: ImpactRank = {
+  name: 'ROOKIE HELPER',
   minPoints: 0,
-  tagline: 'Tu viens d’arriver. La planète compte déjà sur toi.',
+  tagline: 'Tu viens d’arriver. Les autres comptent déjà sur toi.',
 };
 
 /**
@@ -27,19 +27,23 @@ const ROOKIE_CLEANER: ImpactRank = {
  * creation). Source unique : la frise du feed et la page des rangs la lisent, ajuster ici.
  */
 export const IMPACT_RANKS: readonly ImpactRank[] = [
-  ROOKIE_CLEANER,
-  { name: 'STREET SWEEPER', minPoints: 100, tagline: 'Les rues n’ont qu’à bien se tenir.' },
-  { name: 'GREEN RANGER', minPoints: 300, tagline: 'Tu patrouilles, la nature respire.' },
-  { name: 'ECO WARRIOR', minPoints: 700, tagline: 'Chaque action est un coup porté aux déchets.' },
-  { name: 'EARTH GUARDIAN', minPoints: 1500, tagline: 'Tu protèges ce que les autres oublient.' },
-  { name: 'CLEANER MASTER', minPoints: 3000, tagline: 'Aucun terrain ne te résiste.' },
-  { name: 'NATURE SENTINEL', minPoints: 5500, tagline: 'Tu veilles. La nature te le rend.' },
-  { name: 'PLANET DEFENDER', minPoints: 9000, tagline: 'Ton impact se voit depuis l’espace.' },
-  { name: 'ECO LEGEND', minPoints: 15000, tagline: 'Ton nom se murmure sur tous les chantiers.' },
+  ROOKIE_HELPER,
+  { name: 'FIELD VOLUNTEER', minPoints: 100, tagline: 'Tu es sur le terrain, et ça se voit.' },
+  { name: 'COMMUNITY RANGER', minPoints: 300, tagline: 'Tu fédères, la communauté avance.' },
+  { name: 'IMPACT WARRIOR', minPoints: 700, tagline: 'Chaque mission change quelque chose.' },
+  { name: 'CHANGE MAKER', minPoints: 1500, tagline: 'Tu protèges ce que les autres oublient.' },
+  { name: 'IMPACT MASTER', minPoints: 3000, tagline: 'Aucune mission ne te résiste.' },
+  { name: 'HOPE GUARDIAN', minPoints: 5500, tagline: 'Tu veilles, les autres te le rendent.' },
+  { name: 'WORLD DEFENDER', minPoints: 9000, tagline: 'Ton impact se voit depuis l’espace.' },
   {
-    name: 'GAIA TITAN',
+    name: 'LIVING LEGEND',
+    minPoints: 15000,
+    tagline: 'Ton nom se murmure sur toutes les missions.',
+  },
+  {
+    name: 'ATLAS TITAN',
     minPoints: 25000,
-    tagline: 'Le sommet. La Terre te doit une fière chandelle.',
+    tagline: 'Le sommet. Le monde te doit une fière chandelle.',
   },
 ];
 
@@ -61,7 +65,7 @@ export function getImpactRankStatus(totalPoints: number): ImpactRankStatus {
   const points = sanitizePoints(totalPoints);
   const current = IMPACT_RANKS.reduce(
     (best, rank) => (rank.minPoints <= points ? rank : best),
-    ROOKIE_CLEANER,
+    ROOKIE_HELPER,
   );
   const next = IMPACT_RANKS.find((rank) => rank.minPoints > points) ?? null;
 

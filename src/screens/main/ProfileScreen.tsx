@@ -99,6 +99,7 @@ export function ProfileScreen(): React.JSX.Element {
           pseudo={profile.pseudo}
           avatarUrl={resolveAvatarUrl(profile)}
           bio={profile.bio}
+          impactScore={profile.totalImpactScore}
           badges={profile.badges}
           stats={[
             {
@@ -107,19 +108,14 @@ export function ProfileScreen(): React.JSX.Element {
               color: theme.colors.primaryEco,
             },
             {
-              label: 'Abonnés',
+              label: 'Follow',
               value: followersData?.pagination?.total ?? 0,
               color: theme.colors.primarySocio,
             },
             {
-              label: 'Abonnements',
+              label: 'Suivi(e)s',
               value: followsData?.pagination?.total ?? 0,
               color: theme.colors.warning,
-            },
-            {
-              label: 'Évents créés',
-              value: created.totalCount || created.events.length,
-              color: theme.colors.primarySocio,
             },
           ]}
           eventsTabs={{

@@ -24,7 +24,7 @@ describe('ImpactRankBandContainer', () => {
 
     const { getByText } = render(<ImpactRankBandContainer />);
 
-    expect(getByText('ECO WARRIOR')).toBeTruthy();
+    expect(getByText('IMPACT WARRIOR')).toBeTruthy();
     expect(getByText('1 250 pts')).toBeTruthy();
   });
 

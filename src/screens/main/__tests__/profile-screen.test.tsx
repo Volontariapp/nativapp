@@ -1,4 +1,5 @@
 import React from 'react';
+import { StyleSheet, type StyleProp, type TextStyle } from 'react-native';
 import { render } from '@testing-library/react-native';
 import type { ProfileLayout as ProfileLayoutComponent } from '@/components/profile/ProfileLayout';
 import { createProfile } from '@/components/profile/__tests__/profile.factory';
@@ -47,7 +48,13 @@ jest.mock('@/components', () => ({
     '@/components/profile/ProfileLayout',
   ).ProfileLayout,
 }));
-describe('ProfileScreen impact score', () => {
+
+type TextElement = { props: { style?: StyleProp<TextStyle> } };
+
+const fontSizeOf = (element: TextElement): number | undefined =>
+  StyleSheet.flatten(element.props.style).fontSize;
+
+describe('ProfileScreen header stats', () => {
   beforeEach(() => {
     mockUseProfile.mockReturnValue({
       data: createProfile({ totalImpactScore: 120 }),
@@ -70,12 +77,40 @@ describe('ProfileScreen impact score', () => {
     expect(getByText('120')).toBeTruthy();
   });
 
-  it('keeps the social and event stats next to the impact score', () => {
+  it('labels the social stats Follow and Suivi(e)s next to the impact score', () => {
+    const { getByText, queryByText } = render(<ProfileScreen />);
+
+    expect(getByText('Follow')).toBeTruthy();
+    expect(getByText('7')).toBeTruthy();
+    expect(getByText('Suivi(e)s')).toBeTruthy();
+    expect(getByText('3')).toBeTruthy();
+    expect(queryByText('Abonnés')).toBeNull();
+    expect(queryByText('Abonnements')).toBeNull();
+  });
+
+  it('does not show the created events counter', () => {
+    const { queryByText } = render(<ProfileScreen />);
+
+    expect(queryByText('Évents créés')).toBeNull();
+  });
+
+  it('keeps the same font size for every stat and does not shrink any of them', () => {
     const { getByText } = render(<ProfileScreen />);
 
-    expect(getByText('Abonnés')).toBeTruthy();
-    expect(getByText('7')).toBeTruthy();
-    expect(getByText('Abonnements')).toBeTruthy();
-    expect(getByText('Évents créés')).toBeTruthy();
+    const labels = ['Impact', 'Follow', 'Suivi(e)s'].map((label) => getByText(label));
+    const values = ['120', '7', '3'].map((value) => getByText(value));
+
+    expect(new Set(labels.map(fontSizeOf)).size).toBe(1);
+    expect(new Set(values.map(fontSizeOf)).size).toBe(1);
+    [...labels, ...values].forEach((element) => {
+      expect(element.props.adjustsFontSizeToFit).not.toBe(true);
+    });
+  });
+
+  it('shows the rank as a chip next to the pseudo', () => {
+    const { getByTestId, getByText } = render(<ProfileScreen />);
+
+    expect(getByTestId('profile-rank-chip')).toBeTruthy();
+    expect(getByText('FIELD VOLUNTEER')).toBeTruthy();
   });
 });
