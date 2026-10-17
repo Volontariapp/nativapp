@@ -24,6 +24,10 @@ export interface EventDetailsTabProps {
   onSelectTargetState: (state: EventState) => void;
   isRefetching: boolean;
   onRefresh: () => void;
+  /** Photo de l'évènement, affichée au-dessus du formulaire ; elle s'enregistre avec lui. */
+  coverSection?: React.ReactNode;
+  /** Empêche l'enregistrement tant que la photo n'est pas utilisable (envoi en cours, refusée...). */
+  saveDisabled?: boolean;
 }
 
 export function EventDetailsTab({
@@ -36,6 +40,8 @@ export function EventDetailsTab({
   onSelectTargetState,
   isRefetching,
   onRefresh,
+  coverSection,
+  saveDisabled = false,
 }: EventDetailsTabProps): React.JSX.Element {
   const { theme } = useAppTheme();
   const styles = useStyles(createStyles);
@@ -64,6 +70,8 @@ export function EventDetailsTab({
       showsVerticalScrollIndicator={false}
       refreshControl={refreshControl}
     >
+      {coverSection}
+
       {/* Form Card */}
       <View style={styles.card}>
         <View style={styles.cardHeader}>
@@ -142,7 +150,7 @@ export function EventDetailsTab({
           <AppButton
             text={isSubmitting ? 'Enregistrement...' : 'Enregistrer les modifications'}
             variant="eco"
-            disabled={!isDirty || isSubmitting}
+            disabled={!isDirty || isSubmitting || saveDisabled}
             onPress={onSave}
             style={styles.submitButton}
           />

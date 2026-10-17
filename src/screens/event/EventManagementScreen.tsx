@@ -19,10 +19,7 @@ import {
 import { useAppTheme, useStyles } from '@/context/ThemeContext';
 import type { AppTheme } from '@/shared/themes/theme';
 import type { EventState } from '@volontariapp/contracts';
-import {
-  updateEventSchema,
-  type UpdateEventFormValues,
-} from '@/api/event/event.schema';
+import { updateEventSchema, type UpdateEventFormValues } from '@/api/event/event.schema';
 import type { AppEvent } from '@/api/event/event.api';
 import {
   useGetEvent,
@@ -30,6 +27,10 @@ import {
   useChangeEventState,
   useEventParticipants,
 } from '@/api/event/hooks';
+import { useEventCover } from '@/api/event/hooks/use-event-cover';
+import { useCoverAdjuster } from '@/api/event/hooks/use-cover-adjuster';
+import { EventCoverEditor } from '@/components/event/event-cover-editor';
+import { EventCoverCropper } from '@/components/event/event-cover-cropper';
 
 type EventManagementRouteProp = RouteProp<
   { EventManagement: { eventId: string; initialEvent?: AppEvent } },
@@ -67,6 +68,10 @@ export function EventManagementScreen(): React.JSX.Element {
     refetch: refetchParticipants,
     isRefetching: isParticipantsRefetching,
   } = useEventParticipants(eventId);
+
+  const coverAdjuster = useCoverAdjuster();
+  const eventCover = useEventCover({ adjustImage: coverAdjuster.adjustImage });
+  const hasNewCover = eventCover.cover !== undefined;
 
   const updateMutation = useUpdateEvent();
   const stateMutation = useChangeEventState();
@@ -108,9 +113,13 @@ export function EventManagementScreen(): React.JSX.Element {
           description: values.description,
           localisationName: values.localisationName,
           maxParticipants: values.maxParticipants,
+          coverFileId: eventCover.coverFileId,
         },
       });
 
+      if (eventCover.cover !== undefined) {
+        eventCover.removeImage(eventCover.cover.id);
+      }
       Alert.alert('Succès', 'Les informations de votre événement ont été mises à jour.');
     } catch (err) {
       const msg = err instanceof Error ? err.message : 'Une erreur réseau est survenue.';
@@ -209,12 +218,7 @@ export function EventManagementScreen(): React.JSX.Element {
               size={15}
               color={activeTab === 'details' ? theme.colors.primaryEco : theme.colors.grey}
             />
-            <AppText
-              style={[
-                styles.tabLabel,
-                activeTab === 'details' && styles.tabLabelActive,
-              ]}
-            >
+            <AppText style={[styles.tabLabel, activeTab === 'details' && styles.tabLabelActive]}>
               Informations
             </AppText>
           </Pressable>
@@ -233,15 +237,11 @@ export function EventManagementScreen(): React.JSX.Element {
               color={activeTab === 'participants' ? theme.colors.primaryEco : theme.colors.grey}
             />
             <AppText
-              style={[
-                styles.tabLabel,
-                activeTab === 'participants' && styles.tabLabelActive,
-              ]}
+              style={[styles.tabLabel, activeTab === 'participants' && styles.tabLabelActive]}
             >
               Participants
-              {participantsData?.participants && (
-                ` (${String(participantsData.participants.length)})`
-              )}
+              {participantsData?.participants &&
+                ` (${String(participantsData.participants.length)})`}
             </AppText>
           </Pressable>
         </View>
@@ -253,8 +253,20 @@ export function EventManagementScreen(): React.JSX.Element {
           currentEvent={currentEvent}
           control={control}
           errors={errors}
-          isDirty={isDirty}
-          isSubmitting={updateMutation.isPending}
+          isDirty={isDirty || hasNewCover}
+          isSubmitting={updateMutation.isPending || eventCover.isUploading}
+          saveDisabled={eventCover.hasBlockingImage}
+          coverSection={
+            <EventCoverEditor
+              event={currentEvent}
+              cover={eventCover.cover}
+              onAdd={() => {
+                void eventCover.addImages();
+              }}
+              onRetry={eventCover.retryImage}
+              onRemove={eventCover.removeImage}
+            />
+          }
           onSave={() => {
             void onSaveDetails();
           }}
@@ -272,7 +284,7 @@ export function EventManagementScreen(): React.JSX.Element {
           currentEvent={currentEvent}
           participants={participantsData?.participants ?? []}
           totalRegistered={
-            participantsData?.participants.length ?? (currentEvent?.currentParticipants ?? 0)
+            participantsData?.participants.length ?? currentEvent?.currentParticipants ?? 0
           }
           isLoading={isParticipantsLoading}
           isRefetching={isParticipantsRefetching}
@@ -282,6 +294,8 @@ export function EventManagementScreen(): React.JSX.Element {
           onParticipantPress={handleParticipantPress}
         />
       )}
+
+      <EventCoverCropper image={coverAdjuster.pendingImage} onSettle={coverAdjuster.settle} />
 
       {/* Confirmation Modal */}
       <ConfirmStateChangeModal

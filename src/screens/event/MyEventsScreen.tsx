@@ -10,7 +10,7 @@ import type { AppEvent } from '@/api/event/event.api';
 import { useNavigation } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import type { MainStackParamList } from '@/navigation/stacks/MainStack';
-import { EventCard } from '@/components/dataDisplay/EventCard';
+import { MyEventItem } from '@/components/event/my-event-item';
 
 export function MyEventsScreen(): React.JSX.Element {
   const { theme } = useAppTheme();
@@ -29,16 +29,26 @@ export function MyEventsScreen(): React.JSX.Element {
     [rootNavigation],
   );
 
+  const handleEventEdit = useCallback(
+    (event: AppEvent) => {
+      rootNavigation.navigate('EventManagement', { eventId: event.id, initialEvent: event });
+    },
+    [rootNavigation],
+  );
+
   const renderItem = useCallback(
     ({ item }: ListRenderItemInfo<AppEvent>) => (
-      <EventCard
+      <MyEventItem
         event={item}
         onPress={() => {
           handleEventPress(item);
         }}
+        onEdit={() => {
+          handleEventEdit(item);
+        }}
       />
     ),
-    [handleEventPress],
+    [handleEventPress, handleEventEdit],
   );
 
   const keyExtractor = useCallback((item: AppEvent) => item.id, []);
