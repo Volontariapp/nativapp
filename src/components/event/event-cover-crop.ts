@@ -112,8 +112,9 @@ export const regionToImageStyle = (
   return {
     width: image.width * scale,
     height: image.height * scale,
-    left: -region.x * scale,
-    top: -region.y * scale,
+    // `0 -` plutôt qu'une négation : une région à l'origine donne 0 et non -0.
+    left: 0 - region.x * scale,
+    top: 0 - region.y * scale,
   };
 };
 

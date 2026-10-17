@@ -46,15 +46,15 @@ describe('EventDetailsTab', () => {
   });
 
   it.each([
-    [EventState.EVENT_STATE_FINISHED, /terminé/],
-    [EventState.EVENT_STATE_CANCELLED, /annulé/],
+    [EventState.EVENT_STATE_FINISHED, 'terminé'],
+    [EventState.EVENT_STATE_CANCELLED, 'annulé'],
   ])('locks a finished or cancelled event (state %s)', (state, wording) => {
     const { getByText, queryByText, getByTestId } = render(
       <Harness event={createEvent({ state, ...FUTURE })} />,
     );
 
     expect(getByTestId('event-locked-notice')).toBeTruthy();
-    expect(getByText(wording)).toBeTruthy();
+    expect(getByText(`Cet événement est ${wording} : il ne peut plus être modifié.`)).toBeTruthy();
     expect(queryByText(SAVE_LABEL)).toBeNull();
   });
 });
