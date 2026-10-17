@@ -7,11 +7,21 @@ import type { EventFormValues } from '../event.schema';
 
 const EVENTS_QUERY_KEY = ['events'] as const;
 
+const COVER_PENDING_NOTE =
+  '\nVotre photo est en cours de vérification : elle apparaîtra dès qu’elle sera validée.';
+
+export interface CreateEventInput extends EventFormValues {
+  /** Photo déjà envoyée et confirmée, jamais une URL. */
+  coverFileId?: string;
+  /** Une clé par formulaire : un réessai après échec reste idempotent côté serveur. */
+  idempotencyKey?: string;
+}
+
 export const useCreateEvent = () => {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: async (data: EventFormValues) => {
+    mutationFn: async (data: CreateEventInput) => {
       const payload: WithOptionalIdempotencyKey<CreateEventRequest> = {
         title: data.title,
         description: data.description,
@@ -22,6 +32,8 @@ export const useCreateEvent = () => {
         startAt: data.startAt,
         endAt: data.endAt,
         tagIds: [],
+        coverFileId: data.coverFileId,
+        idempotencyKey: data.idempotencyKey,
       };
 
       const newEvent = await eventApi.createEvent(payload);
@@ -47,7 +59,11 @@ export const useCreateEvent = () => {
       if (newEvent !== null) {
         void queryClient.invalidateQueries({ queryKey: EVENTS_QUERY_KEY });
         void queryClient.invalidateQueries({ queryKey: ['my-events'] });
-        Alert.alert('Succès', `L'évènement "${newEvent.title}" a été créé avec succès !`);
+        const coverNote = newEvent.coverStatus === 'PENDING' ? COVER_PENDING_NOTE : '';
+        Alert.alert(
+          'Succès',
+          `L'évènement "${newEvent.title}" a été créé avec succès !${coverNote}`,
+        );
       }
     },
     onError: (error) => {

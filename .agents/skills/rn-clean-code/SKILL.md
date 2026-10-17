@@ -41,3 +41,9 @@ TypeScript is used to guarantee safety. You are explicitly forbidden to use esca
 - Respect the existing boundaries. Do not mix business logic (API calls, complex state) inside UI components.
 - UI components (in `src/components/ui/`) must be "dumb" (purely presentational). They receive data via props and emit events via callbacks.
 - Screens (in `src/screens/`) act as "smart" containers. They connect to React Query, manage Context, and orchestrate the UI components.
+
+## 🩺 React Doctor : trois avertissements récurrents
+
+- **`async-await-in-loop`** : un `for…of` qui attend à chaque tour est signalé. Si les itérations sont indépendantes, les lancer ensemble (`Promise.all`) ; si elles partagent une ressource unique (une seule fenêtre de cadrage, une file), les enchaîner par `reduce` sur une promesse et dire pourquoi dans un commentaire.
+- **`no-loading-flag-reset-outside-finally`** : remettre un drapeau de chargement (`setIsSaving(false)`) dans un `finally`, jamais seulement sur le chemin de succès ou dans le `catch`, sinon le bouton reste bloqué quand l'appel échoue.
+- **`rn-no-scrollview-mapped-list`** : pas de `<ScrollView>{items.map(...)}</ScrollView>`, même horizontal et même pour quelques éléments ; utiliser une `FlatList`.

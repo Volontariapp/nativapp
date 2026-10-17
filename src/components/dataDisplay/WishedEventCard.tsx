@@ -13,7 +13,8 @@ import Feather from 'react-native-vector-icons/Feather';
 import { AppIconsButton } from '@/components';
 import { useUserSocialActions } from '@/api/social/hooks/use-user-social-actions';
 import { Image } from 'expo-image';
-import { getFakeEcologyImage } from '@/utils/fake-images.util';
+import { getEventImageUri } from '@/api/event/event-cover.utils';
+import { LIST_THUMBNAIL_RADIUS, LIST_THUMBNAIL_SIZE } from '@/components/event/event-image-frames';
 
 export interface EventCardProps {
   event: AppEvent;
@@ -55,7 +56,7 @@ export function WishedEventCard({ event }: EventCardProps): React.JSX.Element {
     minute: '2-digit',
   });
 
-  const fakeImageUrl = React.useMemo(() => getFakeEcologyImage(event.id), [event.id]);
+  const imageUri = getEventImageUri(event);
 
   return (
     <TouchableOpacity
@@ -67,7 +68,7 @@ export function WishedEventCard({ event }: EventCardProps): React.JSX.Element {
     >
       <View style={[styles.imageContainer, { backgroundColor: typeBg }]}>
         <Image
-          source={{ uri: fakeImageUrl }}
+          source={{ uri: imageUri }}
           style={StyleSheet.absoluteFillObject}
           contentFit="cover"
           cachePolicy="memory-disk"
@@ -126,9 +127,9 @@ const createStyles = (theme: AppTheme) =>
       borderRadius: 40,
     },
     imageContainer: {
-      width: 70,
-      height: 70,
-      borderRadius: 15,
+      width: LIST_THUMBNAIL_SIZE,
+      height: LIST_THUMBNAIL_SIZE,
+      borderRadius: LIST_THUMBNAIL_RADIUS,
       justifyContent: 'center',
       alignItems: 'center',
       marginRight: theme.spacing.md,

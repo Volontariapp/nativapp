@@ -6,6 +6,7 @@ import Swiper from 'react-native-deck-swiper';
 
 import { AppText } from '@/components/typography/AppText';
 import { EventCard } from '@/components/event/EventCard';
+import { computeSwipeLayout } from '@/components/event/event-image-frames';
 import { config } from '@/shared/config/base-config';
 import AppHeader from '@/components/layout/AppHeader';
 import { AppIconsButton } from '@/components';
@@ -125,15 +126,10 @@ export function SwipeScreen(): React.JSX.Element {
 
   const insets = useSafeAreaInsets();
 
-  // Calculate total height of the bottom tab bar
-  const bottomInset = Platform.OS === 'ios' ? Math.max(insets.bottom, 15) : insets.bottom;
-  const tabBarHeight = Platform.OS === 'ios' ? 64 : 60;
-  const safeBottomOffset = bottomInset + tabBarHeight;
-
-  // The like/nope buttons will float right above the nav bar
-  const buttonsBottom = safeBottomOffset + 10;
-  // The cards should float above the buttons
-  const swiperMarginBottom = buttonsBottom + 80;
+  const { buttonsBottom, swiperMarginBottom } = computeSwipeLayout({
+    insetsBottom: insets.bottom,
+    isIos: Platform.OS === 'ios',
+  });
 
   if (isLoading) return <SwipeLoadingView />;
   if (isError) return <SwipeErrorView />;

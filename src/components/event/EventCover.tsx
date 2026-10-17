@@ -4,8 +4,9 @@ import { Image } from 'expo-image';
 import { useStyles } from '@/context/ThemeContext';
 import type { AppTheme } from '@/shared/themes/theme';
 import type { AppEvent } from '@/api/event/event.api';
-import { getFakeEcologyImage } from '@/utils/fake-images.util';
+import { getEventImageUri } from '@/api/event/event-cover.utils';
 import { EventStatusBadge } from './EventStatusBadge';
+import { DETAIL_COVER_HEIGHT } from './event-image-frames';
 
 interface EventCoverProps {
   event: AppEvent;
@@ -13,11 +14,11 @@ interface EventCoverProps {
 
 export function EventCover({ event }: EventCoverProps): React.JSX.Element {
   const styles = useStyles(createStyles);
-  const placeholderUrl = getFakeEcologyImage(event.id);
+  const imageUri = getEventImageUri(event);
 
   return (
     <View style={styles.container}>
-      <Image source={{ uri: placeholderUrl }} style={styles.coverImage} contentFit="cover" />
+      <Image source={{ uri: imageUri }} style={styles.coverImage} contentFit="cover" />
       <EventStatusBadge
         state={event.state}
         endDate={event.endAt}
@@ -31,7 +32,7 @@ export function EventCover({ event }: EventCoverProps): React.JSX.Element {
 const createStyles = (theme: AppTheme) =>
   StyleSheet.create({
     container: {
-      height: 200,
+      height: DETAIL_COVER_HEIGHT,
       width: '100%',
       position: 'relative',
       marginBottom: theme.spacing.lg,

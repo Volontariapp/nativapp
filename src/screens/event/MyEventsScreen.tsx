@@ -1,6 +1,6 @@
-import React, { useCallback, useEffect } from 'react';
-import type { ListRenderItemInfo } from 'react-native';
-import { View, StyleSheet, FlatList, ActivityIndicator } from 'react-native';
+import React, { useCallback, useEffect, useMemo } from 'react';
+import type { SectionListRenderItemInfo } from 'react-native';
+import { View, StyleSheet, SectionList, ActivityIndicator } from 'react-native';
 import { AppText } from '@/components/typography/AppText';
 import AppHeader from '@/components/layout/AppHeader';
 import { useAppTheme, useStyles } from '@/context/ThemeContext';
@@ -10,7 +10,9 @@ import type { AppEvent } from '@/api/event/event.api';
 import { useNavigation } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import type { MainStackParamList } from '@/navigation/stacks/MainStack';
-import { EventCard } from '@/components/dataDisplay/EventCard';
+import { groupEventsByStatus, type EventStatusGroup } from '@/api/event/group-events-by-status';
+import { MyEventItem } from '@/components/event/my-event-item';
+import { EventStatusSectionHeader } from '@/components/event/event-status-section-header';
 
 export function MyEventsScreen(): React.JSX.Element {
   const { theme } = useAppTheme();
@@ -20,7 +22,10 @@ export function MyEventsScreen(): React.JSX.Element {
   const { data, isLoading, isError, error, hasNextPage, fetchNextPage, isFetchingNextPage } =
     useGetMyEvents(10);
 
-  const events = data?.pages.flatMap((page) => page.events) ?? [];
+  const sections = useMemo(
+    () => groupEventsByStatus(data?.pages.flatMap((page) => page.events) ?? []),
+    [data],
+  );
 
   const handleEventPress = useCallback(
     (event: AppEvent) => {
@@ -29,16 +34,26 @@ export function MyEventsScreen(): React.JSX.Element {
     [rootNavigation],
   );
 
+  const handleEventEdit = useCallback(
+    (event: AppEvent) => {
+      rootNavigation.navigate('EventManagement', { eventId: event.id, initialEvent: event });
+    },
+    [rootNavigation],
+  );
+
   const renderItem = useCallback(
-    ({ item }: ListRenderItemInfo<AppEvent>) => (
-      <EventCard
+    ({ item }: SectionListRenderItemInfo<AppEvent, EventStatusGroup>) => (
+      <MyEventItem
         event={item}
         onPress={() => {
           handleEventPress(item);
         }}
+        onEdit={() => {
+          handleEventEdit(item);
+        }}
       />
     ),
-    [handleEventPress],
+    [handleEventPress, handleEventEdit],
   );
 
   const keyExtractor = useCallback((item: AppEvent) => item.id, []);
@@ -68,10 +83,14 @@ export function MyEventsScreen(): React.JSX.Element {
       ) : isError ? (
         <AppText style={styles.errorText}>Erreur lors du chargement de vos événements.</AppText>
       ) : (
-        <FlatList
-          data={events}
+        <SectionList
+          sections={sections}
           keyExtractor={keyExtractor}
           renderItem={renderItem}
+          renderSectionHeader={({ section }) => (
+            <EventStatusSectionHeader title={section.title} count={section.data.length} />
+          )}
+          stickySectionHeadersEnabled={false}
           contentContainerStyle={styles.listContent}
           onEndReached={handleLoadMore}
           onEndReachedThreshold={0.5}

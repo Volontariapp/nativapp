@@ -1,5 +1,5 @@
 import React from 'react';
-import { View, StyleSheet, TouchableOpacity } from 'react-native';
+import { View, StyleSheet, TouchableOpacity, Pressable } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import type { MainStackParamList } from '@/navigation/stacks/MainStack';
@@ -10,14 +10,17 @@ import { mapEventType } from '@/shared/lib/event-mappers.utils';
 import { EventType } from '@volontariapp/contracts';
 import Feather from 'react-native-vector-icons/Feather';
 import { Image } from 'expo-image';
-import { getFakeEcologyImage } from '@/utils/fake-images.util';
+import { getEventImageUri } from '@/api/event/event-cover.utils';
+import { LIST_THUMBNAIL_RADIUS, LIST_THUMBNAIL_SIZE } from '@/components/event/event-image-frames';
 
 export interface EventCardProps {
   event: AppEvent;
   onPress?: () => void;
+  /** Quand il est fourni, un bouton de modification est affiché sur le côté de la carte. */
+  onEdit?: () => void;
 }
 
-export function EventCard({ event, onPress }: EventCardProps): React.JSX.Element {
+export function EventCard({ event, onPress, onEdit }: EventCardProps): React.JSX.Element {
   const navigation = useNavigation<NativeStackNavigationProp<MainStackParamList>>();
 
   const isEcology =
@@ -50,7 +53,7 @@ export function EventCard({ event, onPress }: EventCardProps): React.JSX.Element
     minute: '2-digit',
   });
 
-  const fakeImageUrl = React.useMemo(() => getFakeEcologyImage(event.id), [event.id]);
+  const imageUri = getEventImageUri(event);
 
   return (
     <TouchableOpacity
@@ -66,7 +69,7 @@ export function EventCard({ event, onPress }: EventCardProps): React.JSX.Element
     >
       <View style={[styles.imageContainer, { backgroundColor: typeBg }]}>
         <Image
-          source={{ uri: fakeImageUrl }}
+          source={{ uri: imageUri }}
           style={StyleSheet.absoluteFillObject}
           contentFit="cover"
           cachePolicy="memory-disk"
@@ -99,6 +102,17 @@ export function EventCard({ event, onPress }: EventCardProps): React.JSX.Element
           </AppText>
         </View>
       </View>
+
+      {onEdit !== undefined && (
+        <Pressable
+          style={styles.editButton}
+          accessibilityLabel={`Modifier l'évènement ${event.title}`}
+          hitSlop={8}
+          onPress={onEdit}
+        >
+          <Feather name="edit-2" size={16} color={theme.colors.primaryEco} />
+        </Pressable>
+      )}
     </TouchableOpacity>
   );
 }
@@ -114,9 +128,9 @@ const styles = StyleSheet.create({
     borderRadius: 40,
   },
   imageContainer: {
-    width: 70,
-    height: 70,
-    borderRadius: 15,
+    width: LIST_THUMBNAIL_SIZE,
+    height: LIST_THUMBNAIL_SIZE,
+    borderRadius: LIST_THUMBNAIL_RADIUS,
     justifyContent: 'center',
     alignItems: 'center',
     marginRight: theme.spacing.md,
@@ -129,6 +143,15 @@ const styles = StyleSheet.create({
   },
   content: {
     flex: 1,
+  },
+  editButton: {
+    width: 36,
+    height: 36,
+    marginLeft: theme.spacing.sm,
+    borderRadius: 18,
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: `${theme.colors.primaryEco}15`,
   },
   tag: {
     alignSelf: 'flex-start',

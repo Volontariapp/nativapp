@@ -10,7 +10,7 @@ import type { AppTheme } from '@/shared/themes/theme';
 import type { AppEvent as Event } from '@/api/event/event.api';
 import { EventTypeTagComponent } from '@/components/dataDisplay/EventTypesTags';
 import { ImpactScoreBadge } from '@/components/event/ImpactScoreBadge';
-import { getFakeEcologyImage } from '@/utils/fake-images.util';
+import { getEventImageUri } from '@/api/event/event-cover.utils';
 import { calculateDistanceInKm, formatDistance } from '@/shared/lib/location.utils';
 
 interface EventCardProps {
@@ -68,14 +68,14 @@ export const EventCard = React.memo(function EventCard({
     };
   }, [event.currentParticipants, event.id]);
 
-  const fakeImageUrl = useMemo(() => getFakeEcologyImage(event.id), [event.id]);
+  const imageUri = getEventImageUri(event);
 
   return (
     <View style={styles.cardContainer}>
       <View style={styles.cardInner}>
         <View style={styles.imageContainer}>
           <Image
-            source={{ uri: fakeImageUrl }}
+            source={{ uri: imageUri }}
             style={StyleSheet.absoluteFillObject}
             contentFit="cover"
             cachePolicy="memory-disk"

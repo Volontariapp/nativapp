@@ -3,6 +3,7 @@ import { EVENT_ENDPOINTS, USER_ENDPOINTS } from '../endpoints';
 import { generateIdempotencyKey } from '@/shared/lib/idempotency.utils';
 import { normalizeEventState, normalizeEventType } from '@/shared/lib/event-mappers.utils';
 import type { WithOptionalIdempotencyKey } from '../idempotency.types';
+import { readEventCover } from './event-cover.utils';
 import type {
   CreateEventRequest,
   EventType,
@@ -20,6 +21,7 @@ import type {
   UpdateEventRequest,
   ListUsersWebResponse,
   UserWeb,
+  CoverStatusWeb,
 } from '@volontariapp/contracts';
 
 export type EventParticipant = UserWeb;
@@ -43,6 +45,10 @@ export interface AppEvent {
   organizerId?: string;
   tags?: Tag[];
   requirements?: Requirement[];
+  /** Traitement de la photo ; absent quand la gateway ne l'a pas fourni. */
+  coverStatus?: CoverStatusWeb;
+  /** URL publique de la photo, uniquement quand coverStatus vaut READY. */
+  coverUrl?: string;
 }
 
 interface GrpcTimestamp {
@@ -62,11 +68,9 @@ const formatTimestamp = (ts: GrpcTimestamp | string | Date | undefined | null): 
   return new Date().toISOString();
 };
 
-export const convertEventDtoToAppEvent = (
-  event: EventDTO | Event,
-): AppEvent => {
-  const rawStart = event.startAt as unknown as (GrpcTimestamp | string | Date | undefined | null);
-  const rawEnd = event.endAt as unknown as (GrpcTimestamp | string | Date | undefined | null);
+export const convertEventDtoToAppEvent = (event: EventDTO | Event): AppEvent => {
+  const rawStart = event.startAt as unknown as GrpcTimestamp | string | Date | undefined | null;
+  const rawEnd = event.endAt as unknown as GrpcTimestamp | string | Date | undefined | null;
 
   return {
     id: event.id,
@@ -89,6 +93,7 @@ export const convertEventDtoToAppEvent = (
       : undefined,
     tags: event.tags,
     requirements: event.requirements,
+    ...readEventCover(event),
   };
 };
 
@@ -245,10 +250,7 @@ export const eventApi = {
     }
   },
 
-  async updateEvent(
-    id: string,
-    payload: Partial<UpdateEventRequest>,
-  ): Promise<AppEvent | null> {
+  async updateEvent(id: string, payload: Partial<UpdateEventRequest>): Promise<AppEvent | null> {
     try {
       const path = EVENT_ENDPOINTS.UPDATE_EVENT.path.replace(':id', id);
       const response = await apiFetch<GetEventResponse, Partial<UpdateEventRequest>>(path, {
@@ -322,4 +324,3 @@ export const eventApi = {
     }
   },
 };
-
