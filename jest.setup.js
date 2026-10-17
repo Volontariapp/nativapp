@@ -51,6 +51,34 @@ jest.mock('react-native-keyboard-controller', () =>
   require('react-native-keyboard-controller/jest'),
 );
 
+// Meme principe que le mock officiel de la librairie, mais avec des fonctions simples et non des
+// jest.fn : un resetAllMocks() ou restoreAllMocks() dans un test viderait leur implementation et
+// useSafeAreaInsets renverrait undefined. Sans provider, les insets valent zero.
+jest.mock('react-native-safe-area-context', () => {
+  const React = require('react');
+  const actual = jest.requireActual('react-native-safe-area-context');
+  const metrics = {
+    frame: { x: 0, y: 0, width: 320, height: 640 },
+    insets: { top: 0, right: 0, bottom: 0, left: 0 },
+  };
+  return {
+    ...actual,
+    initialWindowMetrics: metrics,
+    useSafeAreaInsets: () => React.useContext(actual.SafeAreaInsetsContext) ?? metrics.insets,
+    useSafeAreaFrame: () => React.useContext(actual.SafeAreaFrameContext) ?? metrics.frame,
+    SafeAreaProvider: ({ children, initialMetrics = metrics }) =>
+      React.createElement(
+        actual.SafeAreaFrameContext.Provider,
+        { value: initialMetrics.frame },
+        React.createElement(
+          actual.SafeAreaInsetsContext.Provider,
+          { value: initialMetrics.insets },
+          children,
+        ),
+      ),
+  };
+});
+
 jest.mock('@expo/vector-icons', () => {
   const { Text } = require('react-native');
   const React = require('react');
@@ -73,5 +101,3 @@ jest.mock('react-native-vector-icons/Feather', () => {
   FeatherIcon.displayName = 'MockFeatherIcon';
   return FeatherIcon;
 });
-
-

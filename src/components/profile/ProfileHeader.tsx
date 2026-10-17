@@ -4,7 +4,8 @@ import { Image } from 'expo-image';
 import Icon from 'react-native-vector-icons/Feather';
 import { AppText } from '@/components/typography/AppText';
 import { useAppTheme, useStyles } from '@/context/ThemeContext';
-import type { AppTheme } from '@/shared/themes/theme';
+import { lightTheme, type AppTheme } from '@/shared/themes/theme';
+import { getImpactRankStatus } from '@/shared/lib/impact-ranks';
 
 import type { ProfileStatItem } from './ProfileStats';
 
@@ -12,6 +13,7 @@ interface ProfileHeaderProps {
   pseudo: string;
   avatarUrl?: string;
   bio?: string;
+  impactScore?: number;
   stats?: ProfileStatItem[];
   headerAction?: React.ReactNode;
   bioAction?: React.ReactNode;
@@ -21,6 +23,7 @@ export const ProfileHeader = ({
   pseudo,
   avatarUrl,
   bio,
+  impactScore,
   stats = [],
   headerAction,
   bioAction,
@@ -46,10 +49,10 @@ export const ProfileHeader = ({
         <View style={styles.statsContainer}>
           {displayedStats.map((stat) => (
             <View key={stat.label} style={styles.statItem}>
-              <AppText style={styles.statValue} numberOfLines={1} adjustsFontSizeToFit>
+              <AppText style={styles.statValue} numberOfLines={1}>
                 {stat.value}
               </AppText>
-              <AppText style={styles.statLabel} numberOfLines={1} adjustsFontSizeToFit>
+              <AppText style={styles.statLabel} numberOfLines={1}>
                 {stat.label}
               </AppText>
             </View>
@@ -58,7 +61,16 @@ export const ProfileHeader = ({
       </View>
 
       <View style={styles.bottomSection}>
-        <AppText style={styles.userName}>{pseudo}</AppText>
+        <View style={styles.nameRow}>
+          <AppText style={styles.userName}>{pseudo}</AppText>
+          {impactScore !== undefined && (
+            <View testID="profile-rank-chip" style={styles.rankChip}>
+              <AppText style={styles.rankChipText}>
+                {getImpactRankStatus(impactScore).current.name}
+              </AppText>
+            </View>
+          )}
+        </View>
         <AppText style={styles.bioText}>
           {typeof bio === 'string' && bio.trim() !== ''
             ? bio
@@ -131,11 +143,29 @@ const createStyles = (theme: AppTheme) =>
     bottomSection: {
       paddingHorizontal: theme.spacing.xs,
     },
+    nameRow: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      flexWrap: 'wrap',
+      gap: theme.spacing.sm,
+      marginBottom: theme.spacing.xs,
+    },
     userName: {
       fontSize: 18,
       fontWeight: 'bold',
       color: theme.colors.text,
-      marginBottom: theme.spacing.xs,
+    },
+    rankChip: {
+      backgroundColor: theme.colors.primaryEco,
+      borderRadius: theme.radius.full,
+      paddingHorizontal: theme.spacing.sm,
+      paddingVertical: 2,
+    },
+    rankChipText: {
+      color: lightTheme.colors.white,
+      fontSize: theme.typography.fontSize.xs,
+      fontWeight: theme.typography.fontWeight.bold,
+      letterSpacing: 1,
     },
     bioText: {
       fontSize: theme.typography.fontSize.md,

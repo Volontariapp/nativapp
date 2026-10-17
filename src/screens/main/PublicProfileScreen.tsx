@@ -83,10 +83,16 @@ export function PublicProfileScreen(): React.JSX.Element {
             avatarUrl={resolveAvatarUrl(user)}
             bio={user.bio}
             badges={user.badges}
+            impactScore={user.totalImpactScore}
             stats={[
-              { label: 'Abonnés', value: localFollowersCount, color: theme.colors.primarySocio },
               {
-                label: 'Abonnements',
+                label: 'Impact',
+                value: user.totalImpactScore,
+                color: theme.colors.primaryEco,
+              },
+              { label: 'Follow', value: localFollowersCount, color: theme.colors.primarySocio },
+              {
+                label: 'Suivi(e)s',
                 value: followsCount,
                 color: theme.colors.warning,
               },

@@ -7,6 +7,7 @@ jest.mock(
   () => ({
     WebsocketMessagingType: {
       USER_DELETED: 'USER_DELETED',
+      USER_IMPACT_SCORE_CREDITED: 'USER_IMPACT_SCORE_CREDITED',
     },
   }),
   { virtual: true },
@@ -15,15 +16,17 @@ jest.mock(
 import { renderHook } from '@testing-library/react-native';
 import { useNotificationHandlers } from '../useNotificationHandlers';
 import { WebsocketMessagingType } from '@volontariapp/messaging';
+import { PROFILE_QUERY_KEY } from '@/api/user/hooks/use-profile';
 import { authExpiredBus } from '../../services/event-bus.service';
 import type { Socket } from 'socket.io-client';
 
 const mockQueryClientClear = jest.fn();
+const mockInvalidateQueries = jest.fn();
 
 jest.mock('@tanstack/react-query', () => ({
   useQueryClient: () => ({
     clear: mockQueryClientClear,
-    invalidateQueries: jest.fn(),
+    invalidateQueries: mockInvalidateQueries,
   }),
 }));
 
@@ -81,5 +84,32 @@ describe('useNotificationHandlers', () => {
     expect(showNotificationMock).toHaveBeenCalledWith('Un compte a été supprimé.');
     expect(mockQueryClientClear).not.toHaveBeenCalled();
     expect(authExpiredBusEmitSpy).not.toHaveBeenCalled();
+  });
+
+  it('should invalidate the profile and notify the increment when USER_IMPACT_SCORE_CREDITED is received', () => {
+    renderHook(() => {
+      useNotificationHandlers(mockSocket as unknown as Socket, showNotificationMock);
+    });
+
+    const handler = listeners[WebsocketMessagingType.USER_IMPACT_SCORE_CREDITED];
+    expect(handler).toBeDefined();
+
+    handler?.({ eventId: 'event-1', scoreIncrement: 40 });
+
+    expect(mockInvalidateQueries).toHaveBeenCalledWith({ queryKey: PROFILE_QUERY_KEY });
+    expect(showNotificationMock).toHaveBeenCalledWith('+40 points d’impact');
+  });
+
+  it('should unsubscribe the USER_IMPACT_SCORE_CREDITED handler on unmount', () => {
+    const { unmount } = renderHook(() => {
+      useNotificationHandlers(mockSocket as unknown as Socket, showNotificationMock);
+    });
+
+    unmount();
+
+    expect(mockSocket.off).toHaveBeenCalledWith(
+      WebsocketMessagingType.USER_IMPACT_SCORE_CREDITED,
+      listeners[WebsocketMessagingType.USER_IMPACT_SCORE_CREDITED],
+    );
   });
 });

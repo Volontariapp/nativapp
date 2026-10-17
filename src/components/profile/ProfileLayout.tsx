@@ -10,6 +10,7 @@ interface ProfileLayoutProps {
   pseudo: string;
   avatarUrl?: string;
   bio?: string;
+  impactScore?: number;
   stats: ProfileStatItem[];
   badges?: (BadgeWeb | string)[];
   eventsTabs?: {
@@ -33,6 +34,7 @@ export const ProfileLayout = ({
   pseudo,
   avatarUrl,
   bio,
+  impactScore,
   stats,
   badges,
   eventsTabs,
@@ -46,6 +48,7 @@ export const ProfileLayout = ({
         pseudo={pseudo}
         avatarUrl={avatarUrl}
         bio={bio}
+        impactScore={impactScore}
         stats={stats}
         headerAction={headerAction}
         bioAction={bioAction}

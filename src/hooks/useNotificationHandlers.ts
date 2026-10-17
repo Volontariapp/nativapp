@@ -19,6 +19,7 @@ import {
   type IPostLikedWebsocketPayload,
   type IPostUnlikedWebsocketPayload,
   type IUserBadgeAwardedWebsocketPayload,
+  type IUserImpactScoreCreditedWebsocketPayload,
   WebsocketMessagingType,
 } from '@volontariapp/messaging';
 import { COMMENTS_LIST_QUERY_KEY } from '@/api/post/hooks/use-list-comments';
@@ -158,6 +159,15 @@ export const useNotificationHandlers = (
       }
     };
 
+    const handleUserImpactScoreCredited = (
+      data: IUserImpactScoreCreditedWebsocketPayload,
+    ): void => {
+      void queryClient.invalidateQueries({
+        queryKey: PROFILE_QUERY_KEY,
+      });
+      notifyRef.current(`+${String(data.scoreIncrement)} points d’impact`);
+    };
+
     // Fallback events (optimistic offline sync success)
     const handleFallbackCreateEvent = (data: IFallbackCreateEventWebsocketPayload): void => {
       syncPendingBus.emit(false);
@@ -253,6 +263,7 @@ export const useNotificationHandlers = (
     socket.on(WebsocketMessagingType.USER_CREATION_FAILED, handleUserFailed);
     socket.on(WebsocketMessagingType.USER_DELETION_FAILED, handleUserDeletionFailed);
     socket.on(WebsocketMessagingType.USER_BADGE_AWARDED, handleUserBadgeAwarded);
+    socket.on(WebsocketMessagingType.USER_IMPACT_SCORE_CREDITED, handleUserImpactScoreCredited);
 
     socket.on(WebsocketMessagingType.FALLBACK_CREATE_EVENT, handleFallbackCreateEvent);
     socket.on(WebsocketMessagingType.FALLBACK_UPDATE_EVENT, handleFallbackUpdateEvent);
@@ -286,6 +297,7 @@ export const useNotificationHandlers = (
       socket.off(WebsocketMessagingType.USER_CREATION_FAILED, handleUserFailed);
       socket.off(WebsocketMessagingType.USER_DELETION_FAILED, handleUserDeletionFailed);
       socket.off(WebsocketMessagingType.USER_BADGE_AWARDED, handleUserBadgeAwarded);
+      socket.off(WebsocketMessagingType.USER_IMPACT_SCORE_CREDITED, handleUserImpactScoreCredited);
 
       socket.off(WebsocketMessagingType.FALLBACK_CREATE_EVENT, handleFallbackCreateEvent);
       socket.off(WebsocketMessagingType.FALLBACK_UPDATE_EVENT, handleFallbackUpdateEvent);
