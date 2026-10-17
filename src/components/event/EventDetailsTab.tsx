@@ -13,6 +13,7 @@ import { EventState } from '@volontariapp/contracts';
 import { normalizeEventState } from '@/shared/lib/event-mappers.utils';
 import type { UpdateEventFormValues } from '@/api/event/event.schema';
 import type { AppEvent } from '@/api/event/event.api';
+import { getEventStatusConfig, isEventDatePast, isEventEditable } from './event-status.utils';
 
 export interface EventDetailsTabProps {
   currentEvent?: AppEvent;
@@ -52,6 +53,14 @@ export function EventDetailsTab({
   const isInProgress = normalizedState === EventState.EVENT_STATE_IN_PROGRESS;
   const isFinished = normalizedState === EventState.EVENT_STATE_FINISHED;
   const isCancelled = normalizedState === EventState.EVENT_STATE_CANCELLED;
+  const isLocked = currentEvent !== undefined && !isEventEditable(currentEvent);
+  const lockedLabel =
+    currentEvent === undefined
+      ? ''
+      : getEventStatusConfig(
+          currentEvent.state,
+          isEventDatePast(currentEvent.endAt, currentEvent.startAt),
+        ).label.toLowerCase();
 
   const refreshControl = useMemo(
     () => (
@@ -76,8 +85,19 @@ export function EventDetailsTab({
       <View style={styles.card}>
         <View style={styles.cardHeader}>
           <Feather name="file-text" size={18} color={theme.colors.primaryEco} />
-          <AppText style={styles.cardTitle}>Modifier les informations</AppText>
+          <AppText style={styles.cardTitle}>
+            {isLocked ? 'Informations' : 'Modifier les informations'}
+          </AppText>
         </View>
+
+        {isLocked && (
+          <View style={styles.finalStateBox} testID="event-locked-notice">
+            <Feather name="lock" size={18} color={theme.colors.grey} />
+            <AppText style={styles.finalStateText}>
+              Cet événement est {lockedLabel} : il ne peut plus être modifié.
+            </AppText>
+          </View>
+        )}
 
         <View style={styles.formContent}>
           <Controller
@@ -87,6 +107,7 @@ export function EventDetailsTab({
               <AppInput
                 label="Titre de l’événement"
                 variant="outlined"
+                editable={!isLocked}
                 value={value}
                 onChangeText={onChange}
                 errorMessage={errors.title?.message}
@@ -102,6 +123,7 @@ export function EventDetailsTab({
               <AppInput
                 label="Description détaillée"
                 variant="outlined"
+                editable={!isLocked}
                 value={value}
                 onChangeText={onChange}
                 errorMessage={errors.description?.message}
@@ -120,6 +142,7 @@ export function EventDetailsTab({
               <AppInput
                 label="Lieu / Adresse"
                 variant="outlined"
+                editable={!isLocked}
                 value={value}
                 onChangeText={onChange}
                 errorMessage={errors.localisationName?.message}
@@ -135,6 +158,7 @@ export function EventDetailsTab({
               <AppInput
                 label="Nombre max de participants"
                 variant="outlined"
+                editable={!isLocked}
                 value={String(value ?? '')}
                 onChangeText={(txt) => {
                   const num = parseInt(txt, 10);
@@ -147,13 +171,15 @@ export function EventDetailsTab({
             )}
           />
 
-          <AppButton
-            text={isSubmitting ? 'Enregistrement...' : 'Enregistrer les modifications'}
-            variant="eco"
-            disabled={!isDirty || isSubmitting || saveDisabled}
-            onPress={onSave}
-            style={styles.submitButton}
-          />
+          {!isLocked && (
+            <AppButton
+              text={isSubmitting ? 'Enregistrement...' : 'Enregistrer les modifications'}
+              variant="eco"
+              disabled={!isDirty || isSubmitting || saveDisabled}
+              onPress={onSave}
+              style={styles.submitButton}
+            />
+          )}
         </View>
       </View>
 

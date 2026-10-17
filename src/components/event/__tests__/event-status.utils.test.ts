@@ -1,6 +1,6 @@
 import { EventState } from '@volontariapp/contracts';
 import { lightTheme } from '@/shared/themes/theme';
-import { isEventDatePast, getEventStatusConfig } from '../event-status.utils';
+import { isEventDatePast, getEventStatusConfig, isEventEditable } from '../event-status.utils';
 
 describe('event-status.utils', () => {
   describe('isEventDatePast', () => {
@@ -86,5 +86,33 @@ describe('event-status.utils', () => {
       expect(getEventStatusConfig('EVENT_STATE_IN_PROGRESS', false).label).toBe('En cours');
       expect(getEventStatusConfig('EVENT_STATE_FINISHED', false).label).toBe('Terminé');
     });
+  });
+});
+
+describe('isEventEditable', () => {
+  const FUTURE = { startAt: '2999-10-15T10:00:00.000Z', endAt: '2999-10-15T12:00:00.000Z' };
+  const PAST = { startAt: '2001-10-15T10:00:00.000Z', endAt: '2001-10-15T12:00:00.000Z' };
+
+  it.each([
+    EventState.EVENT_STATE_DRAFT,
+    EventState.EVENT_STATE_PUBLISHED,
+    EventState.EVENT_STATE_IN_PROGRESS,
+  ])('allows editing an upcoming or running event (state %s)', (state) => {
+    expect(isEventEditable({ state, ...FUTURE })).toBe(true);
+  });
+
+  it.each([EventState.EVENT_STATE_FINISHED, EventState.EVENT_STATE_CANCELLED])(
+    'forbids editing a finished or cancelled event (state %s)',
+    (state) => {
+      expect(isEventEditable({ state, ...FUTURE })).toBe(false);
+    },
+  );
+
+  it('forbids editing a published event whose date has passed, shown as cancelled', () => {
+    expect(isEventEditable({ state: EventState.EVENT_STATE_PUBLISHED, ...PAST })).toBe(false);
+  });
+
+  it('understands a state delivered by name', () => {
+    expect(isEventEditable({ state: 'EVENT_STATE_FINISHED', ...FUTURE })).toBe(false);
   });
 });

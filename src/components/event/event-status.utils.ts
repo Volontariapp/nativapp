@@ -93,3 +93,21 @@ export function getEventStatusConfig(
       };
   }
 }
+
+/**
+ * Un évènement terminé ou annulé ne peut plus être modifié. Un évènement publié dont la date est
+ * passée s'affiche « Annulé » (voir getEventStatusConfig) : il est verrouillé de la même façon.
+ */
+export function isEventEditable(event: {
+  state: EventState | number | string;
+  endAt?: string | Date | null;
+  startAt?: string | Date | null;
+}): boolean {
+  const state = normalizeEventState(event.state);
+  if (state === EventState.EVENT_STATE_FINISHED || state === EventState.EVENT_STATE_CANCELLED) {
+    return false;
+  }
+  return !(
+    state === EventState.EVENT_STATE_PUBLISHED && isEventDatePast(event.endAt, event.startAt)
+  );
+}

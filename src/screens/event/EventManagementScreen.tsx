@@ -29,6 +29,7 @@ import {
 } from '@/api/event/hooks';
 import { useEventCover } from '@/api/event/hooks/use-event-cover';
 import { useCoverAdjuster } from '@/api/event/hooks/use-cover-adjuster';
+import { isEventEditable } from '@/components/event/event-status.utils';
 import { EventCoverEditor } from '@/components/event/event-cover-editor';
 import { EventCoverCropper } from '@/components/event/event-cover-cropper';
 
@@ -257,15 +258,17 @@ export function EventManagementScreen(): React.JSX.Element {
           isSubmitting={updateMutation.isPending || eventCover.isUploading}
           saveDisabled={eventCover.hasBlockingImage}
           coverSection={
-            <EventCoverEditor
-              event={currentEvent}
-              cover={eventCover.cover}
-              onAdd={() => {
-                void eventCover.addImages();
-              }}
-              onRetry={eventCover.retryImage}
-              onRemove={eventCover.removeImage}
-            />
+            currentEvent !== undefined && !isEventEditable(currentEvent) ? undefined : (
+              <EventCoverEditor
+                event={currentEvent}
+                cover={eventCover.cover}
+                onAdd={() => {
+                  void eventCover.addImages();
+                }}
+                onRetry={eventCover.retryImage}
+                onRemove={eventCover.removeImage}
+              />
+            )
           }
           onSave={() => {
             void onSaveDetails();
