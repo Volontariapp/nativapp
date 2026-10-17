@@ -23,6 +23,7 @@ import { useNavigation } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import type { ProfileStackParamList } from '@/navigation/stacks/ProfileStack';
 import { useTabBarContentInset } from '@/navigation/hooks/useTabBarContentInset';
+import { ImpactCardContainer } from '@/components/impact/impact-card-container';
 import { useProfileEvents } from './hooks/use-profile-events';
 
 export function ProfileScreen(): React.JSX.Element {
@@ -94,6 +95,8 @@ export function ProfileScreen(): React.JSX.Element {
             }}
           />
         </View>
+
+        <ImpactCardContainer />
 
         <ProfileLayout
           pseudo={profile.pseudo}
