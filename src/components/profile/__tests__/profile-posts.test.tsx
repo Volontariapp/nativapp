@@ -1,9 +1,12 @@
 import React from 'react';
 import { fireEvent, render } from '@testing-library/react-native';
 import { createPostWeb } from '@/api/post/__tests__/post-web.factory';
+import * as mockSafeArea from '@/components/post/__tests__/safe-area.mock';
 import * as mockPostCard from './post-card-stub.mock';
 import { ProfilePosts } from '../profile-posts';
 
+jest.mock('expo-image', () => ({ Image: 'Image' }));
+jest.mock('react-native-safe-area-context', () => mockSafeArea);
 jest.mock('@/components/post/AppPost', () => ({
   __esModule: true,
   default: mockPostCard.PostCardStub,
@@ -28,16 +31,28 @@ describe('ProfilePosts', () => {
     jest.resetAllMocks();
   });
 
-  it('shows the posts of the user', () => {
-    const { getByText } = renderPosts({
+  it('shows one tile per post of the user', () => {
+    const { getByLabelText } = renderPosts({
       posts: [
         createPostWeb({ id: 'post-1', title: 'Premier post' }),
         createPostWeb({ id: 'post-2', title: 'Second post' }),
       ],
     });
 
+    expect(getByLabelText('Ouvrir le post Premier post')).toBeTruthy();
+    expect(getByLabelText('Ouvrir le post Second post')).toBeTruthy();
+  });
+
+  it('opens the post with its details when a tile is pressed, without a delete button', () => {
+    const { getByLabelText, getByText, queryByText } = renderPosts({
+      posts: [createPostWeb({ id: 'post-1', title: 'Premier post' })],
+    });
+    expect(queryByText('Premier post')).toBeNull();
+
+    fireEvent.press(getByLabelText('Ouvrir le post Premier post'));
+
     expect(getByText('Premier post')).toBeTruthy();
-    expect(getByText('Second post')).toBeTruthy();
+    expect(queryByText('Supprimer')).toBeNull();
   });
 
   it('says so when the user has no post', () => {

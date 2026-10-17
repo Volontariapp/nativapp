@@ -3,14 +3,18 @@ import { View, StyleSheet, FlatList, ActivityIndicator, Alert } from 'react-nati
 import { AppText } from '@/components/typography/AppText';
 import AppHeader from '@/components/layout/AppHeader';
 import { PostGridTile } from '@/components/post/post-grid-tile';
-import { MyPostDetailModal } from '@/components/post/my-post-detail-modal';
+import { PostDetailModal } from '@/components/post/post-detail-modal';
+import {
+  POST_GRID_COLUMNS,
+  POST_GRID_GAP,
+  usePostGridTileSize,
+} from '@/components/post/post-grid.utils';
 import { useAppTheme, useStyles } from '@/context/ThemeContext';
 import type { AppTheme } from '@/shared/themes/theme';
 import { useGetMyPosts, useDeletePost } from '@/api/post/hooks';
 import type { PostWeb } from '@volontariapp/contracts';
 
-const GRID_COLUMNS = 3;
-const PAGE_SIZE = GRID_COLUMNS * 4;
+const PAGE_SIZE = POST_GRID_COLUMNS * 4;
 
 export function MyPostsScreen(): React.JSX.Element {
   const { theme } = useAppTheme();
@@ -18,6 +22,7 @@ export function MyPostsScreen(): React.JSX.Element {
   const { data, isLoading, fetchNextPage, hasNextPage, isFetchingNextPage } =
     useGetMyPosts(PAGE_SIZE);
   const { mutateAsync: deletePost } = useDeletePost();
+  const tileSize = usePostGridTileSize();
   const [selectedPost, setSelectedPost] = React.useState<PostWeb | null>(null);
 
   const posts = data?.pages.flatMap((page) => page.posts) ?? [];
@@ -47,8 +52,13 @@ export function MyPostsScreen(): React.JSX.Element {
             testID="my-posts-grid"
             data={posts}
             keyExtractor={(item) => item.id}
-            numColumns={GRID_COLUMNS}
-            renderItem={({ item }) => <PostGridTile post={item} onPress={setSelectedPost} />}
+            numColumns={POST_GRID_COLUMNS}
+            contentContainerStyle={styles.gridContent}
+            columnWrapperStyle={styles.gridRow}
+            ItemSeparatorComponent={RowSeparator}
+            renderItem={({ item }) => (
+              <PostGridTile post={item} size={tileSize} onPress={setSelectedPost} />
+            )}
             onEndReached={() => {
               if (hasNextPage && !isFetchingNextPage) {
                 void fetchNextPage();
@@ -63,7 +73,7 @@ export function MyPostsScreen(): React.JSX.Element {
         )}
       </View>
 
-      <MyPostDetailModal
+      <PostDetailModal
         visible={selectedPost !== null}
         post={selectedPost}
         onClose={() => {
@@ -75,6 +85,11 @@ export function MyPostsScreen(): React.JSX.Element {
       />
     </>
   );
+}
+
+function RowSeparator(): React.JSX.Element {
+  const styles = useStyles(createStyles);
+  return <View style={styles.rowSeparator} />;
 }
 
 const createStyles = (theme: AppTheme) =>
@@ -92,6 +107,15 @@ const createStyles = (theme: AppTheme) =>
       flex: 1,
       justifyContent: 'center',
       alignItems: 'center',
+    },
+    gridContent: {
+      padding: POST_GRID_GAP,
+    },
+    gridRow: {
+      gap: POST_GRID_GAP,
+    },
+    rowSeparator: {
+      height: POST_GRID_GAP,
     },
     emptyText: {
       textAlign: 'center',

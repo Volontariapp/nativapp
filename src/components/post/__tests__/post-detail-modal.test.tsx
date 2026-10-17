@@ -4,7 +4,7 @@ import { fireEvent, render } from '@testing-library/react-native';
 import { createPostWeb } from '@/api/post/__tests__/post-web.factory';
 import * as mockPostCard from '@/components/profile/__tests__/post-card-stub.mock';
 import * as mockSafeArea from './safe-area.mock';
-import { MyPostDetailModal } from '../my-post-detail-modal';
+import { PostDetailModal } from '../post-detail-modal';
 
 jest.mock('react-native-safe-area-context', () => mockSafeArea);
 
@@ -16,7 +16,7 @@ jest.mock('@/components/post/AppPost', () => ({
 const mockOnClose = jest.fn();
 const mockOnDelete = jest.fn();
 
-describe('MyPostDetailModal', () => {
+describe('PostDetailModal', () => {
   beforeEach(() => {
     jest.spyOn(Alert, 'alert').mockImplementation(() => undefined);
   });
@@ -30,7 +30,7 @@ describe('MyPostDetailModal', () => {
     const post = createPostWeb({ title: 'Mission Maraude Paris' });
 
     const { getByText } = render(
-      <MyPostDetailModal visible post={post} onClose={mockOnClose} onDelete={mockOnDelete} />,
+      <PostDetailModal visible post={post} onClose={mockOnClose} onDelete={mockOnDelete} />,
     );
 
     expect(getByText('Mission Maraude Paris')).toBeTruthy();
@@ -38,7 +38,7 @@ describe('MyPostDetailModal', () => {
 
   it('renders nothing visible without a post', () => {
     const { queryByLabelText } = render(
-      <MyPostDetailModal visible post={null} onClose={mockOnClose} onDelete={mockOnDelete} />,
+      <PostDetailModal visible post={null} onClose={mockOnClose} onDelete={mockOnDelete} />,
     );
 
     expect(queryByLabelText('Fermer la vue')).toBeNull();
@@ -46,7 +46,7 @@ describe('MyPostDetailModal', () => {
 
   it('closes with the cross at the top', () => {
     const { getByLabelText } = render(
-      <MyPostDetailModal
+      <PostDetailModal
         visible
         post={createPostWeb()}
         onClose={mockOnClose}
@@ -61,7 +61,7 @@ describe('MyPostDetailModal', () => {
 
   it('also closes with the button at the bottom, always reachable', () => {
     const { getByText } = render(
-      <MyPostDetailModal
+      <PostDetailModal
         visible
         post={createPostWeb()}
         onClose={mockOnClose}
@@ -77,7 +77,7 @@ describe('MyPostDetailModal', () => {
   it('asks for confirmation and deletes only once confirmed', () => {
     const post = createPostWeb({ id: 'post-to-delete' });
     const { getByText } = render(
-      <MyPostDetailModal visible post={post} onClose={mockOnClose} onDelete={mockOnDelete} />,
+      <PostDetailModal visible post={post} onClose={mockOnClose} onDelete={mockOnDelete} />,
     );
 
     fireEvent.press(getByText('Supprimer'));
@@ -87,5 +87,13 @@ describe('MyPostDetailModal', () => {
     const confirm = buttons?.find((button) => button.style === 'destructive');
     confirm?.onPress?.();
     expect(mockOnDelete).toHaveBeenCalledWith('post-to-delete');
+  });
+
+  it('offers no delete button for a post that is not mine', () => {
+    const { queryByText } = render(
+      <PostDetailModal visible post={createPostWeb()} onClose={mockOnClose} />,
+    );
+
+    expect(queryByText('Supprimer')).toBeNull();
   });
 });

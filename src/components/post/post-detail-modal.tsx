@@ -8,20 +8,21 @@ import AppPost from '@/components/post/AppPost';
 import { useAppTheme, useStyles } from '@/context/ThemeContext';
 import type { AppTheme } from '@/shared/themes/theme';
 
-interface MyPostDetailModalProps {
+interface PostDetailModalProps {
   visible: boolean;
   post: PostWeb | null;
   onClose: () => void;
-  onDelete: (id: string) => void;
+  /** Fourni pour mes propres posts : affiche le bouton de suppression. */
+  onDelete?: (id: string) => void;
 }
 
-/** Vue d'un de mes posts : image, description, likes et commentaires (carte du fil), suppression. */
-export function MyPostDetailModal({
+/** Vue d'un post : image, description, likes et commentaires (carte du fil), suppression si permise. */
+export function PostDetailModal({
   visible,
   post,
   onClose,
   onDelete,
-}: MyPostDetailModalProps): React.JSX.Element | null {
+}: PostDetailModalProps): React.JSX.Element | null {
   const { theme } = useAppTheme();
   const styles = useStyles(createStyles);
 
@@ -36,7 +37,7 @@ export function MyPostDetailModal({
         text: 'Supprimer',
         style: 'destructive',
         onPress: () => {
-          onDelete(post.id);
+          onDelete?.(post.id);
         },
       },
     ]);
@@ -63,7 +64,9 @@ export function MyPostDetailModal({
           <ScrollView showsVerticalScrollIndicator={false}>
             <AppPost post={post} />
             <View style={styles.actions}>
-              <AppButton text="Supprimer" variant="danger" onPress={confirmDelete} />
+              {onDelete !== undefined && (
+                <AppButton text="Supprimer" variant="danger" onPress={confirmDelete} />
+              )}
               <AppButton text="Fermer" variant="secondary" onPress={onClose} />
             </View>
           </ScrollView>

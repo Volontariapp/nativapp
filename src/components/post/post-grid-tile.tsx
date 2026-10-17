@@ -17,18 +17,20 @@ const STATUS_BADGES: Record<PostMediaStatusWeb, string | undefined> = {
 
 interface PostGridTileProps {
   post: PostWeb;
+  /** Côté du carreau, en pixels (voir computePostGridTileSize). */
+  size: number;
   onPress: (post: PostWeb) => void;
 }
 
 /** Carreau carré d'un post dans une grille : son image, ou une image de remplacement stable. */
-export function PostGridTile({ post, onPress }: PostGridTileProps): React.JSX.Element {
+export function PostGridTile({ post, size, onPress }: PostGridTileProps): React.JSX.Element {
   const styles = useStyles(createStyles);
   const uri = resolvePostImageUrl(post) ?? getFakeEcologyImage(post.id);
   const badge = STATUS_BADGES[post.mediaStatus ?? 'NONE'];
 
   return (
     <Pressable
-      style={styles.tile}
+      style={[styles.tile, { width: size, height: size }]}
       accessibilityLabel={`Ouvrir le post ${post.title}`}
       onPress={() => {
         onPress(post);
@@ -52,9 +54,7 @@ export function PostGridTile({ post, onPress }: PostGridTileProps): React.JSX.El
 const createStyles = (theme: AppTheme) =>
   StyleSheet.create({
     tile: {
-      width: '33.3333%',
-      aspectRatio: 1,
-      padding: 1,
+      overflow: 'hidden',
     },
     image: {
       width: '100%',
