@@ -1,5 +1,5 @@
 import React from 'react';
-import { Platform, ScrollView, StyleSheet, View, useWindowDimensions } from 'react-native';
+import { FlatList, Platform, StyleSheet, View, useWindowDimensions } from 'react-native';
 import { Image } from 'expo-image';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -61,15 +61,14 @@ export function EventImagePreviews({ imageUri, crop }: EventImagePreviewsProps):
         Le même cadrage automatique que dans l’application (réduit à l’échelle). Si un cadre coupe
         mal la photo, choisissez-en une autre.
       </AppText>
-      <ScrollView
+      <FlatList
         horizontal
+        data={frames}
+        keyExtractor={(frame) => frame.id}
+        renderItem={({ item }) => <FramePreview frame={item} imageUri={imageUri} crop={crop} />}
         showsHorizontalScrollIndicator={false}
         contentContainerStyle={styles.row}
-      >
-        {frames.map((frame) => (
-          <FramePreview key={frame.id} frame={frame} imageUri={imageUri} crop={crop} />
-        ))}
-      </ScrollView>
+      />
     </View>
   );
 }

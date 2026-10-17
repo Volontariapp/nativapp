@@ -127,6 +127,7 @@ function CropperBody({ image, onSettle }: CropperBodyProps): React.JSX.Element {
       onSettle(await cropImage(image, toCropRect(region, imageSize)));
     } catch {
       Alert.alert('Erreur', 'Impossible de cadrer la photo.');
+    } finally {
       setIsSaving(false);
     }
   };

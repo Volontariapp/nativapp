@@ -13,20 +13,23 @@ import {
 
 export { MAX_POST_IMAGES } from '../post-images.utils';
 
-/** Fait passer chaque image par l'étape d'ajustement, l'une après l'autre ; une annulation l'écarte. */
-const adjustEach = async (
+/**
+ * Fait passer chaque image par l'étape d'ajustement, l'une après l'autre ; une annulation l'écarte.
+ * Les ajustements ne sont pas indépendants : ils partagent une seule fenêtre de cadrage, qui ne
+ * peut montrer qu'une image à la fois.
+ */
+const adjustEach = (
   images: PickedImage[],
   adjust: (image: PickedImage) => Promise<PickedImage | undefined>,
-): Promise<PickedImage[]> => {
-  const adjusted: PickedImage[] = [];
-  for (const image of images) {
-    const result = await adjust(image);
-    if (result !== undefined) {
-      adjusted.push(result);
-    }
-  }
-  return adjusted;
-};
+): Promise<PickedImage[]> =>
+  images.reduce<Promise<PickedImage[]>>(
+    (previous, image) =>
+      previous.then(async (adjusted) => {
+        const result = await adjust(image);
+        return result === undefined ? adjusted : [...adjusted, result];
+      }),
+    Promise.resolve([]),
+  );
 
 /** Choix des images d'un post et envoi de chacune, avec un état par image. */
 export const usePostImages = ({
