@@ -1,6 +1,12 @@
 {
   "$schema": "https://raw.githubusercontent.com/fallow-rs/fallow/main/schema.json",
-  "entry": ["src/index.{ts,tsx,js,jsx}", "src/main.{ts,tsx,js,jsx}"],
+  "entry": [
+    "src/index.{ts,tsx,js,jsx}",
+    "src/main.{ts,tsx,js,jsx}",
+    // Tests Jest : meme motif que testMatch dans jest.config.js (sinon chaque test est signale comme fichier inutilise).
+    "src/**/__tests__/**/*.test.{ts,tsx,js,jsx}",
+    "src/**/*.{test,spec}.{ts,tsx,js,jsx}"
+  ],
   "duplicates": {
     // Hide pair-only clones; focus on widespread copy-paste
     // worth refactoring. Lower to 2 to report every duplicate pair.
