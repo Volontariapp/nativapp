@@ -23,7 +23,9 @@ import { useQueryClient } from '@tanstack/react-query';
 import { useNavigation } from '@react-navigation/native';
 import { useDebug } from '@/context/DebugContext';
 import { useEventCover } from '@/api/event/hooks/use-event-cover';
+import { useCoverAdjuster } from '@/api/event/hooks/use-cover-adjuster';
 import { EventCoverPicker } from '@/components/event/event-cover-picker';
+import { EventCoverCropper } from '@/components/event/event-cover-cropper';
 import { EventImagePreviews } from '@/components/event/event-image-previews';
 import { generateIdempotencyKey } from '@/shared/lib/idempotency.utils';
 
@@ -59,7 +61,8 @@ export function EventFormScreen(): React.JSX.Element {
   const navigation = useNavigation();
   const { isDebugMode } = useDebug();
   const [isBatching, setIsBatching] = React.useState(false);
-  const eventCover = useEventCover();
+  const coverAdjuster = useCoverAdjuster();
+  const eventCover = useEventCover({ adjustImage: coverAdjuster.adjustImage });
   // Une seule clé par formulaire : un réessai après échec reste idempotent côté serveur.
   const [idempotencyKey] = React.useState(generateIdempotencyKey);
 
@@ -177,6 +180,8 @@ export function EventFormScreen(): React.JSX.Element {
         />
 
         <EventImagePreviews imageUri={eventCover.cover?.source.uri} />
+
+        <EventCoverCropper image={coverAdjuster.pendingImage} onSettle={coverAdjuster.settle} />
 
         <AppFormController
           control={control}

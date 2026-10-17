@@ -20,6 +20,11 @@ export interface UsePostImagesOptions {
   maxImages?: number;
   /** Type d'entité des fichiers envoyés ; ENTITY_TYPE_POST par défaut (la photo d'un évènement passe EVENT_COVER). */
   entityType?: EntityType;
+  /**
+   * Étape facultative entre la galerie et l'envoi (recadrage). Renvoie l'image à envoyer, ou
+   * undefined si l'utilisateur annule : l'image est alors écartée.
+   */
+  adjustImage?: (image: PickedImage) => Promise<PickedImage | undefined>;
 }
 
 export interface PostImages {

@@ -7,16 +7,30 @@ import { AppText } from '@/components/typography/AppText';
 import { useAppTheme, useStyles } from '@/context/ThemeContext';
 import type { AppTheme } from '@/shared/themes/theme';
 import { computeEventImageFrames, fitFrame, type EventImageFrame } from './event-image-frames';
+import {
+  computeFrameRegion,
+  regionToImageStyle,
+  type CropRegion,
+  type Size,
+} from './event-cover-crop';
 
 const PREVIEW_MAX_WIDTH = 220;
 const PREVIEW_MAX_HEIGHT = 150;
 
+/** Région de l'image que l'éditeur de cadrage s'apprête à enregistrer. */
+export interface PreviewCrop {
+  region: CropRegion;
+  image: Size;
+}
+
 interface EventImagePreviewsProps {
   /** Photo choisie (fichier local) ; sans elle, aucun aperçu n'est affiché. */
   imageUri: string | undefined;
+  /** Avec une région, chaque cadre montre ce qu'il affichera de cette région (éditeur de cadrage). */
+  crop?: PreviewCrop;
 }
 
-export function EventImagePreviews({ imageUri }: EventImagePreviewsProps): React.JSX.Element {
+export function EventImagePreviews({ imageUri, crop }: EventImagePreviewsProps): React.JSX.Element {
   const { theme } = useAppTheme();
   const styles = useStyles(createStyles);
   const { width, height } = useWindowDimensions();
@@ -53,7 +67,7 @@ export function EventImagePreviews({ imageUri }: EventImagePreviewsProps): React
         contentContainerStyle={styles.row}
       >
         {frames.map((frame) => (
-          <FramePreview key={frame.id} frame={frame} imageUri={imageUri} />
+          <FramePreview key={frame.id} frame={frame} imageUri={imageUri} crop={crop} />
         ))}
       </ScrollView>
     </View>
@@ -63,11 +77,23 @@ export function EventImagePreviews({ imageUri }: EventImagePreviewsProps): React
 interface FramePreviewProps {
   frame: EventImageFrame;
   imageUri: string;
+  crop: PreviewCrop | undefined;
 }
 
-function FramePreview({ frame, imageUri }: FramePreviewProps): React.JSX.Element {
+function FramePreview({ frame, imageUri, crop }: FramePreviewProps): React.JSX.Element {
   const styles = useStyles(createStyles);
   const size = fitFrame(frame, { maxWidth: PREVIEW_MAX_WIDTH, maxHeight: PREVIEW_MAX_HEIGHT });
+  const imageStyle =
+    crop === undefined
+      ? StyleSheet.absoluteFill
+      : [
+          styles.positioned,
+          regionToImageStyle(
+            computeFrameRegion(crop.region, frame.width / frame.height),
+            size,
+            crop.image,
+          ),
+        ];
 
   return (
     <View style={styles.item} testID={`event-image-preview-${frame.id}`}>
@@ -75,8 +101,8 @@ function FramePreview({ frame, imageUri }: FramePreviewProps): React.JSX.Element
         <Image
           testID={`event-image-preview-image-${frame.id}`}
           source={{ uri: imageUri }}
-          style={StyleSheet.absoluteFill}
-          contentFit="cover"
+          style={imageStyle}
+          contentFit={crop === undefined ? 'cover' : 'fill'}
         />
         {frame.id === 'swipe' && (
           // Le dégradé de la carte de swipe, sous lequel passe le texte de l'évènement.
@@ -115,6 +141,9 @@ const createStyles = (theme: AppTheme) =>
     item: {
       alignItems: 'center',
       gap: theme.spacing.xs,
+    },
+    positioned: {
+      position: 'absolute',
     },
     frame: {
       overflow: 'hidden',

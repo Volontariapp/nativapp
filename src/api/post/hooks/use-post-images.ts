@@ -13,10 +13,26 @@ import {
 
 export { MAX_POST_IMAGES } from '../post-images.utils';
 
+/** Fait passer chaque image par l'étape d'ajustement, l'une après l'autre ; une annulation l'écarte. */
+const adjustEach = async (
+  images: PickedImage[],
+  adjust: (image: PickedImage) => Promise<PickedImage | undefined>,
+): Promise<PickedImage[]> => {
+  const adjusted: PickedImage[] = [];
+  for (const image of images) {
+    const result = await adjust(image);
+    if (result !== undefined) {
+      adjusted.push(result);
+    }
+  }
+  return adjusted;
+};
+
 /** Choix des images d'un post et envoi de chacune, avec un état par image. */
 export const usePostImages = ({
   maxImages = MAX_POST_IMAGES,
   entityType = EntityType.ENTITY_TYPE_POST,
+  adjustImage,
 }: UsePostImagesOptions = {}): PostImages => {
   const { mutateAsync: uploadFile } = useFileUpload(entityType);
   const [images, setImages] = useState<PostImage[]>([]);
@@ -44,7 +60,11 @@ export const usePostImages = ({
   const remainingSlots = maxImages - images.length;
 
   const addImages = useCallback(async (): Promise<void> => {
-    const picked = await pickGalleryImages({ limit: remainingSlots });
+    const pickedFromGallery = await pickGalleryImages({ limit: remainingSlots });
+    const picked =
+      adjustImage === undefined
+        ? pickedFromGallery
+        : await adjustEach(pickedFromGallery, adjustImage);
     const added = picked.slice(0, remainingSlots).map((source): PostImage => {
       nextId.current += 1;
       return {
@@ -56,7 +76,7 @@ export const usePostImages = ({
     });
     setImages((current) => [...current, ...added]);
     await Promise.all(added.map((image) => startUpload(image.id, image.source)));
-  }, [remainingSlots, startUpload]);
+  }, [adjustImage, remainingSlots, startUpload]);
 
   const retryImage = useCallback(
     (id: string): void => {

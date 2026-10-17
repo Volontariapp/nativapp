@@ -17,12 +17,12 @@ jest.mock('@/api/storage/upload-image', () => ({
 
 const FILE_ID = '11111111-1111-4111-8111-111111111111';
 
-const renderEventCover = () => {
+const renderEventCover = (options?: Parameters<typeof useEventCover>[0]) => {
   const client = new QueryClient({ defaultOptions: { mutations: { retry: false } } });
   const wrapper = ({ children }: { children: React.ReactNode }): React.JSX.Element => (
     <QueryClientProvider client={client}>{children}</QueryClientProvider>
   );
-  return renderHook(() => useEventCover(), { wrapper });
+  return renderHook(() => useEventCover(options), { wrapper });
 };
 
 describe('useEventCover', () => {
@@ -95,6 +95,42 @@ describe('useEventCover', () => {
 
     expect(result.current.cover).toBeUndefined();
     expect(result.current.coverFileId).toBeUndefined();
+    expect(result.current.remainingSlots).toBe(1);
+  });
+
+  it('uploads the adjusted photo instead of the picked one', async () => {
+    const adjusted = createPickedImages(1)[0];
+    const picked = createPickedImages(2)[1];
+    mockDeps.pickGalleryImages.mockResolvedValue([picked]);
+    mockDeps.uploadImage.mockResolvedValue(createUploadResult({ fileId: FILE_ID }));
+    const adjustImage = jest.fn().mockResolvedValue(adjusted);
+    const { result } = renderEventCover({ adjustImage });
+
+    await act(async () => {
+      await result.current.addImages();
+    });
+
+    await waitFor(() => {
+      expect(result.current.cover?.status).toBe('ready');
+    });
+    expect(adjustImage).toHaveBeenCalledWith(picked);
+    expect(mockDeps.uploadImage).toHaveBeenCalledWith(
+      mockContracts.EntityType.ENTITY_TYPE_EVENT_COVER,
+      adjusted,
+    );
+  });
+
+  it('drops the photo when the adjustment is cancelled', async () => {
+    mockDeps.pickGalleryImages.mockResolvedValue(createPickedImages(1));
+    const adjustImage = jest.fn().mockResolvedValue(undefined);
+    const { result } = renderEventCover({ adjustImage });
+
+    await act(async () => {
+      await result.current.addImages();
+    });
+
+    expect(result.current.cover).toBeUndefined();
+    expect(mockDeps.uploadImage).not.toHaveBeenCalled();
     expect(result.current.remainingSlots).toBe(1);
   });
 });
