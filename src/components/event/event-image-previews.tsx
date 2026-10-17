@@ -1,4 +1,5 @@
-import React from 'react';
+import React, { useCallback } from 'react';
+import type { ListRenderItemInfo } from 'react-native';
 import { FlatList, Platform, StyleSheet, View, useWindowDimensions } from 'react-native';
 import { Image } from 'expo-image';
 import { LinearGradient } from 'expo-linear-gradient';
@@ -13,6 +14,8 @@ import {
   type CropRegion,
   type Size,
 } from './event-cover-crop';
+
+const getFrameKey = (frame: EventImageFrame): string => frame.id;
 
 const PREVIEW_MAX_WIDTH = 220;
 const PREVIEW_MAX_HEIGHT = 150;
@@ -35,6 +38,12 @@ export function EventImagePreviews({ imageUri, crop }: EventImagePreviewsProps):
   const styles = useStyles(createStyles);
   const { width, height } = useWindowDimensions();
   const insets = useSafeAreaInsets();
+
+  const renderFrame = useCallback(
+    ({ item }: ListRenderItemInfo<EventImageFrame>) =>
+      imageUri === undefined ? null : <FramePreview frame={item} imageUri={imageUri} crop={crop} />,
+    [imageUri, crop],
+  );
 
   if (imageUri === undefined) {
     return (
@@ -64,8 +73,8 @@ export function EventImagePreviews({ imageUri, crop }: EventImagePreviewsProps):
       <FlatList
         horizontal
         data={frames}
-        keyExtractor={(frame) => frame.id}
-        renderItem={({ item }) => <FramePreview frame={item} imageUri={imageUri} crop={crop} />}
+        keyExtractor={getFrameKey}
+        renderItem={renderFrame}
         showsHorizontalScrollIndicator={false}
         contentContainerStyle={styles.row}
       />
