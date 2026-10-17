@@ -1,12 +1,11 @@
 import React from 'react';
-import { View, StyleSheet, TextInput, Alert, Pressable } from 'react-native';
+import { View, StyleSheet, TextInput, Alert } from 'react-native';
 import { AppKeyboardScrollView } from '@/components/layout/AppKeyboardScrollView';
 import { AppText } from '@/components/typography/AppText';
 import { AppButton } from '@/components/buttons/AppButton';
 import AppHeader from '@/components/layout/AppHeader';
-import { useAppTheme, useStyles } from '@/context/ThemeContext';
+import { useStyles } from '@/context/ThemeContext';
 import type { AppTheme } from '@/shared/themes/theme';
-import Feather from 'react-native-vector-icons/Feather';
 
 import type { CreateEventRequest } from '@volontariapp/contracts';
 import { EventType } from '@volontariapp/contracts';
@@ -23,6 +22,12 @@ import { eventApi } from '@/api/event/event.api';
 import { useQueryClient } from '@tanstack/react-query';
 import { useNavigation } from '@react-navigation/native';
 import { useDebug } from '@/context/DebugContext';
+import { useEventCover } from '@/api/event/hooks/use-event-cover';
+import { EventCoverPicker } from '@/components/event/event-cover-picker';
+import { generateIdempotencyKey } from '@/shared/lib/idempotency.utils';
+
+const UPLOADING_HINT = 'Envoi de la photo en cours...';
+const BLOCKING_HINT = 'Retirez ou renvoyez la photo en échec ou refusée avant de publier.';
 
 const EVENT_TYPE_OPTIONS: AppChipOption<EventType>[] = [
   {
@@ -46,7 +51,6 @@ function getDefaultEventDates(): { startAt: Date; endAt: Date } {
 }
 
 export function EventFormScreen(): React.JSX.Element {
-  const { theme } = useAppTheme();
   const styles = useStyles(createStyles);
 
   const mutation = useCreateEvent();
@@ -54,6 +58,9 @@ export function EventFormScreen(): React.JSX.Element {
   const navigation = useNavigation();
   const { isDebugMode } = useDebug();
   const [isBatching, setIsBatching] = React.useState(false);
+  const eventCover = useEventCover();
+  // Une seule clé par formulaire : un réessai après échec reste idempotent côté serveur.
+  const [idempotencyKey] = React.useState(generateIdempotencyKey);
 
   const defaultDates = React.useMemo(() => getDefaultEventDates(), []);
 
@@ -82,12 +89,18 @@ export function EventFormScreen(): React.JSX.Element {
   });
 
   const onSubmit = handleSubmit((data) => {
-    mutation.mutate(data, {
-      onSuccess: () => {
-        navigation.goBack();
+    mutation.mutate(
+      { ...data, coverFileId: eventCover.coverFileId, idempotencyKey },
+      {
+        onSuccess: () => {
+          navigation.goBack();
+        },
       },
-    });
+    );
   });
+
+  const cannotPublish =
+    mutation.isPending || isBatching || eventCover.isUploading || eventCover.hasBlockingImage;
 
   const handleCreate50Events = React.useCallback(async (): Promise<void> => {
     setIsBatching(true);
@@ -153,15 +166,14 @@ export function EventFormScreen(): React.JSX.Element {
       >
         <AppText style={styles.title}>Créer un Évènement</AppText>
 
-        <Pressable
-          style={styles.imagePlaceholder}
-          onPress={() => {
-            Alert.alert('Info', "L'ajout d'image n'est pas encore disponible.");
+        <EventCoverPicker
+          cover={eventCover.cover}
+          onAdd={() => {
+            void eventCover.addImages();
           }}
-        >
-          <Feather name="plus" size={32} color={theme.colors.grey} />
-          <AppText style={styles.imagePlaceholderText}>Ajouter une image</AppText>
-        </Pressable>
+          onRetry={eventCover.retryImage}
+          onRemove={eventCover.removeImage}
+        />
 
         <AppFormController
           control={control}
@@ -251,13 +263,17 @@ export function EventFormScreen(): React.JSX.Element {
         </View>
 
         <View style={styles.publishContainer}>
+          {eventCover.isUploading && <AppText style={styles.hint}>{UPLOADING_HINT}</AppText>}
+          {eventCover.hasBlockingImage && (
+            <AppText style={styles.hintError}>{BLOCKING_HINT}</AppText>
+          )}
           <AppButton
             text={mutation.isPending || isBatching ? 'Publication...' : "Publier l'évènement"}
             icon="send"
             onPress={() => {
               void onSubmit();
             }}
-            disabled={mutation.isPending || isBatching}
+            disabled={cannotPublish}
             style={styles.publishButton}
             textStyle={styles.publishButtonText}
           />
@@ -292,23 +308,15 @@ const createStyles = (theme: AppTheme) =>
     scrollContent: {
       padding: theme.spacing.xl,
     },
-    imagePlaceholder: {
-      width: '100%',
-      height: 180,
-      borderRadius: theme.radius.md,
-      borderWidth: 2,
-      borderColor: theme.colors.lightGrey,
-      borderStyle: 'dashed',
-      justifyContent: 'center',
-      alignItems: 'center',
-      backgroundColor: theme.colors.white,
-      marginBottom: theme.spacing.xl,
-    },
-    imagePlaceholderText: {
-      marginTop: theme.spacing.sm,
+    hint: {
+      marginBottom: theme.spacing.sm,
+      fontSize: 13,
       color: theme.colors.grey,
-      fontSize: 14,
-      fontWeight: '500',
+    },
+    hintError: {
+      marginBottom: theme.spacing.sm,
+      fontSize: 13,
+      color: theme.colors.danger,
     },
     title: {
       fontSize: 28,

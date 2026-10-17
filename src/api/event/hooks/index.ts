@@ -7,3 +7,4 @@ export * from './use-get-event';
 export * from './use-update-event';
 export * from './use-change-event-state';
 export * from './use-event-participants';
+export * from './use-event-cover';

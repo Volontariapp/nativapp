@@ -10,7 +10,7 @@ import { AppBadgeButton } from '@/components/buttons/AppBadgeButton';
 import { useAppTheme, useStyles } from '@/context/ThemeContext';
 import type { AppTheme } from '@/shared/themes/theme';
 import type { AppEvent } from '@/api/event/event.api';
-import { getFakeEcologyImage } from '@/utils/fake-images.util';
+import { getEventImageUri } from '@/api/event/event-cover.utils';
 import { useFloatingTabBarOffset } from '@/navigation/hooks/useFloatingTabBarOffset';
 
 export interface EventMapPrevueProps {
@@ -32,8 +32,7 @@ export function EventMapPrevue({
   const bottom = bottomOffset ?? cardBottomOffset;
 
   const isEco =
-    event.type === EventType.EVENT_TYPE_ECOLOGY ||
-    (event.type as unknown) === 'EVENT_TYPE_ECOLOGY';
+    event.type === EventType.EVENT_TYPE_ECOLOGY || (event.type as unknown) === 'EVENT_TYPE_ECOLOGY';
 
   const dateString = useMemo(() => {
     if (event.startAt.length > 0) {
@@ -55,7 +54,7 @@ export function EventMapPrevue({
     return 'Date à définir';
   }, [event.startAt]);
 
-  const fakeImageUrl = useMemo(() => getFakeEcologyImage(event.id), [event.id]);
+  const imageUri = getEventImageUri(event);
 
   const handleOpen = (): void => {
     onOpen?.(event);
@@ -86,8 +85,8 @@ export function EventMapPrevue({
 
       {/* Main card content clickable */}
       <Pressable onPress={handleOpen} style={styles.body}>
-        {fakeImageUrl.length > 0 && (
-          <Image source={{ uri: fakeImageUrl }} style={styles.thumbnail} contentFit="cover" />
+        {imageUri.length > 0 && (
+          <Image source={{ uri: imageUri }} style={styles.thumbnail} contentFit="cover" />
         )}
 
         <View style={styles.details}>

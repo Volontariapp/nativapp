@@ -13,7 +13,7 @@ import Feather from 'react-native-vector-icons/Feather';
 import { AppIconsButton } from '@/components';
 import { useUserSocialActions } from '@/api/social/hooks/use-user-social-actions';
 import { Image } from 'expo-image';
-import { getFakeEcologyImage } from '@/utils/fake-images.util';
+import { getEventImageUri } from '@/api/event/event-cover.utils';
 
 export interface EventCardProps {
   event: AppEvent;
@@ -55,7 +55,7 @@ export function WishedEventCard({ event }: EventCardProps): React.JSX.Element {
     minute: '2-digit',
   });
 
-  const fakeImageUrl = React.useMemo(() => getFakeEcologyImage(event.id), [event.id]);
+  const imageUri = getEventImageUri(event);
 
   return (
     <TouchableOpacity
@@ -67,7 +67,7 @@ export function WishedEventCard({ event }: EventCardProps): React.JSX.Element {
     >
       <View style={[styles.imageContainer, { backgroundColor: typeBg }]}>
         <Image
-          source={{ uri: fakeImageUrl }}
+          source={{ uri: imageUri }}
           style={StyleSheet.absoluteFillObject}
           contentFit="cover"
           cachePolicy="memory-disk"

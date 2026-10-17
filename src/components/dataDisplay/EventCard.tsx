@@ -10,7 +10,7 @@ import { mapEventType } from '@/shared/lib/event-mappers.utils';
 import { EventType } from '@volontariapp/contracts';
 import Feather from 'react-native-vector-icons/Feather';
 import { Image } from 'expo-image';
-import { getFakeEcologyImage } from '@/utils/fake-images.util';
+import { getEventImageUri } from '@/api/event/event-cover.utils';
 
 export interface EventCardProps {
   event: AppEvent;
@@ -50,7 +50,7 @@ export function EventCard({ event, onPress }: EventCardProps): React.JSX.Element
     minute: '2-digit',
   });
 
-  const fakeImageUrl = React.useMemo(() => getFakeEcologyImage(event.id), [event.id]);
+  const imageUri = getEventImageUri(event);
 
   return (
     <TouchableOpacity
@@ -66,7 +66,7 @@ export function EventCard({ event, onPress }: EventCardProps): React.JSX.Element
     >
       <View style={[styles.imageContainer, { backgroundColor: typeBg }]}>
         <Image
-          source={{ uri: fakeImageUrl }}
+          source={{ uri: imageUri }}
           style={StyleSheet.absoluteFillObject}
           contentFit="cover"
           cachePolicy="memory-disk"

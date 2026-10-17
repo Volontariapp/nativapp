@@ -16,8 +16,9 @@ export { MAX_POST_IMAGES } from '../post-images.utils';
 /** Choix des images d'un post et envoi de chacune, avec un état par image. */
 export const usePostImages = ({
   maxImages = MAX_POST_IMAGES,
+  entityType = EntityType.ENTITY_TYPE_POST,
 }: UsePostImagesOptions = {}): PostImages => {
-  const { mutateAsync: uploadFile } = useFileUpload(EntityType.ENTITY_TYPE_POST);
+  const { mutateAsync: uploadFile } = useFileUpload(entityType);
   const [images, setImages] = useState<PostImage[]>([]);
   const nextId = useRef(0);
 
