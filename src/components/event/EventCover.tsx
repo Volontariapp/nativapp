@@ -6,6 +6,7 @@ import type { AppTheme } from '@/shared/themes/theme';
 import type { AppEvent } from '@/api/event/event.api';
 import { getEventImageUri } from '@/api/event/event-cover.utils';
 import { EventStatusBadge } from './EventStatusBadge';
+import { DETAIL_COVER_HEIGHT } from './event-image-frames';
 
 interface EventCoverProps {
   event: AppEvent;
@@ -31,7 +32,7 @@ export function EventCover({ event }: EventCoverProps): React.JSX.Element {
 const createStyles = (theme: AppTheme) =>
   StyleSheet.create({
     container: {
-      height: 200,
+      height: DETAIL_COVER_HEIGHT,
       width: '100%',
       position: 'relative',
       marginBottom: theme.spacing.lg,

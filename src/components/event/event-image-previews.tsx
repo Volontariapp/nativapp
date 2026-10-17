@@ -1,0 +1,127 @@
+import React from 'react';
+import { Platform, ScrollView, StyleSheet, View, useWindowDimensions } from 'react-native';
+import { Image } from 'expo-image';
+import { LinearGradient } from 'expo-linear-gradient';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { AppText } from '@/components/typography/AppText';
+import { useAppTheme, useStyles } from '@/context/ThemeContext';
+import type { AppTheme } from '@/shared/themes/theme';
+import { computeEventImageFrames, fitFrame, type EventImageFrame } from './event-image-frames';
+
+const PREVIEW_MAX_WIDTH = 220;
+const PREVIEW_MAX_HEIGHT = 150;
+
+interface EventImagePreviewsProps {
+  /** Photo choisie (fichier local) ; sans elle, aucun aperçu n'est affiché. */
+  imageUri: string | undefined;
+}
+
+export function EventImagePreviews({ imageUri }: EventImagePreviewsProps): React.JSX.Element {
+  const { theme } = useAppTheme();
+  const styles = useStyles(createStyles);
+  const { width, height } = useWindowDimensions();
+  const insets = useSafeAreaInsets();
+
+  if (imageUri === undefined) {
+    return (
+      <AppText style={styles.hint}>
+        Ajoutez une photo pour voir comment elle sera cadrée dans l’application.
+      </AppText>
+    );
+  }
+
+  const frames = computeEventImageFrames({
+    windowWidth: width,
+    windowHeight: height,
+    insetsTop: insets.top,
+    insetsBottom: insets.bottom,
+    isIos: Platform.OS === 'ios',
+    spacingSm: theme.spacing.sm,
+    radiusMd: theme.radius.md,
+  });
+
+  return (
+    <View style={styles.container}>
+      <AppText style={styles.title}>Aperçus</AppText>
+      <AppText style={styles.hint}>
+        Le même cadrage automatique que dans l’application (réduit à l’échelle). Si un cadre coupe
+        mal la photo, choisissez-en une autre.
+      </AppText>
+      <ScrollView
+        horizontal
+        showsHorizontalScrollIndicator={false}
+        contentContainerStyle={styles.row}
+      >
+        {frames.map((frame) => (
+          <FramePreview key={frame.id} frame={frame} imageUri={imageUri} />
+        ))}
+      </ScrollView>
+    </View>
+  );
+}
+
+interface FramePreviewProps {
+  frame: EventImageFrame;
+  imageUri: string;
+}
+
+function FramePreview({ frame, imageUri }: FramePreviewProps): React.JSX.Element {
+  const styles = useStyles(createStyles);
+  const size = fitFrame(frame, { maxWidth: PREVIEW_MAX_WIDTH, maxHeight: PREVIEW_MAX_HEIGHT });
+
+  return (
+    <View style={styles.item} testID={`event-image-preview-${frame.id}`}>
+      <View style={[styles.frame, size, { borderRadius: frame.radius }]}>
+        <Image
+          testID={`event-image-preview-image-${frame.id}`}
+          source={{ uri: imageUri }}
+          style={StyleSheet.absoluteFill}
+          contentFit="cover"
+        />
+        {frame.id === 'swipe' && (
+          // Le dégradé de la carte de swipe, sous lequel passe le texte de l'évènement.
+          <LinearGradient
+            colors={['transparent', 'rgba(0,0,0,0.9)']}
+            locations={[0.4, 1]}
+            style={StyleSheet.absoluteFill}
+          />
+        )}
+      </View>
+      <AppText style={styles.label}>{frame.label}</AppText>
+    </View>
+  );
+}
+
+const createStyles = (theme: AppTheme) =>
+  StyleSheet.create({
+    container: {
+      marginBottom: theme.spacing.xl,
+    },
+    title: {
+      fontSize: 16,
+      fontWeight: '600',
+      color: theme.colors.text,
+      marginBottom: theme.spacing.xs,
+    },
+    hint: {
+      fontSize: 13,
+      color: theme.colors.grey,
+      marginBottom: theme.spacing.md,
+    },
+    row: {
+      gap: theme.spacing.lg,
+      alignItems: 'flex-end',
+    },
+    item: {
+      alignItems: 'center',
+      gap: theme.spacing.xs,
+    },
+    frame: {
+      overflow: 'hidden',
+      backgroundColor: theme.colors.lightGrey,
+    },
+    label: {
+      fontSize: 12,
+      color: theme.colors.grey,
+    },
+  });

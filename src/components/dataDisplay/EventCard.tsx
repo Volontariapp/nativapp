@@ -11,6 +11,7 @@ import { EventType } from '@volontariapp/contracts';
 import Feather from 'react-native-vector-icons/Feather';
 import { Image } from 'expo-image';
 import { getEventImageUri } from '@/api/event/event-cover.utils';
+import { LIST_THUMBNAIL_RADIUS, LIST_THUMBNAIL_SIZE } from '@/components/event/event-image-frames';
 
 export interface EventCardProps {
   event: AppEvent;
@@ -114,9 +115,9 @@ const styles = StyleSheet.create({
     borderRadius: 40,
   },
   imageContainer: {
-    width: 70,
-    height: 70,
-    borderRadius: 15,
+    width: LIST_THUMBNAIL_SIZE,
+    height: LIST_THUMBNAIL_SIZE,
+    borderRadius: LIST_THUMBNAIL_RADIUS,
     justifyContent: 'center',
     alignItems: 'center',
     marginRight: theme.spacing.md,

@@ -11,6 +11,7 @@ import { useAppTheme, useStyles } from '@/context/ThemeContext';
 import type { AppTheme } from '@/shared/themes/theme';
 import type { AppEvent } from '@/api/event/event.api';
 import { getEventImageUri } from '@/api/event/event-cover.utils';
+import { MAP_THUMBNAIL_SIZE } from './event-image-frames';
 import { useFloatingTabBarOffset } from '@/navigation/hooks/useFloatingTabBarOffset';
 
 export interface EventMapPrevueProps {
@@ -148,8 +149,8 @@ const createStyles = (theme: AppTheme) =>
       gap: theme.spacing.md,
     },
     thumbnail: {
-      width: 60,
-      height: 60,
+      width: MAP_THUMBNAIL_SIZE,
+      height: MAP_THUMBNAIL_SIZE,
       borderRadius: theme.radius.md,
       backgroundColor: theme.colors.lightGrey,
     },

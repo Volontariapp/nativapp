@@ -24,6 +24,7 @@ import { useNavigation } from '@react-navigation/native';
 import { useDebug } from '@/context/DebugContext';
 import { useEventCover } from '@/api/event/hooks/use-event-cover';
 import { EventCoverPicker } from '@/components/event/event-cover-picker';
+import { EventImagePreviews } from '@/components/event/event-image-previews';
 import { generateIdempotencyKey } from '@/shared/lib/idempotency.utils';
 
 const UPLOADING_HINT = 'Envoi de la photo en cours...';
@@ -174,6 +175,8 @@ export function EventFormScreen(): React.JSX.Element {
           onRetry={eventCover.retryImage}
           onRemove={eventCover.removeImage}
         />
+
+        <EventImagePreviews imageUri={eventCover.cover?.source.uri} />
 
         <AppFormController
           control={control}
