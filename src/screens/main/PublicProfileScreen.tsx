@@ -138,6 +138,7 @@ export function PublicProfileScreen(): React.JSX.Element {
                 void fetchNextUserPosts();
               }}
               isFetchingNextPage={isFetchingNextUserPosts}
+              horizontalInset={theme.spacing.xl}
             />
           </ProfileLayout>
         </ScrollView>
