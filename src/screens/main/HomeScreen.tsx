@@ -10,6 +10,7 @@ import { ImpactRankBandContainer } from '@/components/impact/impact-rank-band-co
 import Animated from 'react-native-reanimated';
 import { useScrollTabBar } from '@/navigation/hooks/useScrollTabBar';
 import { useTabBarContentInset } from '@/navigation/hooks/useTabBarContentInset';
+import { useDebug } from '@/context/DebugContext';
 import { useHomeScreen } from './hooks/use-home-screen';
 
 type PostItem = React.ComponentProps<typeof AppPost>['post'];
@@ -17,11 +18,13 @@ type PostItem = React.ComponentProps<typeof AppPost>['post'];
 export function HomeScreen(): React.JSX.Element {
   const { theme } = useAppTheme();
   const styles = useStyles(createStyles);
+  const { isDebugMode } = useDebug();
 
   const {
     posts,
     isLoading,
     isError,
+    isFallbackMode,
     isRefreshing,
     hasNextPage,
     isFetchingNextPage,
@@ -43,6 +46,15 @@ export function HomeScreen(): React.JSX.Element {
     <View style={styles.container}>
       <AppHeader showSettings />
       <View style={styles.content}>
+        {isDebugMode && (
+          <View style={styles.debugModeBanner} testID="home-debug-mode-banner">
+            <AppText style={styles.debugModeBannerText}>
+              {isFallbackMode
+                ? 'Mode Debug : Repli chronologique (ms-ranking en attente / 0 post classé)'
+                : 'Mode Debug : Feed classé par ms-ranking (score actif)'}
+            </AppText>
+          </View>
+        )}
         {hasNewContent && (
           <Pressable
             style={styles.newPostsBanner}
@@ -117,6 +129,23 @@ const createStyles = (theme: AppTheme) =>
     },
     content: {
       flex: 1,
+    },
+    debugModeBanner: {
+      backgroundColor: theme.colors.blackOverlay,
+      paddingHorizontal: theme.spacing.md,
+      paddingVertical: theme.spacing.xs,
+      marginHorizontal: theme.spacing.lg,
+      marginTop: theme.spacing.xs,
+      marginBottom: theme.spacing.xs,
+      borderRadius: theme.radius.sm,
+      alignItems: 'center',
+    },
+    debugModeBannerText: {
+      color: theme.colors.warning,
+      fontSize: theme.typography.fontSize.xs,
+      fontWeight: theme.typography.fontWeight.bold,
+      fontFamily: theme.typography.fonts.primary,
+      textAlign: 'center',
     },
     newPostsBanner: {
       position: 'absolute',

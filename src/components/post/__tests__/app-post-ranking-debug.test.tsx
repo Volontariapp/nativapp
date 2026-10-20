@@ -124,4 +124,22 @@ describe('AppPost ranking debug display', () => {
     expect(getByText('Organisateur suivi')).toBeTruthy();
     expect(getByText('Nouveau')).toBeTruthy();
   });
+
+  it('displays fallback indicator chip when debug mode is enabled on an unranked post', () => {
+    mockUseDebug.mockReturnValue({ isDebugMode: true, toggleDebugMode: jest.fn() });
+
+    const unrankedPost = {
+      ...baseRankedPost,
+      rankingScore: undefined,
+      reasons: undefined,
+    };
+
+    const { getByText, getByTestId, queryByText } = render(<AppPost post={unrankedPost} />, {
+      wrapper: createWrapper(),
+    });
+
+    expect(getByTestId('post-debug-ranking-container')).toBeTruthy();
+    expect(getByText('Repli chronologique (non scoré)')).toBeTruthy();
+    expect(queryByText(/Score:/i)).toBeNull();
+  });
 });

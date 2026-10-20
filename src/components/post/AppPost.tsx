@@ -50,6 +50,7 @@ export default function AppPost({ post }: PostCardProps) {
     isDebugMode && typeof rankedPost.rankingScore === 'number'
       ? rankedPost.rankingScore
       : undefined;
+  const isFallbackPost = isDebugMode && rankingScore === undefined && reasons.length === 0;
 
   const { data: author } = useGetPublicUser(post.authorId);
   const { data: commentsData } = useListComments(post.id);
@@ -134,7 +135,7 @@ export default function AppPost({ post }: PostCardProps) {
         }}
       />
 
-      {isDebugMode && (rankingScore !== undefined || reasons.length > 0) && (
+      {isDebugMode && (
         <View style={styles.debugRankingContainer} testID="post-debug-ranking-container">
           {rankingScore !== undefined && (
             <View style={styles.debugScoreChip}>
@@ -146,6 +147,11 @@ export default function AppPost({ post }: PostCardProps) {
               <Text style={styles.debugChipText}>{getRankingReasonLabel(reason)}</Text>
             </View>
           ))}
+          {isFallbackPost && (
+            <View style={styles.debugFallbackChip}>
+              <Text style={styles.debugChipText}>Repli chronologique (non scoré)</Text>
+            </View>
+          )}
         </View>
       )}
 
@@ -304,5 +310,11 @@ const createStyles = (theme: AppTheme) =>
       fontSize: theme.typography.fontSize.xs,
       fontWeight: theme.typography.fontWeight.bold,
       fontFamily: theme.typography.fonts.primary,
+    },
+    debugFallbackChip: {
+      backgroundColor: theme.colors.grey,
+      paddingHorizontal: theme.spacing.sm,
+      paddingVertical: 2,
+      borderRadius: theme.radius.full,
     },
   });
