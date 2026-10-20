@@ -1,9 +1,12 @@
-import { useCallback, useLayoutEffect, useMemo, useRef, useState } from 'react';
+import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
+import { AppState, type AppStateStatus } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import type { CompositeNavigationProp } from '@react-navigation/native';
 import type { BottomTabNavigationProp } from '@react-navigation/bottom-tabs';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import type { LocationObject } from 'expo-location';
+import type Swiper from 'react-native-deck-swiper';
+import { EventState } from '@volontariapp/contracts';
 
 import type { MainStackParamList } from '@/navigation/stacks/MainStack';
 import type { AppEvent } from '@/api/event/event.api';
@@ -11,8 +14,8 @@ import { useGetEvents } from '@/api/event/hooks/use-get-events';
 import { useUserSocialActions } from '@/api/social/hooks/use-user-social-actions';
 import { useLocation } from '@/hooks/use-location';
 import type { UserCoordinates } from '@/hooks/use-location';
-import type Swiper from 'react-native-deck-swiper';
-import { EventState } from '@volontariapp/contracts';
+import { rankingApi } from '@/api/ranking/ranking.api';
+import { useRankingEvents } from '@/api/ranking/hooks/use-ranking-events';
 
 type TabParamList = {
   accueil: undefined;
@@ -29,6 +32,9 @@ type SwipeScreenNavigation = CompositeNavigationProp<
 
 const SWIPE_PREFETCH_THRESHOLD = 10;
 const EVENTS_PAGE_LIMIT = 20;
+const MAX_PASS_BATCH_SIZE = 50;
+const PASS_BATCH_TRIGGER_SIZE = 5;
+const LOCATION_SEND_INTERVAL_MS = 60_000;
 
 export interface UseSwipeScreenResult {
   events: AppEvent[];
@@ -47,58 +53,161 @@ export interface UseSwipeScreenResult {
 export function useSwipeScreen(): UseSwipeScreenResult {
   const navigation = useNavigation<SwipeScreenNavigation>();
 
-  const params = useMemo(
+  // Requête principale : classement intelligent via MS Ranking
+  const rankingQuery = useRankingEvents({ limit: EVENTS_PAGE_LIMIT });
+
+  // Détection du 206 FALLBACK_ACTIVATED : repli gracieux sur useGetEvents
+  const isFallbackMode = Boolean(rankingQuery.data?.pages[0]?.isFallback);
+
+  // Requête de repli sans DRAFT (uniquement les événements publiés)
+  const fallbackParams = useMemo(
     () => ({
       limit: EVENTS_PAGE_LIMIT,
       excludeCreatedByMe: true,
       excludeWishedByMe: true,
       excludeParticipatedByMe: true,
-      statuses: [EventState.EVENT_STATE_PUBLISHED, EventState.EVENT_STATE_DRAFT],
+      statuses: [EventState.EVENT_STATE_PUBLISHED],
       startDateFrom: new Date().toISOString(),
     }),
     [],
   );
 
-  const { data, isLoading, isError, hasNextPage, fetchNextPage, isFetchingNextPage } =
-    useGetEvents(params);
+  const fallbackQuery = useGetEvents(fallbackParams);
 
   const { wish } = useUserSocialActions();
-  const { locationObject: userLocation } = useLocation();
+  const { locationObject: userLocation, coordinates, isPermissionDenied } = useLocation();
 
   const swiperRef = useRef<Swiper<AppEvent> | null>(null);
   const [currentIndex, setCurrentIndex] = useState(0);
 
+  // Tampon de PASS : envoyé par lots de 5, au passage en arrière-plan et au démontage
+  const pendingPassIdsRef = useRef<string[]>([]);
+  const isFlushingPassRef = useRef(false);
+
+  const flushPendingPass = useCallback(async (): Promise<void> => {
+    if (isFlushingPassRef.current || pendingPassIdsRef.current.length === 0) {
+      return;
+    }
+    isFlushingPassRef.current = true;
+    const toSend = pendingPassIdsRef.current.slice(0, MAX_PASS_BATCH_SIZE);
+    try {
+      await rankingApi.recordFeedback(toSend);
+      const sentSet = new Set(toSend);
+      pendingPassIdsRef.current = pendingPassIdsRef.current.filter((id) => !sentSet.has(id));
+      if (pendingPassIdsRef.current.length >= PASS_BATCH_TRIGGER_SIZE) {
+        isFlushingPassRef.current = false;
+        void flushPendingPass();
+        return;
+      }
+    } catch (err) {
+      console.warn('[useSwipeScreen] Failed to record PASS feedback, keeping in buffer:', err);
+    } finally {
+      isFlushingPassRef.current = false;
+    }
+  }, []);
+
+  // Géolocalisation pour le classement : au plus 1 appel par minute si autorisé
+  const lastLocationSentAtRef = useRef<number>(0);
+  const coordinatesRef = useRef(coordinates);
+  const isPermissionDeniedRef = useRef(isPermissionDenied);
+
+  useEffect(() => {
+    coordinatesRef.current = coordinates;
+    isPermissionDeniedRef.current = isPermissionDenied;
+  }, [coordinates, isPermissionDenied]);
+
+  const sendLocationIfAllowed = useCallback(async (): Promise<void> => {
+    if (isPermissionDeniedRef.current) {
+      return;
+    }
+    const coords = coordinatesRef.current;
+    if (coords == null) {
+      return;
+    }
+    const now = Date.now();
+    if (now - lastLocationSentAtRef.current < LOCATION_SEND_INTERVAL_MS) {
+      return;
+    }
+    lastLocationSentAtRef.current = now;
+    try {
+      await rankingApi.updateLocation(coords.latitude, coords.longitude);
+    } catch (err) {
+      console.warn('[useSwipeScreen] Failed to update location for ranking:', err);
+    }
+  }, []);
+
+  // Envoi initial dès disponibilité des coordonnées
+  useEffect(() => {
+    if (coordinates && !isPermissionDenied) {
+      void sendLocationIfAllowed();
+    }
+  }, [coordinates, isPermissionDenied, sendLocationIfAllowed]);
+
+  // Écoute des transitions de cycle de vie de l'application
+  useEffect(() => {
+    const subscription = AppState.addEventListener('change', (nextState: AppStateStatus) => {
+      if (nextState === 'background' || nextState === 'inactive') {
+        void flushPendingPass();
+      } else if (nextState === 'active') {
+        void sendLocationIfAllowed();
+      }
+    });
+
+    return () => {
+      subscription.remove();
+      void flushPendingPass();
+    };
+  }, [flushPendingPass, sendLocationIfAllowed]);
+
+  // Récupération des événements avec déduplication stricte par identifiant
   const events = useMemo(() => {
-    const freshEvents = data?.pages.flatMap((page) => page.events) ?? [];
+    let freshEvents: AppEvent[] = [];
+    if (isFallbackMode) {
+      freshEvents = fallbackQuery.data?.pages.flatMap((page) => page.events) ?? [];
+    } else {
+      freshEvents =
+        rankingQuery.data?.pages.flatMap((page) => (page.isFallback ? [] : page.events)) ?? [];
+    }
+
     const seen = new Set<string>();
     return freshEvents.filter((e) => {
       if (seen.has(e.id)) return false;
       seen.add(e.id);
       return true;
     });
-  }, [data]);
+  }, [isFallbackMode, fallbackQuery.data, rankingQuery.data]);
 
-  const isEndReached = currentIndex >= events.length && !hasNextPage && !isFetchingNextPage;
+  const activeQuery = isFallbackMode ? fallbackQuery : rankingQuery;
+  const isLoading = activeQuery.isLoading;
+  const isError = activeQuery.isError;
+  const hasNextPage = activeQuery.hasNextPage;
+  const isFetchingNextPage = activeQuery.isFetchingNextPage;
+  const fetchNextPage = activeQuery.fetchNextPage;
+
+  const isEndReached =
+    currentIndex >= events.length && !hasNextPage && !isFetchingNextPage && events.length > 0;
+
+  // Rafraîchissement automatique en fin de pile (sans bloquer ni afficher d'erreur si throttled)
+  const hasRequestedRefreshOnEndRef = useRef(false);
+  useEffect(() => {
+    if (isEndReached && !hasRequestedRefreshOnEndRef.current) {
+      hasRequestedRefreshOnEndRef.current = true;
+      Promise.resolve(rankingApi.requestRefresh('EVENT'))
+        .then((res) => {
+          if (!res.refreshThrottled) {
+            void rankingQuery.refetch();
+          }
+        })
+        .catch((err: unknown) => {
+          console.warn('[useSwipeScreen] Ranking refresh on end failed:', err);
+        });
+    }
+  }, [isEndReached, rankingQuery]);
 
   const swipeStateRef = useRef({ events, hasNextPage, isFetchingNextPage, fetchNextPage, wish });
   useLayoutEffect(() => {
     swipeStateRef.current = { events, hasNextPage, isFetchingNextPage, fetchNextPage, wish };
   }, [events, hasNextPage, isFetchingNextPage, fetchNextPage, wish]);
-
-  const handleSwipeRight = useCallback((cardIndex: number): void => {
-    const { events: currentEvents, wish: currentWish } = swipeStateRef.current;
-    const event = currentEvents[cardIndex];
-    if (event != null) {
-      void currentWish(event.id);
-    }
-    setCurrentIndex((prev) => prev + 1);
-    triggerPrefetchIfNeeded(cardIndex);
-  }, []);
-
-  const handleSwipeLeft = useCallback((cardIndex: number): void => {
-    setCurrentIndex((prev) => prev + 1);
-    triggerPrefetchIfNeeded(cardIndex);
-  }, []);
 
   const triggerPrefetchIfNeeded = (cardIndex: number): void => {
     const {
@@ -115,6 +224,32 @@ export function useSwipeScreen(): UseSwipeScreenResult {
       void fetchNext();
     }
   };
+
+  const handleSwipeRight = useCallback((cardIndex: number): void => {
+    const { events: currentEvents, wish: currentWish } = swipeStateRef.current;
+    const event = currentEvents[cardIndex];
+    if (event != null) {
+      void currentWish(event.id);
+    }
+    setCurrentIndex((prev) => prev + 1);
+    triggerPrefetchIfNeeded(cardIndex);
+  }, []);
+
+  const handleSwipeLeft = useCallback(
+    (cardIndex: number): void => {
+      const { events: currentEvents } = swipeStateRef.current;
+      const event = currentEvents[cardIndex];
+      if (event != null) {
+        pendingPassIdsRef.current.push(event.id);
+        if (pendingPassIdsRef.current.length >= PASS_BATCH_TRIGGER_SIZE) {
+          void flushPendingPass();
+        }
+      }
+      setCurrentIndex((prev) => prev + 1);
+      triggerPrefetchIfNeeded(cardIndex);
+    },
+    [flushPendingPass],
+  );
 
   const handleTapCard = useCallback(
     (cardIndex: number): void => {
