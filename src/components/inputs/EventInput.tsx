@@ -39,7 +39,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: theme.spacing.md,
     paddingVertical: theme.spacing.md,
     fontSize: 16,
-    color: theme.colors.secondaryEco, // Light green text
+    color: theme.colors.black,
     fontFamily: theme.typography.fonts.primary,
   },
 });

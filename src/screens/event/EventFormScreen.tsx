@@ -4,19 +4,25 @@ import { AppKeyboardScrollView } from '@/components/layout/AppKeyboardScrollView
 import { AppText } from '@/components/typography/AppText';
 import { AppButton } from '@/components/buttons/AppButton';
 import AppHeader from '@/components/layout/AppHeader';
-import { useStyles } from '@/context/ThemeContext';
+import { useAppTheme, useStyles } from '@/context/ThemeContext';
 import type { AppTheme } from '@/shared/themes/theme';
 
 import type { CreateEventRequest } from '@volontariapp/contracts';
-import { EventType } from '@volontariapp/contracts';
+import { EventType, EventState } from '@volontariapp/contracts';
 import type { WithOptionalIdempotencyKey } from '@/api/idempotency.types';
+import type { AppEvent } from '@/api/event/event.api';
 
 import { useForm, useFieldArray } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { eventSchema, type EventFormValues } from '@/api/event/event.schema';
 import { mapEventType } from '@/shared/lib/event-mappers.utils';
 import { useCreateEvent } from '@/api/event/hooks/use-create-event';
-import { EventInput, AppChipSelector, type AppChipOption } from '@/components/inputs';
+import {
+  EventInput,
+  AppChipSelector,
+  type AppChipOption,
+  LocationAutocompleteInput,
+} from '@/components/inputs';
 import { AppFormController, EventInfoGrid, EventRequirementItem } from '@/components/forms';
 import { eventApi } from '@/api/event/event.api';
 import { useQueryClient } from '@tanstack/react-query';
@@ -27,6 +33,7 @@ import { useCoverAdjuster } from '@/api/event/hooks/use-cover-adjuster';
 import { EventCoverPicker } from '@/components/event/event-cover-picker';
 import { EventCoverCropper } from '@/components/event/event-cover-cropper';
 import { EventImagePreviews } from '@/components/event/event-image-previews';
+import { EventPreviewModal } from '@/components/event/EventPreviewModal';
 import { generateIdempotencyKey } from '@/shared/lib/idempotency.utils';
 import { useTabBarContentInset } from '@/navigation/hooks/useTabBarContentInset';
 
@@ -55,6 +62,7 @@ function getDefaultEventDates(): { startAt: Date; endAt: Date } {
 }
 
 export function EventFormScreen(): React.JSX.Element {
+  const { theme } = useAppTheme();
   const styles = useStyles(createStyles);
   const tabBarInset = useTabBarContentInset();
 
@@ -73,13 +81,15 @@ export function EventFormScreen(): React.JSX.Element {
   const {
     control,
     handleSubmit,
+    setValue,
+    watch,
     formState: { errors },
   } = useForm<EventFormValues>({
     resolver: zodResolver(eventSchema),
     defaultValues: {
-      title: 'Nettoyage de la plage',
-      description: 'Rejoignez-nous pour nettoyer la plage et protéger notre environnement !',
-      localisationName: 'Plage du Prado, Marseille',
+      title: '',
+      description: '',
+      localisationName: 'Paris, France',
       type: undefined as unknown as EventType,
       awardedImpactScore: 100,
       maxParticipants: 50,
@@ -94,16 +104,51 @@ export function EventFormScreen(): React.JSX.Element {
     name: 'requirements',
   });
 
-  const onSubmit = handleSubmit((data) => {
+  const [isPreviewVisible, setIsPreviewVisible] = React.useState(false);
+  const [validatedData, setValidatedData] = React.useState<EventFormValues | null>(null);
+
+  const previewEvent: AppEvent | null = React.useMemo(() => {
+    if (validatedData === null) return null;
+    return {
+      id: 'preview-event',
+      title:
+        validatedData.title.trim() !== '' ? validatedData.title.trim() : "Titre de l'évènement",
+      description:
+        validatedData.description.trim() !== ''
+          ? validatedData.description.trim()
+          : "Description de l'évènement",
+      startAt: validatedData.startAt.toISOString(),
+      endAt: validatedData.endAt.toISOString(),
+      localisationName:
+        validatedData.localisationName.trim() !== ''
+          ? validatedData.localisationName.trim()
+          : 'Lieu non spécifié',
+      type: validatedData.type,
+      state: EventState.EVENT_STATE_PUBLISHED,
+      awardedImpactScore: validatedData.awardedImpactScore,
+      maxParticipants: validatedData.maxParticipants,
+      currentParticipants: 1,
+      coverUrl: eventCover.cover?.source.uri,
+    };
+  }, [validatedData, eventCover.cover?.source.uri]);
+
+  const handleValidateAndPreview = handleSubmit((data) => {
+    setValidatedData(data);
+    setIsPreviewVisible(true);
+  });
+
+  const handleConfirmPublish = (): void => {
+    if (validatedData === null) return;
     mutation.mutate(
-      { ...data, coverFileId: eventCover.coverFileId, idempotencyKey },
+      { ...validatedData, coverFileId: eventCover.coverFileId, idempotencyKey },
       {
         onSuccess: () => {
+          setIsPreviewVisible(false);
           navigation.goBack();
         },
       },
     );
-  });
+  };
 
   const cannotPublish =
     mutation.isPending || isBatching || eventCover.isUploading || eventCover.hasBlockingImage;
@@ -209,6 +254,8 @@ export function EventFormScreen(): React.JSX.Element {
               style={[styles.input, styles.textArea]}
               value={value}
               onChangeText={onChange}
+              placeholder="Ex: Rejoignez-nous pour une action citoyenne et protéger notre environnement !"
+              placeholderTextColor={theme.colors.grey}
               multiline
               numberOfLines={4}
             />
@@ -221,10 +268,10 @@ export function EventFormScreen(): React.JSX.Element {
           label="Lieu"
           errors={errors}
           render={({ field: { onChange, value } }) => (
-            <EventInput
+            <LocationAutocompleteInput
               value={value}
               onChangeText={onChange}
-              placeholder="Ex: Plage du Prado, Marseille"
+              placeholder="Ex: Paris, France"
             />
           )}
         />
@@ -239,7 +286,7 @@ export function EventFormScreen(): React.JSX.Element {
           )}
         />
 
-        <EventInfoGrid control={control} errors={errors} />
+        <EventInfoGrid control={control} errors={errors} setValue={setValue} watch={watch} />
 
         <View style={styles.requirementsSection}>
           <View style={styles.requirementsHeader}>
@@ -278,10 +325,10 @@ export function EventFormScreen(): React.JSX.Element {
             <AppText style={styles.hintError}>{BLOCKING_HINT}</AppText>
           )}
           <AppButton
-            text={mutation.isPending || isBatching ? 'Publication...' : "Publier l'évènement"}
-            icon="send"
+            text="Valider l'évènement"
+            icon="eye"
             onPress={() => {
-              void onSubmit();
+              void handleValidateAndPreview();
             }}
             disabled={cannotPublish}
             style={styles.publishButton}
@@ -305,6 +352,17 @@ export function EventFormScreen(): React.JSX.Element {
 
         <View style={styles.bottomSpacer} />
       </AppKeyboardScrollView>
+
+      {/* Modal de prévisualisation de la carte de swipe avant confirmation */}
+      <EventPreviewModal
+        visible={isPreviewVisible}
+        onClose={() => {
+          setIsPreviewVisible(false);
+        }}
+        onConfirmPublish={handleConfirmPublish}
+        isPublishing={mutation.isPending}
+        event={previewEvent}
+      />
     </View>
   );
 }

@@ -1,4 +1,4 @@
-import React, { useState, useRef, useEffect, useCallback, useMemo } from 'react';
+import React, { useState, useRef, useEffect, useCallback, useMemo, type ReactNode } from 'react';
 import { View, StyleSheet, Pressable, Platform, Modal, type ViewStyle } from 'react-native';
 import RNDateTimePicker, { type DateTimePickerEvent } from '@react-native-community/datetimepicker';
 import Icon from 'react-native-vector-icons/Feather';
@@ -14,6 +14,7 @@ export interface AppDateTimePickerProps {
   inputStyle?: ViewStyle | ViewStyle[];
   hideIcon?: boolean;
   minimumDate?: Date;
+  children?: ReactNode;
 }
 
 type PickerMode = NonNullable<AppDateTimePickerProps['mode']>;
@@ -59,6 +60,7 @@ export const AppDateTimePicker = React.memo(function AppDateTimePicker({
   inputStyle,
   hideIcon = false,
   minimumDate,
+  children,
 }: AppDateTimePickerProps): React.JSX.Element {
   const [showPicker, setShowPicker] = useState(false);
   const [pickerMode, setPickerMode] = useState<'date' | 'time' | 'datetime'>(
@@ -136,14 +138,22 @@ export const AppDateTimePicker = React.memo(function AppDateTimePicker({
         accessibilityLabel={`Ouvrir le sélecteur de ${webAriaLabel}`}
         hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
       >
-        {!hideIcon && (
-          <Icon
-            name={mode === 'time' ? 'clock' : 'calendar'}
-            size={theme.typography.fontSize.md}
-            color={theme.colors.grey}
-          />
+        {children !== undefined ? (
+          children
+        ) : (
+          <>
+            {!hideIcon && (
+              <Icon
+                name={mode === 'time' ? 'clock' : 'calendar'}
+                size={theme.typography.fontSize.md}
+                color={theme.colors.grey}
+              />
+            )}
+            <AppText style={[styles.dateText, hideIcon && styles.noPadding]}>
+              {displayFormat}
+            </AppText>
+          </>
         )}
-        <AppText style={[styles.dateText, hideIcon && styles.noPadding]}>{displayFormat}</AppText>
       </Pressable>
 
       {Platform.OS === 'web' ? (

@@ -14,3 +14,4 @@ export * from './ParticipantEmptyState';
 export * from './EventDetailsTab';
 export * from './EventParticipantsTab';
 export * from './event-status.utils';
+export * from './EventPreviewModal';

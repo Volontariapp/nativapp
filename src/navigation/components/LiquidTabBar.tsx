@@ -71,11 +71,13 @@ export function LiquidTabBar({
       style={[styles.container, { bottom: Math.max(insets.bottom, 15) }, containerAnimatedStyle]}
     >
       {/* Background Pill */}
-      <BlurView
-        intensity={80}
-        tint={themeMode === 'dark' ? 'dark' : 'light'}
-        style={styles.backgroundPill}
-      />
+      <View style={styles.backgroundPill}>
+        <BlurView
+          intensity={80}
+          tint={themeMode === 'dark' ? 'dark' : 'light'}
+          style={styles.blurFill}
+        />
+      </View>
 
       {/* Animated Liquid Indicator */}
       <Animated.View style={[styles.indicator, indicatorStyle]}>
@@ -171,6 +173,7 @@ const createStyles = (theme: AppTheme) =>
       alignSelf: 'center',
       width: TAB_BAR_WIDTH,
       height: TAB_BAR_HEIGHT,
+      borderRadius: TAB_BAR_HEIGHT / 2,
       boxShadow: '0 10px 20px rgba(0, 0, 0, 0.4)',
       zIndex: 100,
     },
@@ -179,6 +182,11 @@ const createStyles = (theme: AppTheme) =>
       borderRadius: TAB_BAR_HEIGHT / 2,
       borderWidth: 1,
       borderColor: theme.colors.whiteOverlay,
+      overflow: 'hidden',
+    },
+    blurFill: {
+      ...StyleSheet.absoluteFillObject,
+      borderRadius: TAB_BAR_HEIGHT / 2,
       overflow: 'hidden',
     },
     tabsContainer: {

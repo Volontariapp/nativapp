@@ -8,3 +8,4 @@ export * from './AppInfoCard';
 export * from './AppChipSelector';
 export * from './AppPillInput';
 export * from './AppSlider';
+export * from './LocationAutocompleteInput';
