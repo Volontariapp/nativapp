@@ -11,6 +11,8 @@ import { PostAuthorHeader } from './PostAuthorHeader';
 import { resolveAvatarUrl } from '@/api/user/resolve-avatar-url';
 import { PostImage } from './post-image';
 import { resolvePostImageUrl } from '@/api/post/resolve-post-image-url';
+import { useDebug } from '@/context/DebugContext';
+import { getRankingReasonLabel, type RankedAppPost } from '@/api/ranking';
 import { PostActions } from './PostActions';
 import { PostCommentsModal } from './PostCommentsModal';
 import { PostCommentPreview } from './PostCommentPreview';
@@ -40,6 +42,15 @@ interface PostCardProps {
 export default function AppPost({ post }: PostCardProps) {
   const { theme } = useAppTheme();
   const styles = useStyles(createStyles);
+  const { isDebugMode } = useDebug();
+
+  const rankedPost = post as Partial<RankedAppPost>;
+  const reasons = isDebugMode && Array.isArray(rankedPost.reasons) ? rankedPost.reasons : [];
+  const rankingScore =
+    isDebugMode && typeof rankedPost.rankingScore === 'number'
+      ? rankedPost.rankingScore
+      : undefined;
+  const isFallbackPost = isDebugMode && rankingScore === undefined && reasons.length === 0;
 
   const { data: author } = useGetPublicUser(post.authorId);
   const { data: commentsData } = useListComments(post.id);
@@ -123,6 +134,26 @@ export default function AppPost({ post }: PostCardProps) {
           navigation.navigate('PublicProfile', { userId: post.authorId });
         }}
       />
+
+      {isDebugMode && (
+        <View style={styles.debugRankingContainer} testID="post-debug-ranking-container">
+          {rankingScore !== undefined && (
+            <View style={styles.debugScoreChip}>
+              <Text style={styles.debugChipText}>Score: {rankingScore.toFixed(1)}</Text>
+            </View>
+          )}
+          {reasons.map((reason) => (
+            <View key={reason} style={styles.debugReasonChip}>
+              <Text style={styles.debugChipText}>{getRankingReasonLabel(reason)}</Text>
+            </View>
+          ))}
+          {isFallbackPost && (
+            <View style={styles.debugFallbackChip}>
+              <Text style={styles.debugChipText}>Repli chronologique (non scoré)</Text>
+            </View>
+          )}
+        </View>
+      )}
 
       <GestureDetector gesture={doubleTapGesture}>
         <View style={styles.imageWrapper}>
@@ -253,5 +284,37 @@ const createStyles = (theme: AppTheme) =>
       color: theme.colors.primarySocio,
       fontWeight: theme.typography.fontWeight.semibold,
       fontFamily: theme.typography.fonts.primary,
+    },
+    debugRankingContainer: {
+      flexDirection: 'row',
+      flexWrap: 'wrap',
+      gap: theme.spacing.xs,
+      paddingHorizontal: theme.spacing.lg,
+      paddingVertical: theme.spacing.xs,
+      backgroundColor: theme.colors.background,
+    },
+    debugScoreChip: {
+      backgroundColor: theme.colors.warning,
+      paddingHorizontal: theme.spacing.sm,
+      paddingVertical: 2,
+      borderRadius: theme.radius.full,
+    },
+    debugReasonChip: {
+      backgroundColor: theme.colors.blackOverlay,
+      paddingHorizontal: theme.spacing.sm,
+      paddingVertical: 2,
+      borderRadius: theme.radius.full,
+    },
+    debugChipText: {
+      color: theme.colors.white,
+      fontSize: theme.typography.fontSize.xs,
+      fontWeight: theme.typography.fontWeight.bold,
+      fontFamily: theme.typography.fonts.primary,
+    },
+    debugFallbackChip: {
+      backgroundColor: theme.colors.grey,
+      paddingHorizontal: theme.spacing.sm,
+      paddingVertical: 2,
+      borderRadius: theme.radius.full,
     },
   });

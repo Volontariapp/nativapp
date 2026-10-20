@@ -8,6 +8,7 @@ jest.mock(
     WebsocketMessagingType: {
       USER_DELETED: 'USER_DELETED',
       USER_IMPACT_SCORE_CREDITED: 'USER_IMPACT_SCORE_CREDITED',
+      RANKING_READY: 'ranking.ready',
     },
   }),
   { virtual: true },
@@ -110,6 +111,44 @@ describe('useNotificationHandlers', () => {
     expect(mockSocket.off).toHaveBeenCalledWith(
       WebsocketMessagingType.USER_IMPACT_SCORE_CREDITED,
       listeners[WebsocketMessagingType.USER_IMPACT_SCORE_CREDITED],
+    );
+  });
+
+  it('should debounce invalidation of ranking queries by 1 second when RANKING_READY is received', () => {
+    jest.useFakeTimers();
+    try {
+      renderHook(() => {
+        useNotificationHandlers(mockSocket as unknown as Socket, showNotificationMock);
+      });
+
+      const handler = listeners[WebsocketMessagingType.RANKING_READY];
+      expect(handler).toBeDefined();
+
+      handler?.({});
+      expect(mockInvalidateQueries).not.toHaveBeenCalled();
+
+      handler?.({});
+      jest.advanceTimersByTime(500);
+      expect(mockInvalidateQueries).not.toHaveBeenCalled();
+
+      jest.advanceTimersByTime(500);
+      expect(mockInvalidateQueries).toHaveBeenCalledTimes(1);
+      expect(mockInvalidateQueries).toHaveBeenCalledWith({ queryKey: ['ranking'] });
+    } finally {
+      jest.useRealTimers();
+    }
+  });
+
+  it('should unsubscribe the RANKING_READY handler on unmount', () => {
+    const { unmount } = renderHook(() => {
+      useNotificationHandlers(mockSocket as unknown as Socket, showNotificationMock);
+    });
+
+    unmount();
+
+    expect(mockSocket.off).toHaveBeenCalledWith(
+      WebsocketMessagingType.RANKING_READY,
+      listeners[WebsocketMessagingType.RANKING_READY],
     );
   });
 });

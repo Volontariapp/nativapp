@@ -12,6 +12,9 @@ import { EventTypeTagComponent } from '@/components/dataDisplay/EventTypesTags';
 import { ImpactScoreBadge } from '@/components/event/ImpactScoreBadge';
 import { getEventImageUri } from '@/api/event/event-cover.utils';
 import { calculateDistanceInKm, formatDistance } from '@/shared/lib/location.utils';
+import { useDebug } from '@/context/DebugContext';
+import { getRankingReasonLabel } from '@/api/ranking';
+import type { RankedAppEvent } from '@/api/ranking';
 
 interface EventCardProps {
   event: Event;
@@ -26,6 +29,14 @@ export const EventCard = React.memo(function EventCard({
 }: EventCardProps): React.JSX.Element {
   const { theme } = useAppTheme();
   const styles = useStyles(createStyles);
+  const { isDebugMode } = useDebug();
+
+  const rankedEvent = event as Partial<RankedAppEvent>;
+  const reasons = isDebugMode && Array.isArray(rankedEvent.reasons) ? rankedEvent.reasons : [];
+  const rankingScore =
+    isDebugMode && typeof rankedEvent.rankingScore === 'number'
+      ? rankedEvent.rankingScore
+      : undefined;
 
   const formattedDate = useMemo(() => {
     const date = new Date(event.startAt);
@@ -96,6 +107,21 @@ export const EventCard = React.memo(function EventCard({
                 <ImpactScoreBadge score={event.awardedImpactScore} />
               )}
             </View>
+
+            {isDebugMode && (rankingScore !== undefined || reasons.length > 0) && (
+              <View style={styles.debugRankingContainer}>
+                {rankingScore !== undefined && (
+                  <View style={styles.debugScoreChip}>
+                    <Text style={styles.debugChipText}>Score: {rankingScore.toFixed(1)}</Text>
+                  </View>
+                )}
+                {reasons.map((reason) => (
+                  <View key={reason} style={styles.debugReasonChip}>
+                    <Text style={styles.debugChipText}>{getRankingReasonLabel(reason)}</Text>
+                  </View>
+                ))}
+              </View>
+            )}
           </View>
 
           <View style={styles.content}>
@@ -193,6 +219,29 @@ const createStyles = (theme: AppTheme) =>
     tagsContainer: {
       flexDirection: 'row',
       gap: theme.spacing.sm,
+    },
+    debugRankingContainer: {
+      flexDirection: 'row',
+      flexWrap: 'wrap',
+      gap: theme.spacing.xs,
+    },
+    debugScoreChip: {
+      backgroundColor: theme.colors.warning,
+      paddingHorizontal: theme.spacing.sm,
+      paddingVertical: 2,
+      borderRadius: theme.radius.full,
+    },
+    debugReasonChip: {
+      backgroundColor: theme.colors.blackOverlay,
+      paddingHorizontal: theme.spacing.sm,
+      paddingVertical: 2,
+      borderRadius: theme.radius.full,
+    },
+    debugChipText: {
+      color: theme.colors.white,
+      fontSize: theme.typography.fontSize.xs,
+      fontWeight: theme.typography.fontWeight.bold,
+      fontFamily: theme.typography.fonts.primary,
     },
     dateAndDistanceContainer: {
       flexDirection: 'row',

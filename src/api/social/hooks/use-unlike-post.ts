@@ -30,12 +30,7 @@ export const useUnlikePost = () => {
         };
       });
 
-      queryClient.setQueryData<PostLikersData>(['post-likers', postId, { limit: 1 }], (old) => {
-        if (!old) return { users: [], totalCount: 0 };
-        return { ...old, totalCount: Math.max(0, old.totalCount - 1) };
-      });
-
-      queryClient.setQueryData<PostLikersData>(['post-likers', postId, undefined], (old) => {
+      queryClient.setQueriesData<PostLikersData>({ queryKey: ['post-likers', postId] }, (old) => {
         if (!old) return { users: [], totalCount: 0 };
         return { ...old, totalCount: Math.max(0, old.totalCount - 1) };
       });

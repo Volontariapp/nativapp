@@ -1,70 +1,85 @@
-import { StyleSheet, View, ActivityIndicator } from 'react-native';
-
-import React, { useCallback, useMemo, useRef } from 'react';
+import { StyleSheet, View, ActivityIndicator, Pressable, RefreshControl } from 'react-native';
+import React, { useCallback, useMemo } from 'react';
+import Icon from 'react-native-vector-icons/Feather';
 import { AppText } from '@/components/typography/AppText';
 import AppHeader from '@/components/layout/AppHeader';
 import { useAppTheme, useStyles } from '@/context/ThemeContext';
 import type { AppTheme } from '@/shared/themes/theme';
-import { useListPosts } from '@/api/post/hooks/use-list-all-posts';
 import AppPost from '@/components/post/AppPost';
 import { ImpactRankBandContainer } from '@/components/impact/impact-rank-band-container';
 import Animated from 'react-native-reanimated';
 import { useScrollTabBar } from '@/navigation/hooks/useScrollTabBar';
 import { useTabBarContentInset } from '@/navigation/hooks/useTabBarContentInset';
+import { useDebug } from '@/context/DebugContext';
+import { useHomeScreen } from './hooks/use-home-screen';
+
+type PostItem = React.ComponentProps<typeof AppPost>['post'];
 
 export function HomeScreen(): React.JSX.Element {
   const { theme } = useAppTheme();
   const styles = useStyles(createStyles);
+  const { isDebugMode } = useDebug();
 
-  const { data, isLoading, isError, refetch, fetchNextPage, hasNextPage, isFetchingNextPage } =
-    useListPosts({
-      limit: 10,
-    });
+  const {
+    posts,
+    isLoading,
+    isError,
+    isFallbackMode,
+    isRefreshing,
+    hasNextPage,
+    isFetchingNextPage,
+    hasNewContent,
+    flatListRef,
+    handleRefresh,
+    handleLoadMore,
+    handleNewPostsPress,
+  } = useHomeScreen();
 
   const scrollHandler = useScrollTabBar();
   const tabBarInset = useTabBarContentInset();
-  const randomSortMap = useRef<Record<string, number>>({});
-  const [isRefreshing, setIsRefreshing] = React.useState(false);
-  const [refreshCount, setRefreshCount] = React.useState(0);
-
-  const handleRefresh = useCallback(async () => {
-    setIsRefreshing(true);
-    randomSortMap.current = {};
-    try {
-      await refetch();
-      setRefreshCount((c) => c + 1);
-    } finally {
-      setIsRefreshing(false);
-    }
-  }, [refetch]);
-
-  const posts = useMemo(() => {
-    const randomizedPages =
-      data?.pages.map((page) => {
-        const pagePosts = [...page.posts];
-        pagePosts.forEach((post) => {
-          randomSortMap.current[post.id] ??= Math.random();
-        });
-        return pagePosts.sort(
-          (a, b) => (randomSortMap.current[a.id] ?? 0) - (randomSortMap.current[b.id] ?? 0),
-        );
-      }) ?? [];
-
-    const finalPosts = randomizedPages.flat();
-    console.log('[HomeScreen] Total posts rendered:', finalPosts.length);
-    return finalPosts;
-  }, [data, refreshCount]);
-
-  type PostItem = React.ComponentProps<typeof AppPost>['post'];
 
   const keyExtractor = useCallback((item: PostItem) => item.id, []);
 
   const renderItem = useCallback(({ item }: { item: PostItem }) => <AppPost post={item} />, []);
 
+  const refreshControl = useMemo(
+    () => (
+      <RefreshControl
+        refreshing={isRefreshing}
+        onRefresh={() => {
+          void handleRefresh();
+        }}
+        colors={[theme.colors.primarySocio]}
+        tintColor={theme.colors.primarySocio}
+      />
+    ),
+    [isRefreshing, handleRefresh, theme.colors.primarySocio],
+  );
+
   return (
     <View style={styles.container}>
       <AppHeader showSettings />
       <View style={styles.content}>
+        {isDebugMode && (
+          <View style={styles.debugModeBanner} testID="home-debug-mode-banner">
+            <AppText style={styles.debugModeBannerText}>
+              {isFallbackMode
+                ? 'Mode Debug : Repli chronologique (ms-ranking en attente / 0 post classé)'
+                : 'Mode Debug : Feed classé par ms-ranking (score actif)'}
+            </AppText>
+          </View>
+        )}
+        {hasNewContent && (
+          <Pressable
+            style={styles.newPostsBanner}
+            onPress={handleNewPostsPress}
+            accessibilityRole="button"
+            accessibilityLabel="Nouveaux posts disponibles"
+          >
+            <Icon name="arrow-up" size={14} color="#FFFFFF" style={styles.bannerIcon} />
+            <AppText style={styles.newPostsText}>Nouveaux posts disponibles</AppText>
+          </Pressable>
+        )}
         {isLoading ? (
           <View style={styles.center}>
             <ActivityIndicator size="large" color={theme.colors.primarySocio} />
@@ -75,6 +90,7 @@ export function HomeScreen(): React.JSX.Element {
           </View>
         ) : (
           <Animated.FlatList
+            ref={flatListRef}
             data={posts}
             keyExtractor={keyExtractor}
             renderItem={renderItem}
@@ -82,24 +98,8 @@ export function HomeScreen(): React.JSX.Element {
             showsVerticalScrollIndicator={false}
             onScroll={scrollHandler}
             scrollEventThrottle={16}
-            onRefresh={() => {
-              void handleRefresh();
-            }}
-            refreshing={isRefreshing}
-            onEndReached={() => {
-              console.log(
-                '[HomeScreen] onEndReached triggered. hasNextPage:',
-                hasNextPage,
-                'isFetchingNextPage:',
-                isFetchingNextPage,
-              );
-              if (hasNextPage && !isFetchingNextPage) {
-                console.log('[HomeScreen] Calling fetchNextPage()...');
-                void fetchNextPage();
-              } else if (!hasNextPage) {
-                console.log('[HomeScreen] No more pages available (hasNextPage is false).');
-              }
-            }}
+            refreshControl={refreshControl}
+            onEndReached={handleLoadMore}
             onEndReachedThreshold={0.5}
             ListHeaderComponent={<ImpactRankBandContainer />}
             ListFooterComponent={
@@ -108,21 +108,13 @@ export function HomeScreen(): React.JSX.Element {
                   <ActivityIndicator size="small" color={theme.colors.primarySocio} />
                 ) : hasNextPage ? (
                   <AppText
-                    style={{
-                      padding: 20,
-                      color: theme.colors.primarySocio,
-                      textAlign: 'center',
-                      fontWeight: 'bold',
-                    }}
-                    onPress={() => {
-                      console.log('[HomeScreen] Manual load more clicked!');
-                      void fetchNextPage();
-                    }}
+                    style={[styles.loadMoreText, { color: theme.colors.primarySocio }]}
+                    onPress={handleLoadMore}
                   >
                     Charger plus de posts
                   </AppText>
                 ) : (
-                  <AppText style={{ padding: 20, color: theme.colors.grey, textAlign: 'center' }}>
+                  <AppText style={[styles.endText, { color: theme.colors.grey }]}>
                     Fin des posts
                   </AppText>
                 )}
@@ -149,6 +141,48 @@ const createStyles = (theme: AppTheme) =>
     content: {
       flex: 1,
     },
+    debugModeBanner: {
+      backgroundColor: theme.colors.blackOverlay,
+      paddingHorizontal: theme.spacing.md,
+      paddingVertical: theme.spacing.xs,
+      marginHorizontal: theme.spacing.lg,
+      marginTop: theme.spacing.xs,
+      marginBottom: theme.spacing.xs,
+      borderRadius: theme.radius.sm,
+      alignItems: 'center',
+    },
+    debugModeBannerText: {
+      color: theme.colors.warning,
+      fontSize: theme.typography.fontSize.xs,
+      fontWeight: theme.typography.fontWeight.bold,
+      fontFamily: theme.typography.fonts.primary,
+      textAlign: 'center',
+    },
+    newPostsBanner: {
+      position: 'absolute',
+      top: 10,
+      alignSelf: 'center',
+      zIndex: 10,
+      flexDirection: 'row',
+      alignItems: 'center',
+      backgroundColor: theme.colors.primarySocio,
+      paddingHorizontal: 16,
+      paddingVertical: 8,
+      borderRadius: 20,
+      shadowColor: '#000',
+      shadowOffset: { width: 0, height: 2 },
+      shadowOpacity: 0.25,
+      shadowRadius: 3.84,
+      elevation: 5,
+    },
+    bannerIcon: {
+      marginRight: 6,
+    },
+    newPostsText: {
+      color: '#FFFFFF',
+      fontSize: 13,
+      fontWeight: '600',
+    },
     listContent: {
       paddingBottom: 20,
     },
@@ -162,6 +196,15 @@ const createStyles = (theme: AppTheme) =>
       paddingVertical: 20,
       alignItems: 'center',
       justifyContent: 'center',
+    },
+    loadMoreText: {
+      padding: 20,
+      textAlign: 'center',
+      fontWeight: 'bold',
+    },
+    endText: {
+      padding: 20,
+      textAlign: 'center',
     },
     spacer: {
       height: 12,

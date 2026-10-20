@@ -177,23 +177,33 @@ export const socialApi = {
     page?: number;
     limit?: number;
   }): Promise<{ ids: string[]; totalCount: number }> {
+    const page = params?.page ?? 1;
+    const limit = params?.limit ?? 500;
     const query = new URLSearchParams();
-    if (params?.page !== undefined) query.append('page', params.page.toString());
-    if (params?.limit !== undefined) query.append('limit', params.limit.toString());
+    query.append('page', page.toString());
+    query.append('limit', limit.toString());
+    query.append('pagination[page]', page.toString());
+    query.append('pagination[limit]', limit.toString());
 
     const queryString = query.toString();
-    const path = queryString
-      ? `${SOCIAL_ENDPOINTS.GET_USER_LIKES_SELF.path}?${queryString}`
-      : SOCIAL_ENDPOINTS.GET_USER_LIKES_SELF.path;
+    const path = `${SOCIAL_ENDPOINTS.GET_USER_LIKES_SELF.path}?${queryString}`;
 
-    const response = await apiFetch<{ ids: string[]; totalCount: number }>(path, {
+    const response = await apiFetch<{
+      ids: string[];
+      totalCount?: number;
+      pagination?: { totalCount?: number; total?: number };
+    }>(path, {
       method: SOCIAL_ENDPOINTS.GET_USER_LIKES_SELF.method,
       requiresAuth: SOCIAL_ENDPOINTS.GET_USER_LIKES_SELF.requiresAuth,
     });
 
     return {
       ids: response.ids,
-      totalCount: response.totalCount,
+      totalCount:
+        response.totalCount ??
+        response.pagination?.totalCount ??
+        response.pagination?.total ??
+        response.ids.length,
     };
   },
 

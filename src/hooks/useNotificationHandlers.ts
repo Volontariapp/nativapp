@@ -32,12 +32,22 @@ export const useNotificationHandlers = (
 ): void => {
   const queryClient = useQueryClient();
   const notifyRef = useRef(showNotification);
+  const rankingDebounceTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   useEffect(() => {
     notifyRef.current = showNotification;
   }, [showNotification]);
 
   useEffect(() => {
     if (!socket) return;
+
+    const handleRankingReady = (): void => {
+      if (rankingDebounceTimerRef.current != null) {
+        clearTimeout(rankingDebounceTimerRef.current);
+      }
+      rankingDebounceTimerRef.current = setTimeout(() => {
+        void queryClient.invalidateQueries({ queryKey: ['ranking'] });
+      }, 1000);
+    };
 
     const handlePostCreated = (data: IPostCreatedWebsocketPayload): void => {
       const msg =
@@ -276,8 +286,13 @@ export const useNotificationHandlers = (
     socket.on(WebsocketMessagingType.FALLBACK_CREATE_TAG, handleFallbackCreateTag);
     socket.on(WebsocketMessagingType.FALLBACK_UPDATE_TAG, handleFallbackUpdateTag);
     socket.on(WebsocketMessagingType.FALLBACK_DELETE_TAG, handleFallbackDeleteTag);
+    socket.on(WebsocketMessagingType.RANKING_READY, handleRankingReady);
 
     return () => {
+      if (rankingDebounceTimerRef.current != null) {
+        clearTimeout(rankingDebounceTimerRef.current);
+        rankingDebounceTimerRef.current = null;
+      }
       socket.off(WebsocketMessagingType.POST_CREATED, handlePostCreated);
       socket.off(WebsocketMessagingType.POST_DELETED, handlePostDeleted);
       socket.off(WebsocketMessagingType.POST_CREATION_FAILED, handlePostFailed);
@@ -313,6 +328,7 @@ export const useNotificationHandlers = (
       socket.off(WebsocketMessagingType.FALLBACK_CREATE_TAG, handleFallbackCreateTag);
       socket.off(WebsocketMessagingType.FALLBACK_UPDATE_TAG, handleFallbackUpdateTag);
       socket.off(WebsocketMessagingType.FALLBACK_DELETE_TAG, handleFallbackDeleteTag);
+      socket.off(WebsocketMessagingType.RANKING_READY, handleRankingReady);
     };
   }, [socket, queryClient]);
 };

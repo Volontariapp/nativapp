@@ -11,6 +11,12 @@ jest.mock(
       VOLUNTEER: 'VOLUNTEER',
       ADMIN: 'ADMIN',
     },
+    TagsNames: {
+      ECOLOGIE: 'ECOLOGIE',
+      SOCIAL: 'SOCIAL',
+      BENEVOLAT: 'BENEVOLAT',
+      CERTIFIED: 'CERTIFIED',
+    },
   }),
   { virtual: true },
 );
