@@ -1,5 +1,5 @@
-import { StyleSheet, View, ActivityIndicator, Pressable } from 'react-native';
-import React, { useCallback } from 'react';
+import { StyleSheet, View, ActivityIndicator, Pressable, RefreshControl } from 'react-native';
+import React, { useCallback, useMemo } from 'react';
 import Icon from 'react-native-vector-icons/Feather';
 import { AppText } from '@/components/typography/AppText';
 import AppHeader from '@/components/layout/AppHeader';
@@ -41,6 +41,20 @@ export function HomeScreen(): React.JSX.Element {
   const keyExtractor = useCallback((item: PostItem) => item.id, []);
 
   const renderItem = useCallback(({ item }: { item: PostItem }) => <AppPost post={item} />, []);
+
+  const refreshControl = useMemo(
+    () => (
+      <RefreshControl
+        refreshing={isRefreshing}
+        onRefresh={() => {
+          void handleRefresh();
+        }}
+        colors={[theme.colors.primarySocio]}
+        tintColor={theme.colors.primarySocio}
+      />
+    ),
+    [isRefreshing, handleRefresh, theme.colors.primarySocio],
+  );
 
   return (
     <View style={styles.container}>
@@ -84,10 +98,7 @@ export function HomeScreen(): React.JSX.Element {
             showsVerticalScrollIndicator={false}
             onScroll={scrollHandler}
             scrollEventThrottle={16}
-            onRefresh={() => {
-              void handleRefresh();
-            }}
-            refreshing={isRefreshing}
+            refreshControl={refreshControl}
             onEndReached={handleLoadMore}
             onEndReachedThreshold={0.5}
             ListHeaderComponent={<ImpactRankBandContainer />}
