@@ -27,13 +27,17 @@ export function useHomeScreen(): UseHomeScreenResult {
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [hasNewContent, setHasNewContent] = useState(false);
   const rankingQuery = useRankingFeed({ limit: FEED_PAGE_LIMIT });
-  const isFallbackMode = Boolean(rankingQuery.data?.pages[0]?.isFallback) || rankingQuery.isError;
+  const firstPage = rankingQuery.data?.pages[0];
+  const hasRankedPosts = Boolean(firstPage && !firstPage.isFallback && firstPage.posts.length > 0);
+  const isFallbackMode =
+    Boolean(firstPage?.isFallback) ||
+    rankingQuery.isError ||
+    (rankingQuery.isSuccess && !hasRankedPosts);
   const fallbackQuery = useListPosts({ limit: FEED_PAGE_LIMIT });
 
   const currentListVersionRef = useRef<string | null>(null);
 
   useEffect(() => {
-    const firstPage = rankingQuery.data?.pages[0];
     if (firstPage && !firstPage.isFallback && firstPage.ranking.listVersion) {
       const newVersion = firstPage.ranking.listVersion;
       if (currentListVersionRef.current != null && currentListVersionRef.current !== newVersion) {
@@ -46,7 +50,7 @@ export function useHomeScreen(): UseHomeScreenResult {
     if (last && !last.isFallback && last.ranking.versionChanged) {
       setHasNewContent(true);
     }
-  }, [rankingQuery.data]);
+  }, [firstPage, rankingQuery.data]);
 
   // 5. Flattening des posts selon le mode
   const posts = useMemo((): PostWeb[] => {
@@ -56,7 +60,9 @@ export function useHomeScreen(): UseHomeScreenResult {
     return fallbackQuery.data?.pages.flatMap((page) => page.posts) ?? [];
   }, [isFallbackMode, rankingQuery.data, fallbackQuery.data]);
 
-  const isLoading = isFallbackMode ? fallbackQuery.isLoading : rankingQuery.isLoading;
+  const isLoading = isFallbackMode
+    ? fallbackQuery.isLoading
+    : rankingQuery.isLoading || (!hasRankedPosts && fallbackQuery.isLoading);
   const isError = isFallbackMode ? fallbackQuery.isError : false;
   const hasNextPage = isFallbackMode ? fallbackQuery.hasNextPage : rankingQuery.hasNextPage;
   const isFetchingNextPage = isFallbackMode

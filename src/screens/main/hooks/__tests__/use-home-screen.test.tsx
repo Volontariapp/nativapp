@@ -158,6 +158,34 @@ describe('useHomeScreen', () => {
     expect(result.current.posts[0]?.id).toBe('post-fallback-1');
   });
 
+  it('falls back to useListPosts when ranking succeeds with 0 posts (empty run / cold-start)', async () => {
+    mockGetFeed.mockResolvedValue({
+      posts: [],
+      totalCount: 0,
+      ranking: {
+        source: 'FULL',
+        computedAt: '2026-10-20T08:00:00.000Z',
+        stale: false,
+        hasMore: false,
+        versionChanged: false,
+        listVersion: 'v1',
+        nextCursor: '',
+      },
+      isFallback: false,
+    });
+
+    const { result } = renderHook(() => useHomeScreen(), {
+      wrapper: createWrapper(),
+    });
+
+    await waitFor(() => {
+      expect(result.current.isFallbackMode).toBe(true);
+    });
+
+    expect(result.current.posts).toHaveLength(1);
+    expect(result.current.posts[0]?.id).toBe('post-fallback-1');
+  });
+
   it('calls rankingApi.requestRefresh with FEED on pull to refresh', async () => {
     mockGetFeed.mockResolvedValue({
       posts: [createSamplePost('post-ranked-1', 'Post Classé 1')],
