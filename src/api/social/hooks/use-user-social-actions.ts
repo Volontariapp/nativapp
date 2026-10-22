@@ -16,9 +16,39 @@ export const useUserSocialActions = () => {
 
   const participateMutation = useMutation({
     mutationFn: (eventId: string) => socialApi.participate(eventId),
+    onMutate: async (eventId: string) => {
+      await queryClient.cancelQueries({ queryKey: ['wished-events'] });
+      await queryClient.cancelQueries({ queryKey: ['participated-events'] });
+      const previousWished = queryClient.getQueriesData({ queryKey: ['wished-events'] });
+
+      // Retrait optimiste immédiat de la wishlist lors d'une participation
+      queryClient.setQueriesData({ queryKey: ['wished-events'] }, (old: unknown) => {
+        const typedOld = old as
+          { pages?: Array<{ totalCount?: number; events: Array<{ id: string }> }> } | undefined;
+        if (!typedOld?.pages) return old;
+        return {
+          ...typedOld,
+          pages: typedOld.pages.map((page) => ({
+            ...page,
+            totalCount: Math.max(0, (page.totalCount ?? 1) - 1),
+            events: page.events.filter((e) => e.id !== eventId),
+          })),
+        };
+      });
+
+      return { previousWished };
+    },
+    onError: (_err, _eventId, context) => {
+      if (context?.previousWished) {
+        context.previousWished.forEach(([key, val]) => {
+          queryClient.setQueryData(key, val);
+        });
+      }
+    },
     onSuccess: () => {
       void queryClient.invalidateQueries({ queryKey: PARTICIPATIONS_QUERY_KEY });
       void queryClient.invalidateQueries({ queryKey: ['participated-events'] });
+      void queryClient.invalidateQueries({ queryKey: ['wished-events'] });
       void queryClient.invalidateQueries({ queryKey: ['events'] });
     },
   });
@@ -42,6 +72,34 @@ export const useUserSocialActions = () => {
 
   const unwishMutation = useMutation({
     mutationFn: (eventId: string) => socialApi.unwishEvent(eventId),
+    onMutate: async (eventId: string) => {
+      await queryClient.cancelQueries({ queryKey: ['wished-events'] });
+      const previousWished = queryClient.getQueriesData({ queryKey: ['wished-events'] });
+
+      // Retrait optimiste immédiat de la wishlist pour temps réel
+      queryClient.setQueriesData({ queryKey: ['wished-events'] }, (old: unknown) => {
+        const typedOld = old as
+          { pages?: Array<{ totalCount?: number; events: Array<{ id: string }> }> } | undefined;
+        if (!typedOld?.pages) return old;
+        return {
+          ...typedOld,
+          pages: typedOld.pages.map((page) => ({
+            ...page,
+            totalCount: Math.max(0, (page.totalCount ?? 1) - 1),
+            events: page.events.filter((e) => e.id !== eventId),
+          })),
+        };
+      });
+
+      return { previousWished };
+    },
+    onError: (_err, _eventId, context) => {
+      if (context?.previousWished) {
+        context.previousWished.forEach(([key, val]) => {
+          queryClient.setQueryData(key, val);
+        });
+      }
+    },
     onSuccess: () => {
       void queryClient.invalidateQueries({ queryKey: WISHES_QUERY_KEY });
       void queryClient.invalidateQueries({ queryKey: ['wished-events'] });

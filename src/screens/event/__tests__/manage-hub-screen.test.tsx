@@ -39,6 +39,15 @@ jest.mock('@/components/ui/AppCalendar', () => {
   };
 });
 
+jest.mock('@/api/social/hooks/use-user-social-actions', () => ({
+  useUserSocialActions: () => ({
+    unwish: jest.fn(),
+    participate: jest.fn(),
+    isUnwishing: false,
+    isParticipating: false,
+  }),
+}));
+
 describe('ManageHubScreen', () => {
   beforeEach(() => {
     jest.clearAllMocks();
@@ -253,5 +262,33 @@ describe('ManageHubScreen', () => {
 
     expect(getByText('Activité en cours ou à venir')).toBeTruthy();
     expect(queryByText('Événement Annulé Fantôme')).toBeNull();
+  });
+
+  it('allows toggling between Demo A and Demo B on Wishlist tab with items', () => {
+    const wishedEvent = {
+      id: 'wish-1',
+      title: 'Mission Wishlist Démo',
+      state: EventState.EVENT_STATE_PUBLISHED,
+      startAt: new Date(Date.now() + 86400000).toISOString(),
+      endAt: new Date(Date.now() + 90000000).toISOString(),
+      type: 1,
+      localisationName: 'Bordeaux',
+    } as AppEvent;
+
+    setupMocks([], [wishedEvent], []);
+
+    const { getByText } = render(<ManageHubScreen />);
+
+    // Basculer sur l'onglet Wishlist
+    fireEvent.press(getByText('Wishlist'));
+
+    // Vérifier que Démo A est active par défaut
+    expect(getByText(/Démo A : Bouton \+ Astuce/)).toBeTruthy();
+    expect(getByText(/Glissez à droite pour participer/)).toBeTruthy();
+
+    // Basculer sur Démo B
+    fireEvent.press(getByText(/Démo B : Peek Animé/));
+    expect(getByText(/La 1ère carte montre le geste automatiquement/)).toBeTruthy();
+    expect(getByText('Rejouer')).toBeTruthy();
   });
 });
