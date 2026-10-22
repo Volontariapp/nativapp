@@ -6,11 +6,14 @@ import {
   Pressable,
   ActivityIndicator,
   RefreshControl,
+  ScrollView,
   type ListRenderItemInfo,
 } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import Feather from 'react-native-vector-icons/Feather';
+import { EventType, EventState } from '@volontariapp/contracts';
+import { normalizeEventState } from '@/shared/lib/event-mappers.utils';
 
 import AppHeader from '@/components/layout/AppHeader';
 import { AppText } from '@/components/typography/AppText';
@@ -31,6 +34,9 @@ import type { MainStackParamList } from '@/navigation/stacks/MainStack';
 import type { CreateEventStackParamList } from '@/navigation/stacks/CreateEventStack';
 
 type ManageTabType = 'participated' | 'wished' | 'created';
+type EventTypeFilter = 'all' | 'social' | 'ecology';
+type SortOrder = 'recent' | 'next';
+type ParticipatedScope = 'all' | 'live' | 'upcoming';
 
 export function ManageHubScreen(): React.JSX.Element {
   const { theme } = useAppTheme();
@@ -38,6 +44,9 @@ export function ManageHubScreen(): React.JSX.Element {
   const tabBarInset = useTabBarContentInset();
 
   const [activeTab, setActiveTab] = useState<ManageTabType>('participated');
+  const [typeFilter, setTypeFilter] = useState<EventTypeFilter>('all');
+  const [sortOrder, setSortOrder] = useState<SortOrder>('recent');
+  const [participatedScope, setParticipatedScope] = useState<ParticipatedScope>('all');
   const [selectedCalendarDate, setSelectedCalendarDate] = useState<string | undefined>(undefined);
 
   const rootNavigation = useNavigation<NativeStackNavigationProp<MainStackParamList>>();
@@ -94,6 +103,103 @@ export function ManageHubScreen(): React.JSX.Element {
   const participatedCount = participatedData?.pages[0]?.totalCount ?? participatedEvents.length;
   const wishedCount = wishedData?.pages[0]?.totalCount ?? wishedEvents.length;
   const myEventsCount = myEventsData?.pages[0]?.totalCount ?? myEvents.length;
+
+  // Compteurs spécifiques aux événements en direct vs à venir
+  const liveCount = useMemo(() => {
+    const now = Date.now();
+    return participatedEvents.filter((event) => {
+      const start = new Date(event.startAt).getTime();
+      const end = new Date(event.endAt).getTime();
+      const isLiveByTime = now >= start && now <= end;
+      const isLiveByState = normalizeEventState(event.state) === EventState.EVENT_STATE_IN_PROGRESS;
+      return isLiveByTime || isLiveByState;
+    }).length;
+  }, [participatedEvents]);
+
+  const upcomingCount = useMemo(() => {
+    const now = Date.now();
+    return participatedEvents.filter((event) => {
+      const start = new Date(event.startAt).getTime();
+      const isUpcomingByTime = now < start;
+      const state = normalizeEventState(event.state);
+      return (
+        isUpcomingByTime &&
+        state !== EventState.EVENT_STATE_FINISHED &&
+        state !== EventState.EVENT_STATE_CANCELLED
+      );
+    }).length;
+  }, [participatedEvents]);
+
+  // Filtrage et tri des événements
+  const filteredEvents = useMemo(() => {
+    let list =
+      activeTab === 'participated'
+        ? participatedEvents
+        : activeTab === 'wished'
+          ? wishedEvents
+          : myEvents;
+
+    // 1. Distinction "En direct" vs "À venir" (spécifique à l'onglet En cours)
+    if (activeTab === 'participated') {
+      const now = Date.now();
+      if (participatedScope === 'live') {
+        list = list.filter((event) => {
+          const start = new Date(event.startAt).getTime();
+          const end = new Date(event.endAt).getTime();
+          const isLiveByTime = now >= start && now <= end;
+          const isLiveByState =
+            normalizeEventState(event.state) === EventState.EVENT_STATE_IN_PROGRESS;
+          return isLiveByTime || isLiveByState;
+        });
+      } else if (participatedScope === 'upcoming') {
+        list = list.filter((event) => {
+          const start = new Date(event.startAt).getTime();
+          const isUpcomingByTime = now < start;
+          const state = normalizeEventState(event.state);
+          return (
+            isUpcomingByTime &&
+            state !== EventState.EVENT_STATE_FINISHED &&
+            state !== EventState.EVENT_STATE_CANCELLED
+          );
+        });
+      }
+    }
+
+    // 2. Filtre Type (Tous / Social / Écologie)
+    if (typeFilter === 'social') {
+      list = list.filter(
+        (event) =>
+          event.type === EventType.EVENT_TYPE_SOCIAL ||
+          String(event.type) === EventType[EventType.EVENT_TYPE_SOCIAL],
+      );
+    } else if (typeFilter === 'ecology') {
+      list = list.filter(
+        (event) =>
+          event.type === EventType.EVENT_TYPE_ECOLOGY ||
+          String(event.type) === EventType[EventType.EVENT_TYPE_ECOLOGY],
+      );
+    }
+
+    // 3. Tri : Plus récent (par défaut) vs Prochain événement (ordre croissant)
+    const sorted = [...list].sort((a, b) => {
+      const timeA = new Date(a.startAt).getTime();
+      const timeB = new Date(b.startAt).getTime();
+      if (sortOrder === 'next') {
+        return timeA - timeB;
+      }
+      return timeB - timeA;
+    });
+
+    return sorted;
+  }, [
+    activeTab,
+    participatedEvents,
+    wishedEvents,
+    myEvents,
+    participatedScope,
+    typeFilter,
+    sortOrder,
+  ]);
 
   // Calcul des dates marquées pour le calendrier
   const markedDates = useMemo(() => {
@@ -244,7 +350,7 @@ export function ManageHubScreen(): React.JSX.Element {
       return (
         <View style={styles.emptyContainer}>
           <View style={styles.emptyBadgeHeader}>
-            <Feather name="calendar" size={20} color={theme.colors.primaryEco} />
+            <Feather name="calendar" size={18} color={theme.colors.primaryEco} />
             <AppText style={styles.emptyBadgeTitle}>Mon Calendrier</AppText>
           </View>
 
@@ -319,13 +425,6 @@ export function ManageHubScreen(): React.JSX.Element {
       </View>
     );
   };
-
-  const currentEvents =
-    activeTab === 'participated'
-      ? participatedEvents
-      : activeTab === 'wished'
-        ? wishedEvents
-        : myEvents;
 
   const currentIsLoading =
     activeTab === 'participated'
@@ -463,16 +562,192 @@ export function ManageHubScreen(): React.JSX.Element {
             </View>
           </Pressable>
         </View>
+
+        {/* Sous-filtres spécifiques à "En cours" (En direct vs À venir) */}
+        {activeTab === 'participated' && (
+          <View style={styles.subFilterRow}>
+            <Pressable
+              style={[
+                styles.subFilterChip,
+                participatedScope === 'all' && styles.subFilterChipActive,
+              ]}
+              onPress={() => {
+                setParticipatedScope('all');
+              }}
+            >
+              <AppText
+                style={[
+                  styles.subFilterText,
+                  participatedScope === 'all' && styles.subFilterTextActive,
+                ]}
+              >
+                Toutes ({String(participatedCount)})
+              </AppText>
+            </Pressable>
+
+            <Pressable
+              style={[
+                styles.subFilterChip,
+                participatedScope === 'live' && styles.subFilterChipLiveActive,
+              ]}
+              onPress={() => {
+                setParticipatedScope('live');
+              }}
+            >
+              <View
+                style={[styles.liveDot, participatedScope === 'live' && styles.liveDotActive]}
+              />
+              <AppText
+                style={[
+                  styles.subFilterText,
+                  participatedScope === 'live' && styles.subFilterTextActive,
+                ]}
+              >
+                En direct ({String(liveCount)})
+              </AppText>
+            </Pressable>
+
+            <Pressable
+              style={[
+                styles.subFilterChip,
+                participatedScope === 'upcoming' && styles.subFilterChipActive,
+              ]}
+              onPress={() => {
+                setParticipatedScope('upcoming');
+              }}
+            >
+              <Feather
+                name="clock"
+                size={12}
+                color={participatedScope === 'upcoming' ? theme.colors.white : theme.colors.grey}
+              />
+              <AppText
+                style={[
+                  styles.subFilterText,
+                  participatedScope === 'upcoming' && styles.subFilterTextActive,
+                ]}
+              >
+                À venir ({String(upcomingCount)})
+              </AppText>
+            </Pressable>
+          </View>
+        )}
+
+        {/* Barre de filtres génériques (Type & Tri) */}
+        <ScrollView
+          horizontal
+          showsHorizontalScrollIndicator={false}
+          contentContainerStyle={styles.filterScrollContainer}
+          style={styles.filterScrollView}
+        >
+          {/* Filtre Type : Tous */}
+          <Pressable
+            style={[styles.filterPill, typeFilter === 'all' && styles.filterPillActive]}
+            onPress={() => {
+              setTypeFilter('all');
+            }}
+          >
+            <AppText
+              style={[styles.filterPillText, typeFilter === 'all' && styles.filterPillTextActive]}
+            >
+              Tous
+            </AppText>
+          </Pressable>
+
+          {/* Filtre Type : Écologie */}
+          <Pressable
+            style={[styles.filterPill, typeFilter === 'ecology' && styles.filterPillEcoActive]}
+            onPress={() => {
+              setTypeFilter(typeFilter === 'ecology' ? 'all' : 'ecology');
+            }}
+          >
+            <Feather
+              name="feather"
+              size={12}
+              color={typeFilter === 'ecology' ? theme.colors.white : theme.colors.primaryEco}
+            />
+            <AppText
+              style={[
+                styles.filterPillText,
+                typeFilter === 'ecology' && styles.filterPillTextActive,
+              ]}
+            >
+              Écologie
+            </AppText>
+          </Pressable>
+
+          {/* Filtre Type : Social */}
+          <Pressable
+            style={[styles.filterPill, typeFilter === 'social' && styles.filterPillSocioActive]}
+            onPress={() => {
+              setTypeFilter(typeFilter === 'social' ? 'all' : 'social');
+            }}
+          >
+            <Feather
+              name="users"
+              size={12}
+              color={typeFilter === 'social' ? theme.colors.white : theme.colors.primarySocio}
+            />
+            <AppText
+              style={[
+                styles.filterPillText,
+                typeFilter === 'social' && styles.filterPillTextActive,
+              ]}
+            >
+              Social
+            </AppText>
+          </Pressable>
+
+          <View style={styles.filterDivider} />
+
+          {/* Tri : Plus récents (Défaut) */}
+          <Pressable
+            style={[styles.filterPill, sortOrder === 'recent' && styles.filterPillSortActive]}
+            onPress={() => {
+              setSortOrder('recent');
+            }}
+          >
+            <Feather
+              name="calendar"
+              size={12}
+              color={sortOrder === 'recent' ? theme.colors.white : theme.colors.grey}
+            />
+            <AppText
+              style={[styles.filterPillText, sortOrder === 'recent' && styles.filterPillTextActive]}
+            >
+              Plus récents
+            </AppText>
+          </Pressable>
+
+          {/* Tri : Prochains (Ordre croissant) */}
+          <Pressable
+            style={[styles.filterPill, sortOrder === 'next' && styles.filterPillSortActive]}
+            onPress={() => {
+              setSortOrder('next');
+            }}
+          >
+            <Feather
+              name="arrow-up-right"
+              size={12}
+              color={sortOrder === 'next' ? theme.colors.white : theme.colors.grey}
+            />
+            <AppText
+              style={[styles.filterPillText, sortOrder === 'next' && styles.filterPillTextActive]}
+            >
+              Prochains
+            </AppText>
+          </Pressable>
+        </ScrollView>
       </View>
 
       {/* Contenu de la liste avec pull-to-refresh et pagination */}
-      {currentIsLoading && currentEvents.length === 0 ? (
+      {currentIsLoading && filteredEvents.length === 0 ? (
         <View style={styles.loaderContainer}>
           <ActivityIndicator size="large" color={theme.colors.primaryEco} />
         </View>
       ) : (
         <FlatList
-          data={currentEvents}
+          data={filteredEvents}
           keyExtractor={keyExtractor}
           renderItem={renderItem}
           contentContainerStyle={[styles.listContent, tabBarInset]}
@@ -510,13 +785,13 @@ const createStyles = (theme: AppTheme) =>
     headerSection: {
       paddingHorizontal: 16,
       paddingTop: 8,
-      paddingBottom: 12,
+      paddingBottom: 8,
     },
     headerRow: {
       flexDirection: 'row',
       alignItems: 'center',
       justifyContent: 'space-between',
-      marginBottom: 14,
+      marginBottom: 12,
     },
     pageTitle: {
       fontSize: 22,
@@ -535,6 +810,7 @@ const createStyles = (theme: AppTheme) =>
       padding: 4,
       backgroundColor:
         theme.colors.text === '#000' ? 'rgba(0, 0, 0, 0.05)' : 'rgba(255, 255, 255, 0.08)',
+      marginBottom: 10,
     },
     tabButton: {
       flex: 1,
@@ -579,6 +855,108 @@ const createStyles = (theme: AppTheme) =>
     },
     countBadgeTextActive: {
       color: theme.colors.white,
+    },
+    subFilterRow: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: 8,
+      marginBottom: 10,
+    },
+    subFilterChip: {
+      flex: 1,
+      flexDirection: 'row',
+      alignItems: 'center',
+      justifyContent: 'center',
+      gap: 5,
+      paddingVertical: 7,
+      paddingHorizontal: 8,
+      borderRadius: 10,
+      backgroundColor:
+        theme.colors.text === '#000' ? 'rgba(0, 0, 0, 0.04)' : 'rgba(255, 255, 255, 0.06)',
+      borderWidth: 1,
+      borderColor:
+        theme.colors.text === '#000' ? 'rgba(0, 0, 0, 0.06)' : 'rgba(255, 255, 255, 0.08)',
+    },
+    subFilterChipActive: {
+      backgroundColor: theme.colors.primaryEco,
+      borderColor: theme.colors.primaryEco,
+    },
+    subFilterChipLiveActive: {
+      backgroundColor: theme.colors.danger,
+      borderColor: theme.colors.danger,
+    },
+    subFilterText: {
+      fontSize: 12,
+      fontWeight: '600',
+      color: theme.colors.grey,
+    },
+    subFilterTextActive: {
+      color: theme.colors.white,
+      fontWeight: '700',
+    },
+    liveDot: {
+      width: 7,
+      height: 7,
+      borderRadius: 4,
+      backgroundColor: theme.colors.danger,
+    },
+    liveDotActive: {
+      backgroundColor: theme.colors.white,
+    },
+    filterScrollView: {
+      marginBottom: 4,
+    },
+    filterScrollContainer: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: 8,
+      paddingVertical: 4,
+    },
+    filterPill: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: 5,
+      paddingVertical: 6,
+      paddingHorizontal: 12,
+      borderRadius: 14,
+      backgroundColor:
+        theme.colors.text === '#000' ? 'rgba(0, 0, 0, 0.04)' : 'rgba(255, 255, 255, 0.06)',
+      borderWidth: 1,
+      borderColor:
+        theme.colors.text === '#000' ? 'rgba(0, 0, 0, 0.06)' : 'rgba(255, 255, 255, 0.08)',
+    },
+    filterPillActive: {
+      backgroundColor:
+        theme.colors.text === '#000' ? 'rgba(0, 0, 0, 0.12)' : 'rgba(255, 255, 255, 0.18)',
+      borderColor: theme.colors.text,
+    },
+    filterPillEcoActive: {
+      backgroundColor: theme.colors.primaryEco,
+      borderColor: theme.colors.primaryEco,
+    },
+    filterPillSocioActive: {
+      backgroundColor: theme.colors.primarySocio,
+      borderColor: theme.colors.primarySocio,
+    },
+    filterPillSortActive: {
+      backgroundColor: theme.colors.primaryEco,
+      borderColor: theme.colors.primaryEco,
+    },
+    filterPillText: {
+      fontSize: 12,
+      fontWeight: '600',
+      color: theme.colors.grey,
+    },
+    filterPillTextActive: {
+      color: theme.colors.white,
+      fontWeight: '700',
+    },
+    filterDivider: {
+      width: 1,
+      height: 18,
+      backgroundColor:
+        theme.colors.text === '#000' ? 'rgba(0, 0, 0, 0.15)' : 'rgba(255, 255, 255, 0.2)',
+      marginHorizontal: 4,
     },
     listContent: {
       paddingHorizontal: 16,
@@ -651,7 +1029,7 @@ const createStyles = (theme: AppTheme) =>
     },
     calendarCard: {
       width: '100%',
-      borderRadius: 20,
+      borderRadius: 18,
       overflow: 'hidden',
       marginBottom: 20,
       borderWidth: 1,
@@ -662,7 +1040,7 @@ const createStyles = (theme: AppTheme) =>
       elevation: 4,
     },
     calendarStyle: {
-      borderRadius: 20,
+      borderRadius: 18,
     },
     emptyButton: {
       minWidth: 220,

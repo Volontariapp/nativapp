@@ -110,6 +110,28 @@ describe('ManageHubScreen', () => {
     expect(mockRootNavigate).toHaveBeenCalledWith('MainTabs', { screen: 'explorer' });
   });
 
+  it('renders the filters for categories and sorting', () => {
+    setupMocks([], [], []);
+
+    const { getByText } = render(<ManageHubScreen />);
+
+    expect(getByText('Tous')).toBeTruthy();
+    expect(getByText('Écologie')).toBeTruthy();
+    expect(getByText('Social')).toBeTruthy();
+    expect(getByText('Plus récents')).toBeTruthy();
+    expect(getByText('Prochains')).toBeTruthy();
+  });
+
+  it('renders the En cours presence sub-filters (Toutes, En direct, À venir)', () => {
+    setupMocks([], [], []);
+
+    const { getByText } = render(<ManageHubScreen />);
+
+    expect(getByText(/Toutes/)).toBeTruthy();
+    expect(getByText(/En direct/)).toBeTruthy();
+    expect(getByText(/À venir/)).toBeTruthy();
+  });
+
   it('switches to Wishlist tab and displays empty wishlist state', () => {
     setupMocks([], [], []);
 

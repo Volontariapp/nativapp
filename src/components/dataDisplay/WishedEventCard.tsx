@@ -83,20 +83,20 @@ export function WishedEventCard({ event }: EventCardProps): React.JSX.Element {
           </AppText>
         </View>
 
-        <AppText style={styles.title} numberOfLines={1}>
+        <AppText style={styles.title} numberOfLines={1} ellipsizeMode="tail">
           {event.title}
         </AppText>
 
         <View style={styles.detailRow}>
           <Feather name="map-pin" size={14} color={theme.colors.grey} />
-          <AppText style={styles.detailText} numberOfLines={1}>
+          <AppText style={styles.detailText} numberOfLines={1} ellipsizeMode="tail">
             {event.localisationName}
           </AppText>
         </View>
 
         <View style={styles.detailRow}>
           <Feather name="calendar" size={14} color={theme.colors.grey} />
-          <AppText style={styles.detailText}>
+          <AppText style={styles.detailText} numberOfLines={1} ellipsizeMode="tail">
             {formattedDate} - {formattedTime}
           </AppText>
         </View>
@@ -104,8 +104,9 @@ export function WishedEventCard({ event }: EventCardProps): React.JSX.Element {
       <View style={styles.trash}>
         <AppIconsButton
           icon="x"
-          size={42}
+          size={36}
           variant="danger"
+          accessibilityLabel={`Retirer ${event.title} de la wishlist`}
           onPress={() => {
             void unwish(event.id);
           }}
@@ -124,7 +125,7 @@ const createStyles = (theme: AppTheme) =>
       flexDirection: 'row',
       alignItems: 'center',
       ...theme.shadows.card,
-      borderRadius: 40,
+      borderRadius: 18,
     },
     imageContainer: {
       width: LIST_THUMBNAIL_SIZE,
@@ -142,6 +143,7 @@ const createStyles = (theme: AppTheme) =>
     },
     content: {
       flex: 1,
+      justifyContent: 'center',
     },
     tag: {
       alignSelf: 'flex-start',
@@ -159,7 +161,6 @@ const createStyles = (theme: AppTheme) =>
       fontWeight: 'bold',
       color: theme.colors.text,
       marginBottom: 4,
-      // Add underline if desired, but image doesn't strictly require it
     },
     detailRow: {
       flexDirection: 'row',
@@ -173,9 +174,7 @@ const createStyles = (theme: AppTheme) =>
       flex: 1,
     },
     trash: {
-      position: 'absolute',
-      right: 10,
-      padding: 5,
+      marginLeft: theme.spacing.sm,
       alignItems: 'center',
       justifyContent: 'center',
     },
