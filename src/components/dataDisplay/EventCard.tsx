@@ -9,6 +9,7 @@ import type { AppEvent } from '@/api/event/event.api';
 import { mapEventType } from '@/shared/lib/event-mappers.utils';
 import { EventType } from '@volontariapp/contracts';
 import Feather from 'react-native-vector-icons/Feather';
+import Ionicons from 'react-native-vector-icons/Ionicons';
 import { Image } from 'expo-image';
 import { getEventImageUri } from '@/api/event/event-cover.utils';
 import { LIST_THUMBNAIL_RADIUS, LIST_THUMBNAIL_SIZE } from '@/components/event/event-image-frames';
@@ -121,7 +122,7 @@ export function EventCard({ event, onPress, onEdit }: EventCardProps): React.JSX
           hitSlop={8}
           onPress={onEdit}
         >
-          <Feather name="edit-2" size={16} color={theme.colors.primaryEco} />
+          <Ionicons name="brush" size={17} color={theme.colors.primaryEco} />
         </Pressable>
       )}
     </TouchableOpacity>
@@ -136,7 +137,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     ...theme.shadows.card,
-    borderRadius: 40,
+    borderRadius: 18,
   },
   imageContainer: {
     width: LIST_THUMBNAIL_SIZE,

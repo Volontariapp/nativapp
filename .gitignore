@@ -38,3 +38,6 @@ expo-env.d.ts
 .fallow/
 graphify-out/
 package-lock.json
+
+# Jest coverage (lue par fallow via .fallowrc.json)
+coverage/
