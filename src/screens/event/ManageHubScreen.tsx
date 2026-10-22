@@ -107,8 +107,6 @@ export function ManageHubScreen(): React.JSX.Element {
   const [typeFilter, setTypeFilter] = useState<EventTypeFilter>('all');
   const [participatedScope, setParticipatedScope] = useState<ParticipatedScope>('all');
   const [selectedCalendarDate, setSelectedCalendarDate] = useState<string | undefined>(undefined);
-  const [wishlistDemoVariant, setWishlistDemoVariant] = useState<'A' | 'B'>('A');
-  const [peekTrigger, setPeekTrigger] = useState(0);
 
   const rootNavigation = useNavigation<NativeStackNavigationProp<MainStackParamList>>();
   const stackNavigation = useNavigation<NativeStackNavigationProp<CreateEventStackParamList>>();
@@ -332,7 +330,7 @@ export function ManageHubScreen(): React.JSX.Element {
 
   // Rendu des cartes selon l'onglet actif
   const renderItem = useCallback(
-    ({ item, index }: ListRenderItemInfo<AppEvent>) => {
+    ({ item }: ListRenderItemInfo<AppEvent>) => {
       if (activeTab === 'participated') {
         return (
           <View style={styles.cardItemWrapper}>
@@ -346,16 +344,7 @@ export function ManageHubScreen(): React.JSX.Element {
         );
       }
       if (activeTab === 'wished') {
-        return (
-          <View style={styles.cardItemWrapper}>
-            <WishedEventCard
-              event={item}
-              variant={wishlistDemoVariant}
-              isFirstItem={index === 0}
-              peekTrigger={peekTrigger}
-            />
-          </View>
-        );
+        return <WishedEventCard event={item} variant="A" />;
       }
       return (
         <View style={styles.cardItemWrapper}>
@@ -371,14 +360,7 @@ export function ManageHubScreen(): React.JSX.Element {
         </View>
       );
     },
-    [
-      activeTab,
-      handleEventPress,
-      handleEventEdit,
-      styles.cardItemWrapper,
-      wishlistDemoVariant,
-      peekTrigger,
-    ],
+    [activeTab, handleEventPress, handleEventEdit, styles.cardItemWrapper],
   );
 
   const keyExtractor = useCallback((item: AppEvent) => item.id, []);
@@ -487,7 +469,7 @@ export function ManageHubScreen(): React.JSX.Element {
     );
   };
 
-  const currentIsLoading =
+  const currentIsInitialLoading =
     activeTab === 'participated'
       ? isParticipatedLoading
       : activeTab === 'wished'
@@ -761,96 +743,21 @@ export function ManageHubScreen(): React.JSX.Element {
         </ScrollView>
       </View>
 
-      {/* Switcher de démonstration Wishlist (Démo A vs Démo B) */}
-      {activeTab === 'wished' && (
-        <View style={styles.demoSwitcherCard}>
-          <View style={styles.demoSegmentedRow}>
-            <Pressable
-              style={[
-                styles.demoTabButton,
-                wishlistDemoVariant === 'A' && styles.demoTabButtonActive,
-              ]}
-              onPress={() => {
-                setWishlistDemoVariant('A');
-              }}
-              accessibilityRole="button"
-              accessibilityLabel="Activer Démo A"
-            >
-              <Feather
-                name="sliders"
-                size={12}
-                color={wishlistDemoVariant === 'A' ? theme.colors.white : theme.colors.grey}
-              />
-              <AppText
-                style={[
-                  styles.demoTabText,
-                  wishlistDemoVariant === 'A' && styles.demoTabTextActive,
-                ]}
-              >
-                Démo A : Bouton + Astuce
-              </AppText>
-            </Pressable>
-
-            <Pressable
-              style={[
-                styles.demoTabButton,
-                wishlistDemoVariant === 'B' && styles.demoTabButtonActive,
-              ]}
-              onPress={() => {
-                setWishlistDemoVariant('B');
-                setPeekTrigger((t) => t + 1);
-              }}
-              accessibilityRole="button"
-              accessibilityLabel="Activer Démo B"
-            >
-              <Feather
-                name="play-circle"
-                size={12}
-                color={wishlistDemoVariant === 'B' ? theme.colors.white : theme.colors.grey}
-              />
-              <AppText
-                style={[
-                  styles.demoTabText,
-                  wishlistDemoVariant === 'B' && styles.demoTabTextActive,
-                ]}
-              >
-                Démo B : Peek Animé
-              </AppText>
-            </Pressable>
+      {/* Astuce d'interaction Wishlist (Démo A validée) */}
+      {activeTab === 'wished' && wishedEvents.length > 0 && (
+        <View style={styles.wishlistHintContainer}>
+          <View style={styles.wishlistHintBanner}>
+            <Feather name="info" size={13} color={theme.colors.primaryEco} />
+            <AppText style={styles.wishlistHintText}>
+              Glissez à droite pour participer, à gauche pour retirer (ou utilisez les boutons
+              directs).
+            </AppText>
           </View>
-
-          {wishlistDemoVariant === 'A' ? (
-            <View style={styles.demoAHintBanner}>
-              <Feather name="info" size={13} color={theme.colors.primaryEco} />
-              <AppText style={styles.demoAHintText}>
-                Glissez à droite pour participer, à gauche pour retirer (ou utilisez les boutons
-                directs).
-              </AppText>
-            </View>
-          ) : (
-            <View style={styles.demoBHintBanner}>
-              <Feather name="zap" size={13} color={theme.colors.primarySocio} />
-              <AppText style={styles.demoBHintText}>
-                La 1ère carte montre le geste automatiquement.
-              </AppText>
-              <Pressable
-                style={styles.replayButton}
-                onPress={() => {
-                  setPeekTrigger((t) => t + 1);
-                }}
-                accessibilityRole="button"
-                accessibilityLabel="Rejouer l'animation de peek"
-              >
-                <Feather name="rotate-cw" size={11} color={theme.colors.primarySocio} />
-                <AppText style={styles.replayButtonText}>Rejouer</AppText>
-              </Pressable>
-            </View>
-          )}
         </View>
       )}
 
       {/* Contenu de la liste avec pull-to-refresh et pagination */}
-      {currentIsLoading && filteredEvents.length === 0 ? (
+      {currentIsInitialLoading ? (
         <View style={styles.loaderContainer}>
           <ActivityIndicator size="large" color={theme.colors.primaryEco} />
         </View>
@@ -1143,85 +1050,24 @@ const createStyles = (theme: AppTheme) =>
     emptyButton: {
       minWidth: 220,
     },
-    demoSwitcherCard: {
+    wishlistHintContainer: {
       paddingHorizontal: 16,
       marginBottom: 10,
     },
-    demoSegmentedRow: {
-      flexDirection: 'row',
-      backgroundColor: theme.colors.text === '#000' ? 'rgba(0,0,0,0.05)' : 'rgba(255,255,255,0.08)',
-      borderRadius: 14,
-      padding: 3,
-      gap: 4,
-    },
-    demoTabButton: {
-      flex: 1,
-      flexDirection: 'row',
-      alignItems: 'center',
-      justifyContent: 'center',
-      gap: 6,
-      paddingVertical: 7,
-      borderRadius: 11,
-    },
-    demoTabButtonActive: {
-      backgroundColor: theme.colors.primaryEco,
-    },
-    demoTabText: {
-      fontSize: 12,
-      fontWeight: '600',
-      color: theme.colors.grey,
-    },
-    demoTabTextActive: {
-      color: theme.colors.white,
-      fontWeight: '700',
-    },
-    demoAHintBanner: {
+    wishlistHintBanner: {
       flexDirection: 'row',
       alignItems: 'center',
       gap: 6,
-      marginTop: 8,
-      paddingHorizontal: 10,
-      paddingVertical: 6,
+      paddingHorizontal: 12,
+      paddingVertical: 8,
       backgroundColor:
         theme.colors.text === '#000' ? 'rgba(47, 110, 62, 0.08)' : 'rgba(47, 110, 62, 0.18)',
-      borderRadius: 10,
+      borderRadius: 12,
     },
-    demoAHintText: {
+    wishlistHintText: {
       flex: 1,
-      fontSize: 11,
+      fontSize: 12,
       color: theme.colors.primaryEco,
-      fontWeight: '500',
-    },
-    demoBHintBanner: {
-      flexDirection: 'row',
-      alignItems: 'center',
-      gap: 6,
-      marginTop: 8,
-      paddingHorizontal: 10,
-      paddingVertical: 6,
-      backgroundColor:
-        theme.colors.text === '#000' ? 'rgba(31, 111, 139, 0.08)' : 'rgba(31, 111, 139, 0.18)',
-      borderRadius: 10,
-    },
-    demoBHintText: {
-      flex: 1,
-      fontSize: 11,
-      color: theme.colors.primarySocio,
-      fontWeight: '500',
-    },
-    replayButton: {
-      flexDirection: 'row',
-      alignItems: 'center',
-      gap: 4,
-      paddingVertical: 3,
-      paddingHorizontal: 8,
-      borderRadius: 8,
-      backgroundColor:
-        theme.colors.text === '#000' ? 'rgba(31, 111, 139, 0.12)' : 'rgba(31, 111, 139, 0.22)',
-    },
-    replayButtonText: {
-      fontSize: 11,
-      fontWeight: '700',
-      color: theme.colors.primarySocio,
+      fontWeight: '600',
     },
   });

@@ -48,7 +48,7 @@ export const useUserSocialActions = () => {
     onSuccess: () => {
       void queryClient.invalidateQueries({ queryKey: PARTICIPATIONS_QUERY_KEY });
       void queryClient.invalidateQueries({ queryKey: ['participated-events'] });
-      void queryClient.invalidateQueries({ queryKey: ['wished-events'] });
+      void queryClient.invalidateQueries({ queryKey: ['wished-events'], refetchType: 'none' });
       void queryClient.invalidateQueries({ queryKey: ['events'] });
     },
   });
@@ -102,7 +102,7 @@ export const useUserSocialActions = () => {
     },
     onSuccess: () => {
       void queryClient.invalidateQueries({ queryKey: WISHES_QUERY_KEY });
-      void queryClient.invalidateQueries({ queryKey: ['wished-events'] });
+      void queryClient.invalidateQueries({ queryKey: ['wished-events'], refetchType: 'none' });
     },
   });
 

@@ -264,7 +264,7 @@ describe('ManageHubScreen', () => {
     expect(queryByText('Événement Annulé Fantôme')).toBeNull();
   });
 
-  it('allows toggling between Demo A and Demo B on Wishlist tab with items', () => {
+  it('renders the validated Wishlist Demo A with interaction hint banner and action buttons', () => {
     const wishedEvent = {
       id: 'wish-1',
       title: 'Mission Wishlist Démo',
@@ -277,18 +277,14 @@ describe('ManageHubScreen', () => {
 
     setupMocks([], [wishedEvent], []);
 
-    const { getByText } = render(<ManageHubScreen />);
+    const { getByText, getAllByText } = render(<ManageHubScreen />);
 
     // Basculer sur l'onglet Wishlist
     fireEvent.press(getByText('Wishlist'));
 
-    // Vérifier que Démo A est active par défaut
-    expect(getByText(/Démo A : Bouton \+ Astuce/)).toBeTruthy();
-    expect(getByText(/Glissez à droite pour participer/)).toBeTruthy();
-
-    // Basculer sur Démo B
-    fireEvent.press(getByText(/Démo B : Peek Animé/));
-    expect(getByText(/La 1ère carte montre le geste automatiquement/)).toBeTruthy();
-    expect(getByText('Rejouer')).toBeTruthy();
+    // Vérifier que Démo A est active : bannière d'astuce + bouton Participer
+    expect(getByText(/Glissez à droite pour participer, à gauche pour retirer/)).toBeTruthy();
+    expect(getByText('Mission Wishlist Démo')).toBeTruthy();
+    expect(getAllByText('Participer').length).toBeGreaterThanOrEqual(1);
   });
 });
