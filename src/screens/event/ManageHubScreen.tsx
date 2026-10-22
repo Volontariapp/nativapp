@@ -35,8 +35,52 @@ import type { CreateEventStackParamList } from '@/navigation/stacks/CreateEventS
 
 type ManageTabType = 'participated' | 'wished' | 'created';
 type EventTypeFilter = 'all' | 'social' | 'ecology';
-type SortOrder = 'recent' | 'next';
 type ParticipatedScope = 'all' | 'live' | 'upcoming';
+
+/**
+ * Tri pour afficher toujours l'événement qui arrive le plus vite :
+ * 1. Événements en direct (en cours en ce moment) -> en tête
+ * 2. Événements à venir (startAt > now) -> triés par date de début croissante (le plus proche en premier)
+ * 3. Événements passés (endAt < now) -> placés à la fin, triés du plus récent au plus ancien
+ */
+export function sortEventsByEarliestUpcoming(a: AppEvent, b: AppEvent, now = Date.now()): number {
+  const startA = new Date(a.startAt).getTime();
+  const endA = new Date(a.endAt || a.startAt).getTime();
+  const startB = new Date(b.startAt).getTime();
+  const endB = new Date(b.endAt || b.startAt).getTime();
+
+  const isInvalidA = Number.isNaN(startA);
+  const isInvalidB = Number.isNaN(startB);
+  if (isInvalidA && isInvalidB) return 0;
+  if (isInvalidA) return 1;
+  if (isInvalidB) return -1;
+
+  const isLiveA =
+    (now >= startA && now <= endA) ||
+    normalizeEventState(a.state) === EventState.EVENT_STATE_IN_PROGRESS;
+  const isPastA =
+    !isLiveA && (endA < now || normalizeEventState(a.state) === EventState.EVENT_STATE_FINISHED);
+  const catA = isLiveA ? 0 : isPastA ? 2 : 1;
+
+  const isLiveB =
+    (now >= startB && now <= endB) ||
+    normalizeEventState(b.state) === EventState.EVENT_STATE_IN_PROGRESS;
+  const isPastB =
+    !isLiveB && (endB < now || normalizeEventState(b.state) === EventState.EVENT_STATE_FINISHED);
+  const catB = isLiveB ? 0 : isPastB ? 2 : 1;
+
+  if (catA !== catB) {
+    return catA - catB;
+  }
+
+  // Pour En direct ou À venir : celui qui arrive le plus vite en premier (startAt croissant)
+  if (catA === 0 || catA === 1) {
+    return startA - startB;
+  }
+
+  // Pour les événements passés : le plus récent en premier
+  return endB - endA;
+}
 
 export function ManageHubScreen(): React.JSX.Element {
   const { theme } = useAppTheme();
@@ -45,7 +89,6 @@ export function ManageHubScreen(): React.JSX.Element {
 
   const [activeTab, setActiveTab] = useState<ManageTabType>('participated');
   const [typeFilter, setTypeFilter] = useState<EventTypeFilter>('all');
-  const [sortOrder, setSortOrder] = useState<SortOrder>('recent');
   const [participatedScope, setParticipatedScope] = useState<ParticipatedScope>('all');
   const [selectedCalendarDate, setSelectedCalendarDate] = useState<string | undefined>(undefined);
 
@@ -180,26 +223,12 @@ export function ManageHubScreen(): React.JSX.Element {
       );
     }
 
-    // 3. Tri : Plus récent (par défaut) vs Prochain événement (ordre croissant)
-    const sorted = [...list].sort((a, b) => {
-      const timeA = new Date(a.startAt).getTime();
-      const timeB = new Date(b.startAt).getTime();
-      if (sortOrder === 'next') {
-        return timeA - timeB;
-      }
-      return timeB - timeA;
-    });
+    // 3. Tri : Toujours l'événement qui arrive le plus vite en premier
+    const now = Date.now();
+    const sorted = [...list].sort((a, b) => sortEventsByEarliestUpcoming(a, b, now));
 
     return sorted;
-  }, [
-    activeTab,
-    participatedEvents,
-    wishedEvents,
-    myEvents,
-    participatedScope,
-    typeFilter,
-    sortOrder,
-  ]);
+  }, [activeTab, participatedEvents, wishedEvents, myEvents, participatedScope, typeFilter]);
 
   // Calcul des dates marquées pour le calendrier
   const markedDates = useMemo(() => {
@@ -697,46 +726,6 @@ export function ManageHubScreen(): React.JSX.Element {
               Social
             </AppText>
           </Pressable>
-
-          <View style={styles.filterDivider} />
-
-          {/* Tri : Plus récents (Défaut) */}
-          <Pressable
-            style={[styles.filterPill, sortOrder === 'recent' && styles.filterPillSortActive]}
-            onPress={() => {
-              setSortOrder('recent');
-            }}
-          >
-            <Feather
-              name="calendar"
-              size={12}
-              color={sortOrder === 'recent' ? theme.colors.white : theme.colors.grey}
-            />
-            <AppText
-              style={[styles.filterPillText, sortOrder === 'recent' && styles.filterPillTextActive]}
-            >
-              Plus récents
-            </AppText>
-          </Pressable>
-
-          {/* Tri : Prochains (Ordre croissant) */}
-          <Pressable
-            style={[styles.filterPill, sortOrder === 'next' && styles.filterPillSortActive]}
-            onPress={() => {
-              setSortOrder('next');
-            }}
-          >
-            <Feather
-              name="arrow-up-right"
-              size={12}
-              color={sortOrder === 'next' ? theme.colors.white : theme.colors.grey}
-            />
-            <AppText
-              style={[styles.filterPillText, sortOrder === 'next' && styles.filterPillTextActive]}
-            >
-              Prochains
-            </AppText>
-          </Pressable>
         </ScrollView>
       </View>
 
@@ -938,10 +927,6 @@ const createStyles = (theme: AppTheme) =>
       backgroundColor: theme.colors.primarySocio,
       borderColor: theme.colors.primarySocio,
     },
-    filterPillSortActive: {
-      backgroundColor: theme.colors.primaryEco,
-      borderColor: theme.colors.primaryEco,
-    },
     filterPillText: {
       fontSize: 12,
       fontWeight: '600',
@@ -950,13 +935,6 @@ const createStyles = (theme: AppTheme) =>
     filterPillTextActive: {
       color: theme.colors.white,
       fontWeight: '700',
-    },
-    filterDivider: {
-      width: 1,
-      height: 18,
-      backgroundColor:
-        theme.colors.text === '#000' ? 'rgba(0, 0, 0, 0.15)' : 'rgba(255, 255, 255, 0.2)',
-      marginHorizontal: 4,
     },
     listContent: {
       paddingHorizontal: 16,

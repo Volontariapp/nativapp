@@ -1,6 +1,6 @@
 import React from 'react';
 import { render, fireEvent } from '@testing-library/react-native';
-import { ManageHubScreen } from '../ManageHubScreen';
+import { ManageHubScreen, sortEventsByEarliestUpcoming } from '../ManageHubScreen';
 import * as getParticipatedHook from '@/api/event/hooks/use-get-participated-events';
 import * as getWishedHook from '@/api/event/hooks/use-get-wished-events';
 import * as getMyEventsHook from '@/api/event/hooks/use-get-my-events';
@@ -110,16 +110,16 @@ describe('ManageHubScreen', () => {
     expect(mockRootNavigate).toHaveBeenCalledWith('MainTabs', { screen: 'explorer' });
   });
 
-  it('renders the filters for categories and sorting', () => {
+  it('renders category filters and removes the plus recent sort toggle', () => {
     setupMocks([], [], []);
 
-    const { getByText } = render(<ManageHubScreen />);
+    const { getByText, queryByText } = render(<ManageHubScreen />);
 
     expect(getByText('Tous')).toBeTruthy();
     expect(getByText('Écologie')).toBeTruthy();
     expect(getByText('Social')).toBeTruthy();
-    expect(getByText('Plus récents')).toBeTruthy();
-    expect(getByText('Prochains')).toBeTruthy();
+    expect(queryByText('Plus récents')).toBeNull();
+    expect(queryByText('Prochains')).toBeNull();
   });
 
   it('renders the En cours presence sub-filters (Toutes, En direct, À venir)', () => {
@@ -152,5 +152,42 @@ describe('ManageHubScreen', () => {
 
     expect(getByText('Aucun événement créé')).toBeTruthy();
     expect(getByText('Créer un événement')).toBeTruthy();
+  });
+
+  it('sorts events with the earliest upcoming event first (live -> soonest -> distant -> past)', () => {
+    const now = new Date('2026-10-22T12:00:00Z').getTime();
+
+    const liveEvent = {
+      id: 'live',
+      title: 'Live Event',
+      startAt: '2026-10-22T11:00:00Z',
+      endAt: '2026-10-22T13:00:00Z',
+    } as AppEvent;
+
+    const soonEvent = {
+      id: 'soon',
+      title: 'Soon Event',
+      startAt: '2026-10-22T15:00:00Z',
+      endAt: '2026-10-22T17:00:00Z',
+    } as AppEvent;
+
+    const nextWeekEvent = {
+      id: 'nextWeek',
+      title: 'Next Week Event',
+      startAt: '2026-10-29T10:00:00Z',
+      endAt: '2026-10-29T12:00:00Z',
+    } as AppEvent;
+
+    const pastEvent = {
+      id: 'past',
+      title: 'Past Event',
+      startAt: '2026-10-21T10:00:00Z',
+      endAt: '2026-10-21T12:00:00Z',
+    } as AppEvent;
+
+    const unordered = [pastEvent, nextWeekEvent, liveEvent, soonEvent];
+    const sorted = [...unordered].sort((a, b) => sortEventsByEarliestUpcoming(a, b, now));
+
+    expect(sorted.map((e) => e.id)).toEqual(['live', 'soon', 'nextWeek', 'past']);
   });
 });
