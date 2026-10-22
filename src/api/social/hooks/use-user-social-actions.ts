@@ -46,19 +46,31 @@ export const useUserSocialActions = () => {
       }
     },
     onSuccess: () => {
-      void queryClient.invalidateQueries({ queryKey: PARTICIPATIONS_QUERY_KEY });
-      void queryClient.invalidateQueries({ queryKey: ['participated-events'] });
+      void queryClient.invalidateQueries({
+        queryKey: PARTICIPATIONS_QUERY_KEY,
+        refetchType: 'none',
+      });
+      void queryClient.invalidateQueries({
+        queryKey: ['participated-events'],
+        refetchType: 'none',
+      });
       void queryClient.invalidateQueries({ queryKey: ['wished-events'], refetchType: 'none' });
-      void queryClient.invalidateQueries({ queryKey: ['events'] });
+      void queryClient.invalidateQueries({ queryKey: ['events'], refetchType: 'none' });
     },
   });
 
   const unparticipateMutation = useMutation({
     mutationFn: (eventId: string) => socialApi.unparticipate(eventId),
     onSuccess: () => {
-      void queryClient.invalidateQueries({ queryKey: PARTICIPATIONS_QUERY_KEY });
-      void queryClient.invalidateQueries({ queryKey: ['participated-events'] });
-      void queryClient.invalidateQueries({ queryKey: ['events'] });
+      void queryClient.invalidateQueries({
+        queryKey: PARTICIPATIONS_QUERY_KEY,
+        refetchType: 'none',
+      });
+      void queryClient.invalidateQueries({
+        queryKey: ['participated-events'],
+        refetchType: 'none',
+      });
+      void queryClient.invalidateQueries({ queryKey: ['events'], refetchType: 'none' });
     },
   });
 

@@ -1,11 +1,5 @@
 import React, { useCallback } from 'react';
-import {
-  View,
-  StyleSheet,
-  TouchableOpacity,
-  Pressable,
-  type LayoutChangeEvent,
-} from 'react-native';
+import { View, StyleSheet, Pressable, type LayoutChangeEvent } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import type { MainStackParamList } from '@/navigation/stacks/MainStack';
@@ -76,15 +70,19 @@ export function WishedEventCard({ event, variant = 'A' }: EventCardProps): React
     void participate(event.id);
   }, [participate, event.id]);
 
-  // Animation de sortie sans rebond : glissement horizontal puis effondrement doux de la hauteur
-  // Animation de sortie sans rebond : glissement horizontal puis effondrement doux de la hauteur
+  // Animation de sortie sans rebond : glissement horizontal rapide puis effondrement doux de la hauteur
   const executeRemoval = useCallback(
-    (direction: 'right' | 'left', onAction: () => void) => {
+    (direction: 'right' | 'left') => {
+      'worklet';
       if (isRemoving.value) return;
       isRemoving.value = true;
 
       if (process.env.NODE_ENV === 'test') {
-        onAction();
+        if (direction === 'right') {
+          handleParticipate();
+        } else {
+          handleUnwish();
+        }
         return;
       }
 
@@ -97,6 +95,7 @@ export function WishedEventCard({ event, variant = 'A' }: EventCardProps): React
         targetX,
         { duration: 200, easing: Easing.out(Easing.cubic) },
         (finished) => {
+          'worklet';
           if (finished === true) {
             // 2. Affaissement doux de la hauteur et de la marge pour que la carte suivante prenne sa place
             containerOpacity.value = withTiming(0, { duration: 150 });
@@ -108,8 +107,13 @@ export function WishedEventCard({ event, variant = 'A' }: EventCardProps): React
               0,
               { duration: 220, easing: Easing.out(Easing.cubic) },
               (hFinished) => {
+                'worklet';
                 if (hFinished === true) {
-                  scheduleOnRN(onAction);
+                  if (direction === 'right') {
+                    scheduleOnRN(handleParticipate);
+                  } else {
+                    scheduleOnRN(handleUnwish);
+                  }
                 }
               },
             );
@@ -117,24 +121,32 @@ export function WishedEventCard({ event, variant = 'A' }: EventCardProps): React
         },
       );
     },
-    [cardTranslateX, containerHeight, containerMarginBottom, containerOpacity, isRemoving],
+    [
+      cardTranslateX,
+      containerHeight,
+      containerMarginBottom,
+      containerOpacity,
+      handleParticipate,
+      handleUnwish,
+      isRemoving,
+    ],
   );
 
-  // Geste de swipe horizontal (exécuté sur le thread JS pour éviter tout crash de worklet UI)
+  // Geste de swipe horizontal (exécuté sur le UI thread avec réactivité immédiate)
   const panGesture = Gesture.Pan()
-    .runOnJS(true)
-    .activeOffsetX([-15, 15])
-    .failOffsetY([-15, 15])
+    .activeOffsetX([-10, 10])
     .onUpdate((e) => {
+      'worklet';
       if (isRemoving.value) return;
       cardTranslateX.value = e.translationX;
     })
     .onEnd((e) => {
+      'worklet';
       if (isRemoving.value) return;
       if (e.translationX > 85) {
-        executeRemoval('right', handleParticipate);
+        executeRemoval('right');
       } else if (e.translationX < -85) {
-        executeRemoval('left', handleUnwish);
+        executeRemoval('left');
       } else {
         // Retour en place doux sans rebond
         cardTranslateX.value = withTiming(0, {
@@ -246,9 +258,8 @@ export function WishedEventCard({ event, variant = 'A' }: EventCardProps): React
               <View style={[styles.edgeIndicator, { backgroundColor: participateColor }]} />
             )}
 
-            <TouchableOpacity
+            <Pressable
               style={styles.cardTouchArea}
-              activeOpacity={0.85}
               onPress={() => {
                 navigation.navigate('EventDetail', { event });
               }}
@@ -288,7 +299,7 @@ export function WishedEventCard({ event, variant = 'A' }: EventCardProps): React
                   </AppText>
                 </View>
               </View>
-            </TouchableOpacity>
+            </Pressable>
 
             {/* DÉMO A : Bouton direct vert + croix discrète */}
             {variant === 'A' && (
@@ -299,7 +310,7 @@ export function WishedEventCard({ event, variant = 'A' }: EventCardProps): React
                   accessibilityRole="button"
                   accessibilityLabel={`Participer à ${event.title}`}
                   onPress={() => {
-                    executeRemoval('right', handleParticipate);
+                    executeRemoval('right');
                   }}
                 >
                   <Feather name="check" size={13} color={theme.colors.white} />
@@ -312,7 +323,7 @@ export function WishedEventCard({ event, variant = 'A' }: EventCardProps): React
                   accessibilityRole="button"
                   accessibilityLabel={`Retirer ${event.title} de la wishlist`}
                   onPress={() => {
-                    executeRemoval('left', handleUnwish);
+                    executeRemoval('left');
                   }}
                 >
                   <Feather name="x" size={15} color={theme.colors.grey} />

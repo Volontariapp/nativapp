@@ -326,7 +326,12 @@ export function ManageHubScreen(): React.JSX.Element {
     }
   }, [activeTab, refetchParticipated, refetchWished, refetchMyEvents]);
 
-  const isRefreshing = isRefetchingParticipated || isRefetchingWished || isRefetchingMyEvents;
+  const isRefreshing =
+    activeTab === 'participated'
+      ? isRefetchingParticipated
+      : activeTab === 'wished'
+        ? isRefetchingWished
+        : isRefetchingMyEvents;
 
   // Rendu des cartes selon l'onglet actif
   const renderItem = useCallback(
