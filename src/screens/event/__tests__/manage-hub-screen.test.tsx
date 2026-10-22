@@ -1,10 +1,7 @@
 import React from 'react';
 import { render, fireEvent } from '@testing-library/react-native';
-import {
-  ManageHubScreen,
-  sortEventsByEarliestUpcoming,
-  isEventCancelled,
-} from '../ManageHubScreen';
+import { ManageHubScreen } from '../ManageHubScreen';
+import { sortEventsByEarliestUpcoming, isEventCancelled } from '../manage-hub.utils';
 import { EventState } from '@volontariapp/contracts';
 import * as getParticipatedHook from '@/api/event/hooks/use-get-participated-events';
 import * as getWishedHook from '@/api/event/hooks/use-get-wished-events';
@@ -47,6 +44,15 @@ jest.mock('@/api/social/hooks/use-user-social-actions', () => ({
     isParticipating: false,
   }),
 }));
+
+jest.mock('react-native-gesture-handler/ReanimatedSwipeable', () => {
+  const { View } = jest.requireActual<typeof ReactNative>('react-native');
+  return {
+    __esModule: true,
+    default: ({ children }: { children: React.ReactNode }) => <View>{children}</View>,
+    SwipeDirection: { LEFT: 'left', RIGHT: 'right' },
+  };
+});
 
 describe('ManageHubScreen', () => {
   beforeEach(() => {

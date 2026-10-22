@@ -15,7 +15,12 @@ export const useUserSocialActions = () => {
   const queryClient = useQueryClient();
 
   const participateMutation = useMutation({
-    mutationFn: (eventId: string) => socialApi.participate(eventId),
+    mutationFn: async (eventId: string) => {
+      const result = await socialApi.participate(eventId);
+      // Un événement auquel on participe ne doit plus rester dans la wishlist (retrait idempotent)
+      await socialApi.unwishEvent(eventId).catch(() => undefined);
+      return result;
+    },
     onMutate: async (eventId: string) => {
       await queryClient.cancelQueries({ queryKey: ['wished-events'] });
       await queryClient.cancelQueries({ queryKey: ['participated-events'] });
@@ -50,10 +55,7 @@ export const useUserSocialActions = () => {
         queryKey: PARTICIPATIONS_QUERY_KEY,
         refetchType: 'none',
       });
-      void queryClient.invalidateQueries({
-        queryKey: ['participated-events'],
-        refetchType: 'none',
-      });
+      void queryClient.invalidateQueries({ queryKey: ['participated-events'] });
       void queryClient.invalidateQueries({ queryKey: ['wished-events'], refetchType: 'none' });
       void queryClient.invalidateQueries({ queryKey: ['events'], refetchType: 'none' });
     },

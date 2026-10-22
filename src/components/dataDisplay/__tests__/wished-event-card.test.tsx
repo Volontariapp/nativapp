@@ -4,6 +4,7 @@ import { render, fireEvent } from '@testing-library/react-native';
 import { WishedEventCard } from '../WishedEventCard';
 import { EventType, EventState } from '@volontariapp/contracts';
 import type { AppEvent } from '@/api/event/event.api';
+import type * as ReactNative from 'react-native';
 import type * as ReactNavigationNative from '@react-navigation/native';
 
 const mockNavigate = jest.fn();
@@ -28,6 +29,15 @@ jest.mock('@/api/social/hooks/use-user-social-actions', () => ({
     isParticipating: false,
   }),
 }));
+
+jest.mock('react-native-gesture-handler/ReanimatedSwipeable', () => {
+  const { View } = jest.requireActual<typeof ReactNative>('react-native');
+  return {
+    __esModule: true,
+    default: ({ children }: { children: React.ReactNode }) => <View>{children}</View>,
+    SwipeDirection: { LEFT: 'left', RIGHT: 'right' },
+  };
+});
 
 describe('WishedEventCard', () => {
   beforeEach(() => {

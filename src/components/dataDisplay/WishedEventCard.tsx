@@ -1,5 +1,5 @@
 import React, { useCallback } from 'react';
-import { View, StyleSheet, Pressable, type LayoutChangeEvent } from 'react-native';
+import { View, StyleSheet, Pressable } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import type { MainStackParamList } from '@/navigation/stacks/MainStack';
@@ -14,21 +14,111 @@ import { useUserSocialActions } from '@/api/social/hooks/use-user-social-actions
 import { Image } from 'expo-image';
 import { getEventImageUri } from '@/api/event/event-cover.utils';
 import { LIST_THUMBNAIL_RADIUS, LIST_THUMBNAIL_SIZE } from '@/components/event/event-image-frames';
-import { Gesture, GestureDetector } from 'react-native-gesture-handler';
-import Animated, {
-  useSharedValue,
-  useAnimatedStyle,
-  withTiming,
-  interpolate,
-  Extrapolation,
-  Easing,
-} from 'react-native-reanimated';
-import { scheduleOnRN } from 'react-native-worklets';
+import Animated, { FadeOut } from 'react-native-reanimated';
+import ReanimatedSwipeable, {
+  SwipeDirection as SwipeableSide,
+} from 'react-native-gesture-handler/ReanimatedSwipeable';
+import { useWishedCardSwipe, type SwipeDirection } from './use-wished-card-swipe';
 
 export interface EventCardProps {
   event: AppEvent;
   variant?: 'A' | 'B';
   isFirstItem?: boolean;
+}
+
+const ACTION_WIDTH = 120;
+
+type CardStyles = ReturnType<typeof createStyles>;
+
+function matchesType(event: AppEvent, type: EventType): boolean {
+  return event.type === type || String(event.type) === EventType[type];
+}
+
+function formatSchedule(startAt: string): string {
+  const date = new Date(startAt);
+  const day = date.toLocaleDateString('fr-FR', { day: 'numeric', month: 'long', year: 'numeric' });
+  const time = date.toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' });
+  return `${day} - ${time}`;
+}
+
+interface CardInfoProps {
+  event: AppEvent;
+  styles: CardStyles;
+  typeColor: string;
+  typeBg: string;
+  greyColor: string;
+  onPress: () => void;
+}
+
+function CardInfo({
+  event,
+  styles,
+  typeColor,
+  typeBg,
+  greyColor,
+  onPress,
+}: CardInfoProps): React.JSX.Element {
+  return (
+    <Pressable style={styles.cardTouchArea} onPress={onPress}>
+      <View style={[styles.imageContainer, { backgroundColor: typeBg }]}>
+        <Image
+          source={{ uri: getEventImageUri(event) }}
+          style={StyleSheet.absoluteFillObject}
+          contentFit="cover"
+          cachePolicy="memory-disk"
+          accessibilityIgnoresInvertColors
+        />
+      </View>
+
+      <View style={styles.content}>
+        <View style={[styles.tag, { backgroundColor: typeBg }]}>
+          <AppText style={[styles.tagText, { color: typeColor }]}>
+            {mapEventType(event.type)}
+          </AppText>
+        </View>
+
+        <AppText style={styles.title} numberOfLines={1} ellipsizeMode="tail">
+          {event.title}
+        </AppText>
+
+        <View style={styles.detailRow}>
+          <Feather name="map-pin" size={14} color={greyColor} />
+          <AppText style={styles.detailText} numberOfLines={1} ellipsizeMode="tail">
+            {event.localisationName}
+          </AppText>
+        </View>
+
+        <View style={styles.detailRow}>
+          <Feather name="calendar" size={14} color={greyColor} />
+          <AppText style={styles.detailText} numberOfLines={1} ellipsizeMode="tail">
+            {formatSchedule(event.startAt)}
+          </AppText>
+        </View>
+      </View>
+    </Pressable>
+  );
+}
+
+interface SwipeActionProps {
+  label: string;
+  icon: string;
+  backgroundColor: string;
+  styles: CardStyles;
+}
+
+function SwipeAction({
+  label,
+  icon,
+  backgroundColor,
+  styles,
+}: SwipeActionProps): React.JSX.Element {
+  const { theme } = useAppTheme();
+  return (
+    <View style={[styles.actionPanel, { backgroundColor }]}>
+      <Feather name={icon} size={22} color={theme.colors.white} />
+      <AppText style={styles.actionText}>{label}</AppText>
+    </View>
+  );
 }
 
 export function WishedEventCard({ event, variant = 'A' }: EventCardProps): React.JSX.Element {
@@ -37,341 +127,135 @@ export function WishedEventCard({ event, variant = 'A' }: EventCardProps): React
   const { unwish, participate } = useUserSocialActions();
   const navigation = useNavigation<NativeStackNavigationProp<MainStackParamList>>();
 
-  const isEcology =
-    event.type === EventType.EVENT_TYPE_ECOLOGY ||
-    String(event.type) === EventType[EventType.EVENT_TYPE_ECOLOGY];
-  const isSocial =
-    event.type === EventType.EVENT_TYPE_SOCIAL ||
-    String(event.type) === EventType[EventType.EVENT_TYPE_SOCIAL];
+  const isEcology = matchesType(event, EventType.EVENT_TYPE_ECOLOGY);
+  const isSocial = matchesType(event, EventType.EVENT_TYPE_SOCIAL);
 
   // Couleur thématique dynamique : Bleu pour Social, Vert pour Écologie
   const participateColor = isSocial ? theme.colors.primarySocio : theme.colors.primaryEco;
-
-  const cardTranslateX = useSharedValue(0);
-  const containerHeight = useSharedValue<number | undefined>(undefined);
-  const containerMarginBottom = useSharedValue(12);
-  const containerOpacity = useSharedValue(1);
-  const isRemoving = useSharedValue(false);
-
-  const onLayout = useCallback(
-    (e: LayoutChangeEvent) => {
-      if (containerHeight.value === undefined && !isRemoving.value) {
-        containerHeight.value = e.nativeEvent.layout.height;
-      }
-    },
-    [containerHeight, isRemoving],
-  );
-
-  const handleUnwish = useCallback(() => {
-    void unwish(event.id);
-  }, [unwish, event.id]);
-
-  const handleParticipate = useCallback(() => {
-    void participate(event.id);
-  }, [participate, event.id]);
-
-  // Animation de sortie sans rebond : glissement horizontal rapide puis effondrement doux de la hauteur
-  const executeRemoval = useCallback(
-    (direction: 'right' | 'left') => {
-      'worklet';
-      if (isRemoving.value) return;
-      isRemoving.value = true;
-
-      if (process.env.NODE_ENV === 'test') {
-        if (direction === 'right') {
-          handleParticipate();
-        } else {
-          handleUnwish();
-        }
-        return;
-      }
-
-      containerHeight.value ??= 100;
-
-      const targetX = direction === 'right' ? 420 : -420;
-
-      // 1. Glissement horizontal rapide sans rebond (cubic easing)
-      cardTranslateX.value = withTiming(
-        targetX,
-        { duration: 200, easing: Easing.out(Easing.cubic) },
-        (finished) => {
-          'worklet';
-          if (finished === true) {
-            // 2. Affaissement doux de la hauteur et de la marge pour que la carte suivante prenne sa place
-            containerOpacity.value = withTiming(0, { duration: 150 });
-            containerMarginBottom.value = withTiming(0, {
-              duration: 220,
-              easing: Easing.out(Easing.cubic),
-            });
-            containerHeight.value = withTiming(
-              0,
-              { duration: 220, easing: Easing.out(Easing.cubic) },
-              (hFinished) => {
-                'worklet';
-                if (hFinished === true) {
-                  if (direction === 'right') {
-                    scheduleOnRN(handleParticipate);
-                  } else {
-                    scheduleOnRN(handleUnwish);
-                  }
-                }
-              },
-            );
-          }
-        },
-      );
-    },
-    [
-      cardTranslateX,
-      containerHeight,
-      containerMarginBottom,
-      containerOpacity,
-      handleParticipate,
-      handleUnwish,
-      isRemoving,
-    ],
-  );
-
-  // Geste de swipe horizontal (exécuté sur le UI thread avec réactivité immédiate)
-  const panGesture = Gesture.Pan()
-    .activeOffsetX([-10, 10])
-    .onUpdate((e) => {
-      'worklet';
-      if (isRemoving.value) return;
-      cardTranslateX.value = e.translationX;
-    })
-    .onEnd((e) => {
-      'worklet';
-      if (isRemoving.value) return;
-      if (e.translationX > 85) {
-        executeRemoval('right');
-      } else if (e.translationX < -85) {
-        executeRemoval('left');
-      } else {
-        // Retour en place doux sans rebond
-        cardTranslateX.value = withTiming(0, {
-          duration: 180,
-          easing: Easing.out(Easing.cubic),
-        });
-      }
-    });
-
-  const containerAnimatedStyle = useAnimatedStyle(() => ({
-    height: containerHeight.value,
-    marginBottom: containerMarginBottom.value,
-    opacity: containerOpacity.value,
-    overflow: 'hidden',
-  }));
-
-  const cardAnimatedStyle = useAnimatedStyle(() => ({
-    transform: [{ translateX: cardTranslateX.value }],
-  }));
-
-  // Le fond gauche (Participer) n'apparaît que lors d'un swipe vers la droite
-  const participateBgStyle = useAnimatedStyle(() => ({
-    opacity: cardTranslateX.value > 0 ? 1 : 0,
-    zIndex: cardTranslateX.value > 0 ? 1 : 0,
-  }));
-
-  // Le fond droit (Retirer/Supprimer) n'apparaît que lors d'un swipe vers la gauche
-  const unwishBgStyle = useAnimatedStyle(() => ({
-    opacity: cardTranslateX.value < 0 ? 1 : 0,
-    zIndex: cardTranslateX.value < 0 ? 1 : 0,
-  }));
-
-  const participateActionStyle = useAnimatedStyle(() => ({
-    opacity: interpolate(cardTranslateX.value, [0, 35, 85], [0, 0.7, 1], Extrapolation.CLAMP),
-    transform: [
-      {
-        scale: interpolate(cardTranslateX.value, [0, 85], [0.85, 1], Extrapolation.CLAMP),
-      },
-    ],
-  }));
-
-  const unwishActionStyle = useAnimatedStyle(() => ({
-    opacity: interpolate(cardTranslateX.value, [-85, -35, 0], [1, 0.7, 0], Extrapolation.CLAMP),
-    transform: [
-      {
-        scale: interpolate(cardTranslateX.value, [-85, 0], [1, 0.85], Extrapolation.CLAMP),
-      },
-    ],
-  }));
-
   const typeColor = isEcology
     ? theme.colors.primaryEco
     : isSocial
       ? theme.colors.primarySocio
       : theme.colors.grey;
+  const typeBg = `${typeColor}20`;
 
-  const typeBg = isEcology
-    ? `${theme.colors.primaryEco}20`
-    : isSocial
-      ? `${theme.colors.primarySocio}20`
-      : `${theme.colors.grey}20`;
+  const onCommit = useCallback(
+    async (direction: SwipeDirection) => {
+      await (direction === 'right' ? participate(event.id) : unwish(event.id));
+    },
+    [participate, unwish, event.id],
+  );
+  const { swipeRef, commit } = useWishedCardSwipe(onCommit);
 
-  const date = new Date(event.startAt);
-  const formattedDate = date.toLocaleDateString('fr-FR', {
-    day: 'numeric',
-    month: 'long',
-    year: 'numeric',
-  });
-  const formattedTime = date.toLocaleTimeString('fr-FR', {
-    hour: '2-digit',
-    minute: '2-digit',
-  });
+  const openDetail = useCallback(() => {
+    navigation.navigate('EventDetail', { event });
+  }, [navigation, event]);
 
-  const imageUri = getEventImageUri(event);
+  const renderParticipateAction = useCallback(
+    () => (
+      <SwipeAction
+        label="Participer"
+        icon="check-circle"
+        backgroundColor={participateColor}
+        styles={styles}
+      />
+    ),
+    [participateColor, styles],
+  );
+
+  const renderUnwishAction = useCallback(
+    () => (
+      <SwipeAction
+        label="Retirer"
+        icon="trash-2"
+        backgroundColor={theme.colors.danger}
+        styles={styles}
+      />
+    ),
+    [theme.colors.danger, styles],
+  );
 
   return (
-    <Animated.View style={containerAnimatedStyle} onLayout={onLayout}>
-      <View style={styles.swipeContainer}>
-        {/* Fond Action Gauche : Participer (Bleu si Social, Vert si Écologie - visible uniquement si swipe droite) */}
-        <Animated.View
-          style={[
-            styles.backgroundAction,
-            styles.backgroundParticipate,
-            { backgroundColor: participateColor },
-            participateBgStyle,
-          ]}
-        >
-          <Animated.View style={[styles.actionContent, participateActionStyle]}>
-            <Feather name="check-circle" size={22} color={theme.colors.white} />
-            <AppText style={styles.actionText}>Participer</AppText>
-          </Animated.View>
-        </Animated.View>
+    <Animated.View style={styles.rowWrapper} exiting={FadeOut.duration(160)}>
+      <ReanimatedSwipeable
+        ref={swipeRef}
+        containerStyle={styles.swipeContainer}
+        friction={1}
+        overshootLeft={false}
+        overshootRight={false}
+        leftThreshold={ACTION_WIDTH * 0.6}
+        rightThreshold={ACTION_WIDTH * 0.6}
+        renderLeftActions={renderParticipateAction}
+        renderRightActions={renderUnwishAction}
+        onSwipeableOpen={(direction) => {
+          void commit(direction === SwipeableSide.RIGHT ? 'right' : 'left');
+        }}
+      >
+        <View style={styles.card}>
+          {variant === 'B' && (
+            <View style={[styles.edgeIndicator, { backgroundColor: participateColor }]} />
+          )}
 
-        {/* Fond Action Droite : Retirer (Rouge corail - visible uniquement si swipe gauche) */}
-        <Animated.View style={[styles.backgroundAction, styles.backgroundUnwish, unwishBgStyle]}>
-          <Animated.View
-            style={[styles.actionContent, styles.actionContentRight, unwishActionStyle]}
-          >
-            <AppText style={styles.actionText}>Retirer</AppText>
-            <Feather name="trash-2" size={22} color={theme.colors.white} />
-          </Animated.View>
-        </Animated.View>
+          <CardInfo
+            event={event}
+            styles={styles}
+            typeColor={typeColor}
+            typeBg={typeBg}
+            greyColor={theme.colors.grey}
+            onPress={openDetail}
+          />
 
-        {/* Carte principale */}
-        <GestureDetector gesture={panGesture}>
-          <Animated.View style={[styles.card, cardAnimatedStyle]}>
-            {/* Démo B : bordures latérales discrètes sans rebond */}
-            {variant === 'B' && (
-              <View style={[styles.edgeIndicator, { backgroundColor: participateColor }]} />
-            )}
+          {variant === 'A' && (
+            <View style={styles.demoAActionsContainer}>
+              <Pressable
+                style={styles.participateButton}
+                hitSlop={6}
+                accessibilityRole="button"
+                accessibilityLabel={`Participer à ${event.title}`}
+                onPress={() => {
+                  void commit('right');
+                }}
+              >
+                <Feather name="check" size={13} color={theme.colors.white} />
+                <AppText style={styles.participateButtonText}>Participer</AppText>
+              </Pressable>
 
-            <Pressable
-              style={styles.cardTouchArea}
-              onPress={() => {
-                navigation.navigate('EventDetail', { event });
-              }}
-            >
-              <View style={[styles.imageContainer, { backgroundColor: typeBg }]}>
-                <Image
-                  source={{ uri: imageUri }}
-                  style={StyleSheet.absoluteFillObject}
-                  contentFit="cover"
-                  cachePolicy="memory-disk"
-                  accessibilityIgnoresInvertColors
-                />
-              </View>
+              <Pressable
+                style={styles.unwishButton}
+                hitSlop={6}
+                accessibilityRole="button"
+                accessibilityLabel={`Retirer ${event.title} de la wishlist`}
+                onPress={() => {
+                  void commit('left');
+                }}
+              >
+                <Feather name="x" size={15} color={theme.colors.grey} />
+              </Pressable>
+            </View>
+          )}
 
-              <View style={styles.content}>
-                <View style={[styles.tag, { backgroundColor: typeBg }]}>
-                  <AppText style={[styles.tagText, { color: typeColor }]}>
-                    {mapEventType(event.type)}
-                  </AppText>
-                </View>
-
-                <AppText style={styles.title} numberOfLines={1} ellipsizeMode="tail">
-                  {event.title}
-                </AppText>
-
-                <View style={styles.detailRow}>
-                  <Feather name="map-pin" size={14} color={theme.colors.grey} />
-                  <AppText style={styles.detailText} numberOfLines={1} ellipsizeMode="tail">
-                    {event.localisationName}
-                  </AppText>
-                </View>
-
-                <View style={styles.detailRow}>
-                  <Feather name="calendar" size={14} color={theme.colors.grey} />
-                  <AppText style={styles.detailText} numberOfLines={1} ellipsizeMode="tail">
-                    {formattedDate} - {formattedTime}
-                  </AppText>
-                </View>
-              </View>
-            </Pressable>
-
-            {/* DÉMO A : Bouton direct vert + croix discrète */}
-            {variant === 'A' && (
-              <View style={styles.demoAActionsContainer}>
-                <Pressable
-                  style={styles.participateButton}
-                  hitSlop={6}
-                  accessibilityRole="button"
-                  accessibilityLabel={`Participer à ${event.title}`}
-                  onPress={() => {
-                    executeRemoval('right');
-                  }}
-                >
-                  <Feather name="check" size={13} color={theme.colors.white} />
-                  <AppText style={styles.participateButtonText}>Participer</AppText>
-                </Pressable>
-
-                <Pressable
-                  style={styles.unwishButton}
-                  hitSlop={6}
-                  accessibilityRole="button"
-                  accessibilityLabel={`Retirer ${event.title} de la wishlist`}
-                  onPress={() => {
-                    executeRemoval('left');
-                  }}
-                >
-                  <Feather name="x" size={15} color={theme.colors.grey} />
-                </Pressable>
-              </View>
-            )}
-
-            {/* DÉMO B : Repère discret à droite */}
-            {variant === 'B' && (
-              <View style={[styles.edgeIndicatorRight, styles.edgeIndicatorRed]} />
-            )}
-          </Animated.View>
-        </GestureDetector>
-      </View>
+          {variant === 'B' && <View style={[styles.edgeIndicatorRight, styles.edgeIndicatorRed]} />}
+        </View>
+      </ReanimatedSwipeable>
     </Animated.View>
   );
 }
 
 const createStyles = (theme: AppTheme) =>
   StyleSheet.create({
+    rowWrapper: {
+      marginBottom: 12,
+    },
     swipeContainer: {
       position: 'relative',
       borderRadius: 18,
       overflow: 'hidden',
     },
-    backgroundAction: {
-      ...StyleSheet.absoluteFillObject,
-      flexDirection: 'row',
+    actionPanel: {
+      width: ACTION_WIDTH,
       alignItems: 'center',
-      paddingHorizontal: 20,
-      borderRadius: 18,
-    },
-    backgroundParticipate: {
-      justifyContent: 'flex-start',
-    },
-    backgroundUnwish: {
-      backgroundColor: theme.colors.danger,
-      justifyContent: 'flex-end',
-    },
-    actionContent: {
-      flexDirection: 'row',
-      alignItems: 'center',
-      gap: 8,
-    },
-    actionContentRight: {
-      flexDirection: 'row',
-      alignItems: 'center',
-      gap: 8,
+      justifyContent: 'center',
+      gap: 6,
     },
     actionText: {
       color: theme.colors.white,

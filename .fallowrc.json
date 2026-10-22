@@ -19,5 +19,10 @@
     //   "**/generated/**"     // OpenAPI, Protobuf codegen
     // ]
   },
+  "health": {
+    // Couverture Jest reelle pour le score CRAP (sinon tout est estime a "aucune couverture").
+    // A regenerer avant un commit : npx jest --coverage --coverageReporters=json --coverageDirectory=coverage
+    "coverage": "coverage/coverage-final.json"
+  },
   "rules": {}
 }
