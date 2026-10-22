@@ -10,7 +10,7 @@ import type { AppEvent } from '@/api/event/event.api';
 import { mapEventType } from '@/shared/lib/event-mappers.utils';
 import { EventType } from '@volontariapp/contracts';
 import Feather from 'react-native-vector-icons/Feather';
-import { AppIconsButton } from '@/components';
+import { AppIconsButton } from '@/components/buttons/AppIconsButton';
 import { useUserSocialActions } from '@/api/social/hooks/use-user-social-actions';
 import { Image } from 'expo-image';
 import { getEventImageUri } from '@/api/event/event-cover.utils';

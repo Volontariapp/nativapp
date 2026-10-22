@@ -70,6 +70,7 @@ describe('MainAppNavigator', () => {
 
     expect(mockNavigate).toHaveBeenCalledWith('MainTabs', {
       screen: 'create',
+      params: { screen: 'ManageEvents' },
     });
   });
 
@@ -88,6 +89,7 @@ describe('MainAppNavigator', () => {
 
     expect(mockNavigate).toHaveBeenCalledWith('MainTabs', {
       screen: 'create',
+      params: { screen: 'ManageHub' },
     });
   });
 });

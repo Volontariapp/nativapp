@@ -12,7 +12,7 @@ import {
 import type { AppEvent } from '@/api/event/event.api';
 
 export type MainStackParamList = {
-  MainTabs: { screen: string } | undefined;
+  MainTabs: { screen: string; params?: { screen: string } } | undefined;
   EventDetail: { event: AppEvent };
   Settings: undefined;
   Ranks: undefined;

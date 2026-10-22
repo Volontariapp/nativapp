@@ -1,0 +1,670 @@
+import React, { useState, useCallback, useMemo } from 'react';
+import {
+  View,
+  StyleSheet,
+  FlatList,
+  Pressable,
+  ActivityIndicator,
+  RefreshControl,
+  type ListRenderItemInfo,
+} from 'react-native';
+import { useNavigation } from '@react-navigation/native';
+import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
+import Feather from 'react-native-vector-icons/Feather';
+
+import AppHeader from '@/components/layout/AppHeader';
+import { AppText } from '@/components/typography/AppText';
+import { AppButton } from '@/components/buttons/AppButton';
+import { EventCard } from '@/components/dataDisplay/EventCard';
+import { WishedEventCard } from '@/components/dataDisplay/WishedEventCard';
+import { MyEventItem } from '@/components/event/my-event-item';
+import { AppCalendar } from '@/components/ui/AppCalendar';
+import { useAppTheme, useStyles } from '@/context/ThemeContext';
+import type { AppTheme } from '@/shared/themes/theme';
+import { useTabBarContentInset } from '@/navigation/hooks/useTabBarContentInset';
+
+import { useGetParticipatedEvents } from '@/api/event/hooks/use-get-participated-events';
+import { useGetWishedEvents } from '@/api/event/hooks/use-get-wished-events';
+import { useGetMyEvents } from '@/api/event/hooks/use-get-my-events';
+import type { AppEvent } from '@/api/event/event.api';
+import type { MainStackParamList } from '@/navigation/stacks/MainStack';
+import type { CreateEventStackParamList } from '@/navigation/stacks/CreateEventStack';
+
+type ManageTabType = 'participated' | 'wished' | 'created';
+
+export function ManageHubScreen(): React.JSX.Element {
+  const { theme } = useAppTheme();
+  const styles = useStyles(createStyles);
+  const tabBarInset = useTabBarContentInset();
+
+  const [activeTab, setActiveTab] = useState<ManageTabType>('participated');
+  const [selectedCalendarDate, setSelectedCalendarDate] = useState<string | undefined>(undefined);
+
+  const rootNavigation = useNavigation<NativeStackNavigationProp<MainStackParamList>>();
+  const stackNavigation = useNavigation<NativeStackNavigationProp<CreateEventStackParamList>>();
+
+  // Hooks pour les 3 catégories d'événements
+  const {
+    data: participatedData,
+    isLoading: isParticipatedLoading,
+    hasNextPage: hasNextParticipated,
+    fetchNextPage: fetchNextParticipated,
+    isFetchingNextPage: isFetchingNextParticipated,
+    refetch: refetchParticipated,
+    isRefetching: isRefetchingParticipated,
+  } = useGetParticipatedEvents(10);
+
+  const {
+    data: wishedData,
+    isLoading: isWishedLoading,
+    hasNextPage: hasNextWished,
+    fetchNextPage: fetchNextWished,
+    isFetchingNextPage: isFetchingNextWished,
+    refetch: refetchWished,
+    isRefetching: isRefetchingWished,
+  } = useGetWishedEvents(10);
+
+  const {
+    data: myEventsData,
+    isLoading: isMyEventsLoading,
+    hasNextPage: hasNextMyEvents,
+    fetchNextPage: fetchNextMyEvents,
+    isFetchingNextPage: isFetchingNextMyEvents,
+    refetch: refetchMyEvents,
+    isRefetching: isRefetchingMyEvents,
+  } = useGetMyEvents(10);
+
+  // Listes aplaties des événements
+  const participatedEvents = useMemo(
+    () => participatedData?.pages.flatMap((page) => page.events) ?? [],
+    [participatedData],
+  );
+
+  const wishedEvents = useMemo(
+    () => wishedData?.pages.flatMap((page) => page.events) ?? [],
+    [wishedData],
+  );
+
+  const myEvents = useMemo(
+    () => myEventsData?.pages.flatMap((page) => page.events) ?? [],
+    [myEventsData],
+  );
+
+  // Compteurs totaux
+  const participatedCount = participatedData?.pages[0]?.totalCount ?? participatedEvents.length;
+  const wishedCount = wishedData?.pages[0]?.totalCount ?? wishedEvents.length;
+  const myEventsCount = myEventsData?.pages[0]?.totalCount ?? myEvents.length;
+
+  // Calcul des dates marquées pour le calendrier
+  const markedDates = useMemo(() => {
+    const dates: Record<
+      string,
+      { customStyles: { container: Record<string, unknown>; text: Record<string, unknown> } }
+    > = {};
+
+    participatedEvents.forEach((event) => {
+      if (event.startAt.length > 0) {
+        const dateStr = event.startAt.split('T')[0];
+        if (dateStr != null && dateStr.length > 0) {
+          dates[dateStr] = {
+            customStyles: {
+              container: {
+                backgroundColor: theme.colors.primaryEco,
+                borderRadius: 18,
+              },
+              text: {
+                color: theme.colors.white,
+                fontWeight: 'bold',
+              },
+            },
+          };
+        }
+      }
+    });
+
+    if (selectedCalendarDate != null && selectedCalendarDate.length > 0) {
+      dates[selectedCalendarDate] = {
+        customStyles: {
+          container: {
+            borderWidth: 2,
+            borderColor: theme.colors.primarySocio,
+            borderRadius: 18,
+          },
+          text: {
+            color: theme.colors.text,
+            fontWeight: 'bold',
+          },
+        },
+      };
+    }
+
+    return dates;
+  }, [participatedEvents, selectedCalendarDate, theme]);
+
+  const handleEventPress = useCallback(
+    (event: AppEvent) => {
+      rootNavigation.navigate('EventDetail', { event });
+    },
+    [rootNavigation],
+  );
+
+  const handleEventEdit = useCallback(
+    (event: AppEvent) => {
+      rootNavigation.navigate('EventManagement', { eventId: event.id, initialEvent: event });
+    },
+    [rootNavigation],
+  );
+
+  const handleExplorePress = useCallback(() => {
+    rootNavigation.navigate('MainTabs', { screen: 'explorer' });
+  }, [rootNavigation]);
+
+  const handleCreatePress = useCallback(() => {
+    stackNavigation.navigate('EventForm');
+  }, [stackNavigation]);
+
+  const onRefresh = useCallback(() => {
+    if (activeTab === 'participated') {
+      void refetchParticipated();
+    } else if (activeTab === 'wished') {
+      void refetchWished();
+    } else {
+      void refetchMyEvents();
+    }
+  }, [activeTab, refetchParticipated, refetchWished, refetchMyEvents]);
+
+  const isRefreshing = isRefetchingParticipated || isRefetchingWished || isRefetchingMyEvents;
+
+  // Rendu des cartes selon l'onglet actif
+  const renderItem = useCallback(
+    ({ item }: ListRenderItemInfo<AppEvent>) => {
+      if (activeTab === 'participated') {
+        return (
+          <View style={styles.cardItemWrapper}>
+            <EventCard
+              event={item}
+              onPress={() => {
+                handleEventPress(item);
+              }}
+            />
+          </View>
+        );
+      }
+      if (activeTab === 'wished') {
+        return (
+          <View style={styles.cardItemWrapper}>
+            <WishedEventCard event={item} />
+          </View>
+        );
+      }
+      return (
+        <View style={styles.cardItemWrapper}>
+          <MyEventItem
+            event={item}
+            onPress={() => {
+              handleEventPress(item);
+            }}
+            onEdit={() => {
+              handleEventEdit(item);
+            }}
+          />
+        </View>
+      );
+    },
+    [activeTab, handleEventPress, handleEventEdit, styles.cardItemWrapper],
+  );
+
+  const keyExtractor = useCallback((item: AppEvent) => item.id, []);
+
+  // Gestion du chargement suivant (pagination)
+  const handleEndReached = useCallback(() => {
+    if (activeTab === 'participated' && hasNextParticipated && !isFetchingNextParticipated) {
+      void fetchNextParticipated();
+    } else if (activeTab === 'wished' && hasNextWished && !isFetchingNextWished) {
+      void fetchNextWished();
+    } else if (activeTab === 'created' && hasNextMyEvents && !isFetchingNextMyEvents) {
+      void fetchNextMyEvents();
+    }
+  }, [
+    activeTab,
+    hasNextParticipated,
+    isFetchingNextParticipated,
+    fetchNextParticipated,
+    hasNextWished,
+    isFetchingNextWished,
+    fetchNextWished,
+    hasNextMyEvents,
+    isFetchingNextMyEvents,
+    fetchNextMyEvents,
+  ]);
+
+  // État vide dédié à chaque onglet
+  const renderEmptyComponent = () => {
+    if (activeTab === 'participated') {
+      return (
+        <View style={styles.emptyContainer}>
+          <View style={styles.emptyBadgeHeader}>
+            <Feather name="calendar" size={20} color={theme.colors.primaryEco} />
+            <AppText style={styles.emptyBadgeTitle}>Mon Calendrier</AppText>
+          </View>
+
+          <AppText style={styles.emptyTitle}>Aucune mission en cours</AppText>
+          <AppText style={styles.emptySubtitle}>
+            Vous n'avez pas de mission active. Consultez votre calendrier ou trouvez votre prochain
+            engagement :
+          </AppText>
+
+          {/* Calendrier interactif intégré dans l'état vide */}
+          <View style={styles.calendarCard}>
+            <AppCalendar
+              markedDates={markedDates}
+              onDayPress={(day) => {
+                setSelectedCalendarDate(day.dateString);
+              }}
+              style={styles.calendarStyle}
+            />
+          </View>
+
+          <AppButton
+            variant="eco"
+            text="Explorer les événements"
+            icon="compass"
+            iconLibrary="Feather"
+            onPress={handleExplorePress}
+            style={styles.emptyButton}
+          />
+        </View>
+      );
+    }
+
+    if (activeTab === 'wished') {
+      return (
+        <View style={styles.emptyContainer}>
+          <View style={[styles.emptyIconCircle, styles.emptyIconCircleSocio]}>
+            <Feather name="heart" size={28} color={theme.colors.primarySocio} />
+          </View>
+          <AppText style={styles.emptyTitle}>Votre wishlist est vide</AppText>
+          <AppText style={styles.emptySubtitle}>
+            Enregistrez les initiatives qui vous inspirent depuis la carte pour les retrouver ici.
+          </AppText>
+          <AppButton
+            variant="socio"
+            text="Découvrir des missions"
+            icon="map"
+            iconLibrary="Feather"
+            onPress={handleExplorePress}
+            style={styles.emptyButton}
+          />
+        </View>
+      );
+    }
+
+    return (
+      <View style={styles.emptyContainer}>
+        <View style={[styles.emptyIconCircle, styles.emptyIconCircleEco]}>
+          <Feather name="plus-circle" size={28} color={theme.colors.primaryEco} />
+        </View>
+        <AppText style={styles.emptyTitle}>Aucun événement créé</AppText>
+        <AppText style={styles.emptySubtitle}>
+          Passez à l'action en créant votre propre mission bénévole sur le terrain.
+        </AppText>
+        <AppButton
+          variant="eco"
+          text="Créer un événement"
+          icon="plus"
+          iconLibrary="Feather"
+          onPress={handleCreatePress}
+          style={styles.emptyButton}
+        />
+      </View>
+    );
+  };
+
+  const currentEvents =
+    activeTab === 'participated'
+      ? participatedEvents
+      : activeTab === 'wished'
+        ? wishedEvents
+        : myEvents;
+
+  const currentIsLoading =
+    activeTab === 'participated'
+      ? isParticipatedLoading
+      : activeTab === 'wished'
+        ? isWishedLoading
+        : isMyEventsLoading;
+
+  const currentIsFetchingNext =
+    activeTab === 'participated'
+      ? isFetchingNextParticipated
+      : activeTab === 'wished'
+        ? isFetchingNextWished
+        : isFetchingNextMyEvents;
+
+  return (
+    <View style={styles.container}>
+      <AppHeader />
+
+      {/* Titre et en-tête de page */}
+      <View style={styles.headerSection}>
+        <View style={styles.headerRow}>
+          <View>
+            <AppText style={styles.pageTitle}>Gérer mes activités</AppText>
+            <AppText style={styles.pageSubtitle}>
+              Missions, sauvegardes et initiatives organisées
+            </AppText>
+          </View>
+        </View>
+
+        {/* Barre de navigation d'onglets (Segmented Control) */}
+        <View style={styles.tabBarContainer}>
+          {/* Onglet 1 : En cours */}
+          <Pressable
+            style={[styles.tabButton, activeTab === 'participated' && styles.tabButtonActive]}
+            onPress={() => {
+              setActiveTab('participated');
+            }}
+            accessibilityRole="tab"
+            accessibilityState={{ selected: activeTab === 'participated' }}
+            accessibilityLabel={`En cours, ${String(participatedCount)} événements`}
+          >
+            <Feather
+              name="activity"
+              size={15}
+              color={activeTab === 'participated' ? theme.colors.white : theme.colors.grey}
+            />
+            <AppText style={[styles.tabText, activeTab === 'participated' && styles.tabTextActive]}>
+              En cours
+            </AppText>
+            <View
+              style={[
+                styles.countBadge,
+                activeTab === 'participated' ? styles.countBadgeActive : styles.countBadgeInactive,
+              ]}
+            >
+              <AppText
+                style={[
+                  styles.countBadgeText,
+                  activeTab === 'participated' && styles.countBadgeTextActive,
+                ]}
+              >
+                {String(participatedCount)}
+              </AppText>
+            </View>
+          </Pressable>
+
+          {/* Onglet 2 : Wishlist */}
+          <Pressable
+            style={[styles.tabButton, activeTab === 'wished' && styles.tabButtonActive]}
+            onPress={() => {
+              setActiveTab('wished');
+            }}
+            accessibilityRole="tab"
+            accessibilityState={{ selected: activeTab === 'wished' }}
+            accessibilityLabel={`Wishlist, ${String(wishedCount)} événements`}
+          >
+            <Feather
+              name="heart"
+              size={15}
+              color={activeTab === 'wished' ? theme.colors.white : theme.colors.grey}
+            />
+            <AppText style={[styles.tabText, activeTab === 'wished' && styles.tabTextActive]}>
+              Wishlist
+            </AppText>
+            <View
+              style={[
+                styles.countBadge,
+                activeTab === 'wished' ? styles.countBadgeActive : styles.countBadgeInactive,
+              ]}
+            >
+              <AppText
+                style={[
+                  styles.countBadgeText,
+                  activeTab === 'wished' && styles.countBadgeTextActive,
+                ]}
+              >
+                {String(wishedCount)}
+              </AppText>
+            </View>
+          </Pressable>
+
+          {/* Onglet 3 : Créés */}
+          <Pressable
+            style={[styles.tabButton, activeTab === 'created' && styles.tabButtonActive]}
+            onPress={() => {
+              setActiveTab('created');
+            }}
+            accessibilityRole="tab"
+            accessibilityState={{ selected: activeTab === 'created' }}
+            accessibilityLabel={`Créés, ${String(myEventsCount)} événements`}
+          >
+            <Feather
+              name="layers"
+              size={15}
+              color={activeTab === 'created' ? theme.colors.white : theme.colors.grey}
+            />
+            <AppText style={[styles.tabText, activeTab === 'created' && styles.tabTextActive]}>
+              Créés
+            </AppText>
+            <View
+              style={[
+                styles.countBadge,
+                activeTab === 'created' ? styles.countBadgeActive : styles.countBadgeInactive,
+              ]}
+            >
+              <AppText
+                style={[
+                  styles.countBadgeText,
+                  activeTab === 'created' && styles.countBadgeTextActive,
+                ]}
+              >
+                {String(myEventsCount)}
+              </AppText>
+            </View>
+          </Pressable>
+        </View>
+      </View>
+
+      {/* Contenu de la liste avec pull-to-refresh et pagination */}
+      {currentIsLoading && currentEvents.length === 0 ? (
+        <View style={styles.loaderContainer}>
+          <ActivityIndicator size="large" color={theme.colors.primaryEco} />
+        </View>
+      ) : (
+        <FlatList
+          data={currentEvents}
+          keyExtractor={keyExtractor}
+          renderItem={renderItem}
+          contentContainerStyle={[styles.listContent, tabBarInset]}
+          showsVerticalScrollIndicator={false}
+          refreshControl={
+            <RefreshControl
+              refreshing={isRefreshing}
+              onRefresh={onRefresh}
+              tintColor={theme.colors.primaryEco}
+              colors={[theme.colors.primaryEco]}
+            />
+          }
+          onEndReached={handleEndReached}
+          onEndReachedThreshold={0.5}
+          ListEmptyComponent={renderEmptyComponent}
+          ListFooterComponent={
+            currentIsFetchingNext ? (
+              <View style={styles.footerLoader}>
+                <ActivityIndicator size="small" color={theme.colors.primaryEco} />
+              </View>
+            ) : null
+          }
+        />
+      )}
+    </View>
+  );
+}
+
+const createStyles = (theme: AppTheme) =>
+  StyleSheet.create({
+    container: {
+      flex: 1,
+      backgroundColor: theme.colors.background,
+    },
+    headerSection: {
+      paddingHorizontal: 16,
+      paddingTop: 8,
+      paddingBottom: 12,
+    },
+    headerRow: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      justifyContent: 'space-between',
+      marginBottom: 14,
+    },
+    pageTitle: {
+      fontSize: 22,
+      fontWeight: '800',
+      color: theme.colors.text,
+      letterSpacing: -0.3,
+    },
+    pageSubtitle: {
+      fontSize: 13,
+      color: theme.colors.grey,
+      marginTop: 2,
+    },
+    tabBarContainer: {
+      flexDirection: 'row',
+      borderRadius: 16,
+      padding: 4,
+      backgroundColor:
+        theme.colors.text === '#000' ? 'rgba(0, 0, 0, 0.05)' : 'rgba(255, 255, 255, 0.08)',
+    },
+    tabButton: {
+      flex: 1,
+      flexDirection: 'row',
+      alignItems: 'center',
+      justifyContent: 'center',
+      paddingVertical: 10,
+      paddingHorizontal: 6,
+      borderRadius: 12,
+      gap: 6,
+    },
+    tabButtonActive: {
+      backgroundColor: theme.colors.primaryEco,
+      boxShadow: '0 4px 10px rgba(47, 110, 62, 0.3)',
+      elevation: 4,
+    },
+    tabText: {
+      fontSize: 13,
+      fontWeight: '600',
+      color: theme.colors.grey,
+    },
+    tabTextActive: {
+      color: theme.colors.white,
+      fontWeight: '700',
+    },
+    countBadge: {
+      paddingHorizontal: 6,
+      paddingVertical: 2,
+      borderRadius: 10,
+    },
+    countBadgeInactive: {
+      backgroundColor:
+        theme.colors.text === '#000' ? 'rgba(0, 0, 0, 0.06)' : 'rgba(255, 255, 255, 0.1)',
+    },
+    countBadgeActive: {
+      backgroundColor: 'rgba(255, 255, 255, 0.25)',
+    },
+    countBadgeText: {
+      fontSize: 11,
+      fontWeight: '700',
+      color: theme.colors.grey,
+    },
+    countBadgeTextActive: {
+      color: theme.colors.white,
+    },
+    listContent: {
+      paddingHorizontal: 16,
+      paddingBottom: 24,
+    },
+    cardItemWrapper: {
+      marginBottom: 12,
+    },
+    loaderContainer: {
+      flex: 1,
+      alignItems: 'center',
+      justifyContent: 'center',
+    },
+    footerLoader: {
+      paddingVertical: 16,
+      alignItems: 'center',
+    },
+    emptyContainer: {
+      alignItems: 'center',
+      justifyContent: 'center',
+      paddingHorizontal: 16,
+      paddingVertical: 24,
+    },
+    emptyBadgeHeader: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: 6,
+      paddingHorizontal: 12,
+      paddingVertical: 6,
+      borderRadius: 16,
+      backgroundColor:
+        theme.colors.text === '#000' ? 'rgba(47, 110, 62, 0.12)' : 'rgba(47, 110, 62, 0.22)',
+      marginBottom: 12,
+    },
+    emptyBadgeTitle: {
+      fontSize: 13,
+      fontWeight: '700',
+      color: theme.colors.primaryEco,
+    },
+    emptyIconCircle: {
+      width: 60,
+      height: 60,
+      borderRadius: 30,
+      alignItems: 'center',
+      justifyContent: 'center',
+      marginBottom: 14,
+    },
+    emptyIconCircleEco: {
+      backgroundColor:
+        theme.colors.text === '#000' ? 'rgba(47, 110, 62, 0.12)' : 'rgba(47, 110, 62, 0.22)',
+    },
+    emptyIconCircleSocio: {
+      backgroundColor:
+        theme.colors.text === '#000' ? 'rgba(31, 111, 139, 0.12)' : 'rgba(31, 111, 139, 0.22)',
+    },
+    emptyTitle: {
+      fontSize: 18,
+      fontWeight: '700',
+      color: theme.colors.text,
+      textAlign: 'center',
+      marginBottom: 6,
+    },
+    emptySubtitle: {
+      fontSize: 13,
+      color: theme.colors.grey,
+      textAlign: 'center',
+      lineHeight: 18,
+      marginBottom: 18,
+      maxWidth: 320,
+    },
+    calendarCard: {
+      width: '100%',
+      borderRadius: 20,
+      overflow: 'hidden',
+      marginBottom: 20,
+      borderWidth: 1,
+      borderColor:
+        theme.colors.text === '#000' ? 'rgba(0, 0, 0, 0.08)' : 'rgba(255, 255, 255, 0.12)',
+      backgroundColor: theme.colors.white,
+      boxShadow: '0 8px 24px rgba(0, 0, 0, 0.08)',
+      elevation: 4,
+    },
+    calendarStyle: {
+      borderRadius: 20,
+    },
+    emptyButton: {
+      minWidth: 220,
+    },
+  });

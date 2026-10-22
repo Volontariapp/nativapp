@@ -11,6 +11,7 @@ export * from './main/SwipeScreen';
 export * from './main/WsFeedbackScreen';
 export * from './event/EventFormScreen';
 export * from './event/ManageEventsScreen';
+export * from './event/ManageHubScreen';
 export * from './event/MyEventsScreen';
 export * from './event/EventManagementScreen';
 export * from './misc/SandBox';

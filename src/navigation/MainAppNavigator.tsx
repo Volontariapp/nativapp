@@ -22,12 +22,18 @@ export default function MainAppNavigator(): React.JSX.Element {
 
   const handleSelectCreate = useCallback(() => {
     setQuickActionsVisible(false);
-    navigation.navigate('MainTabs', { screen: 'create' });
+    navigation.navigate('MainTabs', {
+      screen: 'create',
+      params: { screen: 'ManageEvents' },
+    });
   }, [navigation]);
 
   const handleSelectManage = useCallback(() => {
     setQuickActionsVisible(false);
-    navigation.navigate('MainTabs', { screen: 'create' });
+    navigation.navigate('MainTabs', {
+      screen: 'create',
+      params: { screen: 'ManageHub' },
+    });
   }, [navigation]);
 
   return (
