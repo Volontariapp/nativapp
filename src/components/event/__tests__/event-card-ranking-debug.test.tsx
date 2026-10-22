@@ -1,5 +1,5 @@
 import React from 'react';
-import { render } from '@testing-library/react-native';
+import { render, fireEvent } from '@testing-library/react-native';
 import { EventCard } from '../EventCard';
 import { useDebug } from '@/context/DebugContext';
 import { EventState, EventType } from '@volontariapp/contracts';
@@ -54,5 +54,30 @@ describe('EventCard ranking debug display', () => {
     expect(getByText('Score: 88.5')).toBeTruthy();
     expect(getByText('Proche de vous')).toBeTruthy();
     expect(getByText('Populaire')).toBeTruthy();
+  });
+
+  it('displays precise multi-decimal floating score without coarse truncation', () => {
+    mockUseDebug.mockReturnValue({ isDebugMode: true, toggleDebugMode: jest.fn() });
+
+    const preciseEvent: RankedAppEvent = {
+      ...baseRankedEvent,
+      rankingScore: 0.812345,
+    };
+
+    const { getByText } = render(<EventCard event={preciseEvent} />);
+
+    expect(getByText('Score: 0.8123')).toBeTruthy();
+  });
+
+  it('opens detailed scoring modal on clicking debug ranking container', () => {
+    mockUseDebug.mockReturnValue({ isDebugMode: true, toggleDebugMode: jest.fn() });
+
+    const { getByTestId, getByText } = render(<EventCard event={baseRankedEvent} />);
+
+    fireEvent.press(getByTestId('event-debug-ranking-container'));
+
+    expect(getByTestId('ranking-debug-detail-modal')).toBeTruthy();
+    expect(getByText('Score Exact de Classement')).toBeTruthy();
+    expect(getByText('Scoring des Événements')).toBeTruthy();
   });
 });

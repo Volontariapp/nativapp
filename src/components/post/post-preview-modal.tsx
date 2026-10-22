@@ -63,7 +63,7 @@ export function PostPreviewModal({
           {imageUri !== undefined && <PostImage postId={PREVIEW_POST_ID} imageUrl={imageUri} />}
           <AppText style={styles.title}>{title}</AppText>
           <AppText style={styles.description}>
-            <AppText style={styles.authorPseudo}>{`@${pseudo ?? ''} `}</AppText>
+            <AppText style={styles.authorPseudo}>{`${pseudo ?? ''} `}</AppText>
             {content}
           </AppText>
           <PreviewEventLink title={eventTitle} />

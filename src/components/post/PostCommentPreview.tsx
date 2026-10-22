@@ -35,7 +35,7 @@ export function PostCommentPreview({ comment }: PostCommentPreviewProps) {
     >
       <UserAvatar uri={resolveAvatarUrl(author)} size={20} style={styles.avatarSpacing} />
       <Text style={styles.text} numberOfLines={2}>
-        <Text style={styles.author}>@{pseudo}</Text> {comment.content}
+        <Text style={styles.author}>{pseudo}</Text> {comment.content}
       </Text>
     </Pressable>
   );

@@ -39,7 +39,7 @@ export const PostLikersModal = ({ postId, visible, onClose }: PostLikersModalPro
       <View style={styles.avatarPlaceholder}>
         <Icon name="user" size={20} color={theme.colors.white} />
       </View>
-      <AppText style={styles.likerPseudo}>@{item.pseudo}</AppText>
+      <AppText style={styles.likerPseudo}>{item.pseudo}</AppText>
     </Pressable>
   );
 

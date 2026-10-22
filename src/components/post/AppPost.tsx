@@ -12,7 +12,8 @@ import { resolveAvatarUrl } from '@/api/user/resolve-avatar-url';
 import { PostImage } from './post-image';
 import { resolvePostImageUrl } from '@/api/post/resolve-post-image-url';
 import { useDebug } from '@/context/DebugContext';
-import { getRankingReasonLabel, type RankedAppPost } from '@/api/ranking';
+import { formatRankingScore, getRankingReasonLabel, type RankedAppPost } from '@/api/ranking';
+import { RankingDebugDetailModal } from '@/components/feedback';
 import { PostActions } from './PostActions';
 import { PostCommentsModal } from './PostCommentsModal';
 import { PostCommentPreview } from './PostCommentPreview';
@@ -32,6 +33,7 @@ import Animated, {
   withSequence,
   withDelay,
   withTiming,
+  cancelAnimation,
 } from 'react-native-reanimated';
 import { Gesture, GestureDetector } from 'react-native-gesture-handler';
 
@@ -62,6 +64,7 @@ export default function AppPost({ post }: PostCardProps) {
 
   const [isCommentsVisible, setIsCommentsVisible] = useState(false);
   const [isLikersVisible, setIsLikersVisible] = useState(false);
+  const [isDebugDetailVisible, setIsDebugDetailVisible] = useState(false);
 
   const navigation = useNavigation<NativeStackNavigationProp<MainStackParamList>>();
 
@@ -93,13 +96,20 @@ export default function AppPost({ post }: PostCardProps) {
   });
 
   const triggerLikeAnimation = () => {
+    cancelAnimation(heartScale);
+    cancelAnimation(heartOpacity);
+    heartScale.value = 0;
     heartOpacity.value = 1;
+
     heartScale.value = withSequence(
       withSpring(1, { damping: 12, stiffness: 300, mass: 0.5 }),
       withDelay(
-        50,
-        withTiming(0, { duration: 150 }, () => {
-          heartOpacity.value = 0;
+        200,
+        withTiming(0, { duration: 150 }, (isFinished) => {
+          if (isFinished === true) {
+            heartOpacity.value = 0;
+            heartScale.value = 0;
+          }
         }),
       ),
     );
@@ -119,7 +129,7 @@ export default function AppPost({ post }: PostCardProps) {
     .onStart(() => {
       triggerLikeAnimation();
       if (!isLiked) {
-        handleToggleLike();
+        likePost.mutate(post.id);
       }
     })
     .runOnJS(true);
@@ -130,16 +140,25 @@ export default function AppPost({ post }: PostCardProps) {
         pseudo={author?.pseudo}
         authorId={post.authorId}
         avatarUrl={resolveAvatarUrl(author)}
+        showFollowButton={true}
         onPress={() => {
           navigation.navigate('PublicProfile', { userId: post.authorId });
         }}
       />
 
       {isDebugMode && (
-        <View style={styles.debugRankingContainer} testID="post-debug-ranking-container">
+        <Pressable
+          style={styles.debugRankingContainer}
+          testID="post-debug-ranking-container"
+          onPress={() => {
+            setIsDebugDetailVisible(true);
+          }}
+          accessibilityRole="button"
+          accessibilityLabel="Afficher les détails de scoring"
+        >
           {rankingScore !== undefined && (
             <View style={styles.debugScoreChip}>
-              <Text style={styles.debugChipText}>Score: {rankingScore.toFixed(1)}</Text>
+              <Text style={styles.debugChipText}>Score: {formatRankingScore(rankingScore)}</Text>
             </View>
           )}
           {reasons.map((reason) => (
@@ -147,12 +166,20 @@ export default function AppPost({ post }: PostCardProps) {
               <Text style={styles.debugChipText}>{getRankingReasonLabel(reason)}</Text>
             </View>
           ))}
+          {isLiked && (
+            <View style={styles.debugPenaltyChip}>
+              <Text style={styles.debugChipText}>⚠️ ×0.6 (déjà liké)</Text>
+            </View>
+          )}
           {isFallbackPost && (
             <View style={styles.debugFallbackChip}>
               <Text style={styles.debugChipText}>Repli chronologique (non scoré)</Text>
             </View>
           )}
-        </View>
+          <View style={styles.debugDetailsButtonChip}>
+            <Text style={styles.debugChipText}>🔍 Détails</Text>
+          </View>
+        </Pressable>
       )}
 
       <GestureDetector gesture={doubleTapGesture}>
@@ -185,7 +212,7 @@ export default function AppPost({ post }: PostCardProps) {
 
       <View style={styles.content}>
         <Text style={styles.description}>
-          <Text style={styles.authorPseudo}>@{pseudo} </Text>
+          <Text style={styles.authorPseudo}>{pseudo} </Text>
           {post.content}
         </Text>
 
@@ -227,6 +254,22 @@ export default function AppPost({ post }: PostCardProps) {
         onClose={() => {
           setIsLikersVisible(false);
         }}
+      />
+
+      <RankingDebugDetailModal
+        visible={isDebugDetailVisible}
+        onClose={() => {
+          setIsDebugDetailVisible(false);
+        }}
+        type="post"
+        id={post.id}
+        title={post.title}
+        rankingScore={rankingScore}
+        reasons={reasons}
+        isFallback={isFallbackPost}
+        isLiked={isLiked}
+        authorPseudo={pseudo}
+        createdAt={post.createdAt}
       />
     </View>
   );
@@ -313,6 +356,18 @@ const createStyles = (theme: AppTheme) =>
     },
     debugFallbackChip: {
       backgroundColor: theme.colors.grey,
+      paddingHorizontal: theme.spacing.sm,
+      paddingVertical: 2,
+      borderRadius: theme.radius.full,
+    },
+    debugPenaltyChip: {
+      backgroundColor: theme.colors.warning,
+      paddingHorizontal: theme.spacing.sm,
+      paddingVertical: 2,
+      borderRadius: theme.radius.full,
+    },
+    debugDetailsButtonChip: {
+      backgroundColor: theme.colors.primarySocio,
       paddingHorizontal: theme.spacing.sm,
       paddingVertical: 2,
       borderRadius: theme.radius.full,

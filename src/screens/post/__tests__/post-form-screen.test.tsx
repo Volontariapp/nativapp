@@ -227,7 +227,7 @@ describe('PostFormScreen images', () => {
     expect(await screen.findByText('Aperçu de ton post')).toBeTruthy();
     expect(screen.getByText('Mission Maraude Paris')).toBeTruthy();
     expect(screen.getByText(/Besoin de 5 benevoles ce samedi/)).toBeTruthy();
-    expect(screen.getByText('victor')).toBeTruthy();
+    expect(screen.getAllByText(/victor/)[0]).toBeTruthy();
     expect(mockForm.mockCreatePost).not.toHaveBeenCalled();
   });
 
