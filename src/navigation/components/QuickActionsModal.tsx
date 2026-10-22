@@ -286,7 +286,6 @@ const createStyles = (theme: AppTheme) =>
       backgroundColor:
         theme.colors.text === '#000' ? 'rgba(255, 255, 255, 0.94)' : 'rgba(26, 30, 36, 0.92)',
       boxShadow: '0 16px 36px rgba(0, 0, 0, 0.3)',
-      elevation: 12,
     },
     cardContent: {
       padding: 18,
@@ -405,7 +404,6 @@ const createStyles = (theme: AppTheme) =>
       alignItems: 'center',
       justifyContent: 'center',
       boxShadow: '0 6px 14px rgba(0, 0, 0, 0.35)',
-      elevation: 8,
     },
     toggleTriggerButtonPressed: {
       opacity: 0.85,
