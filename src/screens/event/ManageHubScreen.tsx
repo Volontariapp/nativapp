@@ -25,6 +25,7 @@ import { AppCalendar } from '@/components/ui/AppCalendar';
 import { useAppTheme, useStyles } from '@/context/ThemeContext';
 import type { AppTheme } from '@/shared/themes/theme';
 import { useTabBarContentInset } from '@/navigation/hooks/useTabBarContentInset';
+import { getEventStatusConfig, isEventDatePast } from '@/components/event/event-status.utils';
 
 import { useGetParticipatedEvents } from '@/api/event/hooks/use-get-participated-events';
 import { useGetWishedEvents } from '@/api/event/hooks/use-get-wished-events';
@@ -82,6 +83,21 @@ export function sortEventsByEarliestUpcoming(a: AppEvent, b: AppEvent, now = Dat
   return endB - endA;
 }
 
+/**
+ * Vérifie si un événement est considéré comme annulé :
+ * - Statut explicite EventState.EVENT_STATE_CANCELLED
+ * - Ou statut 'Annulé' calculé par la configuration de statut (ex: événement publié dont la date est passée)
+ */
+export function isEventCancelled(event: AppEvent): boolean {
+  const state = normalizeEventState(event.state);
+  if (state === EventState.EVENT_STATE_CANCELLED) {
+    return true;
+  }
+  const isPast = isEventDatePast(event.endAt, event.startAt);
+  const statusConfig = getEventStatusConfig(event.state, isPast);
+  return statusConfig.label === 'Annulé';
+}
+
 export function ManageHubScreen(): React.JSX.Element {
   const { theme } = useAppTheme();
   const styles = useStyles(createStyles);
@@ -126,9 +142,12 @@ export function ManageHubScreen(): React.JSX.Element {
     isRefetching: isRefetchingMyEvents,
   } = useGetMyEvents(10);
 
-  // Listes aplaties des événements
+  // Listes aplaties des événements (les événements annulés ne doivent jamais apparaître dans "En cours")
   const participatedEvents = useMemo(
-    () => participatedData?.pages.flatMap((page) => page.events) ?? [],
+    () =>
+      (participatedData?.pages.flatMap((page) => page.events) ?? []).filter(
+        (event) => !isEventCancelled(event),
+      ),
     [participatedData],
   );
 
@@ -143,7 +162,7 @@ export function ManageHubScreen(): React.JSX.Element {
   );
 
   // Compteurs totaux
-  const participatedCount = participatedData?.pages[0]?.totalCount ?? participatedEvents.length;
+  const participatedCount = participatedEvents.length;
   const wishedCount = wishedData?.pages[0]?.totalCount ?? wishedEvents.length;
   const myEventsCount = myEventsData?.pages[0]?.totalCount ?? myEvents.length;
 
@@ -185,6 +204,9 @@ export function ManageHubScreen(): React.JSX.Element {
     // 1. Distinction "En direct" vs "À venir" (spécifique à l'onglet En cours)
     if (activeTab === 'participated') {
       const now = Date.now();
+      // Exclusion formelle des événements annulés dans l'onglet En cours
+      list = list.filter((event) => !isEventCancelled(event));
+
       if (participatedScope === 'live') {
         list = list.filter((event) => {
           const start = new Date(event.startAt).getTime();
@@ -199,11 +221,7 @@ export function ManageHubScreen(): React.JSX.Element {
           const start = new Date(event.startAt).getTime();
           const isUpcomingByTime = now < start;
           const state = normalizeEventState(event.state);
-          return (
-            isUpcomingByTime &&
-            state !== EventState.EVENT_STATE_FINISHED &&
-            state !== EventState.EVENT_STATE_CANCELLED
-          );
+          return isUpcomingByTime && state !== EventState.EVENT_STATE_FINISHED;
         });
       }
     }

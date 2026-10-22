@@ -1,6 +1,11 @@
 import React from 'react';
 import { render, fireEvent } from '@testing-library/react-native';
-import { ManageHubScreen, sortEventsByEarliestUpcoming } from '../ManageHubScreen';
+import {
+  ManageHubScreen,
+  sortEventsByEarliestUpcoming,
+  isEventCancelled,
+} from '../ManageHubScreen';
+import { EventState } from '@volontariapp/contracts';
 import * as getParticipatedHook from '@/api/event/hooks/use-get-participated-events';
 import * as getWishedHook from '@/api/event/hooks/use-get-wished-events';
 import * as getMyEventsHook from '@/api/event/hooks/use-get-my-events';
@@ -189,5 +194,64 @@ describe('ManageHubScreen', () => {
     const sorted = [...unordered].sort((a, b) => sortEventsByEarliestUpcoming(a, b, now));
 
     expect(sorted.map((e) => e.id)).toEqual(['live', 'soon', 'nextWeek', 'past']);
+  });
+
+  it('correctly identifies cancelled events via isEventCancelled', () => {
+    const cancelledByState = {
+      id: 'c1',
+      title: 'Cancelled By State',
+      state: EventState.EVENT_STATE_CANCELLED,
+      startAt: '2026-10-25T10:00:00Z',
+      endAt: '2026-10-25T12:00:00Z',
+    } as AppEvent;
+
+    const publishedFuture = {
+      id: 'c2',
+      title: 'Future Event',
+      state: EventState.EVENT_STATE_PUBLISHED,
+      startAt: new Date(Date.now() + 86400000).toISOString(),
+      endAt: new Date(Date.now() + 90000000).toISOString(),
+    } as AppEvent;
+
+    const inProgress = {
+      id: 'c3',
+      title: 'Live Event',
+      state: EventState.EVENT_STATE_IN_PROGRESS,
+      startAt: new Date(Date.now() - 1000).toISOString(),
+      endAt: new Date(Date.now() + 10000).toISOString(),
+    } as AppEvent;
+
+    expect(isEventCancelled(cancelledByState)).toBe(true);
+    expect(isEventCancelled(publishedFuture)).toBe(false);
+    expect(isEventCancelled(inProgress)).toBe(false);
+  });
+
+  it('never displays cancelled events in the En cours tab', () => {
+    const activeEvent = {
+      id: 'active-1',
+      title: 'Activité en cours ou à venir',
+      state: EventState.EVENT_STATE_PUBLISHED,
+      startAt: new Date(Date.now() + 86400000).toISOString(),
+      endAt: new Date(Date.now() + 90000000).toISOString(),
+      type: 1,
+      localisationName: 'Paris',
+    } as AppEvent;
+
+    const cancelledEvent = {
+      id: 'cancelled-1',
+      title: 'Événement Annulé Fantôme',
+      state: EventState.EVENT_STATE_CANCELLED,
+      startAt: new Date(Date.now() + 86400000).toISOString(),
+      endAt: new Date(Date.now() + 90000000).toISOString(),
+      type: 1,
+      localisationName: 'Lyon',
+    } as AppEvent;
+
+    setupMocks([activeEvent, cancelledEvent], [], []);
+
+    const { getByText, queryByText } = render(<ManageHubScreen />);
+
+    expect(getByText('Activité en cours ou à venir')).toBeTruthy();
+    expect(queryByText('Événement Annulé Fantôme')).toBeNull();
   });
 });
