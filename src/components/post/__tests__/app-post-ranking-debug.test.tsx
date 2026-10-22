@@ -1,8 +1,9 @@
 import React from 'react';
-import { render } from '@testing-library/react-native';
+import { render, fireEvent } from '@testing-library/react-native';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import AppPost from '../AppPost';
 import { useDebug } from '@/context/DebugContext';
+
 import type { RankedAppPost } from '@/api/ranking';
 
 import { mockUseGetPublicUser } from '@/api/user/__tests__/user.mock';
@@ -141,5 +142,48 @@ describe('AppPost ranking debug display', () => {
     expect(getByTestId('post-debug-ranking-container')).toBeTruthy();
     expect(getByText('Repli chronologique (non scoré)')).toBeTruthy();
     expect(queryByText(/Score:/i)).toBeNull();
+  });
+
+  it('displays precise multi-decimal floating score without coarse truncation', () => {
+    mockUseDebug.mockReturnValue({ isDebugMode: true, toggleDebugMode: jest.fn() });
+
+    const precisePost = {
+      ...baseRankedPost,
+      rankingScore: 0.642517,
+    };
+
+    const { getByText } = render(<AppPost post={precisePost} />, {
+      wrapper: createWrapper(),
+    });
+
+    expect(getByText('Score: 0.6425')).toBeTruthy();
+  });
+
+  it('displays penalty chip when debug post is already liked', () => {
+    mockUseDebug.mockReturnValue({ isDebugMode: true, toggleDebugMode: jest.fn() });
+    mockUseGetMyLikes.mockReturnValue({
+      data: { ids: [baseRankedPost.id] },
+      isLoading: false,
+    } as unknown as ReturnType<typeof useGetMyLikes>);
+
+    const { getByText } = render(<AppPost post={baseRankedPost} />, {
+      wrapper: createWrapper(),
+    });
+
+    expect(getByText('⚠️ ×0.6 (déjà liké)')).toBeTruthy();
+  });
+
+  it('opens detailed scoring modal on clicking debug ranking container', () => {
+    mockUseDebug.mockReturnValue({ isDebugMode: true, toggleDebugMode: jest.fn() });
+
+    const { getByTestId, getByText } = render(<AppPost post={baseRankedPost} />, {
+      wrapper: createWrapper(),
+    });
+
+    fireEvent.press(getByTestId('post-debug-ranking-container'));
+
+    expect(getByTestId('ranking-debug-detail-modal')).toBeTruthy();
+    expect(getByText('Score Exact de Classement')).toBeTruthy();
+    expect(getByText('Scoring du Feed de Posts')).toBeTruthy();
   });
 });

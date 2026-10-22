@@ -13,8 +13,9 @@ import { ImpactScoreBadge } from '@/components/event/ImpactScoreBadge';
 import { getEventImageUri } from '@/api/event/event-cover.utils';
 import { calculateDistanceInKm, formatDistance } from '@/shared/lib/location.utils';
 import { useDebug } from '@/context/DebugContext';
-import { getRankingReasonLabel } from '@/api/ranking';
+import { formatRankingScore, getRankingReasonLabel } from '@/api/ranking';
 import type { RankedAppEvent } from '@/api/ranking';
+import { RankingDebugDetailModal } from '@/components/feedback';
 
 interface EventCardProps {
   event: Event;
@@ -38,6 +39,8 @@ export const EventCard = React.memo(function EventCard({
       ? rankedEvent.rankingScore
       : undefined;
 
+  const [isDebugDetailVisible, setIsDebugDetailVisible] = React.useState(false);
+
   const formattedDate = useMemo(() => {
     const date = new Date(event.startAt);
     return date
@@ -56,16 +59,20 @@ export const EventCard = React.memo(function EventCard({
     });
   }, [event.startAt]);
 
-  const distanceValue = useMemo(() => {
-    if (!userLocation || !event.location) return '';
-    const distance = calculateDistanceInKm(
+  const distanceKm = useMemo(() => {
+    if (!userLocation || !event.location) return undefined;
+    return calculateDistanceInKm(
       userLocation.coords.latitude,
       userLocation.coords.longitude,
       event.location.latitude,
       event.location.longitude,
     );
-    return `à ${formatDistance(distance)}`;
   }, [userLocation, event.location]);
+
+  const distanceValue = useMemo(() => {
+    if (distanceKm === undefined) return '';
+    return `à ${formatDistance(distanceKm)}`;
+  }, [distanceKm]);
 
   const { avatars, remaining } = useMemo(() => {
     const currentPart = Math.max(1, event.currentParticipants);
@@ -109,10 +116,20 @@ export const EventCard = React.memo(function EventCard({
             </View>
 
             {isDebugMode && (rankingScore !== undefined || reasons.length > 0) && (
-              <View style={styles.debugRankingContainer}>
+              <Pressable
+                style={styles.debugRankingContainer}
+                testID="event-debug-ranking-container"
+                onPress={() => {
+                  setIsDebugDetailVisible(true);
+                }}
+                accessibilityRole="button"
+                accessibilityLabel="Afficher les détails de scoring"
+              >
                 {rankingScore !== undefined && (
                   <View style={styles.debugScoreChip}>
-                    <Text style={styles.debugChipText}>Score: {rankingScore.toFixed(1)}</Text>
+                    <Text style={styles.debugChipText}>
+                      Score: {formatRankingScore(rankingScore)}
+                    </Text>
                   </View>
                 )}
                 {reasons.map((reason) => (
@@ -120,7 +137,10 @@ export const EventCard = React.memo(function EventCard({
                     <Text style={styles.debugChipText}>{getRankingReasonLabel(reason)}</Text>
                   </View>
                 ))}
-              </View>
+                <View style={styles.debugDetailsButtonChip}>
+                  <Text style={styles.debugChipText}>🔍 Détails</Text>
+                </View>
+              </Pressable>
             )}
           </View>
 
@@ -189,6 +209,22 @@ export const EventCard = React.memo(function EventCard({
           </View>
         </View>
       </View>
+
+      <RankingDebugDetailModal
+        visible={isDebugDetailVisible}
+        onClose={() => {
+          setIsDebugDetailVisible(false);
+        }}
+        type="event"
+        id={event.id}
+        title={event.title}
+        rankingScore={rankingScore}
+        reasons={reasons}
+        eventType={event.type}
+        startAt={event.startAt}
+        localisationName={event.localisationName}
+        distanceKm={distanceKm}
+      />
     </View>
   );
 });
@@ -233,6 +269,12 @@ const createStyles = (theme: AppTheme) =>
     },
     debugReasonChip: {
       backgroundColor: theme.colors.blackOverlay,
+      paddingHorizontal: theme.spacing.sm,
+      paddingVertical: 2,
+      borderRadius: theme.radius.full,
+    },
+    debugDetailsButtonChip: {
+      backgroundColor: theme.colors.primarySocio,
       paddingHorizontal: theme.spacing.sm,
       paddingVertical: 2,
       borderRadius: theme.radius.full,
