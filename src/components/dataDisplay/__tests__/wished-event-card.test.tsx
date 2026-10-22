@@ -48,7 +48,7 @@ describe('WishedEventCard', () => {
     currentParticipants: 5,
   });
 
-  it('renders a social event with blue participate button', () => {
+  it('renders a social event with green participate button and blue swipe background', () => {
     const socialEvent = createTestEvent(EventType.EVENT_TYPE_SOCIAL, 'Maraude Solidaire');
     const { getByLabelText, getByText } = render(
       <WishedEventCard event={socialEvent} variant="A" />,
@@ -58,12 +58,12 @@ describe('WishedEventCard', () => {
     const button = getByLabelText('Participer à Maraude Solidaire');
     expect(button).toBeTruthy();
 
-    // Vérifie la couleur primaire socio (#1f6f8b)
+    // Le bouton Participer doit toujours être vert (#2f6e3e)
     const style = StyleSheet.flatten<ViewStyle>(button.props.style as ViewStyle);
-    expect(style.backgroundColor).toBe('#1f6f8b');
+    expect(style.backgroundColor).toBe('#2f6e3e');
   });
 
-  it('renders an ecology event with green participate button', () => {
+  it('renders an ecology event with green participate button and green swipe background', () => {
     const ecoEvent = createTestEvent(EventType.EVENT_TYPE_ECOLOGY, 'Ramassage Déchets');
     const { getByLabelText, getByText } = render(<WishedEventCard event={ecoEvent} variant="A" />);
 
@@ -71,7 +71,7 @@ describe('WishedEventCard', () => {
     const button = getByLabelText('Participer à Ramassage Déchets');
     expect(button).toBeTruthy();
 
-    // Vérifie la couleur primaire éco (#2f6e3e)
+    // Le bouton Participer doit toujours être vert (#2f6e3e)
     const style = StyleSheet.flatten<ViewStyle>(button.props.style as ViewStyle);
     expect(style.backgroundColor).toBe('#2f6e3e');
   });

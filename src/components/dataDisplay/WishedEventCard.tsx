@@ -77,6 +77,7 @@ export function WishedEventCard({ event, variant = 'A' }: EventCardProps): React
   }, [participate, event.id]);
 
   // Animation de sortie sans rebond : glissement horizontal puis effondrement doux de la hauteur
+  // Animation de sortie sans rebond : glissement horizontal puis effondrement doux de la hauteur
   const executeRemoval = useCallback(
     (direction: 'right' | 'left', onAction: () => void) => {
       if (isRemoving.value) return;
@@ -86,6 +87,8 @@ export function WishedEventCard({ event, variant = 'A' }: EventCardProps): React
         onAction();
         return;
       }
+
+      containerHeight.value ??= 100;
 
       const targetX = direction === 'right' ? 420 : -420;
 
@@ -117,8 +120,9 @@ export function WishedEventCard({ event, variant = 'A' }: EventCardProps): React
     [cardTranslateX, containerHeight, containerMarginBottom, containerOpacity, isRemoving],
   );
 
-  // Geste de swipe horizontal (pas de rebond spring)
+  // Geste de swipe horizontal (exécuté sur le thread JS pour éviter tout crash de worklet UI)
   const panGesture = Gesture.Pan()
+    .runOnJS(true)
     .activeOffsetX([-15, 15])
     .failOffsetY([-15, 15])
     .onUpdate((e) => {
@@ -149,6 +153,18 @@ export function WishedEventCard({ event, variant = 'A' }: EventCardProps): React
 
   const cardAnimatedStyle = useAnimatedStyle(() => ({
     transform: [{ translateX: cardTranslateX.value }],
+  }));
+
+  // Le fond gauche (Participer) n'apparaît que lors d'un swipe vers la droite
+  const participateBgStyle = useAnimatedStyle(() => ({
+    opacity: cardTranslateX.value > 0 ? 1 : 0,
+    zIndex: cardTranslateX.value > 0 ? 1 : 0,
+  }));
+
+  // Le fond droit (Retirer/Supprimer) n'apparaît que lors d'un swipe vers la gauche
+  const unwishBgStyle = useAnimatedStyle(() => ({
+    opacity: cardTranslateX.value < 0 ? 1 : 0,
+    zIndex: cardTranslateX.value < 0 ? 1 : 0,
   }));
 
   const participateActionStyle = useAnimatedStyle(() => ({
@@ -197,29 +213,30 @@ export function WishedEventCard({ event, variant = 'A' }: EventCardProps): React
   return (
     <Animated.View style={containerAnimatedStyle} onLayout={onLayout}>
       <View style={styles.swipeContainer}>
-        {/* Fond Action Gauche : Participer (Bleu si Social, Vert si Écologie) */}
-        <View
+        {/* Fond Action Gauche : Participer (Bleu si Social, Vert si Écologie - visible uniquement si swipe droite) */}
+        <Animated.View
           style={[
             styles.backgroundAction,
             styles.backgroundParticipate,
             { backgroundColor: participateColor },
+            participateBgStyle,
           ]}
         >
           <Animated.View style={[styles.actionContent, participateActionStyle]}>
             <Feather name="check-circle" size={22} color={theme.colors.white} />
             <AppText style={styles.actionText}>Participer</AppText>
           </Animated.View>
-        </View>
+        </Animated.View>
 
-        {/* Fond Action Droite : Retirer (Rouge corail) */}
-        <View style={[styles.backgroundAction, styles.backgroundUnwish]}>
+        {/* Fond Action Droite : Retirer (Rouge corail - visible uniquement si swipe gauche) */}
+        <Animated.View style={[styles.backgroundAction, styles.backgroundUnwish, unwishBgStyle]}>
           <Animated.View
             style={[styles.actionContent, styles.actionContentRight, unwishActionStyle]}
           >
             <AppText style={styles.actionText}>Retirer</AppText>
             <Feather name="trash-2" size={22} color={theme.colors.white} />
           </Animated.View>
-        </View>
+        </Animated.View>
 
         {/* Carte principale */}
         <GestureDetector gesture={panGesture}>
@@ -273,11 +290,11 @@ export function WishedEventCard({ event, variant = 'A' }: EventCardProps): React
               </View>
             </TouchableOpacity>
 
-            {/* DÉMO A : Bouton direct coloré (Bleu ou Vert) + croix discrète */}
+            {/* DÉMO A : Bouton direct vert + croix discrète */}
             {variant === 'A' && (
               <View style={styles.demoAActionsContainer}>
                 <Pressable
-                  style={[styles.participateButton, { backgroundColor: participateColor }]}
+                  style={styles.participateButton}
                   hitSlop={6}
                   accessibilityRole="button"
                   accessibilityLabel={`Participer à ${event.title}`}
@@ -415,6 +432,7 @@ const createStyles = (theme: AppTheme) =>
       flexDirection: 'row',
       alignItems: 'center',
       gap: 4,
+      backgroundColor: theme.colors.primaryEco,
       paddingVertical: 7,
       paddingHorizontal: 10,
       borderRadius: 12,
