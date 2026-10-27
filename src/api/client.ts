@@ -14,6 +14,54 @@ const getApiBaseUrl = (): string => {
 
 let refreshPromise: Promise<string | null> | null = null;
 
+/**
+ * Renouvelle l'access token a partir du refresh token et sauvegarde la nouvelle paire.
+ * Les appels concurrents (API et socket) partagent la meme requete de refresh.
+ * Renvoie null si aucun refresh token n'est disponible ou si la reponse est invalide ;
+ * propage l'erreur axios (reseau, 401) sinon.
+ */
+export const refreshAccessToken = (): Promise<string | null> => {
+  refreshPromise ??= (async () => {
+    const currentRefreshToken = await TokenService.getRefreshToken();
+    if (currentRefreshToken == null) {
+      return null;
+    }
+
+    const refreshHeaders: Record<string, string> = {
+      'Content-Type': 'application/json',
+      Accept: 'application/json',
+      Authorization: `Bearer ${currentRefreshToken}`,
+    };
+    const cfAccess = config.cloudflareAccess;
+    if (cfAccess != null && cfAccess.clientId !== '' && cfAccess.clientSecret !== '') {
+      refreshHeaders['CF-Access-Client-Id'] = cfAccess.clientId;
+      refreshHeaders['CF-Access-Client-Secret'] = cfAccess.clientSecret;
+    }
+
+    console.log('[apiFetch] Attempting to refresh token...');
+
+    const refreshRes = await axios.post(
+      `${getApiBaseUrl()}/users/refresh`,
+      { refreshToken: currentRefreshToken },
+      { headers: refreshHeaders },
+    );
+
+    const authData = (refreshRes.data as LoginWebResponse).auth;
+
+    if (typeof authData?.accessToken === 'string' && typeof authData.refreshToken === 'string') {
+      console.log('[apiFetch] Refresh successful, saving new tokens');
+      await TokenService.saveTokens(authData.accessToken, authData.refreshToken);
+      return authData.accessToken;
+    }
+    console.log('[apiFetch] Refresh failed: Invalid auth data structure');
+    return null;
+  })().finally(() => {
+    refreshPromise = null;
+  });
+
+  return refreshPromise;
+};
+
 export const apiFetch = async <TResponse, TRequest = undefined>(
   endpoint: string,
   options: FetchOptions<TRequest> = {},
@@ -77,41 +125,7 @@ export const apiFetch = async <TResponse, TRequest = undefined>(
         !endpoint.includes('/users/refresh')
       ) {
         try {
-          refreshPromise ??= (async () => {
-            const currentRefreshToken = await TokenService.getRefreshToken();
-            if (currentRefreshToken == null) {
-              return null;
-            }
-
-            const refreshUrl = `${baseUrl}/users/refresh`;
-            const refreshHeaders = { ...headers };
-            refreshHeaders['Authorization'] = `Bearer ${currentRefreshToken}`;
-
-            console.log('[apiFetch] Attempting to refresh token...');
-
-            const refreshRes = await axios.post(
-              refreshUrl,
-              { refreshToken: currentRefreshToken },
-              { headers: refreshHeaders },
-            );
-
-            const authData = (refreshRes.data as LoginWebResponse).auth;
-
-            if (
-              typeof authData?.accessToken === 'string' &&
-              typeof authData.refreshToken === 'string'
-            ) {
-              console.log('[apiFetch] Refresh successful, saving new tokens');
-              await TokenService.saveTokens(authData.accessToken, authData.refreshToken);
-              return authData.accessToken;
-            }
-            console.log('[apiFetch] Refresh failed: Invalid auth data structure');
-            return null;
-          })().finally(() => {
-            refreshPromise = null;
-          });
-
-          const newAccessToken = await refreshPromise;
+          const newAccessToken = await refreshAccessToken();
 
           if (newAccessToken !== null) {
             headers['Authorization'] = `Bearer ${newAccessToken}`;

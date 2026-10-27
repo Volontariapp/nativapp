@@ -31,6 +31,7 @@ export const SocketProvider = ({ children }: SocketProviderProps): React.JSX.Ele
 
   useEffect(() => {
     let currentSocket: Socket | null = null;
+    let detachListeners = (): void => {};
     let isMounted = true;
 
     const connectSocket = async (): Promise<void> => {
@@ -42,21 +43,29 @@ export const SocketProvider = ({ children }: SocketProviderProps): React.JSX.Ele
           setSocket(currentSocket);
 
           let hasDisconnected = false;
-          currentSocket.on('connect', () => {
+          const handleConnect = (): void => {
             if (!isMounted) return;
             setIsConnected(true);
             // Reconnexion : des evenements (ex. credit de score) ont pu etre manques.
             if (hasDisconnected) {
               void queryClient.invalidateQueries({ queryKey: PROFILE_QUERY_KEY });
             }
-          });
-          currentSocket.on('disconnect', () => {
+          };
+          const handleDisconnect = (): void => {
             hasDisconnected = true;
             if (isMounted) setIsConnected(false);
-          });
-          currentSocket.on('connect_error', () => {
+          };
+          const handleConnectError = (): void => {
             if (isMounted) setIsConnected(false);
-          });
+          };
+          currentSocket.on('connect', handleConnect);
+          currentSocket.on('disconnect', handleDisconnect);
+          currentSocket.on('connect_error', handleConnectError);
+          detachListeners = (): void => {
+            currentSocket?.off('connect', handleConnect);
+            currentSocket?.off('disconnect', handleDisconnect);
+            currentSocket?.off('connect_error', handleConnectError);
+          };
 
           if (currentSocket.connected) {
             setIsConnected(true);
@@ -84,11 +93,7 @@ export const SocketProvider = ({ children }: SocketProviderProps): React.JSX.Ele
     return (): void => {
       isMounted = false;
       clearInterval(interval);
-      if (currentSocket !== null) {
-        currentSocket.off('connect');
-        currentSocket.off('disconnect');
-        currentSocket.off('connect_error');
-      }
+      detachListeners();
     };
   }, [isAuthenticated, queryClient]);
 
