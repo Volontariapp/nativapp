@@ -32,6 +32,23 @@ export const SocketProvider = ({ children }: SocketProviderProps): React.JSX.Ele
   useEffect(() => {
     let currentSocket: Socket | null = null;
     let isMounted = true;
+    let hasDisconnected = false;
+
+    const handleConnect = (): void => {
+      if (!isMounted) return;
+      setIsConnected(true);
+      // Reconnexion : des evenements (ex. credit de score) ont pu etre manques.
+      if (hasDisconnected) {
+        void queryClient.invalidateQueries({ queryKey: PROFILE_QUERY_KEY });
+      }
+    };
+    const handleDisconnect = (): void => {
+      hasDisconnected = true;
+      if (isMounted) setIsConnected(false);
+    };
+    const handleConnectError = (): void => {
+      if (isMounted) setIsConnected(false);
+    };
 
     const connectSocket = async (): Promise<void> => {
       if (isAuthenticated) {
@@ -41,23 +58,9 @@ export const SocketProvider = ({ children }: SocketProviderProps): React.JSX.Ele
           socketRef.current = currentSocket;
           setSocket(currentSocket);
 
-          let hasDisconnected = false;
-          currentSocket.on('connect', () => {
-            if (!isMounted) return;
-            setIsConnected(true);
-            // Reconnexion : des evenements (ex. credit de score) ont pu etre manques.
-            if (hasDisconnected) {
-              void queryClient.invalidateQueries({ queryKey: PROFILE_QUERY_KEY });
-            }
-          });
-          currentSocket.on('disconnect', () => {
-            hasDisconnected = true;
-            if (isMounted) setIsConnected(false);
-          });
-          currentSocket.on('connect_error', () => {
-            if (isMounted) setIsConnected(false);
-          });
-
+          currentSocket.on('connect', handleConnect);
+          currentSocket.on('disconnect', handleDisconnect);
+          currentSocket.on('connect_error', handleConnectError);
           if (currentSocket.connected) {
             setIsConnected(true);
           }
@@ -85,9 +88,9 @@ export const SocketProvider = ({ children }: SocketProviderProps): React.JSX.Ele
       isMounted = false;
       clearInterval(interval);
       if (currentSocket !== null) {
-        currentSocket.off('connect');
-        currentSocket.off('disconnect');
-        currentSocket.off('connect_error');
+        currentSocket.off('connect', handleConnect);
+        currentSocket.off('disconnect', handleDisconnect);
+        currentSocket.off('connect_error', handleConnectError);
       }
     };
   }, [isAuthenticated, queryClient]);
