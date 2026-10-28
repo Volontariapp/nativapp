@@ -30,7 +30,7 @@
     "node": ">=24.14.0"
   },
   "dependencies": {
-    "@hookform/resolvers": "^5.4.0",
+    "@hookform/resolvers": "^6.0.0",
     "@react-native-community/datetimepicker": "8.4.4",
     "@react-navigation/bottom-tabs": "^7.4.0",
     "@react-navigation/native-stack": "^7.3.16",
@@ -101,7 +101,7 @@
     "eslint": "~9.18.0",
     "jest": "^29.7.0",
     "jest-expo": "~54.0.18",
-    "lint-staged": "^15.4.3",
+    "lint-staged": "^17.6.0",
     "prettier": "^3.9.10",
     "react-doctor": "^0.9.18",
     "react-test-renderer": "19.1.0",
