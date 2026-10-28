@@ -45,14 +45,6 @@ updates:
       - dependency-name: "@opentelemetry/core"
         update-types: ["version-update:semver-major"]
       # Pinned by the Expo SDK: bump through an SDK upgrade, not through Dependabot.
-      - dependency-name: "react"
-        update-types: ["version-update:semver-major", "version-update:semver-minor"]
-      - dependency-name: "react-dom"
-        update-types: ["version-update:semver-major", "version-update:semver-minor"]
-      - dependency-name: "react-test-renderer"
-        update-types: ["version-update:semver-major", "version-update:semver-minor"]
-      - dependency-name: "@types/react"
-        update-types: ["version-update:semver-major", "version-update:semver-minor"]
       - dependency-name: "@react-native/*"
         update-types: ["version-update:semver-major", "version-update:semver-minor"]
       - dependency-name: "expo"
@@ -61,15 +53,17 @@ updates:
         update-types: ["version-update:semver-major", "version-update:semver-minor"]
       - dependency-name: "@expo/*"
         update-types: ["version-update:semver-major", "version-update:semver-minor"]
+      - dependency-name: "react"
+      - dependency-name: "react-dom"
+      - dependency-name: "react-test-renderer"
+      - dependency-name: "@types/react"
       - dependency-name: "react-native"
       - dependency-name: "react-native-*"
       - dependency-name: "@react-native-community/*"
       - dependency-name: "@react-navigation/native-stack"
-      - dependency-name: "@react-navigation/bottom-tabs"
-        update-types: ["version-update:semver-major", "version-update:semver-minor"]
       - dependency-name: "typescript-eslint"
-        update-types: ["version-update:semver-major", "version-update:semver-minor"]
       - dependency-name: "@typescript-eslint/*"
+      - dependency-name: "@react-navigation/bottom-tabs"
         update-types: ["version-update:semver-major", "version-update:semver-minor"]
       - dependency-name: "jest"
         update-types: ["version-update:semver-major"]
