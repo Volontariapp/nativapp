@@ -88,6 +88,11 @@ const createFakeEvent = (id: string, title = 'Event'): RankedAppEvent => ({
   reasons: [],
 });
 
+jest.mock('../constants/swipe-reload.constants', () => ({
+  RELOAD_POLL_INTERVAL_MS: 0,
+  RELOAD_MAX_ATTEMPTS: 3,
+}));
+
 const createTestQueryClient = (): QueryClient =>
   new QueryClient({
     defaultOptions: {
@@ -95,7 +100,7 @@ const createTestQueryClient = (): QueryClient =>
     },
   });
 
-const rankingEventsPage = (events: RankedAppEvent[]): RankingEventsResult => ({
+const rankingEventsPage = (events: RankedAppEvent[], listVersion = 'v1'): RankingEventsResult => ({
   isFallback: false,
   events,
   totalCount: events.length,
@@ -105,7 +110,7 @@ const rankingEventsPage = (events: RankedAppEvent[]): RankingEventsResult => ({
     stale: false,
     hasMore: false,
     versionChanged: false,
-    listVersion: 'v1',
+    listVersion,
     nextCursor: '',
   },
 });
@@ -352,7 +357,7 @@ describe('useSwipeScreen', () => {
     const stale = [createFakeEvent('evt-1'), createFakeEvent('evt-2')];
     mockGetEvents
       .mockResolvedValueOnce(rankingEventsPage(stale))
-      .mockResolvedValue(rankingEventsPage([...stale, createFakeEvent('evt-3')]));
+      .mockResolvedValue(rankingEventsPage([...stale, createFakeEvent('evt-3')], 'v2'));
 
     const { result } = renderSwipeHook();
     await waitFor(() => {
@@ -370,6 +375,58 @@ describe('useSwipeScreen', () => {
     expect(result.current.currentIndex).toBe(0);
     expect(result.current.isEndReached).toBe(false);
     expect(mockRequestRefresh).toHaveBeenCalledWith('EVENT');
+  });
+
+  it('asks for a new EVENT list when no event is served, then shows the recomputed list', async () => {
+    mockGetEvents
+      .mockResolvedValueOnce(rankingEventsPage([], 'v1'))
+      .mockResolvedValue(rankingEventsPage([createFakeEvent('evt-new')], 'v2'));
+
+    const { result } = renderSwipeHook();
+
+    await waitFor(() => {
+      expect(result.current.events.map((event) => event.id)).toEqual(['evt-new']);
+    });
+    expect(mockRequestRefresh).toHaveBeenCalledTimes(1);
+    expect(mockRequestRefresh).toHaveBeenCalledWith('EVENT');
+    expect(result.current.currentIndex).toBe(0);
+  });
+
+  it('asks only once when the recomputed list is still empty', async () => {
+    mockGetEvents.mockResolvedValue(rankingEventsPage([], 'v1'));
+
+    const { result } = renderSwipeHook();
+
+    await waitFor(() => {
+      expect(mockRequestRefresh).toHaveBeenCalledTimes(1);
+    });
+    await act(async () => {
+      await new Promise((resolve) => {
+        setTimeout(resolve, 50);
+      });
+    });
+
+    expect(mockRequestRefresh).toHaveBeenCalledTimes(1);
+    expect(result.current.events).toHaveLength(0);
+  });
+
+  it('does not ask for a recompute when the ranking is in fallback mode and nothing is served', async () => {
+    mockGetEvents.mockResolvedValue({
+      isFallback: true,
+      events: [],
+      totalCount: 0,
+      ranking: null,
+    });
+
+    renderSwipeHook();
+
+    await act(async () => {
+      await new Promise((resolve) => {
+        setTimeout(resolve, 50);
+      });
+    });
+
+    expect(mockRequestRefresh).not.toHaveBeenCalled();
   });
 
   it('sends user location if permitted and throttles updates', async () => {

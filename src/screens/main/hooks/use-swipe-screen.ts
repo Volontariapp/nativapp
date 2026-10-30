@@ -16,7 +16,7 @@ import { useUserSocialActions } from '@/api/social/hooks/use-user-social-actions
 import { useSwipeLocation } from './use-swipe-location';
 import { useSwipePassFeedback } from './use-swipe-pass-feedback';
 import type { UserCoordinates } from '@/hooks/use-location';
-import { rankingApi } from '@/api/ranking/ranking.api';
+import { listVersionOf, useSwipeStackReload } from './use-swipe-stack-reload';
 import { useRankingEvents } from '@/api/ranking/hooks/use-ranking-events';
 
 type TabParamList = {
@@ -126,27 +126,26 @@ export function useSwipeScreen(): UseSwipeScreenResult {
   const isEndReached =
     currentIndex >= events.length && !hasNextPage && !isFetchingNextPage && events.length > 0;
 
-  // Rafraîchissement automatique en fin de pile (sans bloquer ni afficher d'erreur si throttled)
-  const hasRequestedRefreshOnEndRef = useRef(false);
-  useEffect(() => {
-    if (isEndReached && !hasRequestedRefreshOnEndRef.current) {
-      hasRequestedRefreshOnEndRef.current = true;
-      Promise.resolve(rankingApi.requestRefresh('EVENT'))
-        .then(async (res) => {
-          if (res.refreshThrottled) {
-            return;
-          }
-          await rankingQuery.refetch();
-          // Nouvelle pile : les events traites en sortent et le deck repart de la premiere carte
-          refreshExclusions();
-          setCurrentIndex(0);
-          hasRequestedRefreshOnEndRef.current = false;
-        })
-        .catch((err: unknown) => {
-          console.warn('[useSwipeScreen] Ranking refresh on end failed:', err);
-        });
-    }
-  }, [isEndReached, rankingQuery, refreshExclusions]);
+  // Recalcul automatique quand il n'y a plus rien a proposer : fin de pile, ou aucun event servi
+  // a l'ouverture (liste stockee entierement expiree). Sans effet en mode repli.
+  const isEmptyStack = events.length === 0;
+  useSwipeStackReload({
+    isStackExhausted:
+      !isLoading &&
+      !isError &&
+      !isFetchingNextPage &&
+      !hasNextPage &&
+      currentIndex >= events.length &&
+      !(isEmptyStack && isFallbackMode),
+    isEmpty: isEmptyStack,
+    currentListVersion: listVersionOf(rankingQuery.data),
+    reloadRanking: async () => listVersionOf((await rankingQuery.refetch()).data),
+    onReloaded: () => {
+      // Nouvelle pile : les events traites en sortent et le deck repart de la premiere carte
+      refreshExclusions();
+      setCurrentIndex(0);
+    },
+  });
 
   const swipeStateRef = useRef({ events, hasNextPage, isFetchingNextPage, fetchNextPage, wish });
   useLayoutEffect(() => {
