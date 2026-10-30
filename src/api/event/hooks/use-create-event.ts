@@ -27,7 +27,7 @@ export const useCreateEvent = () => {
         description: data.description,
         localisationName: data.localisationName,
         type: data.type,
-        awardedImpactScore: data.awardedImpactScore,
+        awardedImpactScore: data.awardedImpactScore ?? 0,
         maxParticipants: data.maxParticipants,
         startAt: data.startAt,
         endAt: data.endAt,

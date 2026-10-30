@@ -24,7 +24,13 @@ import type {
   GetMyFollowsWebResponse,
   GetMyFollowersWebResponse,
   GetUserEventWebRequest,
+  GetEventAttendeesResponse,
 } from '@volontariapp/contracts';
+
+export interface SetEventAttendanceWebRequest {
+  checkedUserIds: string[];
+  uncheckedUserIds?: string[];
+}
 
 export const SOCIAL_ENDPOINTS = {
   LINK_POST_TO_EVENT: {
@@ -297,6 +303,18 @@ export const SOCIAL_ENDPOINTS = {
     requiresAuth: true,
     roles: [UserRoles.ORGANIZATION, UserRoles.VOLUNTEER, UserRoles.ADMIN],
   } as EndpointDefinition<GetEventParticipantsWebRequest, GetUserEventWebResponse>,
+  SET_EVENT_ATTENDANCE: {
+    path: '/social/events/:eventId/attendance',
+    method: 'POST',
+    requiresAuth: true,
+    roles: [UserRoles.ORGANIZATION, UserRoles.VOLUNTEER, UserRoles.ADMIN],
+  } as EndpointDefinition<SetEventAttendanceWebRequest, ActionSuccessWebResponse>,
+  GET_EVENT_ATTENDEES: {
+    path: '/social/events/:eventId/attendees',
+    method: 'GET',
+    requiresAuth: true,
+    roles: [UserRoles.ORGANIZATION, UserRoles.VOLUNTEER, UserRoles.ADMIN],
+  } as EndpointDefinition<void, GetEventAttendeesResponse>,
   GET_USER_POSTS: {
     path: '/social/users/:userId/posts',
     method: 'GET',

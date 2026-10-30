@@ -1,6 +1,7 @@
-import React, { useState, useMemo, useCallback } from 'react';
+import React, { useState, useMemo, useCallback, useEffect } from 'react';
 import { View, StyleSheet, Pressable } from 'react-native';
 import type { Control, FieldErrors, UseFormSetValue, UseFormWatch } from 'react-hook-form';
+import { computeEventScoring } from '@volontariapp/shared';
 import { AppText } from '@/components/typography/AppText';
 import { AppIcons } from '@/components/media/AppIcons';
 import { AppDateTimePicker } from '@/components/inputs';
@@ -8,6 +9,7 @@ import { theme } from '@/shared/themes/theme';
 import type { EventFormValues } from '@/api/event/event.schema';
 import { EventDurationModal } from './EventDurationModal';
 import { ValuePickerModal, type ValuePickerPreset } from './ValuePickerModal';
+import { EventScoringInfoModal } from './EventScoringInfoModal';
 
 interface EventInfoGridProps {
   control?: Control<EventFormValues>;
@@ -24,14 +26,6 @@ const PARTICIPANTS_PRESETS: ValuePickerPreset[] = [
   { value: 100, label: '100 personnes', sublabel: 'Grand rassemblement' },
 ];
 
-const IMPACT_PRESETS: ValuePickerPreset[] = [
-  { value: 25, label: '25 points', sublabel: 'Coup de main rapide' },
-  { value: 50, label: '50 points', sublabel: 'Action modérée' },
-  { value: 100, label: '100 points', sublabel: 'Forte implication' },
-  { value: 200, label: '200 points', sublabel: 'Impact majeur' },
-  { value: 500, label: '500 points', sublabel: "Projet d'envergure" },
-];
-
 export function EventInfoGrid({ errors, setValue, watch }: EventInfoGridProps): React.JSX.Element {
   const today = useMemo(() => {
     const d = new Date();
@@ -42,7 +36,11 @@ export function EventInfoGrid({ errors, setValue, watch }: EventInfoGridProps): 
   const startAt = watch('startAt');
   const endAt = watch('endAt');
   const maxParticipants = watch('maxParticipants') || 0;
-  const awardedImpactScore = watch('awardedImpactScore') || 0;
+
+  useEffect(() => {
+    // Le score d'impact fixe est remplacé par le scoring dynamique.
+    setValue('awardedImpactScore', 0, { shouldValidate: false });
+  }, [setValue]);
 
   // Détermine la durée initiale en heures
   const initialDuration = useMemo(() => {
@@ -54,7 +52,27 @@ export function EventInfoGrid({ errors, setValue, watch }: EventInfoGridProps): 
   const [durationHours, setDurationHours] = useState<number>(initialDuration);
   const [isDurationModalVisible, setIsDurationModalVisible] = useState<boolean>(false);
   const [isParticipantsModalVisible, setIsParticipantsModalVisible] = useState<boolean>(false);
-  const [isImpactModalVisible, setIsImpactModalVisible] = useState<boolean>(false);
+  const [isScoringInfoModalVisible, setIsScoringInfoModalVisible] = useState<boolean>(false);
+
+  // Estimation dynamique des points selon la durée et la jauge
+  const estimatedScoring = useMemo(() => {
+    const attendeesCount = maxParticipants > 0 ? maxParticipants : 10;
+    const dummyAttendees = Array.from({ length: attendeesCount }, (_, i) => ({
+      userId: `sim-user-${String(i)}`,
+      registeredAt: new Date(startAt.getTime() + i * 1000),
+    }));
+
+    return computeEventScoring({
+      startAt,
+      endAt,
+      maxParticipants: attendeesCount,
+      organizerId: 'sim-creator',
+      attendees: dummyAttendees,
+    });
+  }, [startAt, endAt, maxParticipants]);
+
+  const maxEstimatedPoints = estimatedScoring.participants[0]?.points ?? 0;
+  const organizerBonusPoints = estimatedScoring.organizerPoints;
 
   // Applique la nouvelle durée et recalcule la date de fin
   const handleDurationChange = useCallback(
@@ -219,31 +237,27 @@ export function EventInfoGrid({ errors, setValue, watch }: EventInfoGridProps): 
 
         <View style={styles.separator} />
 
-        {/* 4. Score d'impact */}
+        {/* 4. Points d'impact estimés */}
         <Pressable
           onPress={() => {
-            setIsImpactModalVisible(true);
+            setIsScoringInfoModalVisible(true);
           }}
           style={({ pressed }) => [styles.rowPressable, pressed && styles.rowPressed]}
           accessibilityRole="button"
-          accessibilityLabel="Modifier le score d'impact"
+          accessibilityLabel="Consulter l'estimation des points d'impact"
         >
           <View style={styles.rowLeft}>
             <View style={[styles.iconBox, { backgroundColor: '#eef3ef' }]}>
-              <AppIcons icon="target" size={18} color={theme.colors.primaryEco} />
+              <AppIcons icon="award" size={18} color={theme.colors.primaryEco} />
             </View>
             <View style={styles.textContainer}>
-              <AppText style={styles.rowLabel}>Score d'impact</AppText>
-              {errors.awardedImpactScore?.message !== undefined ? (
-                <AppText style={styles.errorText}>{errors.awardedImpactScore.message}</AppText>
-              ) : (
-                <AppText style={styles.rowSubtitle}>Par participant</AppText>
-              )}
+              <AppText style={styles.rowLabel}>Points d'impact estimés</AppText>
+              <AppText style={styles.rowSubtitle}>Calcul automatique à la clôture</AppText>
             </View>
           </View>
           <View style={styles.rowRight}>
             <AppText style={[styles.rowValue, { color: theme.colors.primaryEco }]}>
-              +{String(awardedImpactScore)} pts
+              Jusqu'à +{String(maxEstimatedPoints)} pts
             </AppText>
             <AppIcons icon="chevron-right" size={16} color={theme.colors.grey} />
           </View>
@@ -293,36 +307,16 @@ export function EventInfoGrid({ errors, setValue, watch }: EventInfoGridProps): 
         variant="socio"
       />
 
-      {/* Modale de sélection du Score d'impact */}
-      <ValuePickerModal
-        visible={isImpactModalVisible}
+      {/* Modale d'information sur le scoring dynamique */}
+      <EventScoringInfoModal
+        visible={isScoringInfoModalVisible}
         onClose={() => {
-          setIsImpactModalVisible(false);
+          setIsScoringInfoModalVisible(false);
         }}
-        title="Score d'impact"
-        subtitle="Points d'impact attribués à chaque participant"
-        currentValue={awardedImpactScore}
-        presets={IMPACT_PRESETS}
-        onConfirm={(val) => {
-          setValue('awardedImpactScore', val, { shouldValidate: true });
-        }}
-        customOptionLabel="Autre score"
-        customOptionSublabel="Personnalisé"
-        customInputLabel="Entrez les points d'impact :"
-        customUnit="points"
-        customPlaceholder="Ex: 150"
-        minValue={0}
-        maxValue={10000}
-        allowDecimals={false}
-        previewTitle="Récompense d'impact"
-        previewIcon="target"
-        formatPreviewDetails={(val) => ({
-          label: 'POINTS DÉCERNÉS :',
-          value: `+${String(val)} points d'impact`,
-          hint: 'Attribués automatiquement après validation de la présence',
-        })}
-        confirmButtonText="Valider le score"
-        variant="eco"
+        maxEstimatedPoints={maxEstimatedPoints}
+        organizerPoints={organizerBonusPoints}
+        durationHours={durationHours}
+        maxParticipants={maxParticipants}
       />
     </View>
   );

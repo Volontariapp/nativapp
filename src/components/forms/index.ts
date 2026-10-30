@@ -3,3 +3,4 @@ export * from './EventInfoGrid';
 export * from './EventRequirementItem';
 export * from './EventDurationModal';
 export * from './ValuePickerModal';
+export * from './EventScoringInfoModal';

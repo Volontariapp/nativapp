@@ -125,7 +125,7 @@ export function EventFormScreen(): React.JSX.Element {
           : 'Lieu non spécifié',
       type: validatedData.type,
       state: EventState.EVENT_STATE_PUBLISHED,
-      awardedImpactScore: validatedData.awardedImpactScore,
+      awardedImpactScore: validatedData.awardedImpactScore ?? 0,
       maxParticipants: validatedData.maxParticipants,
       currentParticipants: 1,
       coverUrl: eventCover.cover?.source.uri,
