@@ -13,9 +13,10 @@ import type { AppEvent } from '@/api/event/event.api';
 import { useGetEvents } from '@/api/event/hooks/use-get-events';
 import { useSwipeEventMemory } from './use-swipe-event-memory';
 import { useUserSocialActions } from '@/api/social/hooks/use-user-social-actions';
-import { useLocation } from '@/hooks/use-location';
+import { useSwipeLocation } from './use-swipe-location';
+import { useSwipePassFeedback } from './use-swipe-pass-feedback';
 import type { UserCoordinates } from '@/hooks/use-location';
-import { rankingApi } from '@/api/ranking/ranking.api';
+import { listVersionOf, useSwipeStackReload } from './use-swipe-stack-reload';
 import { useRankingEvents } from '@/api/ranking/hooks/use-ranking-events';
 
 type TabParamList = {
@@ -33,9 +34,6 @@ type SwipeScreenNavigation = CompositeNavigationProp<
 
 const SWIPE_PREFETCH_THRESHOLD = 10;
 const EVENTS_PAGE_LIMIT = 20;
-const MAX_PASS_BATCH_SIZE = 50;
-const PASS_BATCH_TRIGGER_SIZE = 5;
-const LOCATION_SEND_INTERVAL_MS = 60_000;
 
 export interface UseSwipeScreenResult {
   events: AppEvent[];
@@ -77,73 +75,11 @@ export function useSwipeScreen(): UseSwipeScreenResult {
 
   const { wish } = useUserSocialActions();
   const { excludedIds, markHandled, refreshExclusions } = useSwipeEventMemory();
-  const { locationObject: userLocation, coordinates, isPermissionDenied } = useLocation();
+  const { queuePass, flushPendingPass } = useSwipePassFeedback();
+  const { userLocation, sendLocationIfAllowed } = useSwipeLocation();
 
   const swiperRef = useRef<Swiper<AppEvent> | null>(null);
   const [currentIndex, setCurrentIndex] = useState(0);
-
-  // Tampon de PASS : envoyé par lots de 5, au passage en arrière-plan et au démontage
-  const pendingPassIdsRef = useRef<string[]>([]);
-  const isFlushingPassRef = useRef(false);
-
-  const flushPendingPass = useCallback(async (): Promise<void> => {
-    if (isFlushingPassRef.current || pendingPassIdsRef.current.length === 0) {
-      return;
-    }
-    isFlushingPassRef.current = true;
-    const toSend = pendingPassIdsRef.current.slice(0, MAX_PASS_BATCH_SIZE);
-    try {
-      await rankingApi.recordFeedback(toSend);
-      const sentSet = new Set(toSend);
-      pendingPassIdsRef.current = pendingPassIdsRef.current.filter((id) => !sentSet.has(id));
-      if (pendingPassIdsRef.current.length >= PASS_BATCH_TRIGGER_SIZE) {
-        isFlushingPassRef.current = false;
-        void flushPendingPass();
-        return;
-      }
-    } catch (err) {
-      console.warn('[useSwipeScreen] Failed to record PASS feedback, keeping in buffer:', err);
-    } finally {
-      isFlushingPassRef.current = false;
-    }
-  }, []);
-
-  // Géolocalisation pour le classement : au plus 1 appel par minute si autorisé
-  const lastLocationSentAtRef = useRef<number>(0);
-  const coordinatesRef = useRef(coordinates);
-  const isPermissionDeniedRef = useRef(isPermissionDenied);
-
-  useEffect(() => {
-    coordinatesRef.current = coordinates;
-    isPermissionDeniedRef.current = isPermissionDenied;
-  }, [coordinates, isPermissionDenied]);
-
-  const sendLocationIfAllowed = useCallback(async (): Promise<void> => {
-    if (isPermissionDeniedRef.current) {
-      return;
-    }
-    const coords = coordinatesRef.current;
-    if (coords == null) {
-      return;
-    }
-    const now = Date.now();
-    if (now - lastLocationSentAtRef.current < LOCATION_SEND_INTERVAL_MS) {
-      return;
-    }
-    lastLocationSentAtRef.current = now;
-    try {
-      await rankingApi.updateLocation(coords.latitude, coords.longitude);
-    } catch (err) {
-      console.warn('[useSwipeScreen] Failed to update location for ranking:', err);
-    }
-  }, []);
-
-  // Envoi initial dès disponibilité des coordonnées
-  useEffect(() => {
-    if (coordinates && !isPermissionDenied) {
-      void sendLocationIfAllowed();
-    }
-  }, [coordinates, isPermissionDenied, sendLocationIfAllowed]);
 
   // Écoute des transitions de cycle de vie de l'application
   useEffect(() => {
@@ -190,27 +126,26 @@ export function useSwipeScreen(): UseSwipeScreenResult {
   const isEndReached =
     currentIndex >= events.length && !hasNextPage && !isFetchingNextPage && events.length > 0;
 
-  // Rafraîchissement automatique en fin de pile (sans bloquer ni afficher d'erreur si throttled)
-  const hasRequestedRefreshOnEndRef = useRef(false);
-  useEffect(() => {
-    if (isEndReached && !hasRequestedRefreshOnEndRef.current) {
-      hasRequestedRefreshOnEndRef.current = true;
-      Promise.resolve(rankingApi.requestRefresh('EVENT'))
-        .then(async (res) => {
-          if (res.refreshThrottled) {
-            return;
-          }
-          await rankingQuery.refetch();
-          // Nouvelle pile : les events traites en sortent et le deck repart de la premiere carte
-          refreshExclusions();
-          setCurrentIndex(0);
-          hasRequestedRefreshOnEndRef.current = false;
-        })
-        .catch((err: unknown) => {
-          console.warn('[useSwipeScreen] Ranking refresh on end failed:', err);
-        });
-    }
-  }, [isEndReached, rankingQuery, refreshExclusions]);
+  // Recalcul automatique quand il n'y a plus rien a proposer : fin de pile, ou aucun event servi
+  // a l'ouverture (liste stockee entierement expiree). Sans effet en mode repli.
+  const isEmptyStack = events.length === 0;
+  useSwipeStackReload({
+    isStackExhausted:
+      !isLoading &&
+      !isError &&
+      !isFetchingNextPage &&
+      !hasNextPage &&
+      currentIndex >= events.length &&
+      !(isEmptyStack && isFallbackMode),
+    isEmpty: isEmptyStack,
+    currentListVersion: listVersionOf(rankingQuery.data),
+    reloadRanking: async () => listVersionOf((await rankingQuery.refetch()).data),
+    onReloaded: () => {
+      // Nouvelle pile : les events traites en sortent et le deck repart de la premiere carte
+      refreshExclusions();
+      setCurrentIndex(0);
+    },
+  });
 
   const swipeStateRef = useRef({ events, hasNextPage, isFetchingNextPage, fetchNextPage, wish });
   useLayoutEffect(() => {
@@ -253,15 +188,12 @@ export function useSwipeScreen(): UseSwipeScreenResult {
       const event = currentEvents[cardIndex];
       if (event != null) {
         markHandled(event.id);
-        pendingPassIdsRef.current.push(event.id);
-        if (pendingPassIdsRef.current.length >= PASS_BATCH_TRIGGER_SIZE) {
-          void flushPendingPass();
-        }
+        queuePass(event.id);
       }
       setCurrentIndex((prev) => prev + 1);
       triggerPrefetchIfNeeded(cardIndex);
     },
-    [flushPendingPass, markHandled],
+    [queuePass, markHandled],
   );
 
   const handleTapCard = useCallback(
