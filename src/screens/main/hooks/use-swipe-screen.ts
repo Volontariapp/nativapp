@@ -11,6 +11,7 @@ import { EventState } from '@volontariapp/contracts';
 import type { MainStackParamList } from '@/navigation/stacks/MainStack';
 import type { AppEvent } from '@/api/event/event.api';
 import { useGetEvents } from '@/api/event/hooks/use-get-events';
+import { useSwipeEventMemory } from './use-swipe-event-memory';
 import { useUserSocialActions } from '@/api/social/hooks/use-user-social-actions';
 import { useLocation } from '@/hooks/use-location';
 import type { UserCoordinates } from '@/hooks/use-location';
@@ -75,6 +76,7 @@ export function useSwipeScreen(): UseSwipeScreenResult {
   const fallbackQuery = useGetEvents(fallbackParams);
 
   const { wish } = useUserSocialActions();
+  const { excludedIds, markHandled, refreshExclusions } = useSwipeEventMemory();
   const { locationObject: userLocation, coordinates, isPermissionDenied } = useLocation();
 
   const swiperRef = useRef<Swiper<AppEvent> | null>(null);
@@ -169,13 +171,14 @@ export function useSwipeScreen(): UseSwipeScreenResult {
         rankingQuery.data?.pages.flatMap((page) => (page.isFallback ? [] : page.events)) ?? [];
     }
 
+    // Jamais un event deja souhaite, auquel on participe ou passe pendant la session
     const seen = new Set<string>();
     return freshEvents.filter((e) => {
-      if (seen.has(e.id)) return false;
+      if (seen.has(e.id) || excludedIds.has(e.id)) return false;
       seen.add(e.id);
       return true;
     });
-  }, [isFallbackMode, fallbackQuery.data, rankingQuery.data]);
+  }, [isFallbackMode, fallbackQuery.data, rankingQuery.data, excludedIds]);
 
   const activeQuery = isFallbackMode ? fallbackQuery : rankingQuery;
   const isLoading = activeQuery.isLoading;
@@ -193,16 +196,21 @@ export function useSwipeScreen(): UseSwipeScreenResult {
     if (isEndReached && !hasRequestedRefreshOnEndRef.current) {
       hasRequestedRefreshOnEndRef.current = true;
       Promise.resolve(rankingApi.requestRefresh('EVENT'))
-        .then((res) => {
-          if (!res.refreshThrottled) {
-            void rankingQuery.refetch();
+        .then(async (res) => {
+          if (res.refreshThrottled) {
+            return;
           }
+          await rankingQuery.refetch();
+          // Nouvelle pile : les events traites en sortent et le deck repart de la premiere carte
+          refreshExclusions();
+          setCurrentIndex(0);
+          hasRequestedRefreshOnEndRef.current = false;
         })
         .catch((err: unknown) => {
           console.warn('[useSwipeScreen] Ranking refresh on end failed:', err);
         });
     }
-  }, [isEndReached, rankingQuery]);
+  }, [isEndReached, rankingQuery, refreshExclusions]);
 
   const swipeStateRef = useRef({ events, hasNextPage, isFetchingNextPage, fetchNextPage, wish });
   useLayoutEffect(() => {
@@ -225,21 +233,26 @@ export function useSwipeScreen(): UseSwipeScreenResult {
     }
   };
 
-  const handleSwipeRight = useCallback((cardIndex: number): void => {
-    const { events: currentEvents, wish: currentWish } = swipeStateRef.current;
-    const event = currentEvents[cardIndex];
-    if (event != null) {
-      void currentWish(event.id);
-    }
-    setCurrentIndex((prev) => prev + 1);
-    triggerPrefetchIfNeeded(cardIndex);
-  }, []);
+  const handleSwipeRight = useCallback(
+    (cardIndex: number): void => {
+      const { events: currentEvents, wish: currentWish } = swipeStateRef.current;
+      const event = currentEvents[cardIndex];
+      if (event != null) {
+        markHandled(event.id);
+        void currentWish(event.id);
+      }
+      setCurrentIndex((prev) => prev + 1);
+      triggerPrefetchIfNeeded(cardIndex);
+    },
+    [markHandled],
+  );
 
   const handleSwipeLeft = useCallback(
     (cardIndex: number): void => {
       const { events: currentEvents } = swipeStateRef.current;
       const event = currentEvents[cardIndex];
       if (event != null) {
+        markHandled(event.id);
         pendingPassIdsRef.current.push(event.id);
         if (pendingPassIdsRef.current.length >= PASS_BATCH_TRIGGER_SIZE) {
           void flushPendingPass();
@@ -248,7 +261,7 @@ export function useSwipeScreen(): UseSwipeScreenResult {
       setCurrentIndex((prev) => prev + 1);
       triggerPrefetchIfNeeded(cardIndex);
     },
-    [flushPendingPass],
+    [flushPendingPass, markHandled],
   );
 
   const handleTapCard = useCallback(
