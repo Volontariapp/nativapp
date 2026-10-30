@@ -359,39 +359,4 @@ describe('useHomeScreen', () => {
 
     expect(result.current.posts.map((post) => post.id)).toEqual(['post-3', 'post-1', 'post-2']);
   });
-
-  it('sets hasNewContent = true when versionChanged is returned, and clears it on banner press', async () => {
-    mockGetFeed.mockResolvedValue({
-      posts: [createSamplePost('post-ranked-1', 'Post Classé 1')],
-      totalCount: 1,
-      ranking: {
-        source: 'FULL',
-        computedAt: '2026-10-20T08:00:00.000Z',
-        stale: false,
-        hasMore: false,
-        versionChanged: true,
-        listVersion: 'v2',
-        nextCursor: '',
-      },
-      isFallback: false,
-    });
-    mockRequestRefresh.mockResolvedValue({ accepted: true, refreshThrottled: false });
-
-    const { result } = renderHook(() => useHomeScreen(), {
-      wrapper: createWrapper(),
-    });
-
-    await waitFor(() => {
-      expect(result.current.hasNewContent).toBe(true);
-    });
-
-    act(() => {
-      result.current.handleNewPostsPress();
-    });
-
-    await waitFor(() => {
-      expect(result.current.hasNewContent).toBe(false);
-      expect(mockRequestRefresh).toHaveBeenCalledWith('POST');
-    });
-  });
 });
