@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useMemo, useCallback } from 'react';
-import { View, StyleSheet, FlatList, RefreshControl, ActivityIndicator } from 'react-native';
+import { View, StyleSheet, FlatList, RefreshControl, ActivityIndicator, Alert } from 'react-native';
 import Feather from 'react-native-vector-icons/Feather';
 import { MIN_ATTENDEES_FOR_ORGANIZER_POINTS } from '@volontariapp/shared';
 
@@ -44,7 +44,12 @@ export function EventParticipantsTab({
   const isInProgress = normalizedState === EventState.EVENT_STATE_IN_PROGRESS;
   const isFinished = normalizedState === EventState.EVENT_STATE_FINISHED;
 
-  const { data: attendeesData, refetch: refetchAttendees } = useEventAttendees(eventId);
+  const {
+    data: attendeesData,
+    refetch: refetchAttendees,
+    isSuccess: isAttendanceLoaded,
+    isError: isAttendanceError,
+  } = useEventAttendees(eventId);
 
   const attendanceMutation = useSetEventAttendance(eventId);
 
@@ -52,13 +57,14 @@ export function EventParticipantsTab({
     const set = new Set<string>();
     if (attendeesData?.attendees) {
       for (const a of attendeesData.attendees) {
-        if (a.checkedInAt) {
+        // L'organisateur n'entre pas dans le decompte des presents (docs/scoring/03).
+        if (a.checkedInAt && a.userId !== currentEvent?.organizerId) {
           set.add(a.userId);
         }
       }
     }
     return set;
-  }, [attendeesData]);
+  }, [attendeesData, currentEvent?.organizerId]);
 
   const checkedInCount = checkedInUserIds.size;
 
@@ -103,6 +109,11 @@ export function EventParticipantsTab({
           checkedUserIds: currentStatus ? [] : [userId],
           uncheckedUserIds: currentStatus ? [userId] : [],
         });
+      } catch {
+        Alert.alert(
+          'Erreur',
+          "Impossible de mettre à jour l'émargement. Réessaie dans un instant.",
+        );
       } finally {
         setPendingUserId(null);
       }
@@ -117,7 +128,7 @@ export function EventParticipantsTab({
         <ParticipantCard
           participant={item}
           isCheckedIn={isCheckedIn}
-          canCheckIn={isInProgress}
+          canCheckIn={isInProgress && isAttendanceLoaded}
           isCheckInPending={pendingUserId === item.id}
           onToggleCheckIn={() => {
             void handleToggleCheckIn(item.id, isCheckedIn);
@@ -128,7 +139,14 @@ export function EventParticipantsTab({
         />
       );
     },
-    [checkedInUserIds, isInProgress, pendingUserId, handleToggleCheckIn, handleRowPress],
+    [
+      checkedInUserIds,
+      isInProgress,
+      isAttendanceLoaded,
+      pendingUserId,
+      handleToggleCheckIn,
+      handleRowPress,
+    ],
   );
 
   const handleCombinedRefresh = useCallback(() => {
@@ -172,7 +190,18 @@ export function EventParticipantsTab({
         )}
 
         {/* Live check-in banner */}
-        {(isInProgress || isFinished) && (
+        {(isInProgress || isFinished) && isAttendanceError && (
+          <View style={[styles.attendanceBanner, styles.attendanceBannerWarning]}>
+            <Feather name="alert-triangle" size={18} color={theme.colors.goldText} />
+            <View style={styles.attendanceBannerContent}>
+              <AppText style={styles.attendanceBannerTitle}>Présences indisponibles</AppText>
+              <AppText style={styles.attendanceBannerSubtitle}>
+                Impossible de charger l'émargement. Tire pour rafraîchir.
+              </AppText>
+            </View>
+          </View>
+        )}
+        {(isInProgress || isFinished) && isAttendanceLoaded && (
           <View
             style={[
               styles.attendanceBanner,

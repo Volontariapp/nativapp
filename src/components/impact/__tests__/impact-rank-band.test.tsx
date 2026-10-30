@@ -39,6 +39,13 @@ describe('ImpactRankBand', () => {
     expect(getByText(`${formatPoints(POINTS)} pts`)).toBeTruthy();
   });
 
+  it('keeps the literal threshold table anchored', () => {
+    expect(getImpactRankStatus(299).current.name).toBe('ROOKIE HELPER');
+    expect(getImpactRankStatus(300).current.name).toBe('FIELD VOLUNTEER');
+    expect(getImpactRankStatus(2100).current.name).toBe('IMPACT WARRIOR');
+    expect(getImpactRankStatus(75000).current.name).toBe('ATLAS TITAN');
+  });
+
   it('explains how many points remain to reach the next rank', () => {
     const { getByText } = render(<ImpactRankBand status={getImpactRankStatus(POINTS)} />);
 

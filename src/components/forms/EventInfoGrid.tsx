@@ -49,9 +49,11 @@ export function EventInfoGrid({ errors, setValue, watch }: EventInfoGridProps): 
   const [isParticipantsModalVisible, setIsParticipantsModalVisible] = useState<boolean>(false);
   const [isScoringInfoModalVisible, setIsScoringInfoModalVisible] = useState<boolean>(false);
 
+  // Nombre de presents simule : la jauge, ou 10 quand elle n'est pas renseignee
+  const attendeesCount = maxParticipants > 0 ? maxParticipants : 10;
+
   // Estimation dynamique des points selon la durée et la jauge
   const estimatedScoring = useMemo(() => {
-    const attendeesCount = maxParticipants > 0 ? maxParticipants : 10;
     const dummyAttendees = Array.from({ length: attendeesCount }, (_, i) => ({
       userId: `sim-user-${String(i)}`,
       registeredAt: new Date(startAt.getTime() + i * 1000),
@@ -64,7 +66,7 @@ export function EventInfoGrid({ errors, setValue, watch }: EventInfoGridProps): 
       organizerId: 'sim-creator',
       attendees: dummyAttendees,
     });
-  }, [startAt, endAt, maxParticipants]);
+  }, [startAt, endAt, attendeesCount]);
 
   const maxEstimatedPoints = estimatedScoring.participants[0]?.points ?? 0;
   const organizerBonusPoints = estimatedScoring.organizerPoints;
@@ -311,7 +313,7 @@ export function EventInfoGrid({ errors, setValue, watch }: EventInfoGridProps): 
         maxEstimatedPoints={maxEstimatedPoints}
         organizerPoints={organizerBonusPoints}
         durationHours={durationHours}
-        maxParticipants={maxParticipants}
+        maxParticipants={attendeesCount}
       />
     </View>
   );

@@ -2,11 +2,13 @@ import React from 'react';
 import { render, fireEvent, waitFor } from '@testing-library/react-native';
 import { createUserWeb } from '@/api/user/__tests__/user.factory';
 import { createMockAppEvent } from '@/components/post/__tests__/event.factory';
+import { Alert } from 'react-native';
 import { EventState } from '@volontariapp/contracts';
 import { EventParticipantsTab } from '../EventParticipantsTab';
 
 const mockMutateAsync = jest.fn().mockResolvedValue({ success: true, message: 'Updated' });
 const mockRefetchAttendees = jest.fn();
+const mockAttendeesState = { isSuccess: true, isError: false };
 
 jest.mock('expo-image', () => ({ Image: 'Image' }));
 jest.mock('@/api/social/hooks/use-event-attendance', () => ({
@@ -22,6 +24,8 @@ jest.mock('@/api/social/hooks/use-event-attendance', () => ({
       pagination: undefined,
     },
     refetch: mockRefetchAttendees,
+    isSuccess: mockAttendeesState.isSuccess,
+    isError: mockAttendeesState.isError,
   }),
   useSetEventAttendance: () => ({
     mutateAsync: mockMutateAsync,
@@ -37,6 +41,8 @@ describe('EventParticipantsTab', () => {
 
   beforeEach(() => {
     jest.clearAllMocks();
+    mockAttendeesState.isSuccess = true;
+    mockAttendeesState.isError = false;
   });
 
   it('renders attendance banner when event is in progress and displays present count', () => {
@@ -93,5 +99,56 @@ describe('EventParticipantsTab', () => {
         uncheckedUserIds: [],
       });
     });
+  });
+
+  const renderInProgress = () =>
+    render(
+      <EventParticipantsTab
+        currentEvent={createMockAppEvent({
+          id: 'event-10',
+          state: EventState.EVENT_STATE_IN_PROGRESS,
+        })}
+        participants={participants}
+        totalRegistered={3}
+        isLoading={false}
+        isRefetching={false}
+        onRefresh={jest.fn()}
+        onParticipantPress={jest.fn()}
+      />,
+    );
+
+  it('alerts the organizer and clears the pending state when the check-in fails', async () => {
+    const alertSpy = jest.spyOn(Alert, 'alert').mockImplementation(jest.fn());
+    mockMutateAsync.mockRejectedValueOnce(new Error('403'));
+
+    const { getAllByText } = renderInProgress();
+    const button = getAllByText('Émarger')[0];
+    if (button === undefined) throw new Error('Check-in button not found');
+    fireEvent.press(button);
+
+    await waitFor(() => {
+      expect(alertSpy).toHaveBeenCalledWith('Erreur', expect.any(String));
+    });
+    expect(getAllByText('Émarger').length).toBeGreaterThan(0);
+    alertSpy.mockRestore();
+  });
+
+  it('hides the banner and disables check-in while attendees are not loaded', () => {
+    mockAttendeesState.isSuccess = false;
+
+    const { queryByText } = renderInProgress();
+
+    expect(queryByText(/participants? émargés?/)).toBeNull();
+    expect(mockMutateAsync).not.toHaveBeenCalled();
+  });
+
+  it('shows an unavailable banner when the attendees query fails', () => {
+    mockAttendeesState.isSuccess = false;
+    mockAttendeesState.isError = true;
+
+    const { getByText, queryByText } = renderInProgress();
+
+    expect(getByText('Présences indisponibles')).toBeTruthy();
+    expect(queryByText(/participants? émargés?/)).toBeNull();
   });
 });
