@@ -18,7 +18,6 @@ export const eventSchema = z
         message: "Le type d'évènement est obligatoire (Écologie ou Social)",
       },
     ),
-    awardedImpactScore: z.number().min(0, 'Doit être positif').optional(),
     maxParticipants: z.number().min(1, 'Au moins 1 participant'),
     startAt: z.date({ message: 'Date requise' }),
     endAt: z.date({ message: 'Date requise' }),

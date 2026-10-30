@@ -27,7 +27,8 @@ export const useCreateEvent = () => {
         description: data.description,
         localisationName: data.localisationName,
         type: data.type,
-        awardedImpactScore: data.awardedImpactScore ?? 0,
+        // Champ requis par le contrat mais ignore : les points sont calcules cote serveur (docs/scoring/08).
+        awardedImpactScore: 0,
         maxParticipants: data.maxParticipants,
         startAt: data.startAt,
         endAt: data.endAt,

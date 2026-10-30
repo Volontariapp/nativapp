@@ -1,5 +1,6 @@
 import React from 'react';
 import { fireEvent, render } from '@testing-library/react-native';
+import { IMPACT_RANKS, formatPoints } from '@/shared/lib/impact-ranks';
 import { createProfile } from '@/components/profile/__tests__/profile.factory';
 import { ImpactRankBandContainer } from '../impact-rank-band-container';
 import { mockNavigate, mockUseProfile } from './impact-rank-band-container.mock';
@@ -11,6 +12,10 @@ jest.mock('@react-navigation/native', () => ({
   useNavigation: (): unknown => ({ navigate: mockNavigate }),
 }));
 
+const RANK = IMPACT_RANKS[3];
+if (RANK === undefined) throw new Error('The rank scale must contain at least 4 ranks');
+const POINTS = RANK.minPoints + 250;
+
 describe('ImpactRankBandContainer', () => {
   afterEach(() => {
     jest.resetAllMocks();
@@ -18,14 +23,14 @@ describe('ImpactRankBandContainer', () => {
 
   it('shows the rank that matches the score of the profile', () => {
     mockUseProfile.mockReturnValue({
-      data: createProfile({ totalImpactScore: 1250 }),
+      data: createProfile({ totalImpactScore: POINTS }),
       isLoading: false,
     });
 
     const { getByText } = render(<ImpactRankBandContainer />);
 
-    expect(getByText('IMPACT WARRIOR')).toBeTruthy();
-    expect(getByText('1 250 pts')).toBeTruthy();
+    expect(getByText(RANK.name)).toBeTruthy();
+    expect(getByText(`${formatPoints(POINTS)} pts`)).toBeTruthy();
   });
 
   it('opens the ranks page when the band is pressed', () => {

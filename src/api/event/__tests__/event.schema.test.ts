@@ -11,7 +11,6 @@ describe('eventSchema validation', () => {
       description: 'Collecte participative de déchets le long du fleuve.',
       localisationName: 'Quai de la Gare, Paris',
       type: EventType.EVENT_TYPE_ECOLOGY,
-      awardedImpactScore: 50,
       maxParticipants: 20,
       startAt,
       endAt,

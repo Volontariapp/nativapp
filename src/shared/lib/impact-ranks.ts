@@ -23,8 +23,8 @@ const ROOKIE_HELPER: ImpactRank = {
 };
 
 /**
- * Echelle des rangs, calee sur 100 points par evenement (valeur par defaut du formulaire de
- * creation). Source unique : la frise du feed et la page des rangs la lisent, ajuster ici.
+ * Echelle des rangs, recalibree (x3) pour le scoring dynamique : environ 300 points par mission
+ * validee (docs/scoring/08, section 4). Source unique : la frise du feed et la page des rangs la lisent, ajuster ici.
  */
 export const IMPACT_RANKS: readonly ImpactRank[] = [
   ROOKIE_HELPER,

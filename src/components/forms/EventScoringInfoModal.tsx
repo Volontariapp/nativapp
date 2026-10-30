@@ -2,6 +2,7 @@ import React from 'react';
 import { Modal, View, StyleSheet, Pressable, ScrollView } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import Feather from 'react-native-vector-icons/Feather';
+import { MIN_ATTENDEES_FOR_ORGANIZER_POINTS } from '@volontariapp/shared';
 import { useAppTheme, useStyles } from '@/context/ThemeContext';
 import type { AppTheme } from '@/shared/themes/theme';
 import { AppText } from '@/components/typography/AppText';
@@ -67,7 +68,9 @@ export function EventScoringInfoModal({
               <View style={styles.metricItem}>
                 <AppText style={styles.metricLabel}>Prime créateur</AppText>
                 <AppText style={styles.metricValueSocio}>+{organizerPoints} pts</AppText>
-                <AppText style={styles.metricHint}>dès 3 présents</AppText>
+                <AppText style={styles.metricHint}>
+                  dès {String(MIN_ATTENDEES_FOR_ORGANIZER_POINTS)} présents
+                </AppText>
               </View>
             </View>
 
@@ -128,8 +131,9 @@ export function EventScoringInfoModal({
             <View style={styles.ruleContent}>
               <AppText style={styles.ruleHeading}>Protection anti-triche créateur</AppText>
               <AppText style={styles.ruleText}>
-                La prime de l'organisateur se débloque uniquement si au moins 3 participants
-                différents sont présents sur place.
+                La prime de l'organisateur se débloque uniquement si au moins{' '}
+                {String(MIN_ATTENDEES_FOR_ORGANIZER_POINTS)} participants différents sont présents
+                sur place.
               </AppText>
             </View>
           </View>

@@ -1,4 +1,4 @@
-import React, { useState, useMemo, useCallback, useEffect } from 'react';
+import React, { useState, useMemo, useCallback } from 'react';
 import { View, StyleSheet, Pressable } from 'react-native';
 import type { Control, FieldErrors, UseFormSetValue, UseFormWatch } from 'react-hook-form';
 import { computeEventScoring } from '@volontariapp/shared';
@@ -36,11 +36,6 @@ export function EventInfoGrid({ errors, setValue, watch }: EventInfoGridProps): 
   const startAt = watch('startAt');
   const endAt = watch('endAt');
   const maxParticipants = watch('maxParticipants') || 0;
-
-  useEffect(() => {
-    // Le score d'impact fixe est remplacé par le scoring dynamique.
-    setValue('awardedImpactScore', 0, { shouldValidate: false });
-  }, [setValue]);
 
   // Détermine la durée initiale en heures
   const initialDuration = useMemo(() => {

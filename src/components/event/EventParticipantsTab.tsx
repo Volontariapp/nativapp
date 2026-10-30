@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useMemo, useCallback } from 'react';
 import { View, StyleSheet, FlatList, RefreshControl, ActivityIndicator } from 'react-native';
 import Feather from 'react-native-vector-icons/Feather';
+import { MIN_ATTENDEES_FOR_ORGANIZER_POINTS } from '@volontariapp/shared';
 
 import { SearchBar } from '@/components/ui';
 import { ParticipantGauge, ParticipantCard, ParticipantEmptyState } from '@/components/event';
@@ -175,22 +176,28 @@ export function EventParticipantsTab({
           <View
             style={[
               styles.attendanceBanner,
-              checkedInCount >= 3 ? styles.attendanceBannerSuccess : styles.attendanceBannerWarning,
+              checkedInCount >= MIN_ATTENDEES_FOR_ORGANIZER_POINTS
+                ? styles.attendanceBannerSuccess
+                : styles.attendanceBannerWarning,
             ]}
           >
             <Feather
-              name={checkedInCount >= 3 ? 'award' : 'info'}
+              name={checkedInCount >= MIN_ATTENDEES_FOR_ORGANIZER_POINTS ? 'award' : 'info'}
               size={18}
-              color={checkedInCount >= 3 ? theme.colors.primaryEco : theme.colors.goldText}
+              color={
+                checkedInCount >= MIN_ATTENDEES_FOR_ORGANIZER_POINTS
+                  ? theme.colors.primaryEco
+                  : theme.colors.goldText
+              }
             />
             <View style={styles.attendanceBannerContent}>
               <AppText style={styles.attendanceBannerTitle}>
                 {`${String(checkedInCount)} / ${String(rawParticipants.length)} participant${rawParticipants.length > 1 ? 's' : ''} émargé${checkedInCount > 1 ? 's' : ''}`}
               </AppText>
               <AppText style={styles.attendanceBannerSubtitle}>
-                {checkedInCount >= 3
+                {checkedInCount >= MIN_ATTENDEES_FOR_ORGANIZER_POINTS
                   ? 'Prime créateur débloquée pour cet événement !'
-                  : `Encore ${String(3 - checkedInCount)} présent(s) requis pour débloquer la prime créateur.`}
+                  : `Encore ${String(MIN_ATTENDEES_FOR_ORGANIZER_POINTS - checkedInCount)} présent(s) requis pour débloquer la prime créateur.`}
               </AppText>
             </View>
           </View>
