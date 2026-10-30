@@ -6,6 +6,7 @@ import { AppText } from '@/components/typography/AppText';
 import { AppButton } from '@/components/buttons/AppButton';
 import type { AppEvent } from '@/api/event/event.api';
 import { EventType } from '@volontariapp/contracts';
+import { EventPointsBadge } from '@/components/event/EventPointsBadge';
 import { mapEventType } from '@/shared/lib/event-mappers.utils';
 import { formatDate } from '@/shared/lib/format-date.utils';
 import Feather from 'react-native-vector-icons/Feather';
@@ -126,14 +127,12 @@ export function EventPreviewModal({
             {/* Impact & participants */}
             {(event.awardedImpactScore > 0 || event.maxParticipants > 0) && (
               <View style={styles.statsRow}>
-                {event.awardedImpactScore > 0 && (
-                  <View style={styles.statChip}>
-                    <Feather name="award" size={14} color={theme.colors.primaryEco} />
-                    <AppText style={styles.statText}>
-                      +{event.awardedImpactScore} pts d&apos;impact
-                    </AppText>
-                  </View>
-                )}
+                <EventPointsBadge
+                  event={event}
+                  variant="chip"
+                  style={styles.statChip}
+                  textStyle={styles.statText}
+                />
                 {event.maxParticipants > 0 && (
                   <View style={styles.statChip}>
                     <Feather name="users" size={14} color={theme.colors.primarySocio} />
