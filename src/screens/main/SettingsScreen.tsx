@@ -20,6 +20,7 @@ import { TokenService } from '@/services/token.service';
 import { useDebug } from '@/context/DebugContext';
 import { useDeleteAccount } from '@/api/user/hooks/use-delete-account';
 import { StorageDebugLink } from '@/screens/debug/components/storage-debug-link';
+import { ClearCacheCard } from '@/screens/main/components/clear-cache-card';
 
 const handleOpenLocationSettings = () => {
   if (Platform.OS === 'ios') {
@@ -128,6 +129,12 @@ export function SettingsScreen() {
               thumbColor={theme.colors.white}
             />
           </View>
+        </View>
+
+        {/* Storage Section */}
+        <View style={{ marginTop: theme.spacing.xl }}>
+          <AppText style={styles.settingTitle}>Stockage</AppText>
+          <ClearCacheCard />
         </View>
 
         {/* Account Section */}

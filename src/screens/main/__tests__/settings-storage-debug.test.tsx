@@ -14,6 +14,9 @@ jest.mock('@/context/DebugContext', () => ({
 jest.mock('@/api/user/hooks/use-delete-account', () => ({
   useDeleteAccount: () => ({ mutate: jest.fn(), isPending: false }),
 }));
+jest.mock('@/hooks/use-clear-cache', () => ({
+  useClearCache: () => ({ isClearing: false, clearCache: jest.fn() }),
+}));
 jest.mock('@/services/token.service', () => ({ TokenService: { deleteAccessToken: jest.fn() } }));
 
 describe('SettingsScreen storage debug entry', () => {
