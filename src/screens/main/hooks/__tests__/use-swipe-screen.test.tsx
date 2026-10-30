@@ -88,12 +88,29 @@ const createFakeEvent = (id: string, title = 'Event'): RankedAppEvent => ({
   reasons: [],
 });
 
-const renderSwipeHook = () => {
-  const queryClient = new QueryClient({
+const createTestQueryClient = (): QueryClient =>
+  new QueryClient({
     defaultOptions: {
       queries: { retry: false, gcTime: 0 },
     },
   });
+
+const rankingEventsPage = (events: RankedAppEvent[]): RankingEventsResult => ({
+  isFallback: false,
+  events,
+  totalCount: events.length,
+  ranking: {
+    source: 'FULL',
+    computedAt: '2026-10-20T08:00:00.000Z',
+    stale: false,
+    hasMore: false,
+    versionChanged: false,
+    listVersion: 'v1',
+    nextCursor: '',
+  },
+});
+
+const renderSwipeHook = (queryClient: QueryClient = createTestQueryClient()) => {
   const wrapper = ({ children }: { children: React.ReactNode }): React.JSX.Element => (
     <QueryClientProvider client={queryClient}>{children}</QueryClientProvider>
   );
@@ -302,6 +319,57 @@ describe('useSwipeScreen', () => {
     });
 
     expect(mockWish).toHaveBeenCalledWith('evt-right');
+  });
+
+  it('keeps the deck stable while swiping, then never shows a wished or passed event again when the screen opens again', async () => {
+    const fakeEvents = [
+      createFakeEvent('evt-1'),
+      createFakeEvent('evt-2'),
+      createFakeEvent('evt-3'),
+    ];
+    mockGetEvents.mockResolvedValue(rankingEventsPage(fakeEvents));
+    const queryClient = createTestQueryClient();
+
+    const first = renderSwipeHook(queryClient);
+    await waitFor(() => {
+      expect(first.result.current.events).toHaveLength(3);
+    });
+
+    act(() => {
+      first.result.current.handleSwipeRight(0);
+      first.result.current.handleSwipeLeft(1);
+    });
+    expect(first.result.current.events).toHaveLength(3);
+    first.unmount();
+
+    const second = renderSwipeHook(queryClient);
+    await waitFor(() => {
+      expect(second.result.current.events.map((event) => event.id)).toEqual(['evt-3']);
+    });
+  });
+
+  it('drops the handled events and restarts at the first card when the stack is reloaded at the end', async () => {
+    const stale = [createFakeEvent('evt-1'), createFakeEvent('evt-2')];
+    mockGetEvents
+      .mockResolvedValueOnce(rankingEventsPage(stale))
+      .mockResolvedValue(rankingEventsPage([...stale, createFakeEvent('evt-3')]));
+
+    const { result } = renderSwipeHook();
+    await waitFor(() => {
+      expect(result.current.events).toHaveLength(2);
+    });
+
+    act(() => {
+      result.current.handleSwipeRight(0);
+      result.current.handleSwipeLeft(1);
+    });
+
+    await waitFor(() => {
+      expect(result.current.events.map((event) => event.id)).toEqual(['evt-3']);
+    });
+    expect(result.current.currentIndex).toBe(0);
+    expect(result.current.isEndReached).toBe(false);
+    expect(mockRequestRefresh).toHaveBeenCalledWith('EVENT');
   });
 
   it('sends user location if permitted and throttles updates', async () => {

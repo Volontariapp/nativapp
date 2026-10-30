@@ -1,4 +1,5 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query';
+import { markEventHandled } from '@/api/event/hooks/use-handled-event-ids';
 import { socialApi } from '../social.api';
 import { PARTICIPATIONS_QUERY_KEY } from './use-user-participations';
 import { MY_FOLLOWS_QUERY_KEY } from './use-get-my-follows';
@@ -22,6 +23,7 @@ export const useUserSocialActions = () => {
       return result;
     },
     onMutate: async (eventId: string) => {
+      markEventHandled(queryClient, eventId);
       await queryClient.cancelQueries({ queryKey: ['wished-events'] });
       await queryClient.cancelQueries({ queryKey: ['participated-events'] });
       const previousWished = queryClient.getQueriesData({ queryKey: ['wished-events'] });
@@ -78,6 +80,9 @@ export const useUserSocialActions = () => {
 
   const wishMutation = useMutation({
     mutationFn: (eventId: string) => socialApi.wishEvent(eventId),
+    onMutate: (eventId: string) => {
+      markEventHandled(queryClient, eventId);
+    },
     onSuccess: () => {
       void queryClient.invalidateQueries({ queryKey: WISHES_QUERY_KEY });
       void queryClient.invalidateQueries({ queryKey: ['wished-events'] });
