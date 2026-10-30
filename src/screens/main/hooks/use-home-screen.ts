@@ -24,11 +24,9 @@ export interface UseHomeScreenResult {
   isRefreshing: boolean;
   hasNextPage: boolean;
   isFetchingNextPage: boolean;
-  hasNewContent: boolean;
   flatListRef: React.RefObject<FlatList<PostWeb> | null>;
   handleRefresh: () => Promise<void>;
   handleLoadMore: () => void;
-  handleNewPostsPress: () => void;
 }
 
 const rankedPostsOf = (data: InfiniteData<RankingFeedResult> | undefined): PostWeb[] =>
@@ -40,7 +38,6 @@ const fallbackPostsOf = (data: InfiniteData<{ posts: PostWeb[] }> | undefined): 
 export function useHomeScreen(): UseHomeScreenResult {
   const flatListRef = useRef<FlatList<PostWeb> | null>(null);
   const [isRefreshing, setIsRefreshing] = useState(false);
-  const [hasNewContent, setHasNewContent] = useState(false);
   const { userId } = useAuth();
   const myLikes = useGetMyLikes();
   const engagedPostIds = useEngagedPostIds();
@@ -60,8 +57,6 @@ export function useHomeScreen(): UseHomeScreenResult {
     (rankingQuery.isSuccess && !hasRankedPosts);
   const fallbackQuery = useListPosts({ limit: FEED_PAGE_LIMIT });
 
-  const currentListVersionRef = useRef<string | null>(null);
-
   useEffect(() => {
     if (hasHandledSnapshotRef.current || !myLikes.data) {
       return;
@@ -69,21 +64,6 @@ export function useHomeScreen(): UseHomeScreenResult {
     hasHandledSnapshotRef.current = true;
     setHandledIds(new Set([...myLikes.data.ids, ...engagedPostIds]));
   }, [myLikes.data, engagedPostIds]);
-
-  useEffect(() => {
-    if (firstPage && !firstPage.isFallback && firstPage.ranking.listVersion) {
-      const newVersion = firstPage.ranking.listVersion;
-      if (currentListVersionRef.current != null && currentListVersionRef.current !== newVersion) {
-        setHasNewContent(true);
-      }
-      currentListVersionRef.current = newVersion;
-    }
-
-    const last = rankingQuery.data?.pages[rankingQuery.data.pages.length - 1];
-    if (last && !last.isFallback && last.ranking.versionChanged) {
-      setHasNewContent(true);
-    }
-  }, [firstPage, rankingQuery.data]);
 
   // Flattening des posts selon le mode, sans les posts de l'utilisateur ni ceux deja likes ou commentes
   const posts = useMemo((): PostWeb[] => {
@@ -105,7 +85,6 @@ export function useHomeScreen(): UseHomeScreenResult {
   // Rafraîchissement manuel (Pull-to-refresh)
   const handleRefresh = useCallback(async (): Promise<void> => {
     setIsRefreshing(true);
-    setHasNewContent(false);
     try {
       posts.forEach((post) => seenIdsRef.current.add(post.id));
       try {
@@ -149,11 +128,6 @@ export function useHomeScreen(): UseHomeScreenResult {
     }
   }, [hasNextPage, isFetchingNextPage, isFallbackMode, fallbackQuery, rankingQuery]);
 
-  const handleNewPostsPress = useCallback((): void => {
-    flatListRef.current?.scrollToOffset({ offset: 0, animated: true });
-    void handleRefresh();
-  }, [handleRefresh]);
-
   return {
     posts,
     isLoading,
@@ -162,10 +136,8 @@ export function useHomeScreen(): UseHomeScreenResult {
     isRefreshing,
     hasNextPage,
     isFetchingNextPage,
-    hasNewContent,
     flatListRef,
     handleRefresh,
     handleLoadMore,
-    handleNewPostsPress,
   };
 }

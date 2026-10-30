@@ -1,6 +1,5 @@
-import { StyleSheet, View, ActivityIndicator, Pressable, RefreshControl } from 'react-native';
+import { StyleSheet, View, ActivityIndicator, RefreshControl } from 'react-native';
 import React, { useCallback, useMemo } from 'react';
-import Icon from 'react-native-vector-icons/Feather';
 import { AppText } from '@/components/typography/AppText';
 import AppHeader from '@/components/layout/AppHeader';
 import { useAppTheme, useStyles } from '@/context/ThemeContext';
@@ -28,11 +27,9 @@ export function HomeScreen(): React.JSX.Element {
     isRefreshing,
     hasNextPage,
     isFetchingNextPage,
-    hasNewContent,
     flatListRef,
     handleRefresh,
     handleLoadMore,
-    handleNewPostsPress,
   } = useHomeScreen();
 
   const scrollHandler = useScrollTabBar();
@@ -68,17 +65,6 @@ export function HomeScreen(): React.JSX.Element {
                 : 'Mode Debug : Feed classé par ms-ranking (score actif)'}
             </AppText>
           </View>
-        )}
-        {hasNewContent && (
-          <Pressable
-            style={styles.newPostsBanner}
-            onPress={handleNewPostsPress}
-            accessibilityRole="button"
-            accessibilityLabel="Nouveaux posts disponibles"
-          >
-            <Icon name="arrow-up" size={14} color="#FFFFFF" style={styles.bannerIcon} />
-            <AppText style={styles.newPostsText}>Nouveaux posts disponibles</AppText>
-          </Pressable>
         )}
         {isLoading ? (
           <View style={styles.center}>
@@ -157,31 +143,6 @@ const createStyles = (theme: AppTheme) =>
       fontWeight: theme.typography.fontWeight.bold,
       fontFamily: theme.typography.fonts.primary,
       textAlign: 'center',
-    },
-    newPostsBanner: {
-      position: 'absolute',
-      top: 10,
-      alignSelf: 'center',
-      zIndex: 10,
-      flexDirection: 'row',
-      alignItems: 'center',
-      backgroundColor: theme.colors.primarySocio,
-      paddingHorizontal: 16,
-      paddingVertical: 8,
-      borderRadius: 20,
-      shadowColor: '#000',
-      shadowOffset: { width: 0, height: 2 },
-      shadowOpacity: 0.25,
-      shadowRadius: 3.84,
-      elevation: 5,
-    },
-    bannerIcon: {
-      marginRight: 6,
-    },
-    newPostsText: {
-      color: '#FFFFFF',
-      fontSize: 13,
-      fontWeight: '600',
     },
     listContent: {
       paddingBottom: 20,
