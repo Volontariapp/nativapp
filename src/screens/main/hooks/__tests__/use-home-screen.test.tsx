@@ -41,6 +41,44 @@ jest.mock('@/api/post/hooks/use-list-all-posts', () => ({
   useListPosts: (params?: unknown) => mockUseListPosts(params),
 }));
 
+interface MockMyLikesReturn {
+  data: { ids: string[]; totalCount: number };
+  refetch: () => Promise<{ data: { ids: string[]; totalCount: number } }>;
+}
+
+const mockUseGetMyLikes = jest.fn<MockMyLikesReturn, []>();
+jest.mock('@/api/social/hooks/use-get-my-likes', () => ({
+  useGetMyLikes: () => mockUseGetMyLikes(),
+}));
+
+const CURRENT_USER_ID = 'current-user';
+jest.mock('@/context/auth/auth.context', () => ({
+  useAuth: () => ({ userId: CURRENT_USER_ID }),
+}));
+
+const mockMyLikes = (ids: string[]): void => {
+  const data = { ids, totalCount: ids.length };
+  mockUseGetMyLikes.mockReturnValue({ data, refetch: jest.fn().mockResolvedValue({ data }) });
+};
+
+const rankingPage = (
+  posts: RankedAppPost[],
+  options: { hasMore: boolean; nextCursor: string },
+): RankingFeedResult => ({
+  posts,
+  totalCount: posts.length,
+  ranking: {
+    source: 'FULL',
+    computedAt: '2026-10-20T08:00:00.000Z',
+    stale: false,
+    hasMore: options.hasMore,
+    versionChanged: false,
+    listVersion: 'v1',
+    nextCursor: options.nextCursor,
+  },
+  isFallback: false,
+});
+
 const createSamplePost = (id: string, title: string): RankedAppPost => ({
   id,
   title,
@@ -70,6 +108,7 @@ const createWrapper = () => {
 describe('useHomeScreen', () => {
   beforeEach(() => {
     jest.clearAllMocks();
+    mockMyLikes([]);
     mockUseListPosts.mockReturnValue({
       data: {
         pages: [
@@ -249,6 +288,76 @@ describe('useHomeScreen', () => {
     await waitFor(() => {
       expect(mockGetFeed).toHaveBeenCalledTimes(2);
     });
+  });
+
+  it('never shows the posts of the user nor the posts already liked or commented', async () => {
+    mockMyLikes(['post-liked']);
+    mockGetFeed.mockResolvedValue(
+      rankingPage(
+        [
+          createSamplePost('post-kept', 'Gardé'),
+          createSamplePost('post-liked', 'Déjà liké'),
+          { ...createSamplePost('post-own', 'Le mien'), authorId: CURRENT_USER_ID },
+        ],
+        { hasMore: false, nextCursor: '' },
+      ),
+    );
+
+    const { result } = renderHook(() => useHomeScreen(), { wrapper: createWrapper() });
+
+    await waitFor(() => {
+      expect(result.current.posts.map((post) => post.id)).toEqual(['post-kept']);
+    });
+  });
+
+  it('keeps a post the user likes on screen until the next refresh', async () => {
+    mockGetFeed.mockResolvedValue(
+      rankingPage([createSamplePost('post-a', 'A'), createSamplePost('post-b', 'B')], {
+        hasMore: false,
+        nextCursor: '',
+      }),
+    );
+    mockRequestRefresh.mockResolvedValue({ accepted: true, refreshThrottled: false });
+
+    const { result, rerender } = renderHook(() => useHomeScreen(), { wrapper: createWrapper() });
+    await waitFor(() => {
+      expect(result.current.posts).toHaveLength(2);
+    });
+
+    mockMyLikes(['post-a']);
+    rerender({});
+    expect(result.current.posts).toHaveLength(2);
+
+    await act(async () => {
+      await result.current.handleRefresh();
+    });
+
+    expect(result.current.posts.map((post) => post.id)).toEqual(['post-b']);
+  });
+
+  it('puts the posts never displayed first when a refresh brings no new ranking', async () => {
+    mockGetFeed.mockImplementation((params) =>
+      Promise.resolve(
+        params?.cursor === 'cursor-2'
+          ? rankingPage([createSamplePost('post-3', 'Trois')], { hasMore: false, nextCursor: '' })
+          : rankingPage([createSamplePost('post-1', 'Un'), createSamplePost('post-2', 'Deux')], {
+              hasMore: true,
+              nextCursor: 'cursor-2',
+            }),
+      ),
+    );
+    mockRequestRefresh.mockResolvedValue({ accepted: true, refreshThrottled: false });
+
+    const { result } = renderHook(() => useHomeScreen(), { wrapper: createWrapper() });
+    await waitFor(() => {
+      expect(result.current.posts.map((post) => post.id)).toEqual(['post-1', 'post-2']);
+    });
+
+    await act(async () => {
+      await result.current.handleRefresh();
+    });
+
+    expect(result.current.posts.map((post) => post.id)).toEqual(['post-3', 'post-1', 'post-2']);
   });
 
   it('sets hasNewContent = true when versionChanged is returned, and clears it on banner press', async () => {
