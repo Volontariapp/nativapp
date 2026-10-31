@@ -29,15 +29,15 @@ describe('RanksScreen', () => {
 
     [
       ['ROOKIE HELPER', '0 pts'],
-      ['FIELD VOLUNTEER', '100 pts'],
-      ['COMMUNITY RANGER', '300 pts'],
-      ['IMPACT WARRIOR', '700 pts'],
-      ['CHANGE MAKER', '1 500 pts'],
-      ['CLEANER MASTER', '3 000 pts'],
-      ['HOPE GUARDIAN', '5 500 pts'],
-      ['WORLD DEFENDER', '9 000 pts'],
-      ['LIVING LEGEND', '15 000 pts'],
-      ['ATLAS TITAN', '25 000 pts'],
+      ['FIELD VOLUNTEER', '300 pts'],
+      ['COMMUNITY RANGER', '900 pts'],
+      ['IMPACT WARRIOR', '2 100 pts'],
+      ['CHANGE MAKER', '4 500 pts'],
+      ['CLEANER MASTER', '9 000 pts'],
+      ['HOPE GUARDIAN', '16 500 pts'],
+      ['WORLD DEFENDER', '27 000 pts'],
+      ['LIVING LEGEND', '45 000 pts'],
+      ['ATLAS TITAN', '75 000 pts'],
     ].forEach(([name, threshold]) => {
       expect(getByText(name as string)).toBeTruthy();
       expect(getByText(threshold as string)).toBeTruthy();
@@ -49,11 +49,11 @@ describe('RanksScreen', () => {
     const { getByLabelText, getAllByText } = render(<RanksScreen />);
 
     expect(getByLabelText('FIELD VOLUNTEER, débloqué')).toBeTruthy();
-    expect(getByLabelText('IMPACT WARRIOR, rang actuel')).toBeTruthy();
-    expect(getByLabelText('CHANGE MAKER, verrouillé')).toBeTruthy();
-    expect(getAllByText('Débloqué')).toHaveLength(3);
+    expect(getByLabelText('COMMUNITY RANGER, rang actuel')).toBeTruthy();
+    expect(getByLabelText('IMPACT WARRIOR, verrouillé')).toBeTruthy();
+    expect(getAllByText('Débloqué')).toHaveLength(2);
     expect(getAllByText('Rang actuel')).toHaveLength(1);
-    expect(getAllByText('Verrouillé')).toHaveLength(6);
+    expect(getAllByText('Verrouillé')).toHaveLength(7);
   });
 
   it('shows the points of the user', () => {

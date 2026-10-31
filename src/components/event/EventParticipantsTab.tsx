@@ -1,16 +1,17 @@
 import React, { useState, useEffect, useMemo, useCallback } from 'react';
-import { View, StyleSheet, FlatList, RefreshControl, ActivityIndicator } from 'react-native';
+import { View, StyleSheet, FlatList, RefreshControl, ActivityIndicator, Alert } from 'react-native';
+import Feather from 'react-native-vector-icons/Feather';
+import { MIN_ATTENDEES_FOR_ORGANIZER_POINTS } from '@volontariapp/shared';
 
 import { SearchBar } from '@/components/ui';
-import {
-  ParticipantGauge,
-  ParticipantCard,
-  ParticipantEmptyState,
-} from '@/components/event';
+import { ParticipantGauge, ParticipantCard, ParticipantEmptyState } from '@/components/event';
+import { AppText } from '@/components/typography/AppText';
 import { useAppTheme, useStyles } from '@/context/ThemeContext';
 import type { AppTheme } from '@/shared/themes/theme';
 import type { AppEvent } from '@/api/event/event.api';
-import type { UserWeb } from '@volontariapp/contracts';
+import { EventState, type UserWeb } from '@volontariapp/contracts';
+import { normalizeEventState } from '@/shared/lib/event-mappers.utils';
+import { useEventAttendees, useSetEventAttendance } from '@/api/social/hooks/use-event-attendance';
 
 export interface EventParticipantsTabProps {
   currentEvent?: AppEvent;
@@ -36,6 +37,36 @@ export function EventParticipantsTab({
 
   const [searchQuery, setSearchQuery] = useState('');
   const [debouncedQuery, setDebouncedQuery] = useState('');
+  const [pendingUserId, setPendingUserId] = useState<string | null>(null);
+
+  const eventId = currentEvent?.id;
+  const normalizedState = currentEvent ? normalizeEventState(currentEvent.state) : null;
+  const isInProgress = normalizedState === EventState.EVENT_STATE_IN_PROGRESS;
+  const isFinished = normalizedState === EventState.EVENT_STATE_FINISHED;
+
+  const {
+    data: attendeesData,
+    refetch: refetchAttendees,
+    isSuccess: isAttendanceLoaded,
+    isError: isAttendanceError,
+  } = useEventAttendees(eventId);
+
+  const attendanceMutation = useSetEventAttendance(eventId);
+
+  const checkedInUserIds = useMemo(() => {
+    const set = new Set<string>();
+    if (attendeesData?.attendees) {
+      for (const a of attendeesData.attendees) {
+        // L'organisateur n'entre pas dans le decompte des presents (docs/scoring/03).
+        if (a.checkedInAt && a.userId !== currentEvent?.organizerId) {
+          set.add(a.userId);
+        }
+      }
+    }
+    return set;
+  }, [attendeesData, currentEvent?.organizerId]);
+
+  const checkedInCount = checkedInUserIds.size;
 
   useEffect(() => {
     const handler = setTimeout(() => {
@@ -59,8 +90,7 @@ export function EventParticipantsTab({
   }, [rawParticipants, debouncedQuery]);
 
   const keyExtractor = useCallback(
-    (item: UserWeb, index: number): string =>
-      item.id || String(index),
+    (item: UserWeb, index: number): string => item.id || String(index),
     [],
   );
 
@@ -71,37 +101,76 @@ export function EventParticipantsTab({
     [onParticipantPress],
   );
 
-  const renderItem = useCallback(
-    ({ item }: { item: UserWeb }): React.JSX.Element => (
-      <ParticipantCard
-        participant={item}
-        onPress={() => {
-          handleRowPress(item.id);
-        }}
-      />
-    ),
-    [handleRowPress],
+  const handleToggleCheckIn = useCallback(
+    async (userId: string, currentStatus: boolean): Promise<void> => {
+      setPendingUserId(userId);
+      try {
+        await attendanceMutation.mutateAsync({
+          checkedUserIds: currentStatus ? [] : [userId],
+          uncheckedUserIds: currentStatus ? [userId] : [],
+        });
+      } catch {
+        Alert.alert(
+          'Erreur',
+          "Impossible de mettre à jour l'émargement. Réessaie dans un instant.",
+        );
+      } finally {
+        setPendingUserId(null);
+      }
+    },
+    [attendanceMutation],
   );
+
+  const renderItem = useCallback(
+    ({ item }: { item: UserWeb }): React.JSX.Element => {
+      const isCheckedIn = checkedInUserIds.has(item.id);
+      return (
+        <ParticipantCard
+          participant={item}
+          isCheckedIn={isCheckedIn}
+          canCheckIn={isInProgress && isAttendanceLoaded}
+          isCheckInPending={pendingUserId === item.id}
+          onToggleCheckIn={() => {
+            void handleToggleCheckIn(item.id, isCheckedIn);
+          }}
+          onPress={() => {
+            handleRowPress(item.id);
+          }}
+        />
+      );
+    },
+    [
+      checkedInUserIds,
+      isInProgress,
+      isAttendanceLoaded,
+      pendingUserId,
+      handleToggleCheckIn,
+      handleRowPress,
+    ],
+  );
+
+  const handleCombinedRefresh = useCallback(() => {
+    onRefresh();
+    if (eventId !== undefined && eventId.length > 0) {
+      void refetchAttendees();
+    }
+  }, [onRefresh, eventId, refetchAttendees]);
 
   const refreshControl = useMemo(
     () => (
       <RefreshControl
         refreshing={isRefetching}
-        onRefresh={onRefresh}
+        onRefresh={handleCombinedRefresh}
         colors={[theme.colors.primaryEco]}
       />
     ),
-    [isRefetching, onRefresh, theme.colors.primaryEco],
+    [isRefetching, handleCombinedRefresh, theme.colors.primaryEco],
   );
 
   const listEmptyComponent = useMemo(
     () =>
       isLoading ? (
-        <ActivityIndicator
-          size="large"
-          color={theme.colors.primaryEco}
-          style={styles.listLoader}
-        />
+        <ActivityIndicator size="large" color={theme.colors.primaryEco} style={styles.listLoader} />
       ) : (
         <ParticipantEmptyState isSearchActive={debouncedQuery.length > 0} />
       ),
@@ -118,6 +187,49 @@ export function EventParticipantsTab({
             max={currentEvent.maxParticipants}
             style={styles.gauge}
           />
+        )}
+
+        {/* Live check-in banner */}
+        {(isInProgress || isFinished) && isAttendanceError && (
+          <View style={[styles.attendanceBanner, styles.attendanceBannerWarning]}>
+            <Feather name="alert-triangle" size={18} color={theme.colors.goldText} />
+            <View style={styles.attendanceBannerContent}>
+              <AppText style={styles.attendanceBannerTitle}>Présences indisponibles</AppText>
+              <AppText style={styles.attendanceBannerSubtitle}>
+                Impossible de charger l'émargement. Tire pour rafraîchir.
+              </AppText>
+            </View>
+          </View>
+        )}
+        {(isInProgress || isFinished) && isAttendanceLoaded && (
+          <View
+            style={[
+              styles.attendanceBanner,
+              checkedInCount >= MIN_ATTENDEES_FOR_ORGANIZER_POINTS
+                ? styles.attendanceBannerSuccess
+                : styles.attendanceBannerWarning,
+            ]}
+          >
+            <Feather
+              name={checkedInCount >= MIN_ATTENDEES_FOR_ORGANIZER_POINTS ? 'award' : 'info'}
+              size={18}
+              color={
+                checkedInCount >= MIN_ATTENDEES_FOR_ORGANIZER_POINTS
+                  ? theme.colors.primaryEco
+                  : theme.colors.goldText
+              }
+            />
+            <View style={styles.attendanceBannerContent}>
+              <AppText style={styles.attendanceBannerTitle}>
+                {`${String(checkedInCount)} / ${String(rawParticipants.length)} participant${rawParticipants.length > 1 ? 's' : ''} émargé${checkedInCount > 1 ? 's' : ''}`}
+              </AppText>
+              <AppText style={styles.attendanceBannerSubtitle}>
+                {checkedInCount >= MIN_ATTENDEES_FOR_ORGANIZER_POINTS
+                  ? 'Prime créateur débloquée pour cet événement !'
+                  : `Encore ${String(MIN_ATTENDEES_FOR_ORGANIZER_POINTS - checkedInCount)} présent(s) requis pour débloquer la prime créateur.`}
+              </AppText>
+            </View>
+          </View>
         )}
 
         {/* Search Bar */}
@@ -155,6 +267,36 @@ const createStyles = (theme: AppTheme) =>
     gauge: {
       marginBottom: theme.spacing.md,
     },
+    attendanceBanner: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      padding: theme.spacing.md,
+      borderRadius: theme.radius.md,
+      borderWidth: 1,
+      marginBottom: theme.spacing.md,
+      gap: theme.spacing.md,
+    },
+    attendanceBannerSuccess: {
+      backgroundColor: '#f0fdf4',
+      borderColor: theme.colors.primaryEco,
+    },
+    attendanceBannerWarning: {
+      backgroundColor: theme.colors.goldBackground,
+      borderColor: theme.colors.goldBorder,
+    },
+    attendanceBannerContent: {
+      flex: 1,
+    },
+    attendanceBannerTitle: {
+      fontSize: 13,
+      fontWeight: '700',
+      color: theme.colors.text,
+      marginBottom: 2,
+    },
+    attendanceBannerSubtitle: {
+      fontSize: 11,
+      color: theme.colors.grey,
+    },
     searchBar: {
       marginBottom: theme.spacing.sm,
     },
@@ -166,4 +308,3 @@ const createStyles = (theme: AppTheme) =>
       marginVertical: theme.spacing.xxl,
     },
   });
-

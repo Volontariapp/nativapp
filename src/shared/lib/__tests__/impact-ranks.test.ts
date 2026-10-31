@@ -16,15 +16,15 @@ describe('IMPACT_RANKS', () => {
   it('lists the ten ranks in ascending order of points, starting at zero', () => {
     expect(IMPACT_RANKS.map(({ name, minPoints }) => ({ name, minPoints }))).toEqual([
       { name: 'ROOKIE HELPER', minPoints: 0 },
-      { name: 'FIELD VOLUNTEER', minPoints: 100 },
-      { name: 'COMMUNITY RANGER', minPoints: 300 },
-      { name: 'IMPACT WARRIOR', minPoints: 700 },
-      { name: 'CHANGE MAKER', minPoints: 1500 },
-      { name: 'CLEANER MASTER', minPoints: 3000 },
-      { name: 'HOPE GUARDIAN', minPoints: 5500 },
-      { name: 'WORLD DEFENDER', minPoints: 9000 },
-      { name: 'LIVING LEGEND', minPoints: 15000 },
-      { name: 'ATLAS TITAN', minPoints: 25000 },
+      { name: 'FIELD VOLUNTEER', minPoints: 300 },
+      { name: 'COMMUNITY RANGER', minPoints: 900 },
+      { name: 'IMPACT WARRIOR', minPoints: 2100 },
+      { name: 'CHANGE MAKER', minPoints: 4500 },
+      { name: 'CLEANER MASTER', minPoints: 9000 },
+      { name: 'HOPE GUARDIAN', minPoints: 16500 },
+      { name: 'WORLD DEFENDER', minPoints: 27000 },
+      { name: 'LIVING LEGEND', minPoints: 45000 },
+      { name: 'ATLAS TITAN', minPoints: 75000 },
     ]);
   });
 
@@ -35,49 +35,55 @@ describe('IMPACT_RANKS', () => {
 
 describe('getImpactRankStatus', () => {
   const cases = [
-    { points: 0, current: 'ROOKIE HELPER', next: 'FIELD VOLUNTEER', pointsToNext: 100, ratio: 0 },
-    { points: 50, current: 'ROOKIE HELPER', next: 'FIELD VOLUNTEER', pointsToNext: 50, ratio: 0.5 },
+    { points: 0, current: 'ROOKIE HELPER', next: 'FIELD VOLUNTEER', pointsToNext: 300, ratio: 0 },
     {
-      points: 100,
-      current: 'FIELD VOLUNTEER',
-      next: 'COMMUNITY RANGER',
-      pointsToNext: 200,
-      ratio: 0,
-    },
-    {
-      points: 200,
-      current: 'FIELD VOLUNTEER',
-      next: 'COMMUNITY RANGER',
-      pointsToNext: 100,
+      points: 150,
+      current: 'ROOKIE HELPER',
+      next: 'FIELD VOLUNTEER',
+      pointsToNext: 150,
       ratio: 0.5,
     },
     {
-      points: 299,
+      points: 300,
+      current: 'FIELD VOLUNTEER',
+      next: 'COMMUNITY RANGER',
+      pointsToNext: 600,
+      ratio: 0,
+    },
+    {
+      points: 600,
+      current: 'FIELD VOLUNTEER',
+      next: 'COMMUNITY RANGER',
+      pointsToNext: 300,
+      ratio: 0.5,
+    },
+    {
+      points: 899,
       current: 'FIELD VOLUNTEER',
       next: 'COMMUNITY RANGER',
       pointsToNext: 1,
-      ratio: 0.995,
+      ratio: 599 / 600,
     },
     {
-      points: 300,
+      points: 900,
       current: 'COMMUNITY RANGER',
       next: 'IMPACT WARRIOR',
-      pointsToNext: 400,
+      pointsToNext: 1200,
       ratio: 0,
     },
     {
-      points: 3000,
+      points: 9000,
       current: 'CLEANER MASTER',
       next: 'HOPE GUARDIAN',
-      pointsToNext: 2500,
+      pointsToNext: 7500,
       ratio: 0,
     },
     {
-      points: 24999,
+      points: 74999,
       current: 'LIVING LEGEND',
       next: 'ATLAS TITAN',
       pointsToNext: 1,
-      ratio: 0.9999,
+      ratio: 29999 / 30000,
     },
   ];
 
@@ -95,7 +101,7 @@ describe('getImpactRankStatus', () => {
     },
   );
 
-  it.each([25000, 25001, 99999])('with %i points, the highest rank is reached', (points) => {
+  it.each([75000, 75001, 99999])('with %i points, the highest rank is reached', (points) => {
     const status = getImpactRankStatus(points);
 
     expect(status.current.name).toBe('ATLAS TITAN');

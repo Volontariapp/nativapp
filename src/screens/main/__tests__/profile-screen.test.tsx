@@ -57,7 +57,7 @@ const fontSizeOf = (element: TextElement): number | undefined =>
 describe('ProfileScreen header stats', () => {
   beforeEach(() => {
     mockUseProfile.mockReturnValue({
-      data: createProfile({ totalImpactScore: 120 }),
+      data: createProfile({ totalImpactScore: 350 }),
       isLoading: false,
       error: null,
     });
@@ -74,7 +74,7 @@ describe('ProfileScreen header stats', () => {
     const { getByText } = render(<ProfileScreen />);
 
     expect(getByText('Impact')).toBeTruthy();
-    expect(getByText('120')).toBeTruthy();
+    expect(getByText('350')).toBeTruthy();
   });
 
   it('labels the social stats Follow and Suivi(e)s next to the impact score', () => {
@@ -98,7 +98,7 @@ describe('ProfileScreen header stats', () => {
     const { getByText } = render(<ProfileScreen />);
 
     const labels = ['Impact', 'Follow', 'Suivi(e)s'].map((label) => getByText(label));
-    const values = ['120', '7', '3'].map((value) => getByText(value));
+    const values = ['350', '7', '3'].map((value) => getByText(value));
 
     expect(new Set(labels.map(fontSizeOf)).size).toBe(1);
     expect(new Set(values.map(fontSizeOf)).size).toBe(1);

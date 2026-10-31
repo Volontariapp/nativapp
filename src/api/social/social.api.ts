@@ -1,11 +1,12 @@
 import { apiFetch } from '../client';
-import { SOCIAL_ENDPOINTS } from '../endpoints/social.endpoints';
+import { SOCIAL_ENDPOINTS, type SetEventAttendanceWebRequest } from '../endpoints/social.endpoints';
 import type {
   ActionSuccessWebResponse,
   ListUsersWebResponse,
   GetIsFollowingWebResponse,
   GetMyFollowsWebResponse,
   GetMyFollowersWebResponse,
+  GetEventAttendeesResponse,
 } from '@volontariapp/contracts';
 
 /**
@@ -142,6 +143,42 @@ export const socialApi = {
     });
 
     return response;
+  },
+
+  /**
+   * Valide ou révoque l'émargement des participants à un événement.
+   */
+  async setEventAttendance(
+    eventId: string,
+    payload: { checkedUserIds: string[]; uncheckedUserIds?: string[] },
+  ): Promise<ActionSuccessWebResponse> {
+    const rawPath = SOCIAL_ENDPOINTS.SET_EVENT_ATTENDANCE.path.replace(':eventId', eventId);
+    return await apiFetch<ActionSuccessWebResponse, SetEventAttendanceWebRequest>(rawPath, {
+      method: SOCIAL_ENDPOINTS.SET_EVENT_ATTENDANCE.method,
+      requiresAuth: SOCIAL_ENDPOINTS.SET_EVENT_ATTENDANCE.requiresAuth,
+      body: payload,
+    });
+  },
+
+  /**
+   * Récupère la liste des inscrits avec leur statut d'émargement (checkedInAt).
+   */
+  async getEventAttendees(
+    eventId: string,
+    params?: { page?: number; limit?: number },
+  ): Promise<GetEventAttendeesResponse> {
+    const query = new URLSearchParams();
+    if (params?.page !== undefined) query.append('page', params.page.toString());
+    if (params?.limit !== undefined) query.append('limit', params.limit.toString());
+
+    const queryString = query.toString();
+    const rawPath = SOCIAL_ENDPOINTS.GET_EVENT_ATTENDEES.path.replace(':eventId', eventId);
+    const path = queryString ? `${rawPath}?${queryString}` : rawPath;
+
+    return await apiFetch<GetEventAttendeesResponse>(path, {
+      method: SOCIAL_ENDPOINTS.GET_EVENT_ATTENDEES.method,
+      requiresAuth: SOCIAL_ENDPOINTS.GET_EVENT_ATTENDEES.requiresAuth,
+    });
   },
 
   /**

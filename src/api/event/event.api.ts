@@ -36,6 +36,8 @@ export interface AppEvent {
   type: EventType;
   state: EventState;
   awardedImpactScore: number;
+  /** Version du bareme de points ; absent ou < 1 pour les anciens evenements. */
+  scoringVersion?: number;
   maxParticipants: number;
   currentParticipants: number;
   location?: {
@@ -82,6 +84,7 @@ export const convertEventDtoToAppEvent = (event: EventDTO | Event): AppEvent => 
     type: normalizeEventType(event.type),
     state: normalizeEventState(event.state),
     awardedImpactScore: event.awardedImpactScore,
+    scoringVersion: event.scoringVersion,
     maxParticipants: event.maxParticipants,
     currentParticipants: event.currentParticipants,
     organizerId: event.organizerId,

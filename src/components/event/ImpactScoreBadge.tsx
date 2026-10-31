@@ -6,16 +6,18 @@ import { theme } from '@/shared/themes/theme';
 
 interface ImpactScoreBadgeProps {
   score: number;
+  /** Remplace le texte par defaut (ex. estimation). */
+  label?: string;
   style?: StyleProp<ViewStyle>;
 }
 
-export function ImpactScoreBadge({ score, style }: ImpactScoreBadgeProps) {
+export function ImpactScoreBadge({ score, label, style }: ImpactScoreBadgeProps) {
   if (!score || score <= 0) return null;
 
   return (
     <View style={[styles.container, style]}>
       <AppIcons icon="star" size={14} color={theme.colors.gold} />
-      <AppText style={styles.text}>+{score} points d'impact</AppText>
+      <AppText style={styles.text}>{label ?? `+${String(score)} points d'impact`}</AppText>
     </View>
   );
 }

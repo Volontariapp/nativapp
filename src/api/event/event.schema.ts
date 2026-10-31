@@ -18,7 +18,6 @@ export const eventSchema = z
         message: "Le type d'évènement est obligatoire (Écologie ou Social)",
       },
     ),
-    awardedImpactScore: z.number().min(0, 'Doit être positif'),
     maxParticipants: z.number().min(1, 'Au moins 1 participant'),
     startAt: z.date({ message: 'Date requise' }),
     endAt: z.date({ message: 'Date requise' }),
@@ -46,10 +45,7 @@ export const updateEventSchema = z.object({
   title: z.string().min(3, 'Le titre doit contenir au moins 3 caractères'),
   description: z.string().min(10, 'La description doit contenir au moins 10 caractères'),
   localisationName: z.string().min(2, 'Le lieu doit contenir au moins 2 caractères').optional(),
-  maxParticipants: z
-    .number()
-    .min(1, 'Au moins 1 participant requis')
-    .optional(),
+  maxParticipants: z.number().min(1, 'Au moins 1 participant requis').optional(),
 });
 
 export type UpdateEventFormValues = z.infer<typeof updateEventSchema>;

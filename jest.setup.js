@@ -17,6 +17,7 @@ jest.mock(
       BENEVOLAT: 'BENEVOLAT',
       CERTIFIED: 'CERTIFIED',
     },
+    MIN_ATTENDEES_FOR_ORGANIZER_POINTS: 3,
   }),
   { virtual: true },
 );
