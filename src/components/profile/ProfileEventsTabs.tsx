@@ -4,24 +4,15 @@ import { AppText, AppIconsButton, AppButton, EventCard, ProfileSection } from '@
 import { WishedEventCard } from '@/components/dataDisplay/WishedEventCard';
 import { useAppTheme, useStyles } from '@/context/ThemeContext';
 import type { AppTheme } from '@/shared/themes/theme';
-import type { AppEvent } from '@/api/event/event.api';
-
-export interface PaginatedEventListData {
-  events: AppEvent[];
-  isLoading: boolean;
-  hasNextPage: boolean;
-  fetchNextPage: () => void;
-  isFetchingNextPage: boolean;
-}
+import type { PaginatedEventListData } from './profile-events.types';
 
 interface ProfileEventsTabsProps {
-  participated?: PaginatedEventListData;
   finished?: PaginatedEventListData;
   created?: PaginatedEventListData;
   wished?: PaginatedEventListData;
 }
 
-type TabKey = 'participated' | 'finished' | 'created' | 'wished';
+type TabKey = 'finished' | 'created' | 'wished';
 
 interface TabConfig {
   key: TabKey;
@@ -33,13 +24,6 @@ interface TabConfig {
 
 /** Ordre d'affichage des onglets dans la barre. */
 const TABS: TabConfig[] = [
-  {
-    key: 'participated',
-    icon: 'calendar',
-    activeVariant: 'socio',
-    title: 'Événements à venir',
-    emptyText: 'Aucun événement à venir pour le moment.',
-  },
   {
     key: 'finished',
     icon: 'check-circle',
@@ -117,7 +101,6 @@ function EventTabContent({ tab, data }: EventTabContentProps): React.JSX.Element
 }
 
 export function ProfileEventsTabs({
-  participated,
   finished,
   created,
   wished,
@@ -126,14 +109,13 @@ export function ProfileEventsTabs({
   const styles = useStyles(createStyles);
 
   const dataByTab: Record<TabKey, PaginatedEventListData | undefined> = {
-    participated,
     finished,
     created,
     wished,
   };
   const availableTabs = TABS.filter((tab) => dataByTab[tab.key] !== undefined);
 
-  const defaultTab = (['participated', 'finished', 'created', 'wished'] as const).find(
+  const defaultTab = (['finished', 'wished', 'created'] as const).find(
     (key) => dataByTab[key] !== undefined,
   );
   const [activeTab, setActiveTab] = useState<TabKey>(defaultTab ?? 'wished');

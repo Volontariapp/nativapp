@@ -6,10 +6,8 @@ import {
   AppHeader,
   AppLoader,
   ProfileLayout,
-  ProfileSection,
   ProfileEditModal,
   AppIconsButton,
-  AppCalendar,
 } from '@/components';
 import { useAuth } from '@/context/AuthContext';
 import { resolveAvatarUrl } from '@/api/user/resolve-avatar-url';
@@ -19,11 +17,19 @@ import { useProfile } from '@/api/user/hooks/use-profile';
 import { useUpdateProfile } from '@/api/user/hooks/use-update-profile';
 import { useGetFollows } from '@/api/social/hooks/use-get-follows';
 import { useGetFollowers } from '@/api/social/hooks/use-get-followers';
-import { useNavigation } from '@react-navigation/native';
+import { useNavigation, type NavigationProp } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import type { ProfileStackParamList } from '@/navigation/stacks/ProfileStack';
+import type { MainStackParamList } from '@/navigation/stacks/MainStack';
+import { ProfilePosts } from '@/components/profile/profile-posts';
+import { ProfileUpcomingEvents } from '@/components/profile/profile-upcoming-events';
+import { ProfileFinishedEvents } from '@/components/profile/profile-finished-events';
+import { ProfileManageEventsCta } from '@/components/profile/profile-manage-events-cta';
+import { useGetMyPosts } from '@/api/post/hooks/use-get-my-posts';
 import { useTabBarContentInset } from '@/navigation/hooks/useTabBarContentInset';
 import { useProfileEvents } from './hooks/use-profile-events';
+
+const MY_POSTS_PAGE_SIZE = 9;
 
 export function ProfileScreen(): React.JSX.Element {
   const { theme } = useAppTheme();
@@ -33,6 +39,7 @@ export function ProfileScreen(): React.JSX.Element {
   const [isEditModalVisible, setIsEditModalVisible] = useState(false);
   const { logout } = useAuth();
   const navigation = useNavigation<NativeStackNavigationProp<ProfileStackParamList>>();
+  const mainNavigation = useNavigation<NavigationProp<MainStackParamList>>();
 
   const { data: profile, isLoading: isProfileLoading, error: profileError } = useProfile();
   const updateProfile = useUpdateProfile();
@@ -47,7 +54,15 @@ export function ProfileScreen(): React.JSX.Element {
     Boolean(profile?.id),
   );
 
-  const { participated, finished, created, wished, markedDates } = useProfileEvents(theme);
+  const { upcoming, finished } = useProfileEvents();
+  const {
+    data: myPostsData,
+    isLoading: isMyPostsLoading,
+    hasNextPage: hasNextMyPosts,
+    fetchNextPage: fetchNextMyPosts,
+    isFetchingNextPage: isFetchingNextMyPosts,
+  } = useGetMyPosts(MY_POSTS_PAGE_SIZE);
+  const myPosts = myPostsData?.pages.flatMap((page) => page.posts) ?? [];
 
   const isLoading = isProfileLoading;
 
@@ -118,16 +133,28 @@ export function ProfileScreen(): React.JSX.Element {
               color: theme.colors.warning,
             },
           ]}
-          eventsTabs={{
-            participated,
-            finished,
-            created,
-            wished,
-          }}
         >
-          <ProfileSection title="Mes Engagements">
-            <AppCalendar markedDates={markedDates} />
-          </ProfileSection>
+          <ProfilePosts
+            posts={myPosts}
+            isLoading={isMyPostsLoading}
+            hasNextPage={hasNextMyPosts}
+            fetchNextPage={() => {
+              void fetchNextMyPosts();
+            }}
+            isFetchingNextPage={isFetchingNextMyPosts}
+            horizontalInset={theme.spacing.xl}
+          />
+
+          <ProfileUpcomingEvents data={upcoming} title="Prochain évènement" limit={1} />
+          <ProfileFinishedEvents data={finished} />
+          <ProfileManageEventsCta
+            onPress={() => {
+              mainNavigation.navigate('MainTabs', {
+                screen: 'create',
+                params: { screen: 'ManageHub' },
+              });
+            }}
+          />
 
           <View style={styles.actions}>
             <View style={styles.buttonSpacer} />
@@ -195,11 +222,6 @@ const createStyles = (theme: AppTheme) =>
       marginBottom: -20,
       zIndex: 1,
     },
-    editButtonContainer: {
-      flexDirection: 'row',
-      justifyContent: 'flex-end',
-      marginTop: theme.spacing.xs,
-    },
     actions: {
       marginTop: theme.spacing.md,
     },
@@ -210,15 +232,5 @@ const createStyles = (theme: AppTheme) =>
       color: theme.colors.danger,
       fontSize: 16,
       textAlign: 'center',
-    },
-    emptyText: {
-      color: theme.colors.grey,
-      fontStyle: 'italic',
-      textAlign: 'center',
-      marginTop: theme.spacing.sm,
-    },
-    seeMoreContainer: {
-      alignItems: 'center',
-      marginTop: theme.spacing.sm,
     },
   });

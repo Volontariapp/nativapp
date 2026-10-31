@@ -4,7 +4,8 @@ import { ProfileHeader } from './ProfileHeader';
 import { ProfileSection } from './ProfileSection';
 import { type ProfileStatItem } from './ProfileStats';
 import { ProfileBadges } from './ProfileBadges';
-import { ProfileEventsTabs, type PaginatedEventListData } from './ProfileEventsTabs';
+import { ProfileEventsTabs } from './ProfileEventsTabs';
+import type { PaginatedEventListData } from './profile-events.types';
 
 interface ProfileLayoutProps {
   pseudo: string;
@@ -14,7 +15,6 @@ interface ProfileLayoutProps {
   stats: ProfileStatItem[];
   badges?: (BadgeWeb | string)[];
   eventsTabs?: {
-    participated?: PaginatedEventListData;
     finished?: PaginatedEventListData;
     created?: PaginatedEventListData;
     wished?: PaginatedEventListData;
@@ -27,7 +27,7 @@ interface ProfileLayoutProps {
 /**
  * Template partagé entre le profil privé (ProfileScreen) et le profil public
  * (PublicProfileScreen) : header, bio, stats, badges. Le contenu spécifique à
- * chaque contexte (édition, follow, calendrier, tabs d'événements, actions) passe
+ * chaque contexte (édition, follow, posts, évènements, actions) passe
  * par `headerAction`, `bioAction` et `children`.
  */
 export const ProfileLayout = ({
@@ -60,7 +60,6 @@ export const ProfileLayout = ({
 
       {eventsTabs && (
         <ProfileEventsTabs
-          participated={eventsTabs.participated}
           finished={eventsTabs.finished}
           created={eventsTabs.created}
           wished={eventsTabs.wished}
