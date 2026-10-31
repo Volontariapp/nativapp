@@ -1,17 +1,26 @@
 import React from 'react';
 import { StyleSheet, type StyleProp, type TextStyle } from 'react-native';
-import { render } from '@testing-library/react-native';
+import { fireEvent, render } from '@testing-library/react-native';
 import type { ProfileLayout as ProfileLayoutComponent } from '@/components/profile/ProfileLayout';
 import { createProfile } from '@/components/profile/__tests__/profile.factory';
+import * as mockExpoImage from '@/components/profile/__tests__/expo-image.mock';
+import {
+  createEventList,
+  createUpcomingEvent,
+} from '@/components/profile/__tests__/upcoming-events.factory';
 import { ProfileScreen } from '../ProfileScreen';
 import {
+  createMyPosts,
   createProfileEvents,
+  mockNavigate,
   mockUseGetFollowers,
+  mockUseGetMyPosts,
   mockUseGetFollows,
   mockUseProfile,
   mockUseProfileEvents,
 } from './profile-screen.mock';
 
+jest.mock('expo-image', () => mockExpoImage);
 jest.mock('@/api/user/hooks/use-profile', () => ({
   useProfile: (): unknown => mockUseProfile(),
 }));
@@ -27,22 +36,19 @@ jest.mock('@/api/social/hooks/use-get-followers', () => ({
 jest.mock('../hooks/use-profile-events', () => ({
   useProfileEvents: (): unknown => mockUseProfileEvents(),
 }));
-jest.mock('@/context/AuthContext', () => ({
-  useAuth: (): unknown => ({ logout: jest.fn() }),
+jest.mock('@/api/post/hooks/use-get-my-posts', () => ({
+  useGetMyPosts: (): unknown => mockUseGetMyPosts(),
 }));
 jest.mock('@react-navigation/native', () => ({
-  useNavigation: (): unknown => ({ navigate: jest.fn() }),
+  useNavigation: (): unknown => ({ navigate: mockNavigate }),
 }));
 // Le barrel complet charge Tags.tsx, qui lit des constantes absentes du mock de jest.setup.js :
 // on garde le vrai ProfileLayout (header et stats) et on neutralise le reste.
 jest.mock('@/components', () => ({
-  AppButton: (): null => null,
   AppText: (): null => null,
   AppHeader: (): null => null,
   AppLoader: (): null => null,
   AppIconsButton: (): null => null,
-  AppCalendar: (): null => null,
-  ProfileSection: (): null => null,
   ProfileEditModal: (): null => null,
   ProfileLayout: jest.requireActual<{ ProfileLayout: typeof ProfileLayoutComponent }>(
     '@/components/profile/ProfileLayout',
@@ -64,6 +70,7 @@ describe('ProfileScreen header stats', () => {
     mockUseGetFollows.mockReturnValue({ data: { pagination: { total: 3 } } });
     mockUseGetFollowers.mockReturnValue({ data: { pagination: { total: 7 } } });
     mockUseProfileEvents.mockReturnValue(createProfileEvents());
+    mockUseGetMyPosts.mockReturnValue(createMyPosts());
   });
 
   afterEach(() => {
@@ -112,5 +119,79 @@ describe('ProfileScreen header stats', () => {
 
     expect(getByTestId('profile-rank-chip')).toBeTruthy();
     expect(getByText('FIELD VOLUNTEER')).toBeTruthy();
+  });
+
+  it('no longer shows the engagements calendar', () => {
+    const { queryByText } = render(<ProfileScreen />);
+
+    expect(queryByText('Mes Engagements')).toBeNull();
+  });
+
+  it('shows only the next upcoming event of the user', () => {
+    mockUseProfileEvents.mockReturnValue({
+      ...createProfileEvents(),
+      upcoming: createEventList({
+        events: [
+          createUpcomingEvent({ id: 'next', title: 'Nettoyage des berges' }),
+          createUpcomingEvent({ id: 'later', title: 'Collecte de livres' }),
+        ],
+      }),
+    });
+
+    const { getByText, queryByText } = render(<ProfileScreen />);
+
+    expect(getByText('Prochain évènement')).toBeTruthy();
+    expect(getByText('Nettoyage des berges')).toBeTruthy();
+    expect(queryByText('Collecte de livres')).toBeNull();
+  });
+
+  it('lists the finished events the user joined', () => {
+    mockUseProfileEvents.mockReturnValue({
+      ...createProfileEvents(),
+      finished: createEventList({
+        events: [createUpcomingEvent({ id: 'done', title: 'Maraude de septembre' })],
+      }),
+    });
+
+    const { getByText } = render(<ProfileScreen />);
+
+    expect(getByText('Évènements terminés')).toBeTruthy();
+    expect(getByText('Maraude de septembre')).toBeTruthy();
+  });
+
+  it('opens the events management page from the dedicated button', () => {
+    const { getByLabelText } = render(<ProfileScreen />);
+
+    fireEvent.press(getByLabelText('Gérer mes évènements'));
+
+    expect(mockNavigate).toHaveBeenCalledWith('MainTabs', {
+      screen: 'create',
+      params: { screen: 'ManageHub' },
+    });
+  });
+
+  it('no longer offers the feedbacks button', () => {
+    const { queryByText } = render(<ProfileScreen />);
+
+    expect(queryByText('Voir mes feedbacks')).toBeNull();
+  });
+
+  it('opens the post form from the shortcut next to the posts', () => {
+    const { getByLabelText } = render(<ProfileScreen />);
+
+    fireEvent.press(getByLabelText('Créer un post'));
+
+    expect(mockNavigate).toHaveBeenCalledWith('MainTabs', {
+      screen: 'create',
+      params: { screen: 'PostForm' },
+    });
+  });
+
+  it('opens the full badge catalog from the badges section', () => {
+    const { getByLabelText } = render(<ProfileScreen />);
+
+    fireEvent.press(getByLabelText('Voir tous les badges'));
+
+    expect(mockNavigate).toHaveBeenCalledWith('Badges');
   });
 });

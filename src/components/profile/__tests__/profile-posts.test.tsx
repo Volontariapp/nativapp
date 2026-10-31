@@ -1,8 +1,10 @@
 import React from 'react';
-import { fireEvent, render } from '@testing-library/react-native';
+import { StyleSheet, useWindowDimensions, type StyleProp, type ViewStyle } from 'react-native';
+import { fireEvent, render, renderHook } from '@testing-library/react-native';
 import { createPostWeb } from '@/api/post/__tests__/post-web.factory';
 import * as mockSafeArea from '@/components/post/__tests__/safe-area.mock';
 import * as mockPostCard from './post-card-stub.mock';
+import { computePostGridTileSize } from '@/components/post/post-grid.utils';
 import { ProfilePosts } from '../profile-posts';
 
 jest.mock('expo-image', () => ({ Image: 'Image' }));
@@ -12,7 +14,18 @@ jest.mock('@/components/post/AppPost', () => ({
   default: mockPostCard.PostCardStub,
 }));
 
+type StyledElement = { props: { style?: StyleProp<ViewStyle> } };
+
+const widthOf = (element: StyledElement): ViewStyle['width'] =>
+  StyleSheet.flatten(element.props.style).width;
+
 const mockFetchNextPage = jest.fn();
+const mockOnCreatePress = jest.fn();
+
+const useWindowDimensionsOnce = (): { width: number } => {
+  const { result } = renderHook(() => useWindowDimensions());
+  return result.current;
+};
 
 const renderPosts = (overrides: Partial<React.ComponentProps<typeof ProfilePosts>> = {}) =>
   render(
@@ -82,5 +95,47 @@ describe('ProfilePosts', () => {
     const { queryByText } = renderPosts({ posts: [createPostWeb({ title: 'Premier post' })] });
 
     expect(queryByText('Voir plus')).toBeNull();
+  });
+
+  it('sizes the tiles for the width left inside the content margins', () => {
+    const CONTENT_INSET = 24;
+    const { width } = useWindowDimensionsOnce();
+    const { getByLabelText } = renderPosts({
+      posts: [createPostWeb({ id: 'post-1', title: 'Premier post' })],
+      contentInset: CONTENT_INSET,
+    });
+
+    const tile = getByLabelText('Ouvrir le post Premier post');
+
+    expect(widthOf(tile)).toBe(computePostGridTileSize(width - CONTENT_INSET * 2));
+  });
+
+  it('offers a round create button on the title line, even with posts', () => {
+    const { getByLabelText } = renderPosts({
+      posts: [createPostWeb({ title: 'Premier post' })],
+      onCreatePress: mockOnCreatePress,
+    });
+
+    fireEvent.press(getByLabelText('Créer un post'));
+
+    expect(mockOnCreatePress).toHaveBeenCalledTimes(1);
+  });
+
+  it('keeps the create button when the user has no post yet', () => {
+    const { getByLabelText, getByText } = renderPosts({ onCreatePress: mockOnCreatePress });
+
+    expect(getByText('Aucun post pour le moment.')).toBeTruthy();
+
+    fireEvent.press(getByLabelText('Créer un post'));
+
+    expect(mockOnCreatePress).toHaveBeenCalledTimes(1);
+  });
+
+  it('shows no create button when no shortcut is given (public profile)', () => {
+    const { queryByLabelText } = renderPosts({
+      posts: [createPostWeb({ title: 'Premier post' })],
+    });
+
+    expect(queryByLabelText('Créer un post')).toBeNull();
   });
 });

@@ -1,11 +1,12 @@
 import React from 'react';
-import { ActivityIndicator, StyleSheet, View } from 'react-native';
+import { ActivityIndicator, StyleSheet, View, useWindowDimensions } from 'react-native';
 import type { PostWeb } from '@volontariapp/contracts';
 import { AppText } from '@/components/typography/AppText';
 import { AppButton } from '@/components/buttons/AppButton';
+import { AppIconsButton } from '@/components/buttons/AppIconsButton';
 import { PostGridTile } from '@/components/post/post-grid-tile';
 import { PostDetailModal } from '@/components/post/post-detail-modal';
-import { POST_GRID_GAP, usePostGridTileSize } from '@/components/post/post-grid.utils';
+import { POST_GRID_GAP, computePostGridTileSize } from '@/components/post/post-grid.utils';
 import { useAppTheme, useStyles } from '@/context/ThemeContext';
 import type { AppTheme } from '@/shared/themes/theme';
 import { ProfileSection } from './ProfileSection';
@@ -18,6 +19,13 @@ interface ProfilePostsProps {
   isFetchingNextPage: boolean;
   /** Marge horizontale du parent, annulée pour que la grille aille jusqu'au bord de l'écran. */
   horizontalInset?: number;
+  /**
+   * Marge horizontale du parent à conserver : la grille reste alignée avec le texte des sections
+   * (au lieu d'aller jusqu'au bord) et les carreaux sont calculés sur la largeur restante.
+   */
+  contentInset?: number;
+  /** Quand il est fourni, un bouton rond de création de post est affiché sur la ligne du titre. */
+  onCreatePress?: () => void;
 }
 
 /** Posts d'un utilisateur sur son profil : grille de carreaux, un appui ouvre le post. */
@@ -28,14 +36,31 @@ export function ProfilePosts({
   fetchNextPage,
   isFetchingNextPage,
   horizontalInset = 0,
+  contentInset = 0,
+  onCreatePress,
 }: ProfilePostsProps): React.JSX.Element {
   const { theme } = useAppTheme();
   const styles = useStyles(createStyles);
-  const tileSize = usePostGridTileSize();
+  const { width } = useWindowDimensions();
+  const tileSize = computePostGridTileSize(width - contentInset * 2);
   const [selectedPost, setSelectedPost] = React.useState<PostWeb | null>(null);
 
   return (
-    <ProfileSection title="Posts">
+    <ProfileSection
+      title="Posts"
+      action={
+        onCreatePress !== undefined && (
+          <AppIconsButton
+            icon="plus"
+            variant="eco"
+            size={36}
+            accessibilityRole="button"
+            accessibilityLabel="Créer un post"
+            onPress={onCreatePress}
+          />
+        )
+      }
+    >
       {isLoading ? (
         <ActivityIndicator color={theme.colors.primaryEco} />
       ) : posts.length > 0 ? (

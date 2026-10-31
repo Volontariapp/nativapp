@@ -19,3 +19,4 @@ export * from './post/PostFormScreen';
 export * from './post/MyPostsScreen';
 export * from './main/EventDetailScreen';
 export * from './debug/storage-debug-screen';
+export * from './main/BadgesScreen';

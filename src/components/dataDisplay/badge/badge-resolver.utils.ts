@@ -48,12 +48,9 @@ export function resolveBadgeVariant(item: unknown): BadgeVariant | null {
       name?: unknown;
     };
 
-    const stringFields = [
-      candidate.slug,
-      candidate.variant,
-      candidate.code,
-      candidate.id,
-    ].filter((val): val is string => typeof val === 'string');
+    const stringFields = [candidate.slug, candidate.variant, candidate.code, candidate.id].filter(
+      (val): val is string => typeof val === 'string',
+    );
 
     for (const field of stringFields) {
       const resolved = resolveBadgeVariant(field);

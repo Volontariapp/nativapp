@@ -2,6 +2,8 @@ export const mockUseProfile = jest.fn();
 export const mockUseProfileEvents = jest.fn();
 export const mockUseGetFollows = jest.fn();
 export const mockUseGetFollowers = jest.fn();
+export const mockUseGetMyPosts = jest.fn();
+export const mockNavigate = jest.fn();
 
 const emptyList = {
   events: [],
@@ -13,9 +15,14 @@ const emptyList = {
 };
 
 export const createProfileEvents = (): Record<string, unknown> => ({
-  participated: emptyList,
-  finished: emptyList,
-  created: { ...emptyList, totalCount: 2 },
-  wished: emptyList,
-  markedDates: {},
+  upcoming: emptyList,
+  finished: { ...emptyList },
+});
+
+export const createMyPosts = (): Record<string, unknown> => ({
+  data: { pages: [{ posts: [] }] },
+  isLoading: false,
+  hasNextPage: false,
+  fetchNextPage: jest.fn(),
+  isFetchingNextPage: false,
 });

@@ -33,8 +33,6 @@ export function BadgeModal({ visible, variant, onClose }: BadgeModalProps): Reac
         />
 
         <View style={styles.card}>
-
-
           <View style={styles.medallionCenter}>
             <BadgeMedallion variant={variant} size="xl" />
           </View>
