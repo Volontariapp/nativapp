@@ -11,3 +11,4 @@ export * from './profile-upcoming-events';
 export * from './upcoming-event-card';
 export * from './profile-finished-events';
 export * from './profile-manage-events-cta';
+export * from './profile-next-rank';

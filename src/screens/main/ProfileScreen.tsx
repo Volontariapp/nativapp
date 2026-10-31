@@ -18,10 +18,10 @@ import { useUpdateProfile } from '@/api/user/hooks/use-update-profile';
 import { useGetFollows } from '@/api/social/hooks/use-get-follows';
 import { useGetFollowers } from '@/api/social/hooks/use-get-followers';
 import { useNavigation, type NavigationProp } from '@react-navigation/native';
-import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
-import type { ProfileStackParamList } from '@/navigation/stacks/ProfileStack';
 import type { MainStackParamList } from '@/navigation/stacks/MainStack';
 import { ProfilePosts } from '@/components/profile/profile-posts';
+import { ProfileNextRank } from '@/components/profile/profile-next-rank';
+import { getImpactRankStatus } from '@/shared/lib/impact-ranks';
 import { ProfileUpcomingEvents } from '@/components/profile/profile-upcoming-events';
 import { ProfileFinishedEvents } from '@/components/profile/profile-finished-events';
 import { ProfileManageEventsCta } from '@/components/profile/profile-manage-events-cta';
@@ -38,7 +38,6 @@ export function ProfileScreen(): React.JSX.Element {
 
   const [isEditModalVisible, setIsEditModalVisible] = useState(false);
   const { logout } = useAuth();
-  const navigation = useNavigation<NativeStackNavigationProp<ProfileStackParamList>>();
   const mainNavigation = useNavigation<NavigationProp<MainStackParamList>>();
 
   const { data: profile, isLoading: isProfileLoading, error: profileError } = useProfile();
@@ -142,7 +141,20 @@ export function ProfileScreen(): React.JSX.Element {
               void fetchNextMyPosts();
             }}
             isFetchingNextPage={isFetchingNextMyPosts}
-            horizontalInset={theme.spacing.xl}
+            contentInset={theme.spacing.xl}
+            onCreatePress={() => {
+              mainNavigation.navigate('MainTabs', {
+                screen: 'create',
+                params: { screen: 'PostForm' },
+              });
+            }}
+          />
+
+          <ProfileNextRank
+            status={getImpactRankStatus(profile.totalImpactScore)}
+            onPress={() => {
+              mainNavigation.navigate('Ranks');
+            }}
           />
 
           <ProfileUpcomingEvents data={upcoming} title="Prochain évènement" limit={1} />
@@ -156,24 +168,16 @@ export function ProfileScreen(): React.JSX.Element {
             }}
           />
 
-          <View style={styles.actions}>
-            <View style={styles.buttonSpacer} />
-            <AppButton
-              variant="eco"
-              text="Voir mes feedbacks"
-              onPress={() => {
-                navigation.navigate('ws-feedback');
-              }}
-            />
-            <View style={styles.buttonSpacer} />
-            <AppButton
-              variant="danger"
-              text="Se déconnecter"
-              onPress={() => {
-                void logout();
-              }}
-            />
-          </View>
+          <AppButton
+            variant="secondary"
+            icon="log-out"
+            text="Se déconnecter"
+            style={styles.logoutButton}
+            textStyle={styles.logoutText}
+            onPress={() => {
+              void logout();
+            }}
+          />
 
           <ProfileEditModal
             visible={isEditModalVisible}
@@ -222,11 +226,11 @@ const createStyles = (theme: AppTheme) =>
       marginBottom: -20,
       zIndex: 1,
     },
-    actions: {
+    logoutButton: {
       marginTop: theme.spacing.md,
     },
-    buttonSpacer: {
-      height: theme.spacing.md,
+    logoutText: {
+      color: theme.colors.danger,
     },
     errorText: {
       color: theme.colors.danger,

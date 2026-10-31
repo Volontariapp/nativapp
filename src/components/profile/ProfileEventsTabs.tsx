@@ -100,11 +100,7 @@ function EventTabContent({ tab, data }: EventTabContentProps): React.JSX.Element
   );
 }
 
-export function ProfileEventsTabs({
-  finished,
-  created,
-  wished,
-}: ProfileEventsTabsProps) {
+export function ProfileEventsTabs({ finished, created, wished }: ProfileEventsTabsProps) {
   const { theme } = useAppTheme();
   const styles = useStyles(createStyles);
 

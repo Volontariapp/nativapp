@@ -1,6 +1,7 @@
 import React from 'react';
 import { StyleSheet, type StyleProp, type TextStyle } from 'react-native';
 import { fireEvent, render } from '@testing-library/react-native';
+import type { AppButton as AppButtonComponent } from '@/components/buttons/AppButton';
 import type { ProfileLayout as ProfileLayoutComponent } from '@/components/profile/ProfileLayout';
 import { createProfile } from '@/components/profile/__tests__/profile.factory';
 import * as mockExpoImage from '@/components/profile/__tests__/expo-image.mock';
@@ -8,10 +9,12 @@ import {
   createEventList,
   createUpcomingEvent,
 } from '@/components/profile/__tests__/upcoming-events.factory';
+import { formatPoints, getImpactRankStatus } from '@/shared/lib/impact-ranks';
 import { ProfileScreen } from '../ProfileScreen';
 import {
   createMyPosts,
   createProfileEvents,
+  mockLogout,
   mockNavigate,
   mockUseGetFollowers,
   mockUseGetMyPosts,
@@ -37,13 +40,10 @@ jest.mock('../hooks/use-profile-events', () => ({
   useProfileEvents: (): unknown => mockUseProfileEvents(),
 }));
 jest.mock('@/context/AuthContext', () => ({
-  useAuth: (): unknown => ({ logout: jest.fn() }),
+  useAuth: (): unknown => ({ logout: mockLogout }),
 }));
 jest.mock('@/api/post/hooks/use-get-my-posts', () => ({
   useGetMyPosts: (): unknown => mockUseGetMyPosts(),
-}));
-jest.mock('@/components/profile/profile-posts', () => ({
-  ProfilePosts: (): null => null,
 }));
 jest.mock('@react-navigation/native', () => ({
   useNavigation: (): unknown => ({ navigate: mockNavigate }),
@@ -51,7 +51,9 @@ jest.mock('@react-navigation/native', () => ({
 // Le barrel complet charge Tags.tsx, qui lit des constantes absentes du mock de jest.setup.js :
 // on garde le vrai ProfileLayout (header et stats) et on neutralise le reste.
 jest.mock('@/components', () => ({
-  AppButton: (): null => null,
+  AppButton: jest.requireActual<{ AppButton: typeof AppButtonComponent }>(
+    '@/components/buttons/AppButton',
+  ).AppButton,
   AppText: (): null => null,
   AppHeader: (): null => null,
   AppLoader: (): null => null,
@@ -175,5 +177,42 @@ describe('ProfileScreen header stats', () => {
       screen: 'create',
       params: { screen: 'ManageHub' },
     });
+  });
+
+  it('no longer offers the feedbacks button', () => {
+    const { queryByText } = render(<ProfileScreen />);
+
+    expect(queryByText('Voir mes feedbacks')).toBeNull();
+  });
+
+  it('logs the user out from the logout button', () => {
+    const { getByText } = render(<ProfileScreen />);
+
+    fireEvent.press(getByText('Se déconnecter'));
+
+    expect(mockLogout).toHaveBeenCalledTimes(1);
+  });
+
+  it('opens the post form from the shortcut next to the posts', () => {
+    const { getByText } = render(<ProfileScreen />);
+
+    fireEvent.press(getByText('Créer mon premier post'));
+
+    expect(mockNavigate).toHaveBeenCalledWith('MainTabs', {
+      screen: 'create',
+      params: { screen: 'PostForm' },
+    });
+  });
+
+  it('shows the next rank to unlock and opens the ranks page', () => {
+    const status = getImpactRankStatus(350);
+    const { getByText, getByLabelText } = render(<ProfileScreen />);
+
+    expect(getByText('PROCHAIN RANG')).toBeTruthy();
+    expect(getByText(`Plus que ${formatPoints(status.pointsToNext)} pts`)).toBeTruthy();
+
+    fireEvent.press(getByLabelText('Voir tous les rangs'));
+
+    expect(mockNavigate).toHaveBeenCalledWith('Ranks');
   });
 });
