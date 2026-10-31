@@ -7,6 +7,7 @@ const mockClearCache = jest.fn();
 jest.mock('@react-navigation/native', () => ({
   useNavigation: () => ({ navigate: jest.fn(), goBack: jest.fn() }),
 }));
+jest.mock('@/context/AuthContext', () => ({ useAuth: () => ({ logout: jest.fn() }) }));
 jest.mock('@/context/DebugContext', () => ({
   useDebug: () => ({ isDebugMode: false, toggleDebugMode: jest.fn() }),
 }));

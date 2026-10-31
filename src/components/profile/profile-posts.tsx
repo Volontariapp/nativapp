@@ -3,6 +3,7 @@ import { ActivityIndicator, StyleSheet, View, useWindowDimensions } from 'react-
 import type { PostWeb } from '@volontariapp/contracts';
 import { AppText } from '@/components/typography/AppText';
 import { AppButton } from '@/components/buttons/AppButton';
+import { AppIconsButton } from '@/components/buttons/AppIconsButton';
 import { PostGridTile } from '@/components/post/post-grid-tile';
 import { PostDetailModal } from '@/components/post/post-detail-modal';
 import { POST_GRID_GAP, computePostGridTileSize } from '@/components/post/post-grid.utils';
@@ -23,7 +24,7 @@ interface ProfilePostsProps {
    * (au lieu d'aller jusqu'au bord) et les carreaux sont calculés sur la largeur restante.
    */
   contentInset?: number;
-  /** Quand il est fourni, un raccourci de création de post est affiché. */
+  /** Quand il est fourni, un bouton rond de création de post est affiché sur la ligne du titre. */
   onCreatePress?: () => void;
 }
 
@@ -45,21 +46,25 @@ export function ProfilePosts({
   const [selectedPost, setSelectedPost] = React.useState<PostWeb | null>(null);
 
   return (
-    <ProfileSection title="Posts">
+    <ProfileSection
+      title="Posts"
+      action={
+        onCreatePress !== undefined && (
+          <AppIconsButton
+            icon="plus"
+            variant="eco"
+            size={36}
+            accessibilityRole="button"
+            accessibilityLabel="Créer un post"
+            onPress={onCreatePress}
+          />
+        )
+      }
+    >
       {isLoading ? (
         <ActivityIndicator color={theme.colors.primaryEco} />
       ) : posts.length > 0 ? (
         <View>
-          {onCreatePress !== undefined && (
-            <AppButton
-              variant="eco"
-              size="small"
-              icon="plus"
-              text="Nouveau post"
-              style={styles.createButton}
-              onPress={onCreatePress}
-            />
-          )}
           <View style={[styles.grid, { marginHorizontal: -horizontalInset }]}>
             {posts.map((post) => (
               <PostGridTile key={post.id} post={post} size={tileSize} onPress={setSelectedPost} />
@@ -78,18 +83,7 @@ export function ProfilePosts({
           )}
         </View>
       ) : (
-        <View style={styles.emptyState}>
-          <AppText style={styles.emptyText}>Aucun post pour le moment.</AppText>
-          {onCreatePress !== undefined && (
-            <AppButton
-              variant="eco"
-              size="small"
-              icon="edit-3"
-              text="Créer mon premier post"
-              onPress={onCreatePress}
-            />
-          )}
-        </View>
+        <AppText style={styles.emptyText}>Aucun post pour le moment.</AppText>
       )}
 
       <PostDetailModal
@@ -115,18 +109,10 @@ const createStyles = (theme: AppTheme) =>
       alignItems: 'center',
       marginTop: theme.spacing.sm,
     },
-    createButton: {
-      alignSelf: 'flex-start',
-      marginBottom: theme.spacing.md,
-    },
-    emptyState: {
-      alignItems: 'center',
-      gap: theme.spacing.md,
-      marginTop: theme.spacing.sm,
-    },
     emptyText: {
       color: theme.colors.grey,
       fontStyle: 'italic',
       textAlign: 'center',
+      marginTop: theme.spacing.sm,
     },
   });

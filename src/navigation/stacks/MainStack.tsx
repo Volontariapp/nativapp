@@ -5,6 +5,7 @@ import {
   EventDetailScreen,
   SettingsScreen,
   RanksScreen,
+  BadgesScreen,
   PublicProfileScreen,
   StorageDebugScreen,
   EventManagementScreen,
@@ -16,6 +17,7 @@ export type MainStackParamList = {
   EventDetail: { event: AppEvent };
   Settings: undefined;
   Ranks: undefined;
+  Badges: undefined;
   PublicProfile: { userId: string };
   StorageDebug: undefined;
   EventManagement: { eventId: string; initialEvent?: AppEvent };
@@ -30,6 +32,7 @@ export default function MainStack(): React.JSX.Element {
       <Stack.Screen name="EventDetail" component={EventDetailScreen} />
       <Stack.Screen name="Settings" component={SettingsScreen} />
       <Stack.Screen name="Ranks" component={RanksScreen} />
+      <Stack.Screen name="Badges" component={BadgesScreen} />
       <Stack.Screen name="PublicProfile" component={PublicProfileScreen} />
       <Stack.Screen name="StorageDebug" component={StorageDebugScreen} />
       <Stack.Screen name="EventManagement" component={EventManagementScreen} />

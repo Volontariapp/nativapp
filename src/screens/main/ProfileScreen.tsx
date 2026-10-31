@@ -1,7 +1,6 @@
 import React, { useState } from 'react';
 import { View, StyleSheet, ScrollView } from 'react-native';
 import {
-  AppButton,
   AppText,
   AppHeader,
   AppLoader,
@@ -9,7 +8,6 @@ import {
   ProfileEditModal,
   AppIconsButton,
 } from '@/components';
-import { useAuth } from '@/context/AuthContext';
 import { resolveAvatarUrl } from '@/api/user/resolve-avatar-url';
 import { useAppTheme, useStyles } from '@/context/ThemeContext';
 import type { AppTheme } from '@/shared/themes/theme';
@@ -20,8 +18,6 @@ import { useGetFollowers } from '@/api/social/hooks/use-get-followers';
 import { useNavigation, type NavigationProp } from '@react-navigation/native';
 import type { MainStackParamList } from '@/navigation/stacks/MainStack';
 import { ProfilePosts } from '@/components/profile/profile-posts';
-import { ProfileNextRank } from '@/components/profile/profile-next-rank';
-import { getImpactRankStatus } from '@/shared/lib/impact-ranks';
 import { ProfileUpcomingEvents } from '@/components/profile/profile-upcoming-events';
 import { ProfileFinishedEvents } from '@/components/profile/profile-finished-events';
 import { ProfileManageEventsCta } from '@/components/profile/profile-manage-events-cta';
@@ -37,7 +33,6 @@ export function ProfileScreen(): React.JSX.Element {
   const tabBarInset = useTabBarContentInset();
 
   const [isEditModalVisible, setIsEditModalVisible] = useState(false);
-  const { logout } = useAuth();
   const mainNavigation = useNavigation<NavigationProp<MainStackParamList>>();
 
   const { data: profile, isLoading: isProfileLoading, error: profileError } = useProfile();
@@ -115,6 +110,9 @@ export function ProfileScreen(): React.JSX.Element {
           bio={profile.bio}
           impactScore={profile.totalImpactScore}
           badges={profile.badges}
+          onSeeAllBadges={() => {
+            mainNavigation.navigate('Badges');
+          }}
           stats={[
             {
               label: 'Impact',
@@ -150,15 +148,6 @@ export function ProfileScreen(): React.JSX.Element {
             }}
           />
 
-          <ProfileNextRank
-            status={getImpactRankStatus(profile.totalImpactScore)}
-            onPress={() => {
-              mainNavigation.navigate('Ranks');
-            }}
-          />
-
-          <ProfileUpcomingEvents data={upcoming} title="Prochain évènement" limit={1} />
-          <ProfileFinishedEvents data={finished} />
           <ProfileManageEventsCta
             onPress={() => {
               mainNavigation.navigate('MainTabs', {
@@ -168,16 +157,8 @@ export function ProfileScreen(): React.JSX.Element {
             }}
           />
 
-          <AppButton
-            variant="secondary"
-            icon="log-out"
-            text="Se déconnecter"
-            style={styles.logoutButton}
-            textStyle={styles.logoutText}
-            onPress={() => {
-              void logout();
-            }}
-          />
+          <ProfileUpcomingEvents data={upcoming} title="Prochain évènement" carousel />
+          <ProfileFinishedEvents data={finished} />
 
           <ProfileEditModal
             visible={isEditModalVisible}
@@ -225,12 +206,6 @@ const createStyles = (theme: AppTheme) =>
       justifyContent: 'flex-end',
       marginBottom: -20,
       zIndex: 1,
-    },
-    logoutButton: {
-      marginTop: theme.spacing.md,
-    },
-    logoutText: {
-      color: theme.colors.danger,
     },
     errorText: {
       color: theme.colors.danger,

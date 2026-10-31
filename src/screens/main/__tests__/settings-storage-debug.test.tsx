@@ -8,6 +8,7 @@ let mockIsDebugMode = false;
 jest.mock('@react-navigation/native', () => ({
   useNavigation: () => ({ navigate: mockNavigate, goBack: jest.fn() }),
 }));
+jest.mock('@/context/AuthContext', () => ({ useAuth: () => ({ logout: jest.fn() }) }));
 jest.mock('@/context/DebugContext', () => ({
   useDebug: () => ({ isDebugMode: mockIsDebugMode, toggleDebugMode: jest.fn() }),
 }));

@@ -21,6 +21,7 @@ import { useDebug } from '@/context/DebugContext';
 import { useDeleteAccount } from '@/api/user/hooks/use-delete-account';
 import { StorageDebugLink } from '@/screens/debug/components/storage-debug-link';
 import { ClearCacheCard } from '@/screens/main/components/clear-cache-card';
+import { LogoutCard } from '@/screens/main/components/logout-card';
 
 const handleOpenLocationSettings = () => {
   if (Platform.OS === 'ios') {
@@ -140,6 +141,7 @@ export function SettingsScreen() {
         {/* Account Section */}
         <View style={{ marginTop: theme.spacing.xl }}>
           <AppText style={styles.settingTitle}>Compte</AppText>
+          <LogoutCard />
           <Pressable
             style={[
               styles.settingCard,

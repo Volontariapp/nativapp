@@ -4,6 +4,7 @@ import { ProfileHeader } from './ProfileHeader';
 import { ProfileSection } from './ProfileSection';
 import { type ProfileStatItem } from './ProfileStats';
 import { ProfileBadges } from './ProfileBadges';
+import { ProfileSeeAllLink } from './profile-see-all-link';
 import { ProfileEventsTabs } from './ProfileEventsTabs';
 import type { PaginatedEventListData } from './profile-events.types';
 
@@ -14,6 +15,8 @@ interface ProfileLayoutProps {
   impactScore?: number;
   stats: ProfileStatItem[];
   badges?: (BadgeWeb | string)[];
+  /** Quand il est fourni, la section Badges propose « Tout voir » (catalogue complet). */
+  onSeeAllBadges?: () => void;
   eventsTabs?: {
     finished?: PaginatedEventListData;
     created?: PaginatedEventListData;
@@ -37,6 +40,7 @@ export const ProfileLayout = ({
   impactScore,
   stats,
   badges,
+  onSeeAllBadges,
   eventsTabs,
   headerAction,
   bioAction,
@@ -54,7 +58,14 @@ export const ProfileLayout = ({
         bioAction={bioAction}
       />
 
-      <ProfileSection title="Badges">
+      <ProfileSection
+        title="Badges"
+        action={
+          onSeeAllBadges && (
+            <ProfileSeeAllLink onPress={onSeeAllBadges} accessibilityLabel="Voir tous les badges" />
+          )
+        }
+      >
         <ProfileBadges badges={badges} />
       </ProfileSection>
 

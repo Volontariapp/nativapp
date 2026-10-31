@@ -110,30 +110,32 @@ describe('ProfilePosts', () => {
     expect(widthOf(tile)).toBe(computePostGridTileSize(width - CONTENT_INSET * 2));
   });
 
-  it('offers to create a post next to the existing ones', () => {
-    const { getByText } = renderPosts({
+  it('offers a round create button on the title line, even with posts', () => {
+    const { getByLabelText } = renderPosts({
       posts: [createPostWeb({ title: 'Premier post' })],
       onCreatePress: mockOnCreatePress,
     });
 
-    fireEvent.press(getByText('Nouveau post'));
+    fireEvent.press(getByLabelText('Créer un post'));
 
     expect(mockOnCreatePress).toHaveBeenCalledTimes(1);
   });
 
-  it('invites the user to write a first post when there is none', () => {
-    const { getByText, queryByText } = renderPosts({ onCreatePress: mockOnCreatePress });
+  it('keeps the create button when the user has no post yet', () => {
+    const { getByLabelText, getByText } = renderPosts({ onCreatePress: mockOnCreatePress });
 
-    fireEvent.press(getByText('Créer mon premier post'));
+    expect(getByText('Aucun post pour le moment.')).toBeTruthy();
+
+    fireEvent.press(getByLabelText('Créer un post'));
 
     expect(mockOnCreatePress).toHaveBeenCalledTimes(1);
-    expect(queryByText('Nouveau post')).toBeNull();
   });
 
   it('shows no create button when no shortcut is given (public profile)', () => {
-    const { queryByText } = renderPosts({ posts: [createPostWeb({ title: 'Premier post' })] });
+    const { queryByLabelText } = renderPosts({
+      posts: [createPostWeb({ title: 'Premier post' })],
+    });
 
-    expect(queryByText('Nouveau post')).toBeNull();
-    expect(queryByText('Créer mon premier post')).toBeNull();
+    expect(queryByLabelText('Créer un post')).toBeNull();
   });
 });

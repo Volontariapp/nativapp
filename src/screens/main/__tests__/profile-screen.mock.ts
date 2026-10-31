@@ -4,7 +4,6 @@ export const mockUseGetFollows = jest.fn();
 export const mockUseGetFollowers = jest.fn();
 export const mockUseGetMyPosts = jest.fn();
 export const mockNavigate = jest.fn();
-export const mockLogout = jest.fn();
 
 const emptyList = {
   events: [],

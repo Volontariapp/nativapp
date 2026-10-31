@@ -6,18 +6,27 @@ import type { AppTheme } from '@/shared/themes/theme';
 
 interface ProfileSectionProps {
   title: string;
+  /** Contrôle aligné à droite sur la ligne du titre (bouton rond, lien « Tout voir »...). */
+  action?: React.ReactNode;
   children: React.ReactNode;
 }
 
 /**
  * Conteneur générique pour une section de la page Profil.
- * Affiche un titre en gris en haut et le contenu en dessous.
+ * Affiche un titre en gris en haut (avec une action optionnelle à droite) et le contenu dessous.
  */
-export const ProfileSection = ({ title, children }: ProfileSectionProps): React.JSX.Element => {
+export const ProfileSection = ({
+  title,
+  action,
+  children,
+}: ProfileSectionProps): React.JSX.Element => {
   const styles = useStyles(createStyles);
   return (
     <View style={styles.section}>
-      <AppText style={styles.label}>{title}</AppText>
+      <View style={styles.titleRow}>
+        <AppText style={styles.label}>{title}</AppText>
+        {action}
+      </View>
       {children}
     </View>
   );
@@ -28,12 +37,17 @@ const createStyles = (theme: AppTheme) =>
     section: {
       marginBottom: theme.spacing.xl,
     },
+    titleRow: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      justifyContent: 'space-between',
+      marginBottom: theme.spacing.sm,
+    },
     label: {
       fontSize: theme.typography.fontSize.sm,
       fontWeight: theme.typography.fontWeight.bold,
       color: theme.colors.grey,
       textTransform: 'uppercase',
-      marginBottom: theme.spacing.sm,
       letterSpacing: 1,
     },
   });
