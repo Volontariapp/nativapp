@@ -23,26 +23,26 @@ const ROOKIE_HELPER: ImpactRank = {
 };
 
 /**
- * Echelle des rangs, calee sur 100 points par evenement (valeur par defaut du formulaire de
- * creation). Source unique : la frise du feed et la page des rangs la lisent, ajuster ici.
+ * Echelle des rangs, recalibree (x3) pour le scoring dynamique : environ 300 points par mission
+ * validee (docs/scoring/08, section 4). Source unique : la frise du feed et la page des rangs la lisent, ajuster ici.
  */
 export const IMPACT_RANKS: readonly ImpactRank[] = [
   ROOKIE_HELPER,
-  { name: 'FIELD VOLUNTEER', minPoints: 100, tagline: 'Tu es sur le terrain, et ça se voit.' },
-  { name: 'COMMUNITY RANGER', minPoints: 300, tagline: 'Tu fédères, la communauté avance.' },
-  { name: 'IMPACT WARRIOR', minPoints: 700, tagline: 'Chaque mission change quelque chose.' },
-  { name: 'CHANGE MAKER', minPoints: 1500, tagline: 'Tu protèges ce que les autres oublient.' },
-  { name: 'CLEANER MASTER', minPoints: 3000, tagline: 'Aucune mission ne te résiste.' },
-  { name: 'HOPE GUARDIAN', minPoints: 5500, tagline: 'Tu veilles, les autres te le rendent.' },
-  { name: 'WORLD DEFENDER', minPoints: 9000, tagline: 'Ton impact se voit depuis l’espace.' },
+  { name: 'FIELD VOLUNTEER', minPoints: 300, tagline: 'Tu es sur le terrain, et ça se voit.' },
+  { name: 'COMMUNITY RANGER', minPoints: 900, tagline: 'Tu fédères, la communauté avance.' },
+  { name: 'IMPACT WARRIOR', minPoints: 2100, tagline: 'Chaque mission change quelque chose.' },
+  { name: 'CHANGE MAKER', minPoints: 4500, tagline: 'Tu protèges ce que les autres oublient.' },
+  { name: 'CLEANER MASTER', minPoints: 9000, tagline: 'Aucune mission ne te résiste.' },
+  { name: 'HOPE GUARDIAN', minPoints: 16500, tagline: 'Tu veilles, les autres te le rendent.' },
+  { name: 'WORLD DEFENDER', minPoints: 27000, tagline: 'Ton impact se voit depuis l’espace.' },
   {
     name: 'LIVING LEGEND',
-    minPoints: 15000,
+    minPoints: 45000,
     tagline: 'Ton nom se murmure sur toutes les missions.',
   },
   {
     name: 'ATLAS TITAN',
-    minPoints: 25000,
+    minPoints: 75000,
     tagline: 'Le sommet. Le monde te doit une fière chandelle.',
   },
 ];

@@ -1,5 +1,5 @@
 import React from 'react';
-import { View, StyleSheet, Pressable, type ViewStyle } from 'react-native';
+import { View, StyleSheet, Pressable, ActivityIndicator, type ViewStyle } from 'react-native';
 import { Image } from 'expo-image';
 import Feather from 'react-native-vector-icons/Feather';
 import { AppText } from '@/components/typography/AppText';
@@ -9,6 +9,10 @@ import type { UserWeb } from '@volontariapp/contracts';
 
 export interface ParticipantCardProps {
   participant: UserWeb;
+  isCheckedIn?: boolean;
+  canCheckIn?: boolean;
+  onToggleCheckIn?: () => void;
+  isCheckInPending?: boolean;
   onPress?: () => void;
   style?: ViewStyle;
   testID?: string;
@@ -16,6 +20,10 @@ export interface ParticipantCardProps {
 
 export function ParticipantCard({
   participant,
+  isCheckedIn,
+  canCheckIn = false,
+  onToggleCheckIn,
+  isCheckInPending = false,
   onPress,
   style,
   testID = 'participant-card',
@@ -24,12 +32,13 @@ export function ParticipantCard({
   const styles = useStyles(createStyles);
 
   const avatarUri = participant.logoPath ?? `https://i.pravatar.cc/150?u=${participant.id}`;
+  const isChecked = isCheckedIn === true;
 
   return (
     <Pressable
       style={({ pressed }) => [
         styles.card,
-        pressed && styles.cardPressed,
+        pressed && Boolean(onPress) && styles.cardPressed,
         style,
       ]}
       onPress={onPress}
@@ -51,9 +60,7 @@ export function ParticipantCard({
           {participant.totalImpactScore > 0 ? (
             <View style={styles.scoreRow}>
               <Feather name="award" size={12} color={theme.colors.goldText} />
-              <AppText style={styles.scoreText}>
-                {participant.totalImpactScore} pts
-              </AppText>
+              <AppText style={styles.scoreText}>{participant.totalImpactScore} pts</AppText>
             </View>
           ) : (
             <AppText style={styles.infoText}>Bénévole</AppText>
@@ -66,6 +73,66 @@ export function ParticipantCard({
           )}
         </View>
       </View>
+
+      {/* Bouton ou badge d'émargement */}
+      {canCheckIn ? (
+        <Pressable
+          style={[
+            styles.checkInButton,
+            isChecked ? styles.checkInButtonActive : styles.checkInButtonInactive,
+          ]}
+          onPress={onToggleCheckIn}
+          disabled={isCheckInPending}
+          hitSlop={8}
+          accessibilityRole="checkbox"
+          accessibilityState={{ checked: isChecked }}
+          accessibilityLabel={`Émarger ${participant.pseudo}`}
+        >
+          {isCheckInPending ? (
+            <ActivityIndicator
+              size="small"
+              color={isChecked ? theme.colors.primaryEco : theme.colors.grey}
+            />
+          ) : (
+            <>
+              <Feather
+                name={isChecked ? 'check-circle' : 'circle'}
+                size={18}
+                color={isChecked ? theme.colors.primaryEco : theme.colors.grey}
+              />
+              <AppText
+                style={[
+                  styles.checkInText,
+                  { color: isChecked ? theme.colors.primaryEco : theme.colors.grey },
+                ]}
+              >
+                {isChecked ? 'Présent' : 'Émarger'}
+              </AppText>
+            </>
+          )}
+        </Pressable>
+      ) : isCheckedIn !== undefined ? (
+        <View
+          style={[
+            styles.statusBadge,
+            isChecked ? styles.statusBadgePresent : styles.statusBadgeAbsent,
+          ]}
+        >
+          <Feather
+            name={isChecked ? 'check' : 'x'}
+            size={12}
+            color={isChecked ? theme.colors.primaryEco : theme.colors.grey}
+          />
+          <AppText
+            style={[
+              styles.statusBadgeText,
+              { color: isChecked ? theme.colors.primaryEco : theme.colors.grey },
+            ]}
+          >
+            {isChecked ? 'Présent' : 'Absent'}
+          </AppText>
+        </View>
+      ) : null}
     </Pressable>
   );
 }
@@ -130,5 +197,45 @@ const createStyles = (theme: AppTheme) =>
       fontSize: 11,
       color: theme.colors.grey,
     },
+    checkInButton: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      paddingVertical: 6,
+      paddingHorizontal: 10,
+      borderRadius: 20,
+      borderWidth: 1,
+      gap: 6,
+      marginLeft: theme.spacing.sm,
+    },
+    checkInButtonActive: {
+      backgroundColor: '#f0fdf4',
+      borderColor: theme.colors.primaryEco,
+    },
+    checkInButtonInactive: {
+      backgroundColor: theme.colors.background,
+      borderColor: theme.colors.separator,
+    },
+    checkInText: {
+      fontSize: 12,
+      fontWeight: '600',
+    },
+    statusBadge: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      paddingVertical: 4,
+      paddingHorizontal: 8,
+      borderRadius: theme.radius.sm,
+      gap: 4,
+      marginLeft: theme.spacing.sm,
+    },
+    statusBadgePresent: {
+      backgroundColor: '#f0fdf4',
+    },
+    statusBadgeAbsent: {
+      backgroundColor: theme.colors.lightGrey,
+    },
+    statusBadgeText: {
+      fontSize: 11,
+      fontWeight: '500',
+    },
   });
-

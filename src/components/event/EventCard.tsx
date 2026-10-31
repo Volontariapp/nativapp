@@ -9,7 +9,7 @@ import { useAppTheme, useStyles } from '@/context/ThemeContext';
 import type { AppTheme } from '@/shared/themes/theme';
 import type { AppEvent as Event } from '@/api/event/event.api';
 import { EventTypeTagComponent } from '@/components/dataDisplay/EventTypesTags';
-import { ImpactScoreBadge } from '@/components/event/ImpactScoreBadge';
+import { EventPointsBadge } from '@/components/event/EventPointsBadge';
 import { getEventImageUri } from '@/api/event/event-cover.utils';
 import { calculateDistanceInKm, formatDistance } from '@/shared/lib/location.utils';
 import { useDebug } from '@/context/DebugContext';
@@ -110,9 +110,7 @@ export const EventCard = React.memo(function EventCard({
           <View style={styles.topContainer}>
             <View style={styles.tagsContainer}>
               <EventTypeTagComponent type={event.type} />
-              {event.awardedImpactScore > 0 && (
-                <ImpactScoreBadge score={event.awardedImpactScore} />
-              )}
+              <EventPointsBadge event={event} />
             </View>
 
             {isDebugMode && (rankingScore !== undefined || reasons.length > 0) && (

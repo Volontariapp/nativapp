@@ -35,7 +35,7 @@ import { EventTags } from '../../components/event/EventTags';
 import { EventParticipants } from '../../components/event/EventParticipants';
 import { EventRequirements } from '../../components/event/EventRequirements';
 import { EventOrganizer } from '../../components/event/EventOrganizer';
-import { ImpactScoreBadge } from '../../components/event/ImpactScoreBadge';
+import { EventPointsBadge } from '../../components/event/EventPointsBadge';
 import AppMap from '@/components/map/AppMap';
 
 type Props = NativeStackScreenProps<MainStackParamList, 'EventDetail'>;
@@ -92,9 +92,7 @@ function EventDetailBody({ event }: { event: AppEvent }): React.JSX.Element {
       <View style={styles.content}>
         <AppText style={styles.categoryTitle}>{mapEventType(event.type)}</AppText>
         <AppText style={styles.title}>{event.title}</AppText>
-        {event.awardedImpactScore > 0 && (
-          <ImpactScoreBadge score={event.awardedImpactScore} style={{ marginBottom: 16 }} />
-        )}
+        <EventPointsBadge event={event} style={{ marginBottom: 16 }} />
 
         <EventOrganizer organizerId={event.organizerId} />
         <EventInfoCards event={event} />
