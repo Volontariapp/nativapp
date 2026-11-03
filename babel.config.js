@@ -1,7 +1,10 @@
 module.exports = function (api) {
-  api.cache(true);
+  // api.env() enregistre NODE_ENV dans la cle de cache, donc pas de api.cache(true) ici
+  const isProduction = api.env('production');
   return {
     presets: ['babel-preset-expo'],
+    // Retire console.log/info/debug des bundles de production, garde warn et error
+    plugins: isProduction ? [['transform-remove-console', { exclude: ['error', 'warn'] }]] : [],
     overrides: [
       {
         exclude: /node_modules/,

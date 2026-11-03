@@ -98,6 +98,7 @@
     "@volontariapp/contracts": "^4.8.3",
     "@volontariapp/logger": "^0.4.0",
     "@volontariapp/shared": "^0.18.1",
+    "babel-plugin-transform-remove-console": "^6.9.4",
     "eslint": "~9.18.0",
     "jest": "^29.7.0",
     "jest-expo": "~54.0.18",

@@ -12,12 +12,8 @@ export const useGetMyPosts = (limit = 10) => {
     queryKey: [...MY_POSTS_QUERY_KEY, userId, { limit }],
     queryFn: async ({ pageParam }) => {
       if (userId === null) throw new Error('Not authenticated');
-      console.log('[useGetMyPosts] Fetching page:', pageParam, 'with limit:', limit);
       try {
         const result = await postApi.getMyPosts({ page: pageParam, limit, authorId: userId });
-        console.log(
-          `[useGetMyPosts] Fetched ${String(result.posts.length)} posts on page ${String(pageParam)}. Total count: ${String(result.totalCount)}`,
-        );
         return result;
       } catch (err) {
         console.error(
