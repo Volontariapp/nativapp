@@ -29,7 +29,7 @@ export function PostActions({
     <View style={styles.container}>
       <View style={styles.leftActions}>
         <View style={styles.actionGroup}>
-          <Pressable style={styles.iconButton} onPress={onLikePress}>
+          <Pressable testID="post-like-button" style={styles.iconButton} onPress={onLikePress}>
             <Ionicons
               name={isLiked ? 'heart' : 'heart-outline'}
               size={22}

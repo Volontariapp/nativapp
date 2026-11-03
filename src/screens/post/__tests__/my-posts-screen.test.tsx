@@ -9,6 +9,9 @@ import * as mockMyPosts from './my-posts-screen.mock';
 import { MyPostsScreen } from '../MyPostsScreen';
 
 jest.mock('expo-image', () => ({ Image: 'Image' }));
+jest.mock('@/api/social/hooks/use-likes-summary', () => ({
+  useLikesSummary: jest.fn(),
+}));
 jest.mock('react-native-safe-area-context', () => mockSafeArea);
 jest.mock('@/components/layout/AppHeader', () => ({ __esModule: true, default: () => null }));
 jest.mock('@/components/post/AppPost', () => ({

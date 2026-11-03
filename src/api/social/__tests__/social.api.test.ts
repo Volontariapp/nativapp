@@ -69,3 +69,60 @@ describe('socialApi.getMyLikes', () => {
     expect(apiFetchMock).toHaveBeenCalledTimes(1);
   });
 });
+
+const requestedPostIds = (options: { body?: unknown } | undefined): string[] => {
+  const body = options?.body;
+  if (
+    typeof body === 'object' &&
+    body !== null &&
+    'postIds' in body &&
+    Array.isArray(body.postIds)
+  ) {
+    return body.postIds.filter((id): id is string => typeof id === 'string');
+  }
+  return [];
+};
+
+describe('socialApi.getLikesSummary', () => {
+  afterEach(() => {
+    jest.resetAllMocks();
+  });
+
+  const summariesFor = (postIds: string[]) => ({
+    summaries: postIds.map((postId) => ({ postId, likeCount: 1, likedByMe: false })),
+  });
+
+  it('posts the ids to the gateway route and returns the summaries', async () => {
+    apiFetchMock.mockResolvedValueOnce(summariesFor(['p1', 'p2']));
+
+    const result = await socialApi.getLikesSummary(['p1', 'p2']);
+
+    expect(result.map((summary) => summary.postId)).toEqual(['p1', 'p2']);
+    expect(apiFetchMock).toHaveBeenCalledWith('/social/likes-summary', {
+      method: 'POST',
+      requiresAuth: true,
+      body: { postIds: ['p1', 'p2'] },
+    });
+  });
+
+  it('splits more than 100 ids into several calls of 100 ids at most', async () => {
+    apiFetchMock.mockImplementation((_path, options) =>
+      Promise.resolve(summariesFor(requestedPostIds(options))),
+    );
+
+    const result = await socialApi.getLikesSummary(ids('p', 250));
+
+    expect(result).toHaveLength(250);
+    expect(apiFetchMock).toHaveBeenCalledTimes(3);
+  });
+
+  it('removes duplicate ids and makes no call without ids', async () => {
+    apiFetchMock.mockResolvedValueOnce(summariesFor(['p1']));
+
+    await socialApi.getLikesSummary(['p1', 'p1']);
+    expect(apiFetchMock).toHaveBeenCalledTimes(1);
+
+    expect(await socialApi.getLikesSummary([])).toEqual([]);
+    expect(apiFetchMock).toHaveBeenCalledTimes(1);
+  });
+});

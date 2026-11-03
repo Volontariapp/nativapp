@@ -6,7 +6,7 @@ const NO_POST_IDS: readonly string[] = [];
 
 /**
  * Posts commentes pendant la session. Aucune liste de ses commentaires n'est lue cote serveur : le
- * feed s'en sert pour ne pas reproposer un post deja commente. Les likes viennent de `useGetMyLikes`.
+ * feed s'en sert pour ne pas reproposer un post deja commente. Les likes viennent du resume `useLikesSummary` (likedByMe).
  */
 export const useEngagedPostIds = (): readonly string[] => {
   const { data } = useQuery<readonly string[]>({

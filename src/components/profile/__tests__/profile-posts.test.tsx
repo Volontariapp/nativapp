@@ -8,6 +8,9 @@ import { computePostGridTileSize } from '@/components/post/post-grid.utils';
 import { ProfilePosts } from '../profile-posts';
 
 jest.mock('expo-image', () => ({ Image: 'Image' }));
+jest.mock('@/api/social/hooks/use-likes-summary', () => ({
+  useLikesSummary: jest.fn(),
+}));
 jest.mock('react-native-safe-area-context', () => mockSafeArea);
 jest.mock('@/components/post/AppPost', () => ({
   __esModule: true,

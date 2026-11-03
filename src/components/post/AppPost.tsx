@@ -1,4 +1,4 @@
-import React, { memo, useCallback, useMemo, useState } from 'react';
+import React, { memo, useCallback, useState } from 'react';
 import { View, Text, StyleSheet, Pressable } from 'react-native';
 import Icon from 'react-native-vector-icons/Feather';
 import Ionicons from 'react-native-vector-icons/Ionicons';
@@ -23,8 +23,7 @@ import type { MainStackParamList } from '@/navigation/stacks/MainStack';
 import { convertEventDtoToAppEvent } from '@/api/event/event.api';
 import { useLikePost } from '@/api/social/hooks/use-like-post';
 import { useUnlikePost } from '@/api/social/hooks/use-unlike-post';
-import { useGetMyLikes } from '@/api/social/hooks/use-get-my-likes';
-import { useGetPostLikers } from '@/api/user/hooks/use-get-post-likers';
+import { usePostLikeSummary } from '@/api/social/hooks/use-likes-summary';
 import { PostLikersModal } from './PostLikersModal';
 import Animated, {
   useSharedValue,
@@ -56,8 +55,8 @@ function AppPostComponent({ post }: PostCardProps) {
 
   const { data: author } = useGetPublicUser(post.authorId);
   const { data: commentsData } = useListComments(post.id);
-  const { data: myLikesData } = useGetMyLikes();
-  const { data: likersData } = useGetPostLikers(post.id, { limit: 1 });
+  // Resume lu depuis le cache alimente par le lot de la liste (useLikesSummary) : aucune requete ici.
+  const { data: likeSummary } = usePostLikeSummary(post.id);
 
   const likePost = useLikePost();
   const unlikePost = useUnlikePost();
@@ -70,15 +69,11 @@ function AppPostComponent({ post }: PostCardProps) {
 
   const pseudo = author?.pseudo ?? 'Auteur inconnu';
   const topComments = commentsData?.comments.slice(0, 3) ?? [];
-  const isLiked = useMemo(
-    () => myLikesData?.ids.includes(post.id) ?? false,
-    [myLikesData, post.id],
-  );
-
-  let likeCount = likersData?.totalCount ?? 0;
-  if (isLiked && likeCount === 0) {
-    likeCount = 1;
-  }
+  // Sans resume (lot en cours ou en echec) l'etat du like est inconnu : on ne l'affiche pas comme
+  // "non like" et on ne laisse pas liker a l'aveugle (un tap pourrait inverser un vrai like).
+  const isLikeStateKnown = likeSummary !== undefined;
+  const isLiked = likeSummary?.likedByMe ?? false;
+  const likeCount = likeSummary?.likeCount ?? 0;
 
   const heartScale = useSharedValue(0);
   const heartOpacity = useSharedValue(0);
@@ -114,13 +109,14 @@ function AppPostComponent({ post }: PostCardProps) {
   const { mutate: unlikeMutate } = unlikePost;
 
   const handleToggleLike = useCallback(() => {
+    if (!isLikeStateKnown) return;
     if (isLiked) {
       unlikeMutate(post.id);
     } else {
       likeMutate(post.id);
       triggerLikeAnimation();
     }
-  }, [isLiked, unlikeMutate, likeMutate, post.id, triggerLikeAnimation]);
+  }, [isLikeStateKnown, isLiked, unlikeMutate, likeMutate, post.id, triggerLikeAnimation]);
 
   const handleCommentPress = useCallback(() => {
     setIsCommentsVisible(true);
@@ -141,6 +137,7 @@ function AppPostComponent({ post }: PostCardProps) {
   const doubleTapGesture = Gesture.Tap()
     .numberOfTaps(2)
     .onStart(() => {
+      if (!isLikeStateKnown) return;
       triggerLikeAnimation();
       if (!isLiked) {
         likePost.mutate(post.id);

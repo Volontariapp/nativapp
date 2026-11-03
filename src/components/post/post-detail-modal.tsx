@@ -3,6 +3,7 @@ import { Alert, Modal, Pressable, ScrollView, StyleSheet, View } from 'react-nat
 import { SafeAreaProvider, SafeAreaView } from 'react-native-safe-area-context';
 import Feather from 'react-native-vector-icons/Feather';
 import type { PostWeb } from '@volontariapp/contracts';
+import { useLikesSummary } from '@/api/social/hooks/use-likes-summary';
 import { AppButton } from '@/components/buttons/AppButton';
 import AppPost from '@/components/post/AppPost';
 import { useAppTheme, useStyles } from '@/context/ThemeContext';
@@ -25,6 +26,8 @@ export function PostDetailModal({
 }: PostDetailModalProps): React.JSX.Element | null {
   const { theme } = useAppTheme();
   const styles = useStyles(createStyles);
+  // Un seul post : un lot d'un id, lu ensuite par la carte via le cache du resume.
+  useLikesSummary(visible && post !== null ? [post.id] : []);
 
   if (post === null) {
     return null;
