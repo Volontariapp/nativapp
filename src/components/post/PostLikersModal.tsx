@@ -1,10 +1,10 @@
-import React from 'react';
+import React, { useMemo } from 'react';
 import { View, StyleSheet, Modal, Pressable, FlatList, ActivityIndicator } from 'react-native';
 import Icon from 'react-native-vector-icons/Feather';
 import { AppText } from '@/components/typography/AppText';
 import { useAppTheme, useStyles } from '@/context/ThemeContext';
 import type { AppTheme } from '@/shared/themes/theme';
-import { useGetPostLikers } from '@/api/user/hooks/use-get-post-likers';
+import { useInfinitePostLikers } from '@/api/user/hooks/use-infinite-post-likers';
 import type { UserPublicProfile } from '@/api/user/user.api';
 import { useNavigation } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
@@ -19,10 +19,17 @@ interface PostLikersModalProps {
 export const PostLikersModal = ({ postId, visible, onClose }: PostLikersModalProps) => {
   const { theme } = useAppTheme();
   const styles = useStyles(createStyles);
-  const { data, isLoading } = useGetPostLikers(postId);
+  const { data, isLoading, hasNextPage, isFetchingNextPage, fetchNextPage } =
+    useInfinitePostLikers(postId);
   const navigation = useNavigation<NativeStackNavigationProp<MainStackParamList>>();
 
-  const likers = data?.users ?? [];
+  const likers = useMemo(() => data?.pages.flatMap((page) => page.users) ?? [], [data]);
+
+  const handleEndReached = () => {
+    if (hasNextPage && !isFetchingNextPage) {
+      void fetchNextPage();
+    }
+  };
 
   const goToProfile = (userId: string) => {
     onClose();
@@ -62,6 +69,16 @@ export const PostLikersModal = ({ postId, visible, onClose }: PostLikersModalPro
               keyExtractor={(item) => item.id}
               renderItem={renderLiker}
               contentContainerStyle={styles.listContent}
+              onEndReached={handleEndReached}
+              onEndReachedThreshold={0.5}
+              ListFooterComponent={
+                isFetchingNextPage ? (
+                  <ActivityIndicator
+                    style={styles.footerLoader}
+                    color={theme.colors.primarySocio}
+                  />
+                ) : null
+              }
               ListEmptyComponent={
                 <View style={styles.emptyContainer}>
                   <AppText style={styles.emptyText}>Aucun J'aime pour le moment.</AppText>
@@ -105,6 +122,9 @@ const createStyles = (theme: AppTheme) =>
     },
     closeButton: {
       padding: theme.spacing.xs,
+    },
+    footerLoader: {
+      paddingVertical: theme.spacing.md,
     },
     loader: {
       flex: 1,

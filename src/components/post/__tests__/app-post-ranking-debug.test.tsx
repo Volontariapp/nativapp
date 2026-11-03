@@ -6,6 +6,10 @@ import { useDebug } from '@/context/DebugContext';
 
 import type { RankedAppPost } from '@/api/ranking';
 
+import {
+  mockUseInfiniteCommentsEmpty,
+  mockUseInfinitePostLikersEmpty,
+} from './post-modals-hooks.mock';
 import { mockUseGetPublicUser } from '@/api/user/__tests__/user.mock';
 import { createUserPublicProfile } from '@/api/user/__tests__/user.factory';
 
@@ -18,6 +22,12 @@ jest.mock('@/api/user/hooks/use-get-public-user', () => ({
 }));
 jest.mock('@/api/post/hooks/use-list-comments', () => ({
   useListComments: jest.fn(),
+}));
+jest.mock('@/api/post/hooks/use-infinite-comments', () => ({
+  useInfiniteComments: () => mockUseInfiniteCommentsEmpty(),
+}));
+jest.mock('@/api/user/hooks/use-infinite-post-likers', () => ({
+  useInfinitePostLikers: () => mockUseInfinitePostLikersEmpty(),
 }));
 jest.mock('@/api/social/hooks/use-get-my-likes', () => ({
   useGetMyLikes: jest.fn(),

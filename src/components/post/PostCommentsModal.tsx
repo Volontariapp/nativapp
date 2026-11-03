@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useMemo, useState } from 'react';
 import {
   View,
   StyleSheet,
@@ -14,7 +14,7 @@ import { AppText } from '@/components/typography/AppText';
 import { AppKeyboardAvoidingView } from '@/components/layout/AppKeyboardAvoidingView';
 import { useAppTheme, useStyles } from '@/context/ThemeContext';
 import type { AppTheme } from '@/shared/themes/theme';
-import { useListComments } from '@/api/post/hooks/use-list-comments';
+import { useInfiniteComments } from '@/api/post/hooks/use-infinite-comments';
 import { useCreateComment } from '@/api/post/hooks/use-create-comment';
 import type { CommentWebResponse } from '@volontariapp/contracts';
 import { CommentItem } from './CommentItem';
@@ -31,10 +31,17 @@ export const PostCommentsModal = ({ postId, visible, onClose }: PostCommentsModa
   const { theme } = useAppTheme();
   const styles = useStyles(createStyles);
   const [commentText, setCommentText] = useState('');
-  const { data, isLoading } = useListComments(postId);
+  const { data, isLoading, hasNextPage, isFetchingNextPage, fetchNextPage } =
+    useInfiniteComments(postId);
   const createComment = useCreateComment(postId);
 
-  const comments = data?.comments ?? [];
+  const comments = useMemo(() => data?.pages.flatMap((page) => page.comments) ?? [], [data]);
+
+  const handleEndReached = () => {
+    if (hasNextPage && !isFetchingNextPage) {
+      void fetchNextPage();
+    }
+  };
 
   const handleSend = () => {
     const text = commentText.trim();
@@ -70,6 +77,13 @@ export const PostCommentsModal = ({ postId, visible, onClose }: PostCommentsModa
               keyExtractor={(item) => item.id}
               renderItem={renderComment}
               contentContainerStyle={styles.listContent}
+              onEndReached={handleEndReached}
+              onEndReachedThreshold={0.5}
+              ListFooterComponent={
+                isFetchingNextPage ? (
+                  <ActivityIndicator style={styles.footerLoader} color={theme.colors.primaryEco} />
+                ) : null
+              }
               ListEmptyComponent={
                 <View style={styles.emptyContainer}>
                   <AppText style={styles.emptyText}>Soyez le premier à commenter !</AppText>
@@ -148,6 +162,9 @@ const createStyles = (theme: AppTheme) =>
     },
     list: {
       flex: 1,
+    },
+    footerLoader: {
+      paddingVertical: theme.spacing.md,
     },
     listContent: {
       padding: theme.spacing.md,

@@ -1,7 +1,9 @@
 import { useQuery } from '@tanstack/react-query';
 import { postApi } from '../post.api';
 
-export const COMMENTS_LIST_QUERY_KEY = ['comments-list'] as const;
+import { COMMENTS_LIST_QUERY_KEY } from '../comments-query-keys';
+
+export { COMMENTS_LIST_QUERY_KEY };
 
 export function useListComments(
   postId: string,
