@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { memo, useCallback, useMemo, useState } from 'react';
 import { View, Text, StyleSheet, Pressable } from 'react-native';
 import Icon from 'react-native-vector-icons/Feather';
 import Ionicons from 'react-native-vector-icons/Ionicons';
@@ -41,7 +41,7 @@ interface PostCardProps {
   post: PostWeb;
 }
 
-export default function AppPost({ post }: PostCardProps) {
+function AppPostComponent({ post }: PostCardProps) {
   const { theme } = useAppTheme();
   const styles = useStyles(createStyles);
   const { isDebugMode } = useDebug();
@@ -70,20 +70,15 @@ export default function AppPost({ post }: PostCardProps) {
 
   const pseudo = author?.pseudo ?? 'Auteur inconnu';
   const topComments = commentsData?.comments.slice(0, 3) ?? [];
-  const isLiked = myLikesData?.ids.includes(post.id) ?? false;
+  const isLiked = useMemo(
+    () => myLikesData?.ids.includes(post.id) ?? false,
+    [myLikesData, post.id],
+  );
 
   let likeCount = likersData?.totalCount ?? 0;
   if (isLiked && likeCount === 0) {
     likeCount = 1;
   }
-
-  useEffect(() => {
-    console.log(`[AppPost ${post.id}] myLikesData:`, myLikesData?.ids);
-    console.log(`[AppPost ${post.id}] likersData totalCount:`, likersData?.totalCount);
-    console.log(
-      `[AppPost ${post.id}] Computed -> isLiked: ${String(isLiked)}, likeCount: ${String(likeCount)}`,
-    );
-  }, [isLiked, likeCount, post.id, myLikesData, likersData]);
 
   const heartScale = useSharedValue(0);
   const heartOpacity = useSharedValue(0);
@@ -95,7 +90,7 @@ export default function AppPost({ post }: PostCardProps) {
     };
   });
 
-  const triggerLikeAnimation = () => {
+  const triggerLikeAnimation = useCallback(() => {
     cancelAnimation(heartScale);
     cancelAnimation(heartOpacity);
     heartScale.value = 0;
@@ -113,16 +108,35 @@ export default function AppPost({ post }: PostCardProps) {
         }),
       ),
     );
-  };
+  }, [heartScale, heartOpacity]);
 
-  const handleToggleLike = () => {
+  const { mutate: likeMutate } = likePost;
+  const { mutate: unlikeMutate } = unlikePost;
+
+  const handleToggleLike = useCallback(() => {
     if (isLiked) {
-      unlikePost.mutate(post.id);
+      unlikeMutate(post.id);
     } else {
-      likePost.mutate(post.id);
+      likeMutate(post.id);
       triggerLikeAnimation();
     }
-  };
+  }, [isLiked, unlikeMutate, likeMutate, post.id, triggerLikeAnimation]);
+
+  const handleCommentPress = useCallback(() => {
+    setIsCommentsVisible(true);
+  }, []);
+  const handleCommentsClose = useCallback(() => {
+    setIsCommentsVisible(false);
+  }, []);
+  const handleLikeCountPress = useCallback(() => {
+    setIsLikersVisible(true);
+  }, []);
+  const handleLikersClose = useCallback(() => {
+    setIsLikersVisible(false);
+  }, []);
+  const handleDebugDetailClose = useCallback(() => {
+    setIsDebugDetailVisible(false);
+  }, []);
 
   const doubleTapGesture = Gesture.Tap()
     .numberOfTaps(2)
@@ -199,15 +213,11 @@ export default function AppPost({ post }: PostCardProps) {
 
       <PostActions
         commentCount={commentsData?.totalCount ?? commentsData?.comments.length ?? 0}
-        onCommentPress={() => {
-          setIsCommentsVisible(true);
-        }}
+        onCommentPress={handleCommentPress}
         isLiked={isLiked}
         likeCount={likeCount}
         onLikePress={handleToggleLike}
-        onLikeCountPress={() => {
-          setIsLikersVisible(true);
-        }}
+        onLikeCountPress={handleLikeCountPress}
       />
 
       <View style={styles.content}>
@@ -243,24 +253,14 @@ export default function AppPost({ post }: PostCardProps) {
       <PostCommentsModal
         postId={post.id}
         visible={isCommentsVisible}
-        onClose={() => {
-          setIsCommentsVisible(false);
-        }}
+        onClose={handleCommentsClose}
       />
 
-      <PostLikersModal
-        postId={post.id}
-        visible={isLikersVisible}
-        onClose={() => {
-          setIsLikersVisible(false);
-        }}
-      />
+      <PostLikersModal postId={post.id} visible={isLikersVisible} onClose={handleLikersClose} />
 
       <RankingDebugDetailModal
         visible={isDebugDetailVisible}
-        onClose={() => {
-          setIsDebugDetailVisible(false);
-        }}
+        onClose={handleDebugDetailClose}
         type="post"
         id={post.id}
         title={post.title}
@@ -274,6 +274,10 @@ export default function AppPost({ post }: PostCardProps) {
     </View>
   );
 }
+
+const AppPost = memo(AppPostComponent);
+
+export default AppPost;
 
 const createStyles = (theme: AppTheme) =>
   StyleSheet.create({

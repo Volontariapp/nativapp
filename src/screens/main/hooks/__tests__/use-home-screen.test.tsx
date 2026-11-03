@@ -197,6 +197,33 @@ describe('useHomeScreen', () => {
     expect(result.current.posts[0]?.id).toBe('post-fallback-1');
   });
 
+  it('exposes isError and retry refetches the fallback when ranking and fallback both fail', async () => {
+    mockGetFeed.mockRejectedValue(new Error('Network error on ranking'));
+    mockUseListPosts.mockReturnValue({
+      data: { pages: [] },
+      isLoading: false,
+      isError: true,
+      hasNextPage: false,
+      fetchNextPage: mockFetchNextPageFallback,
+      isFetchingNextPage: false,
+      refetch: mockRefetchFallback,
+    });
+
+    const { result } = renderHook(() => useHomeScreen(), {
+      wrapper: createWrapper(),
+    });
+
+    await waitFor(() => {
+      expect(result.current.isFallbackMode).toBe(true);
+    });
+    expect(result.current.isError).toBe(true);
+
+    act(() => {
+      result.current.retry();
+    });
+    expect(mockRefetchFallback).toHaveBeenCalledTimes(1);
+  });
+
   it('falls back to useListPosts when ranking succeeds with 0 posts (empty run / cold-start)', async () => {
     mockGetFeed.mockResolvedValue({
       posts: [],
