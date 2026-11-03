@@ -1,4 +1,4 @@
-import { StyleSheet, View, ActivityIndicator, RefreshControl } from 'react-native';
+import { StyleSheet, View, ActivityIndicator, RefreshControl, Platform } from 'react-native';
 import React, { useCallback, useMemo } from 'react';
 import { AppText } from '@/components/typography/AppText';
 import AppHeader from '@/components/layout/AppHeader';
@@ -10,6 +10,7 @@ import Animated from 'react-native-reanimated';
 import { useScrollTabBar } from '@/navigation/hooks/useScrollTabBar';
 import { useTabBarContentInset } from '@/navigation/hooks/useTabBarContentInset';
 import { useDebug } from '@/context/DebugContext';
+import { AppButton } from '@/components/buttons';
 import { useHomeScreen } from './hooks/use-home-screen';
 
 type PostItem = React.ComponentProps<typeof AppPost>['post'];
@@ -29,6 +30,7 @@ export function HomeScreen(): React.JSX.Element {
     isFetchingNextPage,
     flatListRef,
     handleRefresh,
+    retry,
     handleLoadMore,
   } = useHomeScreen();
 
@@ -38,6 +40,44 @@ export function HomeScreen(): React.JSX.Element {
   const keyExtractor = useCallback((item: PostItem) => item.id, []);
 
   const renderItem = useCallback(({ item }: { item: PostItem }) => <AppPost post={item} />, []);
+
+  const listHeader = useMemo(() => <ImpactRankBandContainer />, []);
+
+  const listFooter = useMemo(
+    () => (
+      <View style={styles.footerLoader}>
+        {isFetchingNextPage ? (
+          <ActivityIndicator size="small" color={theme.colors.primarySocio} />
+        ) : hasNextPage ? (
+          <AppText
+            style={[styles.loadMoreText, { color: theme.colors.primarySocio }]}
+            onPress={handleLoadMore}
+          >
+            Charger plus de posts
+          </AppText>
+        ) : (
+          <AppText style={[styles.endText, { color: theme.colors.grey }]}>Fin des posts</AppText>
+        )}
+      </View>
+    ),
+    [
+      styles,
+      theme.colors.primarySocio,
+      theme.colors.grey,
+      isFetchingNextPage,
+      hasNextPage,
+      handleLoadMore,
+    ],
+  );
+
+  const listEmpty = useMemo(
+    () => (
+      <View style={styles.center}>
+        <AppText>Aucun post à afficher pour le moment.</AppText>
+      </View>
+    ),
+    [styles],
+  );
 
   const refreshControl = useMemo(
     () => (
@@ -73,6 +113,14 @@ export function HomeScreen(): React.JSX.Element {
         ) : isError ? (
           <View style={styles.center}>
             <AppText>Une erreur est survenue lors du chargement des posts.</AppText>
+            <AppButton
+              text="Réessayer"
+              variant="eco"
+              size="small"
+              onPress={retry}
+              testID="home-retry-button"
+              style={styles.retryButton}
+            />
           </View>
         ) : (
           <Animated.FlatList
@@ -87,30 +135,13 @@ export function HomeScreen(): React.JSX.Element {
             refreshControl={refreshControl}
             onEndReached={handleLoadMore}
             onEndReachedThreshold={0.5}
-            ListHeaderComponent={<ImpactRankBandContainer />}
-            ListFooterComponent={
-              <View style={styles.footerLoader}>
-                {isFetchingNextPage ? (
-                  <ActivityIndicator size="small" color={theme.colors.primarySocio} />
-                ) : hasNextPage ? (
-                  <AppText
-                    style={[styles.loadMoreText, { color: theme.colors.primarySocio }]}
-                    onPress={handleLoadMore}
-                  >
-                    Charger plus de posts
-                  </AppText>
-                ) : (
-                  <AppText style={[styles.endText, { color: theme.colors.grey }]}>
-                    Fin des posts
-                  </AppText>
-                )}
-              </View>
-            }
-            ListEmptyComponent={
-              <View style={styles.center}>
-                <AppText>Aucun post à afficher pour le moment.</AppText>
-              </View>
-            }
+            ListHeaderComponent={listHeader}
+            ListFooterComponent={listFooter}
+            ListEmptyComponent={listEmpty}
+            windowSize={7}
+            initialNumToRender={4}
+            maxToRenderPerBatch={4}
+            removeClippedSubviews={Platform.OS === 'android'}
           />
         )}
       </View>
@@ -166,6 +197,9 @@ const createStyles = (theme: AppTheme) =>
     endText: {
       padding: 20,
       textAlign: 'center',
+    },
+    retryButton: {
+      marginTop: theme.spacing.md,
     },
     spacer: {
       height: 12,

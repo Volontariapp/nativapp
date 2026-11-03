@@ -26,6 +26,7 @@ export interface UseHomeScreenResult {
   isFetchingNextPage: boolean;
   flatListRef: React.RefObject<FlatList<PostWeb> | null>;
   handleRefresh: () => Promise<void>;
+  retry: () => void;
   handleLoadMore: () => void;
 }
 
@@ -76,14 +77,41 @@ export function useHomeScreen(): UseHomeScreenResult {
   const isLoading = isFallbackMode
     ? fallbackQuery.isLoading
     : rankingQuery.isLoading || (!hasRankedPosts && fallbackQuery.isLoading);
-  const isError = isFallbackMode ? fallbackQuery.isError : false;
+  // En mode repli, le repli qui echoue est l'erreur visible (le ranking est deja en echec ou vide).
+  const isError = isFallbackMode ? fallbackQuery.isError : rankingQuery.isError;
   const hasNextPage = isFallbackMode ? fallbackQuery.hasNextPage : rankingQuery.hasNextPage;
   const isFetchingNextPage = isFallbackMode
     ? fallbackQuery.isFetchingNextPage
     : rankingQuery.isFetchingNextPage;
 
+  // Derniers etats lus par les callbacks stables : evite de les recreer a chaque rendu des useQuery.
+  const latestRef = useRef({
+    posts,
+    isFallbackMode,
+    rankingQuery,
+    fallbackQuery,
+    myLikes,
+    engagedPostIds,
+    userId,
+    hasNextPage,
+    isFetchingNextPage,
+  });
+  latestRef.current = {
+    posts,
+    isFallbackMode,
+    rankingQuery,
+    fallbackQuery,
+    myLikes,
+    engagedPostIds,
+    userId,
+    hasNextPage,
+    isFetchingNextPage,
+  };
+
   // Rafraîchissement manuel (Pull-to-refresh)
   const handleRefresh = useCallback(async (): Promise<void> => {
+    const { posts, isFallbackMode, rankingQuery, fallbackQuery, myLikes, engagedPostIds, userId } =
+      latestRef.current;
     setIsRefreshing(true);
     try {
       posts.forEach((post) => seenIdsRef.current.add(post.id));
@@ -116,9 +144,24 @@ export function useHomeScreen(): UseHomeScreenResult {
     } finally {
       setIsRefreshing(false);
     }
-  }, [posts, isFallbackMode, rankingQuery, fallbackQuery, myLikes, engagedPostIds, userId]);
+  }, []);
+
+  // Relance la requete en echec : le repli en mode repli, plus le ranking s'il est lui aussi en erreur.
+  const retry = useCallback((): void => {
+    const { isFallbackMode, rankingQuery, fallbackQuery } = latestRef.current;
+    if (isFallbackMode) {
+      void fallbackQuery.refetch();
+      if (rankingQuery.isError) {
+        void rankingQuery.refetch();
+      }
+    } else {
+      void rankingQuery.refetch();
+    }
+  }, []);
 
   const handleLoadMore = useCallback((): void => {
+    const { hasNextPage, isFetchingNextPage, isFallbackMode, fallbackQuery, rankingQuery } =
+      latestRef.current;
     if (hasNextPage && !isFetchingNextPage) {
       if (isFallbackMode) {
         void fallbackQuery.fetchNextPage();
@@ -126,7 +169,7 @@ export function useHomeScreen(): UseHomeScreenResult {
         void rankingQuery.fetchNextPage();
       }
     }
-  }, [hasNextPage, isFetchingNextPage, isFallbackMode, fallbackQuery, rankingQuery]);
+  }, []);
 
   return {
     posts,
@@ -138,6 +181,7 @@ export function useHomeScreen(): UseHomeScreenResult {
     isFetchingNextPage,
     flatListRef,
     handleRefresh,
+    retry,
     handleLoadMore,
   };
 }
