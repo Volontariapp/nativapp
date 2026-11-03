@@ -1,5 +1,7 @@
-import React from 'react';
-import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
+import React, { useEffect } from 'react';
+import { QueryClientProvider } from '@tanstack/react-query';
+import { createQueryClient } from '@/shared/lib/query-client';
+import { setupQueryManagers } from '@/shared/lib/setup-query-managers';
 import { AuthProvider } from '@/context/AuthContext';
 import { SocketProvider } from '@/context/SocketContext';
 import { NotificationProvider } from '@/context/NotificationContext';
@@ -9,9 +11,11 @@ import AdminNavigator from '@/navigation/AdminNavigator';
 import { KeyboardProvider } from 'react-native-keyboard-controller';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 
-const queryClient = new QueryClient();
+const queryClient = createQueryClient();
 
 export default function Layout(): React.JSX.Element {
+  useEffect(() => setupQueryManagers(), []);
+
   return (
     <GestureHandlerRootView style={{ flex: 1 }}>
       <KeyboardProvider statusBarTranslucent navigationBarTranslucent>

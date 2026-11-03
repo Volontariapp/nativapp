@@ -2193,6 +2193,7 @@ __metadata:
     "@eslint/js": "npm:^9.18.0"
     "@hookform/resolvers": "npm:^6.0.2"
     "@react-native-community/datetimepicker": "npm:8.4.4"
+    "@react-native-community/netinfo": "npm:11.4.1"
     "@react-navigation/bottom-tabs": "npm:^7.4.0"
     "@react-navigation/native-stack": "npm:^7.3.16"
     "@react-navigation/native-tabs": "npm:@react-navigation/bottom-tabs@^7.4.0"
@@ -3271,6 +3272,15 @@ __metadata:
     react-native-windows:
       optional: true
   checksum: 10c0/05794d2746584be85bd74f86593951714407da2bebf49e63e676d58d40a5c85923ae87342a930fde59b60bd5f18e6c878fe747a92f67271d339ed4b1fde6479e
+  languageName: node
+  linkType: hard
+
+"@react-native-community/netinfo@npm:11.4.1":
+  version: 11.4.1
+  resolution: "@react-native-community/netinfo@npm:11.4.1"
+  peerDependencies:
+    react-native: ">=0.59"
+  checksum: 10c0/118ba6d495bd14c2dab3d228a0c1857620a293ae8592d170d70eaf88a6ac6a4e35c7f84527975a9054e36891a9694aacc8ec053326b5f05961459ed08a70dd35
   languageName: node
   linkType: hard
 
