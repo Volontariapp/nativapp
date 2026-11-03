@@ -25,7 +25,7 @@ function SwipeLoadingView(): React.JSX.Element {
   return (
     <View style={styles.container}>
       <StatusBar style={themeMode === 'dark' ? 'light' : 'dark'} />
-      <AppHeader showSettings dark={themeMode === 'dark'} />
+      <AppHeader showSettings showWishlist dark={themeMode === 'dark'} />
       <View style={styles.center}>
         <ActivityIndicator
           size="large"
@@ -46,7 +46,7 @@ function SwipeErrorView(): React.JSX.Element {
   return (
     <View style={styles.container}>
       <StatusBar style={themeMode === 'dark' ? 'light' : 'dark'} />
-      <AppHeader showSettings dark={themeMode === 'dark'} />
+      <AppHeader showSettings showWishlist dark={themeMode === 'dark'} />
       <View style={styles.center}>
         <AppText style={{ color: theme.colors.text }}>Erreur lors du chargement.</AppText>
       </View>
@@ -60,7 +60,7 @@ function SwipeEmptyView(): React.JSX.Element {
   return (
     <View style={styles.container}>
       <StatusBar style={themeMode === 'dark' ? 'light' : 'dark'} />
-      <AppHeader showSettings dark={themeMode === 'dark'} />
+      <AppHeader showSettings showWishlist dark={themeMode === 'dark'} />
       <View style={styles.center}>
         <AppText variant="subtitle" style={{ color: theme.colors.text }}>
           Aucun événement disponible pour le moment.
@@ -76,7 +76,7 @@ function SwipeEndView(): React.JSX.Element {
   return (
     <View style={styles.container}>
       <StatusBar style={themeMode === 'dark' ? 'light' : 'dark'} />
-      <AppHeader showSettings dark={themeMode === 'dark'} />
+      <AppHeader showSettings showWishlist dark={themeMode === 'dark'} />
       <View style={styles.center}>
         <AppText variant="subtitle" style={{ color: theme.colors.text }}>
           Plus d&apos;événement pour l&apos;instant.
@@ -139,7 +139,7 @@ export function SwipeScreen(): React.JSX.Element {
   return (
     <View style={styles.container}>
       <StatusBar style={themeMode === 'dark' ? 'light' : 'dark'} />
-      <AppHeader showSettings dark={themeMode === 'dark'} />
+      <AppHeader showSettings showWishlist dark={themeMode === 'dark'} />
 
       <View style={styles.contentWrapper}>
         <View style={styles.swiperContainer}>

@@ -17,12 +17,17 @@ type NavigationProp = NativeStackNavigationProp<MainStackParamList>;
 export interface AppHeaderProps {
   showBack?: boolean;
   showSettings?: boolean;
+  /** Raccourci discret vers l'onglet Wishlist du hub de gestion. */
+  showWishlist?: boolean;
   dark?: boolean;
 }
+
+const WISHLIST_LABEL = 'Ouvrir ma wishlist';
 
 export default function AppHeader({
   showBack = false,
   showSettings = false,
+  showWishlist = false,
   dark = false,
 }: AppHeaderProps): React.JSX.Element {
   const { theme } = useAppTheme();
@@ -56,6 +61,26 @@ export default function AppHeader({
         </AppText>
       </View>
       <View style={styles.rightContainer}>
+        {showWishlist && (
+          <Pressable
+            onPress={() => {
+              navigation.navigate('MainTabs', {
+                screen: 'create',
+                params: { screen: 'ManageHub', params: { initialTab: 'wished' } },
+              });
+            }}
+            style={styles.settingsButton}
+            hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
+            accessibilityRole="button"
+            accessibilityLabel={WISHLIST_LABEL}
+          >
+            <AppIcons
+              icon="bookmark"
+              size={24}
+              color={dark ? theme.colors.white : theme.colors.text}
+            />
+          </Pressable>
+        )}
         {showSettings && (
           <Pressable
             onPress={() => {

@@ -41,7 +41,7 @@ export const ExploreScreen = React.memo(function ExploreScreen(): React.JSX.Elem
 
   return (
     <View style={styles.container}>
-      <AppHeader showSettings />
+      <AppHeader showSettings showWishlist />
 
       {isPermissionDenied && (
         <View style={[styles.errorContainer, { top: insets.top + theme.spacing.sm }]}>

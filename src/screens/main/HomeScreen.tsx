@@ -55,7 +55,7 @@ export function HomeScreen(): React.JSX.Element {
 
   return (
     <View style={styles.container}>
-      <AppHeader showSettings />
+      <AppHeader showSettings showWishlist />
       <View style={styles.content}>
         {isDebugMode && (
           <View style={styles.debugModeBanner} testID="home-debug-mode-banner">

@@ -1,4 +1,4 @@
-import React, { useState, useCallback, useMemo } from 'react';
+import React, { useState, useCallback, useEffect, useMemo } from 'react';
 import {
   View,
   StyleSheet,
@@ -6,7 +6,7 @@ import {
   RefreshControl,
   type ListRenderItemInfo,
 } from 'react-native';
-import { useNavigation } from '@react-navigation/native';
+import { useNavigation, useRoute, type RouteProp } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import Feather from 'react-native-vector-icons/Feather';
 import Animated, { LinearTransition } from 'react-native-reanimated';
@@ -34,7 +34,10 @@ export function ManageHubScreen(): React.JSX.Element {
   const styles = useStyles(createStyles);
   const tabBarInset = useTabBarContentInset();
 
-  const [activeTab, setActiveTab] = useState<ManageTabType>('participated');
+  const route = useRoute<RouteProp<CreateEventStackParamList, 'ManageHub'>>();
+  const initialTab = route.params?.initialTab;
+
+  const [activeTab, setActiveTab] = useState<ManageTabType>(initialTab ?? 'participated');
   const [typeFilter, setTypeFilter] = useState<EventTypeFilter>('all');
   const [participatedScope, setParticipatedScope] = useState<ParticipatedScope>('all');
   const [selectedCalendarDate, setSelectedCalendarDate] = useState<string | undefined>(undefined);
@@ -56,6 +59,11 @@ export function ManageHubScreen(): React.JSX.Element {
     currentIsInitialLoading,
     currentIsFetchingNext,
   } = useManageHubData(activeTab, typeFilter, participatedScope);
+
+  // Le hub peut déjà être monté (pile conservée) : on suit le paramètre de navigation.
+  useEffect(() => {
+    if (initialTab != null) setActiveTab(initialTab);
+  }, [initialTab]);
 
   // Calcul des dates marquées pour le calendrier
   const markedDates = useMemo(() => {
