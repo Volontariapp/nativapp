@@ -12,6 +12,9 @@ const getApiBaseUrl = (): string => {
   return `${base}/api/v1`;
 };
 
+// Delai maximal d'une requete HTTP avant abandon (evite un appel suspendu hors-ligne).
+const REQUEST_TIMEOUT_MS = 15000;
+
 let refreshPromise: Promise<string | null> | null = null;
 
 /**
@@ -38,28 +41,64 @@ export const refreshAccessToken = (): Promise<string | null> => {
       refreshHeaders['CF-Access-Client-Secret'] = cfAccess.clientSecret;
     }
 
-    console.log('[apiFetch] Attempting to refresh token...');
-
     const refreshRes = await axios.post(
       `${getApiBaseUrl()}/users/refresh`,
       { refreshToken: currentRefreshToken },
-      { headers: refreshHeaders },
+      { headers: refreshHeaders, timeout: REQUEST_TIMEOUT_MS },
     );
 
     const authData = (refreshRes.data as LoginWebResponse).auth;
 
     if (typeof authData?.accessToken === 'string' && typeof authData.refreshToken === 'string') {
-      console.log('[apiFetch] Refresh successful, saving new tokens');
       await TokenService.saveTokens(authData.accessToken, authData.refreshToken);
       return authData.accessToken;
     }
-    console.log('[apiFetch] Refresh failed: Invalid auth data structure');
+    console.error('[apiFetch] Refresh failed: structure de reponse invalide');
     return null;
   })().finally(() => {
     refreshPromise = null;
   });
 
   return refreshPromise;
+};
+
+/**
+ * Envoie la requete et traite le statut 206 (reponse degradee) de la meme facon
+ * pour le premier appel et pour le retry apres refresh.
+ */
+const sendRequest = async <TResponse>(
+  url: string,
+  options: FetchOptions<unknown>,
+  headers: Record<string, string>,
+): Promise<TResponse> => {
+  const response = await axios({
+    url,
+    method: options.method ?? 'GET',
+    headers,
+    data: options.body,
+    params: options.params,
+    timeout: REQUEST_TIMEOUT_MS,
+  });
+
+  if (response.status === 206) {
+    syncPendingBus.emit(true);
+  }
+
+  return response.data as TResponse;
+};
+
+const toApiError = (error: unknown): Error => {
+  if (axios.isAxiosError(error)) {
+    const axiosError = error as AxiosError<Record<string, unknown>>;
+    const data = axiosError.response?.data ?? {};
+    const message = typeof data.message === 'string' ? data.message : axiosError.message;
+    if (axiosError.response === undefined) {
+      return new InternalServerError(`Erreur reseau: ${message}`, 'NETWORK_ERROR');
+    }
+    return createApiError(axiosError.response.status, message, data);
+  }
+  const message = error instanceof Error ? error.message : 'Unknown error';
+  return new InternalServerError(`Erreur reseau: ${message}`, 'NETWORK_ERROR');
 };
 
 export const apiFetch = async <TResponse, TRequest = undefined>(
@@ -90,21 +129,7 @@ export const apiFetch = async <TResponse, TRequest = undefined>(
   }
 
   try {
-    console.log(`[apiFetch] Requesting URL: ${url}`);
-
-    const response = await axios({
-      url,
-      method: options.method ?? 'GET',
-      headers,
-      data: options.body,
-      params: options.params,
-    });
-
-    if (response.status === 206) {
-      syncPendingBus.emit(true);
-    }
-
-    return response.data as TResponse;
+    return await sendRequest<TResponse>(url, options, headers);
   } catch (error) {
     if (axios.isAxiosError(error)) {
       const axiosError = error as AxiosError<Record<string, unknown>>;
@@ -124,36 +149,49 @@ export const apiFetch = async <TResponse, TRequest = undefined>(
         (status === 401 || isTokenRelated403 || isTokenExpiredError) &&
         !endpoint.includes('/users/refresh')
       ) {
+        let newAccessToken: string | null;
         try {
-          const newAccessToken = await refreshAccessToken();
-
-          if (newAccessToken !== null) {
-            headers['Authorization'] = `Bearer ${newAccessToken}`;
-            const retryRes = await axios({
-              url,
-              method: options.method ?? 'GET',
-              headers,
-              data: options.body,
-              params: options.params,
-            });
-            return retryRes.data as TResponse;
-          }
+          newAccessToken = await refreshAccessToken();
         } catch (refreshErr) {
-          console.error('[apiFetch] Failed to refresh token. Error:', refreshErr);
+          console.error('[apiFetch] Echec du refresh du token');
           if (axios.isAxiosError(refreshErr)) {
-            console.error('[apiFetch] Refresh error response:', refreshErr.response?.data);
+            const refreshStatus = refreshErr.response?.status;
+            // Seul un refus explicite du serveur invalide la session.
+            if (refreshStatus === 401 || refreshStatus === 403) {
+              authExpiredBus.emit();
+              throw createApiError(status, message, data);
+            }
+            // Erreur reseau ou 5xx : la session reste valide, l'appelant pourra retenter.
+            if (refreshStatus === undefined) {
+              throw new InternalServerError(
+                `Erreur reseau: ${refreshErr.message}`,
+                'NETWORK_ERROR',
+              );
+            }
+            throw createApiError(refreshStatus, refreshErr.message);
           }
+          const refreshMessage = refreshErr instanceof Error ? refreshErr.message : 'Unknown error';
+          throw new InternalServerError(`Erreur reseau: ${refreshMessage}`, 'NETWORK_ERROR');
         }
 
-        // If refresh failed or no refresh token, emit auth expired
-        authExpiredBus.emit();
+        if (newAccessToken === null) {
+          // Pas de refresh token ou reponse invalide : la session est perdue.
+          authExpiredBus.emit();
+          throw createApiError(status, message, data);
+        }
+
+        headers['Authorization'] = `Bearer ${newAccessToken}`;
+        try {
+          return await sendRequest<TResponse>(url, options, headers);
+        } catch (retryError) {
+          throw toApiError(retryError);
+        }
       } else if ((status === 401 || status === 403) && endpoint.includes('/users/refresh')) {
         authExpiredBus.emit();
       }
 
       throw createApiError(status, message, data);
     }
-    const message = error instanceof Error ? error.message : 'Unknown error';
-    throw new InternalServerError(`Erreur réseau: ${message}`, 'NETWORK_ERROR');
+    throw toApiError(error);
   }
 };
