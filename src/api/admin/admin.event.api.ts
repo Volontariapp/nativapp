@@ -209,7 +209,6 @@ export const adminEventApi = {
         finalPath = finalPath.replace(':' + k, v);
       });
     }
-    console.log('[adminEventApi.getEvent] sending to:', finalPath, 'params:', pathParams);
     return apiFetch<GetEventResponse>(finalPath, {
       method: EVENT_ENDPOINTS.GET_EVENT.method,
       requiresAuth: EVENT_ENDPOINTS.GET_EVENT.requiresAuth,

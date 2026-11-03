@@ -25,7 +25,6 @@ export const postApi = {
         fileIds: input.fileIds ?? [],
         idempotencyKey: input.idempotencyKey ?? generateIdempotencyKey(),
       };
-      console.log('[postApi.createPost] Sending payload:', payload);
 
       const response = await apiFetch<PostWebResponse, CreatePostRequest>(
         POST_ENDPOINTS.CREATE_POST.path,
@@ -35,7 +34,6 @@ export const postApi = {
           body: payload,
         },
       );
-      console.log('[postApi.createPost] Received response:', response);
       return response;
     } catch (error) {
       console.error(
@@ -102,10 +100,6 @@ export const postApi = {
       const path = queryString
         ? `${POST_ENDPOINTS.LIST_POSTS.path}?${queryString}`
         : POST_ENDPOINTS.LIST_POSTS.path;
-
-      console.log(`[FRONTEND_DEBUG] getMyPosts params:`, params);
-      console.log(`[FRONTEND_DEBUG] getMyPosts query toString:`, query.toString());
-      console.log(`[FRONTEND_DEBUG] getMyPosts final path:`, path);
 
       const response = await apiFetch<ListPostsWebResponse>(path, {
         method: POST_ENDPOINTS.LIST_POSTS.method,

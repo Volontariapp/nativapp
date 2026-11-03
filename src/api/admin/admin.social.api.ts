@@ -21,7 +21,6 @@ export const adminSocialApi = {
         finalPath = finalPath.replace(':' + k, v);
       });
     }
-    console.log('[adminSocialApi.participate] sending to:', finalPath, 'params:', pathParams);
     return apiFetch<ActionSuccessWebResponse>(finalPath, {
       method: SOCIAL_ENDPOINTS.PARTICIPATE.method,
       requiresAuth: SOCIAL_ENDPOINTS.PARTICIPATE.requiresAuth,
@@ -34,7 +33,6 @@ export const adminSocialApi = {
         finalPath = finalPath.replace(':' + k, v);
       });
     }
-    console.log('[adminSocialApi.unparticipate] sending to:', finalPath, 'params:', pathParams);
     return apiFetch<ActionSuccessWebResponse>(finalPath, {
       method: SOCIAL_ENDPOINTS.UNPARTICIPATE.method,
       requiresAuth: SOCIAL_ENDPOINTS.UNPARTICIPATE.requiresAuth,
@@ -48,7 +46,6 @@ export const adminSocialApi = {
         finalPath = finalPath.replace(':' + k, v);
       });
     }
-    console.log('[adminSocialApi.wishEvent] sending to:', finalPath, 'params:', pathParams);
     return apiFetch<ActionSuccessWebResponse>(finalPath, {
       method: SOCIAL_ENDPOINTS.WISH_EVENT.method,
       requiresAuth: SOCIAL_ENDPOINTS.WISH_EVENT.requiresAuth,
@@ -62,7 +59,6 @@ export const adminSocialApi = {
         finalPath = finalPath.replace(':' + k, v);
       });
     }
-    console.log('[adminSocialApi.unwishEvent] sending to:', finalPath, 'params:', pathParams);
     return apiFetch<ActionSuccessWebResponse>(finalPath, {
       method: SOCIAL_ENDPOINTS.UNWISH_EVENT.method,
       requiresAuth: SOCIAL_ENDPOINTS.UNWISH_EVENT.requiresAuth,
@@ -76,7 +72,6 @@ export const adminSocialApi = {
         finalPath = finalPath.replace(':' + k, v);
       });
     }
-    console.log('[adminSocialApi.follow] sending to:', finalPath, 'params:', pathParams);
     return apiFetch<ActionSuccessWebResponse>(finalPath, {
       method: SOCIAL_ENDPOINTS.FOLLOW.method,
       requiresAuth: SOCIAL_ENDPOINTS.FOLLOW.requiresAuth,
@@ -90,7 +85,6 @@ export const adminSocialApi = {
         finalPath = finalPath.replace(':' + k, v);
       });
     }
-    console.log('[adminSocialApi.unfollow] sending to:', finalPath, 'params:', pathParams);
     return apiFetch<ActionSuccessWebResponse>(finalPath, {
       method: SOCIAL_ENDPOINTS.UNFOLLOW.method,
       requiresAuth: SOCIAL_ENDPOINTS.UNFOLLOW.requiresAuth,
@@ -104,7 +98,6 @@ export const adminSocialApi = {
         finalPath = finalPath.replace(':' + k, v);
       });
     }
-    console.log('[adminSocialApi.block] sending to:', finalPath, 'params:', pathParams);
     return apiFetch<ActionSuccessWebResponse>(finalPath, {
       method: SOCIAL_ENDPOINTS.BLOCK.method,
       requiresAuth: SOCIAL_ENDPOINTS.BLOCK.requiresAuth,
@@ -118,7 +111,6 @@ export const adminSocialApi = {
         finalPath = finalPath.replace(':' + k, v);
       });
     }
-    console.log('[adminSocialApi.unblock] sending to:', finalPath, 'params:', pathParams);
     return apiFetch<ActionSuccessWebResponse>(finalPath, {
       method: SOCIAL_ENDPOINTS.UNBLOCK.method,
       requiresAuth: SOCIAL_ENDPOINTS.UNBLOCK.requiresAuth,
@@ -135,12 +127,6 @@ export const adminSocialApi = {
         finalPath = finalPath.replace(':' + k, v);
       });
     }
-    console.log(
-      '[adminSocialApi.getUserParticipatedEvents] sending to:',
-      finalPath,
-      'params:',
-      pathParams,
-    );
     return apiFetch<GetUserParticipateEventWebResponse, GetUserParticipateEventWebRequest>(
       finalPath,
       {
@@ -160,12 +146,6 @@ export const adminSocialApi = {
         finalPath = finalPath.replace(':' + k, v);
       });
     }
-    console.log(
-      '[adminSocialApi.getUserWishedEvents] sending to:',
-      finalPath,
-      'params:',
-      pathParams,
-    );
     return apiFetch<GetUserWishEventWebResponse, GetUserWishEventWebRequest>(finalPath, {
       method: SOCIAL_ENDPOINTS.GET_USER_WISHED_EVENTS.method,
       requiresAuth: SOCIAL_ENDPOINTS.GET_USER_WISHED_EVENTS.requiresAuth,
@@ -182,7 +162,6 @@ export const adminSocialApi = {
         finalPath = finalPath.replace(':' + k, v);
       });
     }
-    console.log('[adminSocialApi.getFollowers] sending to:', finalPath, 'params:', pathParams);
     return apiFetch<GetUserEventWebResponse, GetMyFollowersWebRequest>(finalPath, {
       method: SOCIAL_ENDPOINTS.GET_FOLLOWERS.method,
       requiresAuth: SOCIAL_ENDPOINTS.GET_FOLLOWERS.requiresAuth,
@@ -199,7 +178,6 @@ export const adminSocialApi = {
         finalPath = finalPath.replace(':' + k, v);
       });
     }
-    console.log('[adminSocialApi.getFollows] sending to:', finalPath, 'params:', pathParams);
     return apiFetch<GetUserEventWebResponse, GetMyFollowsWebRequest>(finalPath, {
       method: SOCIAL_ENDPOINTS.GET_FOLLOWS.method,
       requiresAuth: SOCIAL_ENDPOINTS.GET_FOLLOWS.requiresAuth,
@@ -216,7 +194,6 @@ export const adminSocialApi = {
         finalPath = finalPath.replace(':' + k, v);
       });
     }
-    console.log('[adminSocialApi.getBlocks] sending to:', finalPath, 'params:', pathParams);
     return apiFetch<GetUserEventWebResponse, GetMyBlocksWebRequest>(finalPath, {
       method: SOCIAL_ENDPOINTS.GET_BLOCKS.method,
       requiresAuth: SOCIAL_ENDPOINTS.GET_BLOCKS.requiresAuth,
@@ -233,7 +210,6 @@ export const adminSocialApi = {
         finalPath = finalPath.replace(':' + k, v);
       });
     }
-    console.log('[adminSocialApi.getUserPosts] sending to:', finalPath, 'params:', pathParams);
     return apiFetch<GetUserEventWebResponse, GetUserPostsWebRequest>(finalPath, {
       method: SOCIAL_ENDPOINTS.GET_USER_POSTS.method,
       requiresAuth: SOCIAL_ENDPOINTS.GET_USER_POSTS.requiresAuth,
