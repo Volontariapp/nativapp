@@ -30,7 +30,7 @@
     "node": ">=24.14.0"
   },
   "dependencies": {
-    "@hookform/resolvers": "^6.0.0",
+    "@hookform/resolvers": "^6.0.2",
     "@react-native-community/datetimepicker": "8.4.4",
     "@react-navigation/bottom-tabs": "^7.4.0",
     "@react-navigation/native-stack": "^7.3.16",
@@ -42,7 +42,7 @@
     "@volontariapp/logger": "^0.4.0",
     "@volontariapp/messaging": "^2.30.0",
     "@volontariapp/shared": "^0.18.1",
-    "axios": "^1.16.1",
+    "axios": "^1.21.0",
     "class-validator": "^0.15.1",
     "expo": "~54.0.38",
     "expo-blur": "~15.0.8",
