@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useCallback, useMemo, useState } from 'react';
 import { View, StyleSheet, ScrollView } from 'react-native';
 import {
   AppText,
@@ -24,8 +24,11 @@ import { ProfileManageEventsCta } from '@/components/profile/profile-manage-even
 import { useGetMyPosts } from '@/api/post/hooks/use-get-my-posts';
 import { useTabBarContentInset } from '@/navigation/hooks/useTabBarContentInset';
 import { useProfileEvents } from './hooks/use-profile-events';
+import { dedupeById } from '@/shared/utils/dedupe-by-id';
 
-const MY_POSTS_PAGE_SIZE = 9;
+// Nombre de posts affiches sur le profil, puis ajoutes a chaque "Voir plus" (la requete, elle, est
+// partagee avec "Mes posts" et charge des pages plus grandes).
+const PROFILE_POSTS_STEP = 9;
 
 export function ProfileScreen(): React.JSX.Element {
   const { theme } = useAppTheme();
@@ -55,8 +58,30 @@ export function ProfileScreen(): React.JSX.Element {
     hasNextPage: hasNextMyPosts,
     fetchNextPage: fetchNextMyPosts,
     isFetchingNextPage: isFetchingNextMyPosts,
-  } = useGetMyPosts(MY_POSTS_PAGE_SIZE);
-  const myPosts = myPostsData?.pages.flatMap((page) => page.posts) ?? [];
+  } = useGetMyPosts();
+  const [visiblePostsCount, setVisiblePostsCount] = useState(PROFILE_POSTS_STEP);
+  const loadedPosts = useMemo(
+    () => dedupeById(myPostsData?.pages.flatMap((page) => page.posts) ?? []),
+    [myPostsData],
+  );
+  const myPosts = useMemo(
+    () => loadedPosts.slice(0, visiblePostsCount),
+    [loadedPosts, visiblePostsCount],
+  );
+  const hasMorePosts = visiblePostsCount < loadedPosts.length || hasNextMyPosts;
+  const handleSeeMorePosts = useCallback((): void => {
+    const nextCount = visiblePostsCount + PROFILE_POSTS_STEP;
+    setVisiblePostsCount(nextCount);
+    if (nextCount > loadedPosts.length && hasNextMyPosts && !isFetchingNextMyPosts) {
+      void fetchNextMyPosts();
+    }
+  }, [
+    visiblePostsCount,
+    loadedPosts.length,
+    hasNextMyPosts,
+    isFetchingNextMyPosts,
+    fetchNextMyPosts,
+  ]);
 
   const isLoading = isProfileLoading;
 
@@ -134,10 +159,8 @@ export function ProfileScreen(): React.JSX.Element {
           <ProfilePosts
             posts={myPosts}
             isLoading={isMyPostsLoading}
-            hasNextPage={hasNextMyPosts}
-            fetchNextPage={() => {
-              void fetchNextMyPosts();
-            }}
+            hasNextPage={hasMorePosts}
+            fetchNextPage={handleSeeMorePosts}
             isFetchingNextPage={isFetchingNextMyPosts}
             contentInset={theme.spacing.xl}
             onCreatePress={() => {

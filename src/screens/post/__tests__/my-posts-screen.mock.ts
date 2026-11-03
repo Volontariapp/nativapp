@@ -4,6 +4,7 @@ export const mockDeletePost = jest.fn();
 export const mockMyPostsQuery = {
   data: undefined as unknown,
   isLoading: false,
+  isError: false,
   hasNextPage: false,
   isFetchingNextPage: false,
   fetchNextPage: mockFetchNextPage,

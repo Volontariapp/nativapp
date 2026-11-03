@@ -13,6 +13,7 @@ import { useOptimisticFollow } from '@/api/social/hooks/use-optimistic-follow';
 import { useRoute, type RouteProp } from '@react-navigation/native';
 import type { MainStackParamList } from '@/navigation/stacks/MainStack';
 import { EventState } from '@volontariapp/contracts';
+import { dedupeById } from '@/shared/utils/dedupe-by-id';
 
 const PUBLIC_EVENT_STATUSES = [
   EventState.EVENT_STATE_PUBLISHED,
@@ -103,8 +104,8 @@ export function PublicProfileScreen(): React.JSX.Element {
 
   const isPageLoading = isLoading;
 
-  const allUserEvents = userEventsData?.pages.flatMap((page) => page.events) ?? [];
-  const allUserPosts = userPostsData?.pages.flatMap((page) => page.posts) ?? [];
+  const allUserEvents = dedupeById(userEventsData?.pages.flatMap((page) => page.events) ?? []);
+  const allUserPosts = dedupeById(userPostsData?.pages.flatMap((page) => page.posts) ?? []);
 
   return (
     <View style={styles.container}>

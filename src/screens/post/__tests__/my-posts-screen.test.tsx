@@ -30,6 +30,8 @@ describe('MyPostsScreen', () => {
   beforeEach(() => {
     jest.spyOn(Alert, 'alert').mockImplementation(() => undefined);
     mockMyPosts.mockMyPostsQuery.isLoading = false;
+    mockMyPosts.mockMyPostsQuery.isError = false;
+    mockMyPosts.mockMyPostsQuery.isFetchingNextPage = false;
     mockMyPosts.mockMyPostsQuery.hasNextPage = false;
     mockMyPosts.mockDeletePost.mockResolvedValue(undefined);
   });
@@ -91,5 +93,46 @@ describe('MyPostsScreen', () => {
     fireEvent(getByTestId('my-posts-grid'), 'endReached');
 
     expect(mockMyPosts.mockFetchNextPage).toHaveBeenCalledTimes(1);
+  });
+
+  it('does not request another page while one is already loading', () => {
+    setPosts([createPostWeb({ id: 'post-1' })]);
+    mockMyPosts.mockMyPostsQuery.hasNextPage = true;
+    mockMyPosts.mockMyPostsQuery.isFetchingNextPage = true;
+    const { getByTestId } = render(<MyPostsScreen />);
+
+    fireEvent(getByTestId('my-posts-grid'), 'endReached');
+
+    expect(mockMyPosts.mockFetchNextPage).not.toHaveBeenCalled();
+  });
+
+  it('uses the same end threshold as the other lists', () => {
+    setPosts([createPostWeb({ id: 'post-1' })]);
+    const { getByTestId } = render(<MyPostsScreen />);
+
+    expect(getByTestId('my-posts-grid').props.onEndReachedThreshold).toBe(0.5);
+  });
+
+  it('shows an error message when the first load fails', () => {
+    mockMyPosts.mockMyPostsQuery.data = undefined;
+    mockMyPosts.mockMyPostsQuery.isError = true;
+
+    const { getByText } = render(<MyPostsScreen />);
+
+    expect(getByText('Erreur lors du chargement de vos posts.')).toBeTruthy();
+  });
+
+  it('deduplicates a post returned by two pages', () => {
+    const post = createPostWeb({ id: 'post-1', title: 'Premier post' });
+    mockMyPosts.mockMyPostsQuery.data = {
+      pages: [
+        { posts: [post], totalCount: 2, pagination: undefined },
+        { posts: [post, createPostWeb({ id: 'post-2', title: 'Second post' })], totalCount: 2 },
+      ],
+    };
+
+    const { getAllByLabelText } = render(<MyPostsScreen />);
+
+    expect(getAllByLabelText('Ouvrir le post Premier post')).toHaveLength(1);
   });
 });

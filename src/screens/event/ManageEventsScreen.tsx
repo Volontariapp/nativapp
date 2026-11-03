@@ -25,7 +25,7 @@ export function ManageEventsScreen(): React.JSX.Element {
   const tabBarInset = useTabBarContentInset();
 
   const { data: eventsData } = useGetMyEvents(1);
-  const { data: postsData } = useGetMyPosts(1);
+  const { data: postsData } = useGetMyPosts();
 
   const eventsCount = useMemo(() => {
     return eventsData?.pages[0]?.totalCount;
