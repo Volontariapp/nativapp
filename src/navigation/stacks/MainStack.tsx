@@ -11,9 +11,12 @@ import {
   EventManagementScreen,
 } from '@/screens';
 import type { AppEvent } from '@/api/event/event.api';
+import type { ManageTabType } from '@/screens/event/manage-hub.utils';
 
 export type MainStackParamList = {
-  MainTabs: { screen: string; params?: { screen: string } } | undefined;
+  MainTabs:
+    | { screen: string; params?: { screen: string; params?: { initialTab?: ManageTabType } } }
+    | undefined;
   EventDetail: { event: AppEvent };
   Settings: undefined;
   Ranks: undefined;

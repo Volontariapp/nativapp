@@ -10,10 +10,11 @@ import {
 import { PostFormScreen } from '@/screens/post/PostFormScreen';
 import { MyPostsScreen } from '@/screens/post/MyPostsScreen';
 import type { AppEvent } from '@/api/event/event.api';
+import type { ManageTabType } from '@/screens/event/manage-hub.utils';
 
 export type CreateEventStackParamList = {
   ManageEvents: undefined;
-  ManageHub: undefined;
+  ManageHub: { initialTab?: ManageTabType } | undefined;
   EventForm: undefined;
   MyEvents: undefined;
   EventManagement: { eventId: string; initialEvent?: AppEvent };

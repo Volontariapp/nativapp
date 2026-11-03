@@ -11,6 +11,7 @@ import type * as ReactNavigationNative from '@react-navigation/native';
 import type * as ReactNative from 'react-native';
 
 const mockRootNavigate = jest.fn();
+const mockUseRoute = jest.fn();
 
 jest.mock('@react-navigation/native', () => {
   const actual = jest.requireActual<typeof ReactNavigationNative>('@react-navigation/native');
@@ -19,6 +20,7 @@ jest.mock('@react-navigation/native', () => {
     useNavigation: () => ({
       navigate: mockRootNavigate,
     }),
+    useRoute: (): unknown => mockUseRoute(),
   };
 });
 
@@ -57,6 +59,7 @@ jest.mock('react-native-gesture-handler/ReanimatedSwipeable', () => {
 describe('ManageHubScreen', () => {
   beforeEach(() => {
     jest.clearAllMocks();
+    mockUseRoute.mockReturnValue({ params: undefined });
   });
 
   afterEach(() => {
@@ -292,5 +295,14 @@ describe('ManageHubScreen', () => {
     expect(getByText(/Glissez à droite pour participer, à gauche pour retirer/)).toBeTruthy();
     expect(getByText('Mission Wishlist Démo')).toBeTruthy();
     expect(getAllByText('Participer').length).toBeGreaterThanOrEqual(1);
+  });
+
+  it('opens directly on the Wishlist tab when initialTab is "wished"', () => {
+    mockUseRoute.mockReturnValue({ params: { initialTab: 'wished' } });
+    setupMocks([], [], []);
+
+    const { getByText } = render(<ManageHubScreen />);
+
+    expect(getByText('Votre wishlist est vide')).toBeTruthy();
   });
 });
