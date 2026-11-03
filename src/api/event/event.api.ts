@@ -320,10 +320,7 @@ export const eventApi = {
         `[eventApi.getEventParticipants] Error fetching participants for event ${eventId}:`,
         error instanceof Error ? error.message : String(error),
       );
-      return {
-        participants: [],
-        totalCount: 0,
-      };
+      throw error;
     }
   },
 };

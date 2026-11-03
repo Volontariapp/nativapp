@@ -173,7 +173,8 @@ export const adminEventApi = {
   },
 
   async listEvents(
-    payload: SearchEventsRequest & { organizerId?: string },
+    payload: Omit<SearchEventsRequest, 'page' | 'limit'> &
+      Partial<Pick<SearchEventsRequest, 'page' | 'limit'>> & { organizerId?: string },
     pathParams?: Record<string, string>,
   ): Promise<SearchEventsResponse> {
     let finalPath: string = EVENT_ENDPOINTS.LIST_EVENTS.path;
@@ -182,7 +183,9 @@ export const adminEventApi = {
         finalPath = finalPath.replace(':' + k, v);
       });
     }
-    const queryParts: string[] = ['page=1', 'limit=50'];
+    const page = payload.page ?? 1;
+    const limit = payload.limit ?? 50;
+    const queryParts: string[] = [`page=${String(page)}`, `limit=${String(limit)}`];
     if (payload.onlyAvailable !== undefined) {
       queryParts.push('onlyAvailable=' + String(payload.onlyAvailable));
     }

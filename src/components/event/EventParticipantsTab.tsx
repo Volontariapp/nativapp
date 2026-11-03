@@ -1,5 +1,13 @@
 import React, { useState, useEffect, useMemo, useCallback } from 'react';
-import { View, StyleSheet, FlatList, RefreshControl, ActivityIndicator, Alert } from 'react-native';
+import {
+  View,
+  StyleSheet,
+  FlatList,
+  Pressable,
+  RefreshControl,
+  ActivityIndicator,
+  Alert,
+} from 'react-native';
 import Feather from 'react-native-vector-icons/Feather';
 import { MIN_ATTENDEES_FOR_ORGANIZER_POINTS } from '@volontariapp/shared';
 
@@ -20,6 +28,11 @@ export interface EventParticipantsTabProps {
   isLoading: boolean;
   isRefetching: boolean;
   onRefresh: () => void;
+  /** Charge la page suivante de participants (scroll infini). */
+  onEndReached?: () => void;
+  isFetchingNextPage?: boolean;
+  /** Vrai si le chargement des participants a echoue (affiche un bouton de reessai). */
+  isError?: boolean;
   onParticipantPress: (userId: string) => void;
 }
 
@@ -30,6 +43,9 @@ export function EventParticipantsTab({
   isLoading,
   isRefetching,
   onRefresh,
+  onEndReached,
+  isFetchingNextPage = false,
+  isError = false,
   onParticipantPress,
 }: EventParticipantsTabProps): React.JSX.Element {
   const { theme } = useAppTheme();
@@ -77,6 +93,8 @@ export function EventParticipantsTab({
     };
   }, [searchQuery]);
 
+  // La recherche porte uniquement sur les participants deja charges (pages recues),
+  // pas sur la totalite des inscrits cote serveur.
   const filteredParticipants = useMemo(() => {
     if (debouncedQuery.length === 0) {
       return rawParticipants;
@@ -171,10 +189,25 @@ export function EventParticipantsTab({
     () =>
       isLoading ? (
         <ActivityIndicator size="large" color={theme.colors.primaryEco} style={styles.listLoader} />
+      ) : isError ? (
+        <View style={styles.errorBanner}>
+          <AppText>Impossible de charger les participants.</AppText>
+          <Pressable onPress={onRefresh} accessibilityRole="button">
+            <AppText>Reessayer</AppText>
+          </Pressable>
+        </View>
       ) : (
         <ParticipantEmptyState isSearchActive={debouncedQuery.length > 0} />
       ),
-    [isLoading, debouncedQuery.length, theme.colors.primaryEco, styles.listLoader],
+    [
+      isLoading,
+      isError,
+      onRefresh,
+      debouncedQuery.length,
+      theme.colors.primaryEco,
+      styles.listLoader,
+      styles.errorBanner,
+    ],
   );
 
   return (
@@ -248,6 +281,13 @@ export function EventParticipantsTab({
         renderItem={renderItem}
         contentContainerStyle={styles.listContent}
         refreshControl={refreshControl}
+        onEndReached={onEndReached}
+        onEndReachedThreshold={0.5}
+        ListFooterComponent={
+          isFetchingNextPage ? (
+            <ActivityIndicator style={styles.footerLoader} color={theme.colors.primarySocio} />
+          ) : null
+        }
         ListEmptyComponent={listEmptyComponent}
       />
     </View>
@@ -263,6 +303,13 @@ const createStyles = (theme: AppTheme) =>
       padding: theme.spacing.lg,
       paddingBottom: theme.spacing.sm,
       backgroundColor: theme.colors.background,
+    },
+    footerLoader: {
+      paddingVertical: theme.spacing.md,
+    },
+    errorBanner: {
+      padding: theme.spacing.md,
+      alignItems: 'center',
     },
     gauge: {
       marginBottom: theme.spacing.md,

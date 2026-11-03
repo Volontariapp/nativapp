@@ -190,7 +190,7 @@ export function EventDetailScreen({ route }: Props): React.JSX.Element {
 
   const { userId } = useAuth();
   const { participate, isParticipating, unparticipate, isUnparticipating } = useUserSocialActions();
-  const { data: participations } = useUserParticipations(100);
+  const { data: participations } = useUserParticipations(100, { autoFetchAll: true });
   const { data: profile } = useProfile();
 
   const isJoined = useMemo(

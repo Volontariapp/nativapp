@@ -9,6 +9,11 @@ import type {
   GetEventAttendeesResponse,
 } from '@volontariapp/contracts';
 
+/** Taille de page des likes (plafond de la gateway : ne jamais depasser 100). */
+const MY_LIKES_PAGE_SIZE = 100;
+/** Garde-fou : nombre maximal d'ids de likes recuperes au total. */
+const MY_LIKES_MAX_IDS = 2000;
+
 /**
  * Service API pour les interactions sociales (participations, likes, follows, etc.)
  */
@@ -214,8 +219,30 @@ export const socialApi = {
     page?: number;
     limit?: number;
   }): Promise<{ ids: string[]; totalCount: number }> {
+    if (params?.page !== undefined || params?.limit !== undefined) {
+      return await socialApi.getMyLikesPage(params);
+    }
+    // Sans parametres : recupere TOUS les ids, page par page (100 max, plafond de la gateway).
+    const ids: string[] = [];
+    let totalCount = 0;
+    for (let page = 1; ids.length < MY_LIKES_MAX_IDS; page += 1) {
+      const result = await socialApi.getMyLikesPage({ page, limit: MY_LIKES_PAGE_SIZE });
+      totalCount = result.totalCount;
+      ids.push(...result.ids);
+      if (result.ids.length === 0 || ids.length >= result.totalCount) break;
+    }
+    return { ids: ids.slice(0, MY_LIKES_MAX_IDS), totalCount };
+  },
+
+  /**
+   * Une seule page des likes de l'utilisateur connecte.
+   */
+  async getMyLikesPage(params?: {
+    page?: number;
+    limit?: number;
+  }): Promise<{ ids: string[]; totalCount: number }> {
     const page = params?.page ?? 1;
-    const limit = params?.limit ?? 500;
+    const limit = params?.limit ?? MY_LIKES_PAGE_SIZE;
     const query = new URLSearchParams();
     query.append('page', page.toString());
     query.append('limit', limit.toString());

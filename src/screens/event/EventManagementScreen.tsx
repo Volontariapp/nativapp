@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import { View, StyleSheet, Alert, ActivityIndicator, Pressable } from 'react-native';
 import { useRoute, useNavigation, type RouteProp } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
@@ -25,7 +25,7 @@ import {
   useGetEvent,
   useUpdateEvent,
   useChangeEventState,
-  useEventParticipants,
+  useInfiniteEventParticipants,
 } from '@/api/event/hooks';
 import { useEventCover } from '@/api/event/hooks/use-event-cover';
 import { useCoverAdjuster } from '@/api/event/hooks/use-cover-adjuster';
@@ -305,9 +305,20 @@ export function EventManagementScreen(): React.JSX.Element {
   const {
     data: participantsData,
     isLoading: isParticipantsLoading,
+    isError: isParticipantsError,
     refetch: refetchParticipants,
     isRefetching: isParticipantsRefetching,
-  } = useEventParticipants(eventId);
+    hasNextPage: hasMoreParticipants,
+    isFetchingNextPage: isFetchingMoreParticipants,
+    fetchNextPage: fetchMoreParticipants,
+  } = useInfiniteEventParticipants(eventId);
+
+  const participants = useMemo(
+    () => participantsData?.pages.flatMap((page) => page.participants) ?? [],
+    [participantsData],
+  );
+  const participantsTotal =
+    participantsData?.pages[0]?.totalCount ?? currentEvent?.currentParticipants ?? 0;
 
   const coverAdjuster = useCoverAdjuster();
   const eventCover = useEventCover({ adjustImage: coverAdjuster.adjustImage });
@@ -351,7 +362,7 @@ export function EventManagementScreen(): React.JSX.Element {
         event={currentEvent}
         activeTab={activeTab}
         onChangeTab={setActiveTab}
-        participantsCount={participantsData?.participants.length}
+        participantsCount={participantsData ? participantsTotal : undefined}
       />
 
       {/* Tab 1: Informations & Cycle de vie */}
@@ -391,11 +402,16 @@ export function EventManagementScreen(): React.JSX.Element {
         /* Tab 2: Participants */
         <EventParticipantsTab
           currentEvent={currentEvent}
-          participants={participantsData?.participants ?? []}
-          totalRegistered={
-            participantsData?.participants.length ?? currentEvent?.currentParticipants ?? 0
-          }
+          participants={participants}
+          totalRegistered={participantsTotal}
           isLoading={isParticipantsLoading}
+          isError={isParticipantsError}
+          isFetchingNextPage={isFetchingMoreParticipants}
+          onEndReached={() => {
+            if (hasMoreParticipants && !isFetchingMoreParticipants) {
+              void fetchMoreParticipants();
+            }
+          }}
           isRefetching={isParticipantsRefetching}
           onRefresh={() => {
             void refetchParticipants();
