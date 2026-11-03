@@ -8,6 +8,12 @@ import type {
   GetMyFollowersWebResponse,
   GetEventAttendeesResponse,
 } from '@volontariapp/contracts';
+import type {
+  GetPostsLikeSummaryRequest,
+  GetPostsLikeSummaryResponse,
+  PostLikeSummary,
+} from './likes-summary.types';
+import { chunkPostIds } from './likes-summary.utils';
 
 /** Taille de page des likes (plafond de la gateway : ne jamais depasser 100). */
 const MY_LIKES_PAGE_SIZE = 100;
@@ -232,6 +238,24 @@ export const socialApi = {
       if (result.ids.length === 0 || ids.length >= result.totalCount) break;
     }
     return { ids: ids.slice(0, MY_LIKES_MAX_IDS), totalCount };
+  },
+
+  /**
+   * Resume des likes (compteur et likedByMe) de plusieurs posts. Les ids sont dedoublonnes et
+   * decoupes par 100 (plafond de la gateway) : un appel par lot, en parallele.
+   */
+  async getLikesSummary(postIds: readonly string[]): Promise<PostLikeSummary[]> {
+    const endpoint = SOCIAL_ENDPOINTS.GET_POSTS_LIKE_SUMMARY_SELF;
+    const responses = await Promise.all(
+      chunkPostIds(postIds).map((chunk) =>
+        apiFetch<GetPostsLikeSummaryResponse, GetPostsLikeSummaryRequest>(endpoint.path, {
+          method: endpoint.method,
+          requiresAuth: endpoint.requiresAuth,
+          body: { postIds: chunk },
+        }),
+      ),
+    );
+    return responses.flatMap((response) => response.summaries);
   },
 
   /**

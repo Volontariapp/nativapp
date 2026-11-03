@@ -9,6 +9,7 @@ import type {
 } from '@volontariapp/contracts';
 import { useHomeScreen } from '../use-home-screen';
 import type { RankedAppPost, RankingFeedResult } from '@/api/ranking/ranking.api';
+import type { PostLikeSummary } from '@/api/social/likes-summary.types';
 
 const mockGetFeed = jest.fn<Promise<RankingFeedResult>, [GetRankingFeedWebRequest?]>();
 const mockRequestRefresh = jest.fn<
@@ -41,14 +42,12 @@ jest.mock('@/api/post/hooks/use-list-all-posts', () => ({
   useListPosts: (params?: unknown) => mockUseListPosts(params),
 }));
 
-interface MockMyLikesReturn {
-  data: { ids: string[]; totalCount: number };
-  refetch: () => Promise<{ data: { ids: string[]; totalCount: number } }>;
-}
-
-const mockUseGetMyLikes = jest.fn<MockMyLikesReturn, []>();
-jest.mock('@/api/social/hooks/use-get-my-likes', () => ({
-  useGetMyLikes: () => mockUseGetMyLikes(),
+let mockLikedIds = new Set<string>();
+const mockGetLikesSummary = jest.fn<Promise<PostLikeSummary[]>, [readonly string[]]>();
+jest.mock('@/api/social/social.api', () => ({
+  socialApi: {
+    getLikesSummary: (ids: readonly string[]) => mockGetLikesSummary(ids),
+  },
 }));
 
 const CURRENT_USER_ID = 'current-user';
@@ -57,8 +56,7 @@ jest.mock('@/context/auth/auth.context', () => ({
 }));
 
 const mockMyLikes = (ids: string[]): void => {
-  const data = { ids, totalCount: ids.length };
-  mockUseGetMyLikes.mockReturnValue({ data, refetch: jest.fn().mockResolvedValue({ data }) });
+  mockLikedIds = new Set(ids);
 };
 
 const rankingPage = (
@@ -104,6 +102,14 @@ const createWrapper = () => {
     <QueryClientProvider client={queryClient}>{children}</QueryClientProvider>
   );
 };
+
+beforeEach(() => {
+  mockGetLikesSummary.mockImplementation((ids) =>
+    Promise.resolve(
+      ids.map((postId) => ({ postId, likeCount: 0, likedByMe: mockLikedIds.has(postId) })),
+    ),
+  );
+});
 
 describe('useHomeScreen', () => {
   beforeEach(() => {
@@ -355,6 +361,65 @@ describe('useHomeScreen', () => {
     rerender({});
     expect(result.current.posts).toHaveLength(2);
 
+    await act(async () => {
+      await result.current.handleRefresh();
+    });
+
+    expect(result.current.posts.map((post) => post.id)).toEqual(['post-b']);
+  });
+
+  it('requests the likes summary once per page of ids, with the posts of the user left out', async () => {
+    mockGetFeed.mockResolvedValue(
+      rankingPage(
+        [
+          createSamplePost('post-a', 'A'),
+          createSamplePost('post-b', 'B'),
+          { ...createSamplePost('post-own', 'Le mien'), authorId: CURRENT_USER_ID },
+        ],
+        { hasMore: false, nextCursor: '' },
+      ),
+    );
+
+    const { result } = renderHook(() => useHomeScreen(), { wrapper: createWrapper() });
+    await waitFor(() => {
+      expect(result.current.posts).toHaveLength(2);
+    });
+
+    expect(mockGetLikesSummary).toHaveBeenCalledTimes(1);
+    expect(mockGetLikesSummary).toHaveBeenCalledWith(['post-a', 'post-b']);
+  });
+
+  it('still shows the posts when the likes summary fails (liked state unknown, not "not liked")', async () => {
+    mockGetLikesSummary.mockRejectedValue(new Error('network down'));
+    mockGetFeed.mockResolvedValue(
+      rankingPage([createSamplePost('post-a', 'A')], { hasMore: false, nextCursor: '' }),
+    );
+
+    const { result } = renderHook(() => useHomeScreen(), { wrapper: createWrapper() });
+
+    await waitFor(() => {
+      expect(result.current.posts.map((post) => post.id)).toEqual(['post-a']);
+    });
+    expect(result.current.isError).toBe(false);
+    expect(result.current.isLoading).toBe(false);
+  });
+
+  it('keeps a liked post out after a refresh whose likes summary fails', async () => {
+    mockMyLikes(['post-a']);
+    mockGetFeed.mockResolvedValue(
+      rankingPage([createSamplePost('post-a', 'A'), createSamplePost('post-b', 'B')], {
+        hasMore: false,
+        nextCursor: '',
+      }),
+    );
+    mockRequestRefresh.mockResolvedValue({ accepted: true, refreshThrottled: false });
+
+    const { result } = renderHook(() => useHomeScreen(), { wrapper: createWrapper() });
+    await waitFor(() => {
+      expect(result.current.posts.map((post) => post.id)).toEqual(['post-b']);
+    });
+
+    mockGetLikesSummary.mockRejectedValue(new Error('network down'));
     await act(async () => {
       await result.current.handleRefresh();
     });

@@ -21,6 +21,9 @@ import {
 } from './profile-screen.mock';
 
 jest.mock('expo-image', () => mockExpoImage);
+jest.mock('@/api/social/hooks/use-likes-summary', () => ({
+  useLikesSummary: jest.fn(),
+}));
 jest.mock('@/api/user/hooks/use-profile', () => ({
   useProfile: (): unknown => mockUseProfile(),
 }));

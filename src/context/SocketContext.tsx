@@ -3,6 +3,7 @@ import { AppState } from 'react-native';
 import { useQueryClient } from '@tanstack/react-query';
 import type { Socket } from 'socket.io-client';
 import { COMMENTS_LIST_QUERY_KEY } from '@/api/post/hooks/use-list-comments';
+import { LIKES_SUMMARY_QUERY_KEY } from '@/api/social/likes-summary.cache';
 import { PROFILE_QUERY_KEY } from '@/api/user/hooks/use-profile';
 import { socketService } from '../services/socket.service';
 import { useAuth } from './AuthContext';
@@ -20,6 +21,7 @@ interface SocketContextType {
 export const RESYNC_QUERY_KEYS: readonly (readonly unknown[])[] = [
   PROFILE_QUERY_KEY,
   ['my-likes'],
+  LIKES_SUMMARY_QUERY_KEY,
   ['ranking'],
   COMMENTS_LIST_QUERY_KEY,
   ['post-likers'],

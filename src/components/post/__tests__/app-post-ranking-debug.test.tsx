@@ -5,6 +5,7 @@ import AppPost from '../AppPost';
 import { useDebug } from '@/context/DebugContext';
 
 import type { RankedAppPost } from '@/api/ranking';
+import type { PostLikeSummary } from '@/api/social/likes-summary.types';
 
 import {
   mockUseInfiniteCommentsEmpty,
@@ -29,11 +30,9 @@ jest.mock('@/api/post/hooks/use-infinite-comments', () => ({
 jest.mock('@/api/user/hooks/use-infinite-post-likers', () => ({
   useInfinitePostLikers: () => mockUseInfinitePostLikersEmpty(),
 }));
-jest.mock('@/api/social/hooks/use-get-my-likes', () => ({
-  useGetMyLikes: jest.fn(),
-}));
-jest.mock('@/api/user/hooks/use-get-post-likers', () => ({
-  useGetPostLikers: jest.fn(),
+const mockUsePostLikeSummary = jest.fn<{ data: PostLikeSummary | undefined }, [string]>();
+jest.mock('@/api/social/hooks/use-likes-summary', () => ({
+  usePostLikeSummary: (postId: string) => mockUsePostLikeSummary(postId),
 }));
 jest.mock('@/api/social/hooks/use-like-post', () => ({
   useLikePost: jest.fn(),
@@ -46,15 +45,11 @@ jest.mock('@react-navigation/native', () => ({
 }));
 
 import { useListComments } from '@/api/post/hooks/use-list-comments';
-import { useGetMyLikes } from '@/api/social/hooks/use-get-my-likes';
-import { useGetPostLikers } from '@/api/user/hooks/use-get-post-likers';
 import { useLikePost } from '@/api/social/hooks/use-like-post';
 import { useUnlikePost } from '@/api/social/hooks/use-unlike-post';
 
 const mockUseDebug = jest.mocked(useDebug);
 const mockUseListComments = jest.mocked(useListComments);
-const mockUseGetMyLikes = jest.mocked(useGetMyLikes);
-const mockUseGetPostLikers = jest.mocked(useGetPostLikers);
 const mockUseLikePost = jest.mocked(useLikePost);
 const mockUseUnlikePost = jest.mocked(useUnlikePost);
 
@@ -90,14 +85,9 @@ describe('AppPost ranking debug display', () => {
       data: { comments: [], totalCount: 0 },
       isLoading: false,
     } as unknown as ReturnType<typeof useListComments>);
-    mockUseGetMyLikes.mockReturnValue({
-      data: { ids: [] },
-      isLoading: false,
-    } as unknown as ReturnType<typeof useGetMyLikes>);
-    mockUseGetPostLikers.mockReturnValue({
-      data: { users: [], totalCount: 0 },
-      isLoading: false,
-    } as unknown as ReturnType<typeof useGetPostLikers>);
+    mockUsePostLikeSummary.mockReturnValue({
+      data: { postId: 'post-test-1', likeCount: 0, likedByMe: false },
+    });
     mockUseLikePost.mockReturnValue({ mutate: jest.fn() } as unknown as ReturnType<
       typeof useLikePost
     >);
@@ -171,10 +161,9 @@ describe('AppPost ranking debug display', () => {
 
   it('displays penalty chip when debug post is already liked', () => {
     mockUseDebug.mockReturnValue({ isDebugMode: true, toggleDebugMode: jest.fn() });
-    mockUseGetMyLikes.mockReturnValue({
-      data: { ids: [baseRankedPost.id] },
-      isLoading: false,
-    } as unknown as ReturnType<typeof useGetMyLikes>);
+    mockUsePostLikeSummary.mockReturnValue({
+      data: { postId: baseRankedPost.id, likeCount: 4, likedByMe: true },
+    });
 
     const { getByText } = render(<AppPost post={baseRankedPost} />, {
       wrapper: createWrapper(),
@@ -195,5 +184,63 @@ describe('AppPost ranking debug display', () => {
     expect(getByTestId('ranking-debug-detail-modal')).toBeTruthy();
     expect(getByText('Score Exact de Classement')).toBeTruthy();
     expect(getByText('Scoring du Feed de Posts')).toBeTruthy();
+  });
+
+  it('reads like count and state from the summary without any per-post request', () => {
+    mockUseDebug.mockReturnValue({ isDebugMode: false, toggleDebugMode: jest.fn() });
+    mockUsePostLikeSummary.mockReturnValue({
+      data: { postId: baseRankedPost.id, likeCount: 12, likedByMe: true },
+    });
+
+    const { getByText } = render(<AppPost post={baseRankedPost} />, { wrapper: createWrapper() });
+
+    expect(getByText('12')).toBeTruthy();
+    expect(mockUsePostLikeSummary).toHaveBeenCalledWith(baseRankedPost.id);
+  });
+
+  it('does not like or unlike while the summary is unknown (loading or failed)', () => {
+    mockUseDebug.mockReturnValue({ isDebugMode: true, toggleDebugMode: jest.fn() });
+    mockUsePostLikeSummary.mockReturnValue({ data: undefined });
+    const likeMutate = jest.fn();
+    const unlikeMutate = jest.fn();
+    mockUseLikePost.mockReturnValue({ mutate: likeMutate } as unknown as ReturnType<
+      typeof useLikePost
+    >);
+    mockUseUnlikePost.mockReturnValue({ mutate: unlikeMutate } as unknown as ReturnType<
+      typeof useUnlikePost
+    >);
+
+    const { queryByText, getByTestId } = render(<AppPost post={baseRankedPost} />, {
+      wrapper: createWrapper(),
+    });
+    expect(queryByText('⚠️ ×0.6 (déjà liké)')).toBeNull();
+    fireEvent.press(getByTestId('post-like-button'));
+
+    expect(likeMutate).not.toHaveBeenCalled();
+    expect(unlikeMutate).not.toHaveBeenCalled();
+  });
+
+  it('likes when the summary says not liked and unlikes when it says liked', () => {
+    mockUseDebug.mockReturnValue({ isDebugMode: false, toggleDebugMode: jest.fn() });
+    const likeMutate = jest.fn();
+    const unlikeMutate = jest.fn();
+    mockUseLikePost.mockReturnValue({ mutate: likeMutate } as unknown as ReturnType<
+      typeof useLikePost
+    >);
+    mockUseUnlikePost.mockReturnValue({ mutate: unlikeMutate } as unknown as ReturnType<
+      typeof useUnlikePost
+    >);
+
+    const first = render(<AppPost post={baseRankedPost} />, { wrapper: createWrapper() });
+    fireEvent.press(first.getByTestId('post-like-button'));
+    expect(likeMutate).toHaveBeenCalledWith(baseRankedPost.id);
+    first.unmount();
+
+    mockUsePostLikeSummary.mockReturnValue({
+      data: { postId: baseRankedPost.id, likeCount: 1, likedByMe: true },
+    });
+    const second = render(<AppPost post={baseRankedPost} />, { wrapper: createWrapper() });
+    fireEvent.press(second.getByTestId('post-like-button'));
+    expect(unlikeMutate).toHaveBeenCalledWith(baseRankedPost.id);
   });
 });

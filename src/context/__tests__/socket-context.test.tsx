@@ -87,7 +87,13 @@ describe('SocketProvider', () => {
 
     expect(invalidateSpy).toHaveBeenCalledTimes(RESYNC_QUERY_KEYS.length);
     expect(RESYNC_QUERY_KEYS).toEqual(
-      expect.arrayContaining([['my-likes'], ['ranking'], ['post-likers'], ['comments-list']]),
+      expect.arrayContaining([
+        ['my-likes'],
+        ['likes-summary'],
+        ['ranking'],
+        ['post-likers'],
+        ['comments-list'],
+      ]),
     );
     RESYNC_QUERY_KEYS.forEach((queryKey) => {
       expect(invalidateSpy).toHaveBeenCalledWith({ queryKey });

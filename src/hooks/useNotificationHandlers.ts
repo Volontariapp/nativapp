@@ -23,6 +23,7 @@ import {
   WebsocketMessagingType,
 } from '@volontariapp/messaging';
 import { COMMENTS_LIST_QUERY_KEY } from '@/api/post/hooks/use-list-comments';
+import { invalidateLikesSummary } from '@/api/social/likes-summary.cache';
 import { PROFILE_QUERY_KEY } from '@/api/user/hooks/use-profile';
 import { authExpiredBus, badgeAwardedBus, syncPendingBus } from '../services/event-bus.service';
 
@@ -93,6 +94,7 @@ export const useNotificationHandlers = (
       void queryClient.invalidateQueries({
         queryKey: ['post-likers', data.postId],
       });
+      invalidateLikesSummary(queryClient, data.postId);
       // Les likes de l'utilisateur courant ne changent que s'il est l'emetteur.
       if (data.isEmitter === true) {
         void queryClient.invalidateQueries({
@@ -105,6 +107,7 @@ export const useNotificationHandlers = (
       void queryClient.invalidateQueries({
         queryKey: ['post-likers', data.postId],
       });
+      invalidateLikesSummary(queryClient, data.postId);
       // Les likes de l'utilisateur courant ne changent que s'il est l'emetteur.
       if (data.isEmitter === true) {
         void queryClient.invalidateQueries({

@@ -13,6 +13,13 @@ jest.mock('@/components/post/AppPost', () => ({
   default: mockPostCard.PostCardStub,
 }));
 
+const mockUseLikesSummary = jest.fn<undefined, [readonly string[]]>();
+jest.mock('@/api/social/hooks/use-likes-summary', () => ({
+  useLikesSummary: (ids: readonly string[]) => {
+    mockUseLikesSummary(ids);
+  },
+}));
+
 const mockOnClose = jest.fn();
 const mockOnDelete = jest.fn();
 

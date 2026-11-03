@@ -1,6 +1,10 @@
 import { UserRoles } from '@volontariapp/shared';
 import type { EndpointDefinition } from '../types';
 import type {
+  GetPostsLikeSummaryRequest,
+  GetPostsLikeSummaryResponse,
+} from '../social/likes-summary.types';
+import type {
   ActionSuccessWebResponse,
   GetEventPostsWebRequest,
   GetUserLikesWebRequest,
@@ -81,6 +85,12 @@ export const SOCIAL_ENDPOINTS = {
     requiresAuth: true,
     roles: [UserRoles.ORGANIZATION, UserRoles.VOLUNTEER, UserRoles.ADMIN],
   } as EndpointDefinition<void, ActionSuccessWebResponse>,
+  GET_POSTS_LIKE_SUMMARY_SELF: {
+    path: '/social/likes-summary',
+    method: 'POST',
+    requiresAuth: true,
+    roles: [UserRoles.ORGANIZATION, UserRoles.VOLUNTEER, UserRoles.ADMIN],
+  } as EndpointDefinition<GetPostsLikeSummaryRequest, GetPostsLikeSummaryResponse>,
   CREATE_EVENT_NODE: {
     path: '/social/events/:eventId',
     method: 'POST',

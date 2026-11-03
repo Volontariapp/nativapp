@@ -165,6 +165,11 @@ describe('useNotificationHandlers', () => {
 
     handler?.({ postId: 'p1', isEmitter: false });
     expect(mockInvalidateQueries).toHaveBeenCalledWith({ queryKey: ['post-likers', 'p1'] });
+    expect(
+      mockInvalidateQueries.mock.calls.some(
+        ([arg]) => typeof arg === 'object' && arg !== null && 'predicate' in arg,
+      ),
+    ).toBe(true);
     expect(mockInvalidateQueries).not.toHaveBeenCalledWith({ queryKey: ['my-likes'] });
 
     handler?.({ postId: 'p1', isEmitter: true });
