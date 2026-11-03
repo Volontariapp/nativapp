@@ -2,7 +2,8 @@ import React, { act } from 'react';
 import { render, waitFor } from '@testing-library/react-native';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { PROFILE_QUERY_KEY } from '@/api/user/hooks/use-profile';
-import { SocketProvider } from '../SocketContext';
+import { AppState, type AppStateStatus } from 'react-native';
+import { RESYNC_QUERY_KEYS, SocketProvider } from '../SocketContext';
 import {
   createFakeSocket,
   mockGetAccessToken,
@@ -29,8 +30,14 @@ describe('SocketProvider', () => {
   let fakeSocket: FakeSocket;
   let queryClient: QueryClient;
   let invalidateSpy: jest.SpyInstance;
+  let appStateHandler: ((state: AppStateStatus) => void) | undefined;
 
   beforeEach(async () => {
+    appStateHandler = undefined;
+    jest.spyOn(AppState, 'addEventListener').mockImplementation((_type, handler) => {
+      appStateHandler = handler;
+      return { remove: jest.fn() };
+    });
     fakeSocket = createFakeSocket();
     queryClient = new QueryClient();
     invalidateSpy = jest.spyOn(queryClient, 'invalidateQueries');
@@ -68,7 +75,46 @@ describe('SocketProvider', () => {
       fakeSocket.emitLocal('connect');
     });
 
-    expect(invalidateSpy).toHaveBeenCalledTimes(1);
     expect(invalidateSpy).toHaveBeenCalledWith({ queryKey: PROFILE_QUERY_KEY });
+  });
+
+  it('resyncs likes, ranking, comments and likers after a reconnection', () => {
+    act(() => {
+      fakeSocket.emitLocal('connect');
+      fakeSocket.emitLocal('disconnect');
+      fakeSocket.emitLocal('connect');
+    });
+
+    expect(invalidateSpy).toHaveBeenCalledTimes(RESYNC_QUERY_KEYS.length);
+    expect(RESYNC_QUERY_KEYS).toEqual(
+      expect.arrayContaining([['my-likes'], ['ranking'], ['post-likers'], ['comments-list']]),
+    );
+    RESYNC_QUERY_KEYS.forEach((queryKey) => {
+      expect(invalidateSpy).toHaveBeenCalledWith({ queryKey });
+    });
+  });
+
+  it('reconnects the existing socket when the app returns to the foreground', () => {
+    fakeSocket.connected = false;
+
+    act(() => {
+      appStateHandler?.('active');
+    });
+
+    expect(fakeSocket.connect).toHaveBeenCalledTimes(1);
+    expect(mockSocketServiceConnect).toHaveBeenCalledTimes(1);
+  });
+
+  it('does not reconnect on foreground when already connected or when going to background', () => {
+    fakeSocket.connected = true;
+    act(() => {
+      appStateHandler?.('active');
+    });
+    fakeSocket.connected = false;
+    act(() => {
+      appStateHandler?.('background');
+    });
+
+    expect(fakeSocket.connect).not.toHaveBeenCalled();
   });
 });

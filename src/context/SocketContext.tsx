@@ -1,6 +1,8 @@
 import React, { createContext, use, useEffect, useRef, useState, type ReactNode } from 'react';
+import { AppState } from 'react-native';
 import { useQueryClient } from '@tanstack/react-query';
 import type { Socket } from 'socket.io-client';
+import { COMMENTS_LIST_QUERY_KEY } from '@/api/post/hooks/use-list-comments';
 import { PROFILE_QUERY_KEY } from '@/api/user/hooks/use-profile';
 import { socketService } from '../services/socket.service';
 import { useAuth } from './AuthContext';
@@ -10,6 +12,21 @@ interface SocketContextType {
   socket: Socket | null;
   isConnected: boolean;
 }
+
+/**
+ * Cles invalidees apres une reconnexion : likes, commentaires, ranking et profil
+ * peuvent avoir change pendant la coupure sans que l'evenement n'arrive.
+ */
+export const RESYNC_QUERY_KEYS: readonly (readonly unknown[])[] = [
+  PROFILE_QUERY_KEY,
+  ['my-likes'],
+  ['ranking'],
+  COMMENTS_LIST_QUERY_KEY,
+  ['post-likers'],
+];
+
+/** Intervalle du filet de securite sur socket.connected (les evenements restent la source principale). */
+export const CONNECTION_POLL_INTERVAL_MS = 15000;
 
 const SocketContext = createContext<SocketContextType>({
   socket: null,
@@ -37,9 +54,12 @@ export const SocketProvider = ({ children }: SocketProviderProps): React.JSX.Ele
     const handleConnect = (): void => {
       if (!isMounted) return;
       setIsConnected(true);
-      // Reconnexion : des evenements (ex. credit de score) ont pu etre manques.
+      // Reconnexion : des evenements (score, likes, commentaires, ranking) ont pu etre manques.
       if (hasDisconnected) {
-        void queryClient.invalidateQueries({ queryKey: PROFILE_QUERY_KEY });
+        hasDisconnected = false;
+        RESYNC_QUERY_KEYS.forEach((queryKey) => {
+          void queryClient.invalidateQueries({ queryKey });
+        });
       }
     };
     const handleDisconnect = (): void => {
@@ -77,16 +97,27 @@ export const SocketProvider = ({ children }: SocketProviderProps): React.JSX.Ele
 
     void connectSocket();
 
-    // Safety-net: poll socket.connected every 3s in case the disconnect event
-    // is delayed (e.g. heartbeat timeout, polling transport lag).
+    // Retour au premier plan : le systeme peut avoir suspendu le socket en arriere-plan.
+    // socket.connect() relance la reconnexion sans recreer l'instance.
+    const appStateSubscription = AppState.addEventListener('change', (state) => {
+      const s = socketRef.current;
+      if (state === 'active' && s !== null && !s.connected) {
+        s.connect();
+      }
+    });
+
+    // Filet de securite : les evenements connect / disconnect / connect_error couvrent les cas
+    // nominaux; ce poll ne rattrape qu'un evenement perdu (lag du transport polling), donc
+    // un intervalle de 15 s suffit au lieu de 3 s.
     const interval = setInterval(() => {
       const s = socketRef.current;
       setIsConnected(s?.connected ?? false);
-    }, 3000);
+    }, CONNECTION_POLL_INTERVAL_MS);
 
     return (): void => {
       isMounted = false;
       clearInterval(interval);
+      appStateSubscription.remove();
       if (currentSocket !== null) {
         currentSocket.off('connect', handleConnect);
         currentSocket.off('disconnect', handleDisconnect);

@@ -8,6 +8,7 @@ export interface FakeManagerOptions {
 export interface FakeManagerSocket {
   id: string;
   connected: boolean;
+  active: boolean;
   io: { opts: FakeManagerOptions };
   on: jest.Mock;
   disconnect: jest.Mock;
@@ -20,6 +21,7 @@ export const createFakeManagerSocket = (opts: FakeManagerOptions = {}): FakeMana
   return {
     id: 'fake-socket',
     connected: false,
+    active: true,
     io: { opts },
     on: jest.fn((event: string, handler: Listener) => {
       listeners.set(event, [...(listeners.get(event) ?? []), handler]);
