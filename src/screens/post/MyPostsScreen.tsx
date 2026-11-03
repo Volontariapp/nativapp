@@ -14,20 +14,22 @@ import type { AppTheme } from '@/shared/themes/theme';
 import { useGetMyPosts, useDeletePost } from '@/api/post/hooks';
 import type { PostWeb } from '@volontariapp/contracts';
 import { useTabBarContentInset } from '@/navigation/hooks/useTabBarContentInset';
-
-const PAGE_SIZE = POST_GRID_COLUMNS * 4;
+import { dedupeById } from '@/shared/utils/dedupe-by-id';
 
 export function MyPostsScreen(): React.JSX.Element {
   const { theme } = useAppTheme();
   const styles = useStyles(createStyles);
   const tabBarInset = useTabBarContentInset();
-  const { data, isLoading, fetchNextPage, hasNextPage, isFetchingNextPage } =
-    useGetMyPosts(PAGE_SIZE);
+  const { data, isLoading, isError, fetchNextPage, hasNextPage, isFetchingNextPage } =
+    useGetMyPosts();
   const { mutateAsync: deletePost } = useDeletePost();
   const tileSize = usePostGridTileSize();
   const [selectedPost, setSelectedPost] = React.useState<PostWeb | null>(null);
 
-  const posts = data?.pages.flatMap((page) => page.posts) ?? [];
+  const posts = React.useMemo(
+    () => dedupeById(data?.pages.flatMap((page) => page.posts) ?? []),
+    [data],
+  );
 
   const handleDelete = async (id: string) => {
     try {
@@ -39,6 +41,12 @@ export function MyPostsScreen(): React.JSX.Element {
       Alert.alert('Erreur', message);
     }
   };
+
+  const handleEndReached = React.useCallback(() => {
+    if (hasNextPage && !isFetchingNextPage) {
+      void fetchNextPage();
+    }
+  }, [hasNextPage, isFetchingNextPage, fetchNextPage]);
 
   const renderItem = React.useCallback(
     ({ item }: { item: PostWeb }) => (
@@ -56,6 +64,8 @@ export function MyPostsScreen(): React.JSX.Element {
           <View style={styles.center}>
             <ActivityIndicator size="large" color={theme.colors.primaryEco} />
           </View>
+        ) : isError && posts.length === 0 ? (
+          <AppText style={styles.errorText}>Erreur lors du chargement de vos posts.</AppText>
         ) : (
           <FlatList
             testID="my-posts-grid"
@@ -66,11 +76,8 @@ export function MyPostsScreen(): React.JSX.Element {
             columnWrapperStyle={styles.gridRow}
             ItemSeparatorComponent={RowSeparator}
             renderItem={renderItem}
-            onEndReached={() => {
-              if (hasNextPage && !isFetchingNextPage) {
-                void fetchNextPage();
-              }
-            }}
+            onEndReached={handleEndReached}
+            onEndReachedThreshold={0.5}
             ListEmptyComponent={
               <AppText style={styles.emptyText}>
                 Vous n'avez créé aucun post pour le moment.
@@ -123,6 +130,11 @@ const createStyles = (theme: AppTheme) =>
     },
     rowSeparator: {
       height: POST_GRID_GAP,
+    },
+    errorText: {
+      textAlign: 'center',
+      color: theme.colors.danger,
+      marginTop: theme.spacing.xxl,
     },
     emptyText: {
       textAlign: 'center',

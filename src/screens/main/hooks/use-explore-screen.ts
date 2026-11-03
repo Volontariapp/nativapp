@@ -13,6 +13,7 @@ import type { UserCoordinates } from '@/hooks/use-location';
 import { EventState, EventType } from '@volontariapp/contracts';
 import { calculateDistanceInKm } from '@/shared/lib/location.utils';
 import type { EventCategoryFilter } from '@/components/map/MapFilterBar';
+import { dedupeById } from '@/shared/utils/dedupe-by-id';
 
 // ─── Navigation Typing ────────────────────────────────────────────────────────
 // ExploreScreen vit dans un tab ("explorer") ET dans une stack (MainStack).
@@ -91,7 +92,7 @@ export function useExploreScreen(): UseExploreScreenResult {
   });
 
   const events = useMemo(
-    () => eventsData?.pages.flatMap((page) => page.events) ?? [],
+    () => dedupeById(eventsData?.pages.flatMap((page) => page.events) ?? []),
     [eventsData],
   );
 

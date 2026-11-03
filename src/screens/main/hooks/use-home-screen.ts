@@ -8,6 +8,7 @@ import { useGetMyLikes } from '@/api/social/hooks/use-get-my-likes';
 import { rankingApi, type RankingFeedResult } from '@/api/ranking/ranking.api';
 import { useAuth } from '@/context/auth/auth.context';
 import type { PostWeb } from '@volontariapp/contracts';
+import { dedupeById } from '@/shared/utils/dedupe-by-id';
 import {
   applyPinnedOrder,
   unseenFirst,
@@ -15,6 +16,8 @@ import {
 } from '../helpers/feed-visibility.helpers';
 
 const FEED_PAGE_LIMIT = 10;
+// Pages consecutives chargees d'office quand la derniere page n'ajoute aucun post visible.
+const MAX_AUTO_PAGES = 3;
 
 export interface UseHomeScreenResult {
   posts: PostWeb[];
@@ -31,10 +34,10 @@ export interface UseHomeScreenResult {
 }
 
 const rankedPostsOf = (data: InfiniteData<RankingFeedResult> | undefined): PostWeb[] =>
-  data?.pages.flatMap((page) => (page.isFallback ? [] : page.posts)) ?? [];
+  dedupeById(data?.pages.flatMap((page) => (page.isFallback ? [] : page.posts)) ?? []);
 
 const fallbackPostsOf = (data: InfiniteData<{ posts: PostWeb[] }> | undefined): PostWeb[] =>
-  data?.pages.flatMap((page) => page.posts) ?? [];
+  dedupeById(data?.pages.flatMap((page) => page.posts) ?? []);
 
 export function useHomeScreen(): UseHomeScreenResult {
   const flatListRef = useRef<FlatList<PostWeb> | null>(null);
@@ -49,6 +52,9 @@ export function useHomeScreen(): UseHomeScreenResult {
   const [pinnedOrder, setPinnedOrder] = useState<readonly string[]>([]);
   const seenIdsRef = useRef<Set<string>>(new Set());
   const hasHandledSnapshotRef = useRef(false);
+  // Posts visibles lors de la derniere page evaluee, et pages chargees d'office depuis.
+  const visibleBaselineRef = useRef(0);
+  const autoPagesRef = useRef(0);
   const rankingQuery = useRankingFeed({ limit: FEED_PAGE_LIMIT });
   const firstPage = rankingQuery.data?.pages[0];
   const hasRankedPosts = Boolean(firstPage && !firstPage.isFallback && firstPage.posts.length > 0);
@@ -56,7 +62,8 @@ export function useHomeScreen(): UseHomeScreenResult {
     Boolean(firstPage?.isFallback) ||
     rankingQuery.isError ||
     (rankingQuery.isSuccess && !hasRankedPosts);
-  const fallbackQuery = useListPosts({ limit: FEED_PAGE_LIMIT });
+  // Le repli chronologique ne part que si le ranking ne suffit pas (echec, 206 ou liste vide).
+  const fallbackQuery = useListPosts({ limit: FEED_PAGE_LIMIT, enabled: isFallbackMode });
 
   useEffect(() => {
     if (hasHandledSnapshotRef.current || !myLikes.data) {
@@ -74,15 +81,17 @@ export function useHomeScreen(): UseHomeScreenResult {
     return applyPinnedOrder(withoutHandledPosts(candidates, handledIds, userId), pinnedOrder);
   }, [isFallbackMode, rankingQuery.data, fallbackQuery.data, handledIds, userId, pinnedOrder]);
 
-  const isLoading = isFallbackMode
-    ? fallbackQuery.isLoading
-    : rankingQuery.isLoading || (!hasRankedPosts && fallbackQuery.isLoading);
+  const isLoading = isFallbackMode ? fallbackQuery.isLoading : rankingQuery.isLoading;
   // En mode repli, le repli qui echoue est l'erreur visible (le ranking est deja en echec ou vide).
   const isError = isFallbackMode ? fallbackQuery.isError : rankingQuery.isError;
   const hasNextPage = isFallbackMode ? fallbackQuery.hasNextPage : rankingQuery.hasNextPage;
   const isFetchingNextPage = isFallbackMode
     ? fallbackQuery.isFetchingNextPage
     : rankingQuery.isFetchingNextPage;
+
+  // Change a chaque page chargee : relance l'evaluation meme si l'etat de chargement n'a pas ete rendu.
+  const loadedPagesCount =
+    (isFallbackMode ? fallbackQuery.data?.pages.length : rankingQuery.data?.pages.length) ?? 0;
 
   // Derniers etats lus par les callbacks stables : evite de les recreer a chaque rendu des useQuery.
   const latestRef = useRef({
@@ -159,7 +168,7 @@ export function useHomeScreen(): UseHomeScreenResult {
     }
   }, []);
 
-  const handleLoadMore = useCallback((): void => {
+  const fetchMore = useCallback((): void => {
     const { hasNextPage, isFetchingNextPage, isFallbackMode, fallbackQuery, rankingQuery } =
       latestRef.current;
     if (hasNextPage && !isFetchingNextPage) {
@@ -170,6 +179,44 @@ export function useHomeScreen(): UseHomeScreenResult {
       }
     }
   }, []);
+
+  // Action de l'utilisateur (scroll en fin de liste) : rearme le chargement automatique.
+  const handleLoadMore = useCallback((): void => {
+    autoPagesRef.current = 0;
+    fetchMore();
+  }, [fetchMore]);
+
+  // Le filtrage client (posts likes, commentes, de l'utilisateur) vient apres la pagination : une
+  // page peut n'ajouter aucun post visible alors qu'il en reste, et onEndReached ne se redeclenche
+  // pas sur une liste qui ne grandit pas. On charge donc la suite d'office, 3 pages au plus.
+  useEffect(() => {
+    visibleBaselineRef.current = 0;
+    autoPagesRef.current = 0;
+  }, [isFallbackMode]);
+
+  useEffect(() => {
+    if (isLoading || isError || isFetchingNextPage || !hasNextPage) return;
+    if (posts.length > visibleBaselineRef.current) {
+      visibleBaselineRef.current = posts.length;
+      autoPagesRef.current = 0;
+      return;
+    }
+    if (posts.length < visibleBaselineRef.current) {
+      visibleBaselineRef.current = posts.length;
+      if (posts.length > 0) return;
+    }
+    if (autoPagesRef.current >= MAX_AUTO_PAGES) return;
+    autoPagesRef.current += 1;
+    fetchMore();
+  }, [
+    posts.length,
+    loadedPagesCount,
+    isLoading,
+    isError,
+    isFetchingNextPage,
+    hasNextPage,
+    fetchMore,
+  ]);
 
   return {
     posts,

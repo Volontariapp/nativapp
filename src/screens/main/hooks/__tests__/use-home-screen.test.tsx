@@ -387,3 +387,108 @@ describe('useHomeScreen', () => {
     expect(result.current.posts.map((post) => post.id)).toEqual(['post-3', 'post-1', 'post-2']);
   });
 });
+
+describe('useHomeScreen pagination hygiene', () => {
+  const rankedPage = (ids: string[], hasMore: boolean, nextCursor: string): RankingFeedResult =>
+    rankingPage(
+      ids.map((id) => createSamplePost(id, id)),
+      { hasMore, nextCursor },
+    );
+
+  beforeEach(() => {
+    jest.clearAllMocks();
+    mockMyLikes([]);
+    mockUseListPosts.mockReturnValue({
+      data: { pages: [] },
+      isLoading: false,
+      isError: false,
+      hasNextPage: false,
+      fetchNextPage: mockFetchNextPageFallback,
+      isFetchingNextPage: false,
+      refetch: mockRefetchFallback,
+    });
+  });
+
+  it('keeps the chronological fallback disabled while the ranking is usable', async () => {
+    mockGetFeed.mockResolvedValue(rankedPage(['post-1'], false, ''));
+
+    const { result } = renderHook(() => useHomeScreen(), { wrapper: createWrapper() });
+    await waitFor(() => {
+      expect(result.current.posts).toHaveLength(1);
+    });
+
+    const calls = mockUseListPosts.mock.calls as Array<[{ enabled?: boolean }?]>;
+    expect(calls.every(([params]) => params?.enabled === false)).toBe(true);
+  });
+
+  it('enables the fallback when the ranking fails', async () => {
+    mockGetFeed.mockRejectedValue(new Error('ranking down'));
+
+    renderHook(() => useHomeScreen(), { wrapper: createWrapper() });
+
+    await waitFor(() => {
+      const calls = mockUseListPosts.mock.calls as Array<[{ enabled?: boolean }?]>;
+      expect(calls.some(([params]) => params?.enabled === true)).toBe(true);
+    });
+  });
+
+  it('deduplicates a post that reappears on the next ranking page', async () => {
+    mockGetFeed.mockImplementation((params) =>
+      Promise.resolve(
+        params?.cursor === 'cursor-2'
+          ? rankedPage(['post-2', 'post-3'], false, '')
+          : rankedPage(['post-1', 'post-2'], true, 'cursor-2'),
+      ),
+    );
+
+    const { result } = renderHook(() => useHomeScreen(), { wrapper: createWrapper() });
+    await waitFor(() => {
+      expect(result.current.hasNextPage).toBe(true);
+    });
+    act(() => {
+      result.current.handleLoadMore();
+    });
+
+    await waitFor(() => {
+      expect(result.current.posts.map((post) => post.id)).toEqual(['post-1', 'post-2', 'post-3']);
+    });
+  });
+
+  it('loads the next ranking page by itself when the filtered page is empty', async () => {
+    mockMyLikes(['post-1', 'post-2']);
+    mockGetFeed.mockImplementation((params) =>
+      Promise.resolve(
+        params?.cursor === 'cursor-2'
+          ? rankedPage(['post-3'], false, '')
+          : rankedPage(['post-1', 'post-2'], true, 'cursor-2'),
+      ),
+    );
+
+    const { result } = renderHook(() => useHomeScreen(), { wrapper: createWrapper() });
+
+    await waitFor(() => {
+      expect(result.current.posts.map((post) => post.id)).toEqual(['post-3']);
+    });
+    expect(mockGetFeed).toHaveBeenCalledTimes(2);
+  });
+
+  it('stops after 3 consecutive pages that add no visible post', async () => {
+    mockMyLikes(['a', 'b', 'c', 'd', 'e']);
+    const ids = ['a', 'b', 'c', 'd', 'e'];
+    mockGetFeed.mockImplementation((params) => {
+      const index = params?.cursor === undefined ? 0 : Number(params.cursor);
+      return Promise.resolve(rankedPage([ids[index] ?? 'z'], true, String(index + 1)));
+    });
+
+    const { result } = renderHook(() => useHomeScreen(), { wrapper: createWrapper() });
+
+    await waitFor(() => {
+      expect(mockGetFeed).toHaveBeenCalledTimes(4);
+    });
+    await act(async () => {
+      await Promise.resolve();
+    });
+    expect(mockGetFeed).toHaveBeenCalledTimes(4);
+    expect(result.current.posts).toHaveLength(0);
+  });
+});

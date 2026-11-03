@@ -14,6 +14,7 @@ import { groupEventsByStatus, type EventStatusGroup } from '@/api/event/group-ev
 import { MyEventItem } from '@/components/event/my-event-item';
 import { EventStatusSectionHeader } from '@/components/event/event-status-section-header';
 import { useTabBarContentInset } from '@/navigation/hooks/useTabBarContentInset';
+import { dedupeById } from '@/shared/utils/dedupe-by-id';
 
 export function MyEventsScreen(): React.JSX.Element {
   const { theme } = useAppTheme();
@@ -25,7 +26,7 @@ export function MyEventsScreen(): React.JSX.Element {
     useGetMyEvents(10);
 
   const sections = useMemo(
-    () => groupEventsByStatus(data?.pages.flatMap((page) => page.events) ?? []),
+    () => groupEventsByStatus(dedupeById(data?.pages.flatMap((page) => page.events) ?? [])),
     [data],
   );
 

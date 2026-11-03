@@ -14,6 +14,7 @@ import {
   type ManageTabType,
   type ParticipatedScope,
 } from '../manage-hub.utils';
+import { dedupeById } from '@/shared/utils/dedupe-by-id';
 
 interface EventsPage {
   events: AppEvent[];
@@ -21,7 +22,7 @@ interface EventsPage {
 }
 
 function flattenPages(data: { pages: EventsPage[] } | undefined): AppEvent[] {
-  return data?.pages.flatMap((page) => page.events) ?? [];
+  return dedupeById(data?.pages.flatMap((page) => page.events) ?? []);
 }
 
 /**

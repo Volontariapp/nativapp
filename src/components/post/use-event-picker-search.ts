@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState } from 'react';
 import { EventState } from '@volontariapp/contracts';
 import type { AppEvent } from '@/api/event/event.api';
 import { useGetEvents } from '@/api/event/hooks/use-get-events';
+import { dedupeById } from '@/shared/utils/dedupe-by-id';
 
 const SEARCH_DEBOUNCE_MS = 300;
 const PAGE_SIZE = 20;
@@ -41,7 +42,10 @@ export const useEventPickerSearch = (query: string): EventPickerSearch => {
     limit: PAGE_SIZE,
   });
 
-  const events = useMemo(() => data?.pages.flatMap((page) => page.events) ?? [], [data]);
+  const events = useMemo(
+    () => dedupeById(data?.pages.flatMap((page) => page.events) ?? []),
+    [data],
+  );
 
   return {
     events,

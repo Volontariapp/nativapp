@@ -5,6 +5,7 @@ import { useGetParticipatedEvents } from '@/api/event/hooks/use-get-participated
 import type { PaginatedEventListData } from '@/components/profile/profile-events.types';
 import { normalizeEventState } from '@/shared/lib/event-mappers.utils';
 import { mergeUpcomingEvents } from './merge-upcoming-events.utils';
+import { dedupeById } from '@/shared/utils/dedupe-by-id';
 
 const PROFILE_EVENTS_PAGE_SIZE = 10;
 
@@ -33,11 +34,11 @@ export function useProfileEvents(): ProfileEventsHookReturn {
   } = useGetParticipatedEvents(PROFILE_EVENTS_PAGE_SIZE);
 
   const allMyEvents = useMemo(
-    () => myEventsData?.pages.flatMap((page) => page.events) ?? [],
+    () => dedupeById(myEventsData?.pages.flatMap((page) => page.events) ?? []),
     [myEventsData],
   );
   const allParticipatedEvents = useMemo(
-    () => participatedEventsData?.pages.flatMap((page) => page.events) ?? [],
+    () => dedupeById(participatedEventsData?.pages.flatMap((page) => page.events) ?? []),
     [participatedEventsData],
   );
 

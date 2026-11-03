@@ -7,13 +7,17 @@ export function useListPosts(
   params: {
     authorId?: string;
     limit?: number;
+    /** Faux : la requete ne part pas (ex. repli du fil Home tant que le ranking suffit). */
+    enabled?: boolean;
   } = {},
 ) {
-  const limit = params.limit ?? 10;
+  const { enabled = true, ...queryParams } = params;
+  const limit = queryParams.limit ?? 10;
 
   return useInfiniteQuery({
-    queryKey: [POSTS_LIST_QUERY_KEY, params],
-    queryFn: ({ pageParam }) => postApi.listPosts({ ...params, page: pageParam, limit }),
+    queryKey: [POSTS_LIST_QUERY_KEY, queryParams],
+    queryFn: ({ pageParam }) => postApi.listPosts({ ...queryParams, page: pageParam, limit }),
+    enabled,
     initialPageParam: 1,
     getNextPageParam: (lastPage, allPages) => {
       if (lastPage.posts.length < limit) {
