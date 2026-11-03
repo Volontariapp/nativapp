@@ -123,3 +123,43 @@ describe('SocketService reconnection', () => {
     expect(authExpiredListener).not.toHaveBeenCalled();
   });
 });
+
+describe('SocketService connect reuse', () => {
+  let fakeSocket: FakeManagerSocket;
+
+  beforeEach(() => {
+    fakeSocket = createFakeManagerSocket();
+    mockIo.mockReturnValue(fakeSocket);
+  });
+
+  afterEach(() => {
+    socketService.disconnect();
+    jest.resetAllMocks();
+  });
+
+  it('reuses an instance that is reconnecting with the same token', () => {
+    const first = socketService.connect('token-a');
+    fakeSocket.connected = false;
+    fakeSocket.active = true;
+
+    expect(socketService.connect('token-a')).toBe(first);
+    expect(mockIo).toHaveBeenCalledTimes(1);
+    expect(fakeSocket.disconnect).not.toHaveBeenCalled();
+  });
+
+  it('recreates the instance when the token changed', () => {
+    socketService.connect('token-a');
+    socketService.connect('token-b');
+
+    expect(fakeSocket.disconnect).toHaveBeenCalledTimes(1);
+    expect(mockIo).toHaveBeenCalledTimes(2);
+  });
+
+  it('recreates the instance when it is no longer active', () => {
+    socketService.connect('token-a');
+    fakeSocket.active = false;
+    socketService.connect('token-a');
+
+    expect(mockIo).toHaveBeenCalledTimes(2);
+  });
+});

@@ -11,14 +11,20 @@ import { TokenService } from './token.service';
 class SocketService {
   private socket: Socket | null = null;
   private credentialsRefresh: Promise<void> | null = null;
+  private currentToken: string | null = null;
 
   public connect(token: string): Socket {
     if (this.socket) {
-      if (this.socket.connected) {
+      // socket.active vaut true tant que l'instance est connectee ou en cours de (re)connexion
+      // automatique; il passe a false apres un disconnect() volontaire ou une deconnexion
+      // decidee par le serveur. On reutilise donc l'instance sauf si le token a change.
+      if (this.currentToken === token && this.socket.active) {
         return this.socket;
       }
       this.socket.disconnect();
+      this.socket = null;
     }
+    this.currentToken = token;
 
     const base = config.apiGatewayUrl.replace(/\/$/, '');
 
@@ -42,14 +48,6 @@ class SocketService {
 
     this.socket = io(base, ioOptions);
 
-    this.socket.on('connect', () => {
-      console.log('Socket connected:', this.socket?.id);
-    });
-
-    this.socket.on('disconnect', () => {
-      // Intentionally left empty as requested
-    });
-
     this.socket.on('unauthorized', () => {
       this.disconnect();
     });
@@ -70,6 +68,7 @@ class SocketService {
       this.socket.disconnect();
       this.socket = null;
     }
+    this.currentToken = null;
   }
 
   private async refreshCredentials(): Promise<void> {
@@ -90,6 +89,7 @@ class SocketService {
       if (this.socket !== socket) {
         return;
       }
+      this.currentToken = token;
       socket.io.opts.query = { token };
       socket.io.opts.extraHeaders = {
         ...socket.io.opts.extraHeaders,

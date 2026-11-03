@@ -4,6 +4,7 @@ export interface FakeSocket {
   connected: boolean;
   on: jest.Mock;
   off: jest.Mock;
+  connect: jest.Mock;
   emitLocal: (event: string) => void;
 }
 
@@ -16,6 +17,7 @@ export const createFakeSocket = (): FakeSocket => {
       listeners.set(event, handler);
     }),
     off: jest.fn(),
+    connect: jest.fn(),
     emitLocal: (event: string): void => {
       listeners.get(event)?.();
     },

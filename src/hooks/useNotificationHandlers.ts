@@ -93,18 +93,24 @@ export const useNotificationHandlers = (
       void queryClient.invalidateQueries({
         queryKey: ['post-likers', data.postId],
       });
-      void queryClient.invalidateQueries({
-        queryKey: ['my-likes'],
-      });
+      // Les likes de l'utilisateur courant ne changent que s'il est l'emetteur.
+      if (data.isEmitter === true) {
+        void queryClient.invalidateQueries({
+          queryKey: ['my-likes'],
+        });
+      }
     };
 
     const handlePostUnliked = (data: IPostUnlikedWebsocketPayload): void => {
       void queryClient.invalidateQueries({
         queryKey: ['post-likers', data.postId],
       });
-      void queryClient.invalidateQueries({
-        queryKey: ['my-likes'],
-      });
+      // Les likes de l'utilisateur courant ne changent que s'il est l'emetteur.
+      if (data.isEmitter === true) {
+        void queryClient.invalidateQueries({
+          queryKey: ['my-likes'],
+        });
+      }
     };
 
     const handleEventCreated = (data: IEventCreatedWebsocketPayload): void => {

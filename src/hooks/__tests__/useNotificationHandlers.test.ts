@@ -9,6 +9,8 @@ jest.mock(
       USER_DELETED: 'USER_DELETED',
       USER_IMPACT_SCORE_CREDITED: 'USER_IMPACT_SCORE_CREDITED',
       RANKING_READY: 'ranking.ready',
+      POST_LIKED: 'POST_LIKED',
+      POST_UNLIKED: 'POST_UNLIKED',
     },
   }),
   { virtual: true },
@@ -150,5 +152,22 @@ describe('useNotificationHandlers', () => {
       WebsocketMessagingType.RANKING_READY,
       listeners[WebsocketMessagingType.RANKING_READY],
     );
+  });
+
+  it.each([
+    ['POST_LIKED', WebsocketMessagingType.POST_LIKED],
+    ['POST_UNLIKED', WebsocketMessagingType.POST_UNLIKED],
+  ])('%s invalidates my-likes only when the current user is the emitter', (_name, eventType) => {
+    renderHook(() => {
+      useNotificationHandlers(mockSocket as unknown as Socket, showNotificationMock);
+    });
+    const handler = listeners[eventType];
+
+    handler?.({ postId: 'p1', isEmitter: false });
+    expect(mockInvalidateQueries).toHaveBeenCalledWith({ queryKey: ['post-likers', 'p1'] });
+    expect(mockInvalidateQueries).not.toHaveBeenCalledWith({ queryKey: ['my-likes'] });
+
+    handler?.({ postId: 'p1', isEmitter: true });
+    expect(mockInvalidateQueries).toHaveBeenCalledWith({ queryKey: ['my-likes'] });
   });
 });
