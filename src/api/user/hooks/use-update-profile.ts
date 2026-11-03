@@ -2,8 +2,7 @@ import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { userApi } from '../user.api';
 import type { UpdateUserRequest } from '@volontariapp/contracts';
 import { Alert } from 'react-native';
-
-const PROFILE_QUERY_KEY = ['profile'] as const;
+import { PROFILE_QUERY_KEY } from '../user-query-keys';
 
 /**
  * Hook pour mettre à jour les informations du profil utilisateur.
