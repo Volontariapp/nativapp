@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useCallback } from 'react';
 import { View, Button } from 'react-native';
 
 import RootNavigator from './RootNavigator';
@@ -6,9 +6,18 @@ import SandboxStack from '@/navigation/stacks/SandboxStack';
 import AdminAppNavigator from '@/navigation/admin/AdminAppNavigator';
 
 import { AdminContext } from '@/context/admin/admin.context';
+import { config } from '@/shared/config/base-config';
+import type { AdminMode } from './resolve-admin-mode';
+import { resolveAllowedAdminMode, resolveInitialAdminMode } from './resolve-admin-mode';
+
+const ADMIN_MODE_ENV = { isDev: __DEV__, appEnv: config.nodeEnv };
 
 export default function AdminNavigator(): React.JSX.Element {
-  const [mode, setMode] = useState<'menu' | 'app' | 'sandbox' | 'panel'>('menu');
+  const [mode, setModeState] = useState<AdminMode>(() => resolveInitialAdminMode(ADMIN_MODE_ENV));
+
+  const setMode = useCallback((requested: AdminMode): void => {
+    setModeState(resolveAllowedAdminMode(requested, ADMIN_MODE_ENV));
+  }, []);
 
   const adminContextValue = useMemo(() => ({ setMode }), [setMode]);
 
