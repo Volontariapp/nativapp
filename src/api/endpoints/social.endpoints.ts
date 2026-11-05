@@ -265,12 +265,6 @@ export const SOCIAL_ENDPOINTS = {
     requiresAuth: true,
     roles: [UserRoles.ORGANIZATION, UserRoles.VOLUNTEER, UserRoles.ADMIN],
   } as EndpointDefinition<GetUserLikesWebRequest, GetUserEventWebResponse>,
-  GET_USER_CREATED_EVENTS: {
-    path: '/social/users/:userId/events/created',
-    method: 'GET',
-    requiresAuth: true,
-    roles: [UserRoles.ADMIN],
-  } as EndpointDefinition<GetUserEventWebRequest, GetUserEventWebResponse>,
   GET_USER_PARTICIPATED_EVENTS: {
     path: '/social/users/:userId/events/participated',
     method: 'GET',
