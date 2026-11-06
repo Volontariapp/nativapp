@@ -13,7 +13,8 @@ import { AppText } from '@/components/typography/AppText';
 import { theme } from '@/shared/themes/theme';
 import { useSocket } from './SocketContext';
 import { useNotificationHandlers } from '../hooks/useNotificationHandlers';
-import { syncPendingBus, badgeAwardedBus } from '../services/event-bus.service';
+import { badgeAwardedBus } from '../services/event-bus.service';
+import { useSyncPendingIndicator } from '../hooks/use-sync-pending-indicator';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { ActivityIndicator } from 'react-native';
 import { BadgeCelebrationModal } from '@/components/feedback/BadgeCelebrationModal';
@@ -30,16 +31,13 @@ const NotificationContext = createContext<NotificationContextType>({
 
 export const NotificationProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [message, setMessage] = useState<string | null>(null);
-  const [isSyncing, setIsSyncing] = useState<boolean>(false);
+  const isSyncing = useSyncPendingIndicator();
   const [awardedBadge, setAwardedBadge] = useState<BadgeVariant | null>(null);
   const translateY = useSharedValue(-150);
   const { socket } = useSocket();
   const insets = useSafeAreaInsets();
 
   React.useEffect(() => {
-    const unsubscribeSync = syncPendingBus.subscribe((status) => {
-      setIsSyncing(status);
-    });
     const unsubscribeBadge = badgeAwardedBus.subscribe((badges) => {
       const firstValidSlug = badges.find((b) => b.slug in BADGE_REGISTRY)?.slug as
         BadgeVariant | undefined;
@@ -48,7 +46,6 @@ export const NotificationProvider: React.FC<{ children: React.ReactNode }> = ({ 
       }
     });
     return () => {
-      unsubscribeSync();
       unsubscribeBadge();
     };
   }, []);

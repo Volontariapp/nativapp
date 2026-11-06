@@ -56,6 +56,7 @@ describe('rankingApi', () => {
         method: RANKING_ENDPOINTS.GET_EVENTS.method,
         requiresAuth: RANKING_ENDPOINTS.GET_EVENTS.requiresAuth,
         params: { limit: 20 },
+        signalSyncPending: false,
       });
 
       expect(result.isFallback).toBe(false);
@@ -90,6 +91,17 @@ describe('rankingApi', () => {
       expect(result.isFallback).toBe(true);
       expect(result.events).toEqual([]);
       expect(result.ranking).toBeNull();
+    });
+
+    it('does not raise the global sync indicator when the list is not ready (206)', async () => {
+      apiFetchMock.mockResolvedValue({ code: 'FALLBACK_ACTIVATED' });
+
+      await rankingApi.getEvents();
+
+      expect(apiFetchMock).toHaveBeenCalledWith(
+        RANKING_ENDPOINTS.GET_EVENTS.path,
+        expect.objectContaining({ signalSyncPending: false }),
+      );
     });
   });
 
@@ -128,6 +140,7 @@ describe('rankingApi', () => {
         method: RANKING_ENDPOINTS.GET_FEED.method,
         requiresAuth: RANKING_ENDPOINTS.GET_FEED.requiresAuth,
         params: { limit: 10 },
+        signalSyncPending: false,
       });
 
       expect(result.isFallback).toBe(false);
@@ -152,6 +165,17 @@ describe('rankingApi', () => {
       expect(result.posts).toEqual([]);
       expect(result.ranking).toBeNull();
       expect(result.totalCount).toBe(0);
+    });
+
+    it('does not raise the global sync indicator when the feed is not ready (206)', async () => {
+      apiFetchMock.mockResolvedValue({ code: 'FALLBACK_ACTIVATED' });
+
+      await rankingApi.getFeed();
+
+      expect(apiFetchMock).toHaveBeenCalledWith(
+        RANKING_ENDPOINTS.GET_FEED.path,
+        expect.objectContaining({ signalSyncPending: false }),
+      );
     });
 
     it('returns fallback if response does not contain posts array', async () => {

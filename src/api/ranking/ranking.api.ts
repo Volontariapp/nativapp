@@ -72,6 +72,7 @@ export const rankingApi = {
         method: RANKING_ENDPOINTS.GET_EVENTS.method,
         requiresAuth: RANKING_ENDPOINTS.GET_EVENTS.requiresAuth,
         params,
+        signalSyncPending: false,
       },
     );
 
@@ -106,6 +107,7 @@ export const rankingApi = {
         method: RANKING_ENDPOINTS.GET_FEED.method,
         requiresAuth: RANKING_ENDPOINTS.GET_FEED.requiresAuth,
         params,
+        signalSyncPending: false,
       },
     );
 

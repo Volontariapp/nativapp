@@ -58,6 +58,14 @@ describe('apiFetch', () => {
     expect(syncPending).toHaveBeenCalledWith(true);
   });
 
+  it('n emet pas syncPendingBus sur un 206 quand signalSyncPending vaut false', async () => {
+    axiosMock.mockResolvedValueOnce(createAxiosResponse(206, {}));
+
+    await apiFetch('/x', { signalSyncPending: false });
+
+    expect(syncPending).not.toHaveBeenCalled();
+  });
+
   describe('refresh apres expiration du token', () => {
     it('retente avec le nouveau token, timeout inclus, et traite le 206 du retry', async () => {
       axiosMock

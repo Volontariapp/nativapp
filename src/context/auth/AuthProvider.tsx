@@ -1,4 +1,5 @@
-import React, { useState, useEffect, type ReactNode } from 'react';
+import React, { useState, useEffect, useRef, type ReactNode } from 'react';
+import { useQueryClient } from '@tanstack/react-query';
 import { jwtDecode } from 'jwt-decode';
 import { TokenService } from '../../services/token.service';
 import { authExpiredBus } from '../../services/event-bus.service';
@@ -12,10 +13,16 @@ export const AuthProvider = ({ children }: { children: ReactNode }): React.JSX.E
   const [userId, setUserId] = useState<string | null>(null);
   const [role, setRole] = useState<UserRoles | null>(null);
   const [isLoading, setIsLoading] = useState<boolean>(true);
+  // Le client de requetes est un singleton de l'app : une ref le garde hors des dependances des
+  // effets qui appellent logout (sinon logout devient reactif et ces effets se relancent).
+  const queryClientRef = useRef(useQueryClient());
 
   const logout = async (): Promise<void> => {
     socketService.disconnect();
     await TokenService.clearTokens();
+    // Les listes en cache (ranking, wishlist, profil...) appartiennent au compte qui part : sans
+    // ce vidage, le compte suivant les afficherait jusqu'au prochain refetch.
+    queryClientRef.current.clear();
     setUserId(null);
     setRole(null);
   };
