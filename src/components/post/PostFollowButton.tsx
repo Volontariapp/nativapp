@@ -10,9 +10,17 @@ import type { AppTheme } from '@/shared/themes/theme';
 
 export interface PostFollowButtonProps {
   authorId: string;
+  /**
+   * Etat de suivi deja connu de l'appelant (ex. liste de mes abonnements). Quand il est fourni, le
+   * bouton ne l'interroge pas au serveur : une liste de N personnes ne lance pas N requetes.
+   */
+  knownIsFollowing?: boolean;
 }
 
-export function PostFollowButton({ authorId }: PostFollowButtonProps): React.JSX.Element | null {
+export function PostFollowButton({
+  authorId,
+  knownIsFollowing,
+}: PostFollowButtonProps): React.JSX.Element | null {
   const styles = useStyles(createStyles);
   const auth = useContext(AuthContext);
   const currentUserId = auth?.userId;
@@ -24,7 +32,7 @@ export function PostFollowButton({ authorId }: PostFollowButtonProps): React.JSX
 
   const { data: isFollowingData, isLoading: isQueryLoading } = useGetIsFollowing(
     authorId,
-    isEnabled,
+    isEnabled && knownIsFollowing === undefined,
   );
   const { follow, unfollow, isFollowingPending, isUnfollowingPending } = useUserSocialActions();
 
@@ -37,7 +45,7 @@ export function PostFollowButton({ authorId }: PostFollowButtonProps): React.JSX
     return null;
   }
 
-  const serverIsFollowing = isFollowingData?.isFollowing ?? false;
+  const serverIsFollowing = knownIsFollowing ?? isFollowingData?.isFollowing ?? false;
   const isFollowing =
     overrideState?.serverWas === serverIsFollowing ? overrideState.value : serverIsFollowing;
 

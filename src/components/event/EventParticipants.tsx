@@ -1,4 +1,4 @@
-import React, { useMemo } from 'react';
+import React, { useCallback, useMemo, useState } from 'react';
 import { View, StyleSheet, Pressable } from 'react-native';
 import type { DimensionValue } from 'react-native';
 import { AppText } from '@/components/typography/AppText';
@@ -8,6 +8,7 @@ import { useEventParticipants } from '@/api/user/hooks/use-event-participants';
 import { resolveAvatarUrl } from '@/api/user/resolve-avatar-url';
 import type { AppTheme } from '@/shared/themes/theme';
 import type { AppEvent } from '@/api/event/event.api';
+import { EventParticipantsModal } from './EventParticipantsModal';
 
 const MAX_DISPLAYED_AVATARS = 5;
 
@@ -23,6 +24,21 @@ export const EventParticipants = React.memo(function EventParticipants({
   const { theme } = useAppTheme();
   const styles = useStyles(createStyles);
   const { data: participants } = useEventParticipants(event.id);
+  // La liste complete n'est montee (et ne charge rien) qu'a la premiere ouverture, puis gardee
+  // montee pour que la fermeture garde son animation.
+  const [hasOpenedList, setHasOpenedList] = useState(false);
+  const [isListOpen, setIsListOpen] = useState(false);
+  const openList = useCallback(() => {
+    if (onSeeMorePress !== undefined) {
+      onSeeMorePress();
+      return;
+    }
+    setHasOpenedList(true);
+    setIsListOpen(true);
+  }, [onSeeMorePress]);
+  const closeList = useCallback(() => {
+    setIsListOpen(false);
+  }, []);
   const { currentPart, maxPart, fillPercentage } = useMemo(() => {
     const current = Math.max(1, event.currentParticipants);
     const max = event.maxParticipants;
@@ -45,7 +61,7 @@ export const EventParticipants = React.memo(function EventParticipants({
         <AppText style={styles.title}>Participants</AppText>
 
         <Pressable
-          onPress={onSeeMorePress}
+          onPress={openList}
           hitSlop={{ top: 15, bottom: 15, left: 15, right: 15 }}
           accessibilityRole="button"
           accessibilityLabel="Voir tous les participants"
@@ -55,7 +71,13 @@ export const EventParticipants = React.memo(function EventParticipants({
         </Pressable>
       </View>
 
-      <View style={styles.contentRow}>
+      <Pressable
+        testID="event-participants-preview"
+        onPress={openList}
+        accessibilityRole="button"
+        accessibilityLabel="Voir la liste des participants"
+        style={styles.contentRow}
+      >
         <View style={styles.avatarsContainer}>
           {slots.map((participant, i) => (
             <UserAvatar
@@ -78,7 +100,7 @@ export const EventParticipants = React.memo(function EventParticipants({
           </AppText>
           <AppText style={styles.statsSubtext}>places remplies</AppText>
         </View>
-      </View>
+      </Pressable>
 
       <View style={styles.progressBarBg}>
         <View
@@ -88,6 +110,10 @@ export const EventParticipants = React.memo(function EventParticipants({
           ]}
         />
       </View>
+
+      {hasOpenedList && (
+        <EventParticipantsModal eventId={event.id} visible={isListOpen} onClose={closeList} />
+      )}
     </View>
   );
 });
