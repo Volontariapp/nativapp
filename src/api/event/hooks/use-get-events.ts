@@ -4,7 +4,15 @@ import type { SearchEventsRequest } from '@volontariapp/contracts';
 
 const EVENTS_QUERY_KEY = ['events'] as const;
 
-export const useGetEvents = (params?: Partial<SearchEventsRequest> & { organizerId?: string }) => {
+interface UseGetEventsOptions {
+  /** false : la requete attend (ex. position de l'utilisateur pas encore connue). */
+  enabled?: boolean;
+}
+
+export const useGetEvents = (
+  params?: Partial<SearchEventsRequest> & { organizerId?: string },
+  options?: UseGetEventsOptions,
+) => {
   return useInfiniteQuery({
     queryKey: [...EVENTS_QUERY_KEY, params],
     queryFn: async ({ pageParam }) => {
@@ -20,6 +28,7 @@ export const useGetEvents = (params?: Partial<SearchEventsRequest> & { organizer
         throw err;
       }
     },
+    enabled: options?.enabled ?? true,
     initialPageParam: 1,
     getNextPageParam: (lastPage, allPages) => {
       const currentCount = allPages.reduce((acc, page) => acc + page.events.length, 0);
