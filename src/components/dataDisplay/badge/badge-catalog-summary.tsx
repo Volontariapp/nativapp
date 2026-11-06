@@ -3,16 +3,20 @@ import { StyleSheet, View } from 'react-native';
 import { AppText } from '@/components/typography/AppText';
 import { useStyles } from '@/context/ThemeContext';
 import type { AppTheme } from '@/shared/themes/theme';
+import { BadgeProgressBar } from './badge-progress-bar';
 
 interface BadgeCatalogSummaryProps {
   unlockedCount: number;
   total: number;
+  /** Points déjà gagnés grâce aux badges ; masqué tant que la progression n'est pas connue. */
+  earnedPoints?: number;
 }
 
 /** Carte de synthèse du catalogue : « 2 / 13 débloqués » et barre de progression. */
 export const BadgeCatalogSummary = ({
   unlockedCount,
   total,
+  earnedPoints,
 }: BadgeCatalogSummaryProps): React.JSX.Element => {
   const styles = useStyles(createStyles);
   const ratio = total === 0 ? 0 : unlockedCount / total;
@@ -25,10 +29,10 @@ export const BadgeCatalogSummary = ({
       <AppText style={styles.hint}>
         Chaque badge récompense une action précise : voici comment obtenir ceux qu'il te reste.
       </AppText>
-      <View style={styles.track}>
-        <View testID="badge-catalog-progress" style={[styles.fill, { flex: ratio }]} />
-        <View style={{ flex: 1 - ratio }} />
-      </View>
+      {earnedPoints !== undefined && (
+        <AppText style={styles.points}>{`${String(earnedPoints)} points gagnés`}</AppText>
+      )}
+      <BadgeProgressBar ratio={ratio} testID="badge-catalog-progress" />
     </View>
   );
 };
@@ -52,15 +56,9 @@ const createStyles = (theme: AppTheme) =>
       fontSize: theme.typography.fontSize.sm,
       color: theme.colors.grey,
     },
-    track: {
-      flexDirection: 'row',
-      height: theme.spacing.sm,
-      borderRadius: theme.radius.full,
-      backgroundColor: theme.colors.lightGrey,
-      overflow: 'hidden',
-    },
-    fill: {
-      borderRadius: theme.radius.full,
-      backgroundColor: theme.colors.primaryEco,
+    points: {
+      fontSize: theme.typography.fontSize.md,
+      fontWeight: theme.typography.fontWeight.semibold,
+      color: theme.colors.badgeGreen,
     },
   });

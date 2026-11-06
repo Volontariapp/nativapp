@@ -30,6 +30,7 @@ import { RANKING_EVENTS_QUERY_KEY } from '@/api/ranking/hooks/use-ranking-events
 import { RANKING_FEED_QUERY_KEY } from '@/api/ranking/hooks/use-ranking-feed';
 import { invalidateLikesSummary } from '@/api/social/likes-summary.cache';
 import { PROFILE_QUERY_KEY } from '@/api/user/hooks/use-profile';
+import { BADGE_PROGRESS_QUERY_KEY } from '@/api/user/hooks/use-badge-progress';
 import { authExpiredBus, badgeAwardedBus, syncPendingBus } from '../services/event-bus.service';
 
 const EVENT_LISTS_DEBOUNCE_MS = 500;
@@ -214,6 +215,9 @@ export const useNotificationHandlers = (
     const handleUserBadgeAwarded = (data: IUserBadgeAwardedWebsocketPayload): void => {
       void queryClient.invalidateQueries({
         queryKey: PROFILE_QUERY_KEY,
+      });
+      void queryClient.invalidateQueries({
+        queryKey: BADGE_PROGRESS_QUERY_KEY,
       });
 
       if (data.badges.length > 0) {

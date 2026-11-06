@@ -10,6 +10,7 @@ import type {
   BadgeCatalogSection,
 } from '@/components/dataDisplay/badge/badge-catalog.types';
 import { useProfile } from '@/api/user/hooks/use-profile';
+import { useBadgeProgress } from '@/api/user/hooks/use-badge-progress';
 import { useStyles } from '@/context/ThemeContext';
 import type { AppTheme } from '@/shared/themes/theme';
 
@@ -23,7 +24,11 @@ const renderItem = ({ item }: { item: BadgeCatalogEntry }): React.JSX.Element =>
 export function BadgesScreen(): React.JSX.Element {
   const styles = useStyles(createStyles);
   const { data: profile } = useProfile();
-  const catalog = useMemo(() => buildBadgeCatalog(profile?.badges ?? []), [profile?.badges]);
+  const { data: progress } = useBadgeProgress();
+  const catalog = useMemo(
+    () => buildBadgeCatalog(profile?.badges ?? [], progress ?? []),
+    [profile?.badges, progress],
+  );
   // Catalogue court et fixe : tout rendre d'emblée (lignes, en-têtes de section et en-tête de liste comptent).
   const initialRowCount = catalog.total + catalog.sections.length + 1;
 
@@ -48,7 +53,11 @@ export function BadgesScreen(): React.JSX.Element {
         ListHeaderComponent={
           <View style={styles.intro}>
             <AppText variant="title">Les badges</AppText>
-            <BadgeCatalogSummary unlockedCount={catalog.unlockedCount} total={catalog.total} />
+            <BadgeCatalogSummary
+              unlockedCount={catalog.unlockedCount}
+              total={catalog.total}
+              earnedPoints={progress !== undefined ? catalog.earnedPoints : undefined}
+            />
           </View>
         }
       />

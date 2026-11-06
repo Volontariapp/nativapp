@@ -28,6 +28,7 @@ import { BADGE_REGISTRY } from '@/components/dataDisplay/badge/badge.config';
 import { BadgeMedallion } from '@/components/dataDisplay/badge/badge-medallion';
 import type { BadgeVariant } from '@/components/dataDisplay/badge/badge.types';
 import type { IconLibrary } from '@/shared/types/components';
+import { BadgePointsReward } from './badge-points-reward';
 
 export interface BadgeCelebrationModalProps {
   visible: boolean;
@@ -36,6 +37,8 @@ export interface BadgeCelebrationModalProps {
   badgeIcon?: string;
   iconLibrary?: IconLibrary;
   description?: string;
+  /** Points crédités pour ce badge ; absent tant que les points ne sont pas activés côté serveur. */
+  points?: number;
   onClose: () => void;
   testID?: string;
 }
@@ -105,6 +108,7 @@ export function BadgeCelebrationModal({
   badgeIcon,
   iconLibrary,
   description,
+  points,
   onClose,
   testID = 'badge-celebration-modal',
 }: BadgeCelebrationModalProps): React.JSX.Element {
@@ -296,6 +300,8 @@ export function BadgeCelebrationModal({
                 </AppText>
               </View>
             )}
+
+            {points !== undefined && points > 0 && <BadgePointsReward points={points} />}
           </View>
 
           <View style={styles.footer}>

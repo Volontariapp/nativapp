@@ -20,6 +20,7 @@ import type {
   ListUsersWebResponse,
   GetEventParticipantsWebRequest,
   GetPostLikersWebRequest,
+  GetMyBadgeProgressWebResponse,
 } from '@volontariapp/contracts';
 
 export const USER_ENDPOINTS = {
@@ -141,6 +142,12 @@ export const USER_ENDPOINTS = {
     requiresAuth: true,
     roles: [UserRoles.ORGANIZATION, UserRoles.VOLUNTEER, UserRoles.ADMIN],
   } as EndpointDefinition<void, UserWebResponse>,
+  GET_MY_BADGE_PROGRESS: {
+    path: '/users/me/badges/progress',
+    method: 'GET',
+    requiresAuth: true,
+    roles: [UserRoles.ORGANIZATION, UserRoles.VOLUNTEER, UserRoles.ADMIN],
+  } as EndpointDefinition<void, GetMyBadgeProgressWebResponse>,
   GET_EVENT_PARTICIPANTS: {
     path: '/users/event/:eventId/participants',
     method: 'GET',

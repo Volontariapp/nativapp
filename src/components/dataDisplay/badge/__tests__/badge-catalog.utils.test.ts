@@ -17,6 +17,7 @@ describe('buildBadgeCatalog', () => {
         slug: 'COMMUNITY_POST_COUNT_1',
         name: 'Première Plume',
         description: 'Poster 1 post',
+        points: 100,
       },
     ]);
 

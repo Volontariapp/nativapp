@@ -21,6 +21,12 @@ import { BadgeCelebrationModal } from '@/components/feedback/BadgeCelebrationMod
 import { BADGE_REGISTRY } from '@/components/dataDisplay/badge/badge.config';
 import type { BadgeVariant } from '@/components/dataDisplay/badge/badge.types';
 
+/** Badge montré dans la modale de félicitations, avec les points crédités s'il y en a. */
+interface AwardedBadge {
+  variant: BadgeVariant;
+  points?: number;
+}
+
 interface NotificationContextType {
   showNotification: (message: string) => void;
 }
@@ -32,17 +38,16 @@ const NotificationContext = createContext<NotificationContextType>({
 export const NotificationProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [message, setMessage] = useState<string | null>(null);
   const isSyncing = useSyncPendingIndicator();
-  const [awardedBadge, setAwardedBadge] = useState<BadgeVariant | null>(null);
+  const [awardedBadge, setAwardedBadge] = useState<AwardedBadge | null>(null);
   const translateY = useSharedValue(-150);
   const { socket } = useSocket();
   const insets = useSafeAreaInsets();
 
   React.useEffect(() => {
     const unsubscribeBadge = badgeAwardedBus.subscribe((badges) => {
-      const firstValidSlug = badges.find((b) => b.slug in BADGE_REGISTRY)?.slug as
-        BadgeVariant | undefined;
-      if (firstValidSlug) {
-        setAwardedBadge(firstValidSlug);
+      const first = badges.find((b) => b.slug in BADGE_REGISTRY);
+      if (first) {
+        setAwardedBadge({ variant: first.slug as BadgeVariant, points: first.points });
       }
     });
     return () => {
@@ -98,7 +103,8 @@ export const NotificationProvider: React.FC<{ children: React.ReactNode }> = ({ 
       {awardedBadge != null && (
         <BadgeCelebrationModal
           visible={true}
-          variant={awardedBadge}
+          variant={awardedBadge.variant}
+          points={awardedBadge.points}
           onClose={() => {
             setAwardedBadge(null);
           }}
