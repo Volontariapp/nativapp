@@ -20,10 +20,14 @@ import {
   type IPostUnlikedWebsocketPayload,
   type IUserBadgeAwardedWebsocketPayload,
   type IUserImpactScoreCreditedWebsocketPayload,
+  type IRankingReadyWebsocketPayload,
+  type RankingReadyListKind,
   WebsocketMessagingType,
 } from '@volontariapp/messaging';
 import { COMMENTS_LIST_QUERY_KEY } from '@/api/post/hooks/use-list-comments';
 import { invalidateEventLists } from '@/api/event/event-cache';
+import { RANKING_EVENTS_QUERY_KEY } from '@/api/ranking/hooks/use-ranking-events';
+import { RANKING_FEED_QUERY_KEY } from '@/api/ranking/hooks/use-ranking-feed';
 import { invalidateLikesSummary } from '@/api/social/likes-summary.cache';
 import { PROFILE_QUERY_KEY } from '@/api/user/hooks/use-profile';
 import { authExpiredBus, badgeAwardedBus, syncPendingBus } from '../services/event-bus.service';
@@ -37,6 +41,7 @@ export const useNotificationHandlers = (
   const queryClient = useQueryClient();
   const notifyRef = useRef(showNotification);
   const rankingDebounceTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const rankingReadyKindsRef = useRef<Set<RankingReadyListKind>>(new Set());
   const eventListsTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const rankingAlsoStaleRef = useRef(false);
   useEffect(() => {
@@ -64,12 +69,24 @@ export const useNotificationHandlers = (
       }, EVENT_LISTS_DEBOUNCE_MS);
     };
 
-    const handleRankingReady = (): void => {
+    const handleRankingReady = (data?: IRankingReadyWebsocketPayload): void => {
+      // `listKind` absent : emetteur ancien, on ne sait pas quelle liste est prete, donc les deux.
+      const kinds: readonly RankingReadyListKind[] =
+        data?.listKind === undefined ? ['EVENT', 'POST'] : [data.listKind];
+      kinds.forEach((kind) => rankingReadyKindsRef.current.add(kind));
       if (rankingDebounceTimerRef.current != null) {
         clearTimeout(rankingDebounceTimerRef.current);
       }
       rankingDebounceTimerRef.current = setTimeout(() => {
-        void queryClient.invalidateQueries({ queryKey: ['ranking'] });
+        const ready = rankingReadyKindsRef.current;
+        rankingReadyKindsRef.current = new Set();
+        if (ready.has('EVENT') && ready.has('POST')) {
+          void queryClient.invalidateQueries({ queryKey: ['ranking'] });
+        } else if (ready.has('EVENT')) {
+          void queryClient.invalidateQueries({ queryKey: RANKING_EVENTS_QUERY_KEY });
+        } else if (ready.has('POST')) {
+          void queryClient.invalidateQueries({ queryKey: RANKING_FEED_QUERY_KEY });
+        }
       }, 1000);
     };
 
@@ -345,6 +362,7 @@ export const useNotificationHandlers = (
         clearTimeout(rankingDebounceTimerRef.current);
         rankingDebounceTimerRef.current = null;
       }
+      rankingReadyKindsRef.current = new Set();
       if (eventListsTimerRef.current != null) {
         clearTimeout(eventListsTimerRef.current);
         eventListsTimerRef.current = null;

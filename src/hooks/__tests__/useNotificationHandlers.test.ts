@@ -148,6 +148,69 @@ describe('useNotificationHandlers', () => {
     }
   });
 
+  describe('RANKING_READY list kind', () => {
+    const readyKeys = (): unknown[] =>
+      mockInvalidateQueries.mock.calls.map(([arg]) => (arg as { queryKey: unknown }).queryKey);
+
+    const fire = (...payloads: unknown[]): void => {
+      renderHook(() => {
+        useNotificationHandlers(mockSocket as unknown as Socket, showNotificationMock);
+      });
+      const handler = listeners[WebsocketMessagingType.RANKING_READY];
+      payloads.forEach((payload) => handler?.(payload));
+      jest.advanceTimersByTime(1000);
+    };
+
+    beforeEach(() => {
+      jest.useFakeTimers();
+    });
+
+    afterEach(() => {
+      jest.useRealTimers();
+    });
+
+    it('refreshes only the event list when the event list is ready', () => {
+      fire({ listKind: 'EVENT' });
+
+      expect(readyKeys()).toEqual([['ranking', 'events']]);
+    });
+
+    it('refreshes only the post feed when the feed is ready', () => {
+      fire({ listKind: 'POST' });
+
+      expect(readyKeys()).toEqual([['ranking', 'feed']]);
+    });
+
+    it('refreshes both lists when the emitter does not say which one (older emitter)', () => {
+      fire({});
+
+      expect(readyKeys()).toEqual([['ranking']]);
+    });
+
+    it('refreshes both lists when both are announced within the same second', () => {
+      fire({ listKind: 'EVENT' }, { listKind: 'POST' });
+
+      expect(readyKeys()).toEqual([['ranking']]);
+    });
+
+    it('forgets what was refreshed once the debounce fired', () => {
+      renderHook(() => {
+        useNotificationHandlers(mockSocket as unknown as Socket, showNotificationMock);
+      });
+      const handler = listeners[WebsocketMessagingType.RANKING_READY];
+
+      handler?.({ listKind: 'EVENT' });
+      jest.advanceTimersByTime(1000);
+      handler?.({ listKind: 'POST' });
+      jest.advanceTimersByTime(1000);
+
+      expect(readyKeys()).toEqual([
+        ['ranking', 'events'],
+        ['ranking', 'feed'],
+      ]);
+    });
+  });
+
   it('should unsubscribe the RANKING_READY handler on unmount', () => {
     const { unmount } = renderHook(() => {
       useNotificationHandlers(mockSocket as unknown as Socket, showNotificationMock);
