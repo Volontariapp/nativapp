@@ -157,4 +157,44 @@ describe('PostFollowButton', () => {
     expect(getByTestId('post-follow-button')).toBeTruthy();
     expect(getByText('Suivre')).toBeTruthy();
   });
+
+  describe('when the follow state is already known', () => {
+    it('does not ask the server and shows the known state', () => {
+      mockUseGetIsFollowing.mockReturnValue({ data: undefined, isLoading: false });
+
+      const { getByText } = render(
+        <PostFollowButton authorId="target-user-1" knownIsFollowing />,
+        { wrapper: createWrapper('current-user-1') },
+      );
+
+      expect(mockUseGetIsFollowing).toHaveBeenCalledWith('target-user-1', false);
+      expect(getByText('Suivi')).toBeTruthy();
+    });
+
+    it('offers to follow when the known state is not following, and follows on press', async () => {
+      mockUseGetIsFollowing.mockReturnValue({ data: undefined, isLoading: false });
+
+      const { getByText, getByTestId } = render(
+        <PostFollowButton authorId="target-user-1" knownIsFollowing={false} />,
+        { wrapper: createWrapper('current-user-1') },
+      );
+      expect(getByText('Suivre')).toBeTruthy();
+
+      fireEvent.press(getByTestId('post-follow-button'));
+
+      await waitFor(() => {
+        expect(mockFollow).toHaveBeenCalledWith('target-user-1');
+      });
+    });
+
+    it('still asks the server when nothing is known', () => {
+      mockUseGetIsFollowing.mockReturnValue({ data: { isFollowing: false }, isLoading: false });
+
+      render(<PostFollowButton authorId="target-user-1" />, {
+        wrapper: createWrapper('current-user-1'),
+      });
+
+      expect(mockUseGetIsFollowing).toHaveBeenCalledWith('target-user-1', true);
+    });
+  });
 });

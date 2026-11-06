@@ -2,6 +2,7 @@ import { EventState, type SearchEventsRequest } from '@volontariapp/contracts';
 import type { AppEvent } from '@/api/event/event.api';
 import type { UserCoordinates } from '@/hooks/use-location';
 import { calculateDistanceInKm } from '@/shared/lib/location.utils';
+import { shouldLoadNextPage } from '@/shared/lib/paging.utils';
 
 /** Taille d'une page de la carte. Les pages suivantes sont chargees automatiquement. */
 export const MAP_EVENTS_PAGE_LIMIT = 50;
@@ -64,9 +65,5 @@ interface MapPagingState {
 }
 
 /** La carte charge seule les pages suivantes, dans la limite de `MAP_EVENTS_MAX_PAGES`. */
-export const shouldLoadMoreMapEvents = ({
-  hasNextPage,
-  isFetchingNextPage,
-  loadedPages,
-}: MapPagingState): boolean =>
-  hasNextPage && !isFetchingNextPage && loadedPages < MAP_EVENTS_MAX_PAGES;
+export const shouldLoadMoreMapEvents = (state: MapPagingState): boolean =>
+  shouldLoadNextPage({ ...state, maxPages: MAP_EVENTS_MAX_PAGES });
