@@ -11,39 +11,37 @@ const SYNC_PENDING_TIMEOUT_MS = 20_000;
 /** Etat de l'indicateur de synchronisation, allume par un 206 et eteint par un evenement, un delai ou la fin de session. */
 export const useSyncPendingIndicator = (): boolean => {
   const [isSyncing, setIsSyncing] = useState(false);
+  // Incremente a chaque nouveau 206 : relance le compte a rebours meme si l'indicateur est deja allume.
+  const [signalCount, setSignalCount] = useState(0);
 
   useEffect(() => {
-    let timer: ReturnType<typeof setTimeout> | null = null;
-
-    const stop = (): void => {
-      if (timer !== null) {
-        clearTimeout(timer);
-        timer = null;
-      }
-      setIsSyncing(false);
-    };
-
     const unsubscribeSync = syncPendingBus.subscribe((pending) => {
-      if (!pending) {
-        stop();
-        return;
+      setIsSyncing(pending);
+      if (pending) {
+        setSignalCount((count) => count + 1);
       }
-      if (timer !== null) {
-        clearTimeout(timer);
-      }
-      setIsSyncing(true);
-      timer = setTimeout(stop, SYNC_PENDING_TIMEOUT_MS);
     });
-    const unsubscribeAuth = authExpiredBus.subscribe(stop);
+    const unsubscribeAuth = authExpiredBus.subscribe(() => {
+      setIsSyncing(false);
+    });
 
     return (): void => {
-      if (timer !== null) {
-        clearTimeout(timer);
-      }
       unsubscribeSync();
       unsubscribeAuth();
     };
   }, []);
+
+  useEffect(() => {
+    if (!isSyncing) {
+      return undefined;
+    }
+    const timer = setTimeout(() => {
+      setIsSyncing(false);
+    }, SYNC_PENDING_TIMEOUT_MS);
+    return (): void => {
+      clearTimeout(timer);
+    };
+  }, [isSyncing, signalCount]);
 
   return isSyncing;
 };
