@@ -6,6 +6,10 @@ import { MY_FOLLOWS_QUERY_KEY } from './use-get-my-follows';
 import { GET_IS_FOLLOWING_QUERY_KEY } from './use-get-is-following';
 import { FOLLOWS_QUERY_KEY } from './use-get-follows';
 import { FOLLOWERS_QUERY_KEY } from './use-get-followers';
+import {
+  removeWishedEventOptimistically,
+  scheduleWishlistRefresh,
+} from '../wishlist-cache';
 const WISHES_QUERY_KEY = ['user-wishes'];
 
 /**
@@ -18,39 +22,16 @@ export const useUserSocialActions = () => {
   const participateMutation = useMutation({
     mutationFn: async (eventId: string) => {
       const result = await socialApi.participate(eventId);
-      // Un événement auquel on participe ne doit plus rester dans la wishlist (retrait idempotent)
+      // Un événement auquel on participe ne doit plus rester dans la wishlist (retrait idempotent).
+      // Un échec ici n'annule pas la participation : le rechargement de la wishlist le reflète.
       await socialApi.unwishEvent(eventId).catch(() => undefined);
       return result;
     },
     onMutate: async (eventId: string) => {
       markEventHandled(queryClient, eventId);
-      await queryClient.cancelQueries({ queryKey: ['wished-events'] });
       await queryClient.cancelQueries({ queryKey: ['participated-events'] });
-      const previousWished = queryClient.getQueriesData({ queryKey: ['wished-events'] });
-
       // Retrait optimiste immédiat de la wishlist lors d'une participation
-      queryClient.setQueriesData({ queryKey: ['wished-events'] }, (old: unknown) => {
-        const typedOld = old as
-          { pages?: Array<{ totalCount?: number; events: Array<{ id: string }> }> } | undefined;
-        if (!typedOld?.pages) return old;
-        return {
-          ...typedOld,
-          pages: typedOld.pages.map((page) => ({
-            ...page,
-            totalCount: Math.max(0, (page.totalCount ?? 1) - 1),
-            events: page.events.filter((e) => e.id !== eventId),
-          })),
-        };
-      });
-
-      return { previousWished };
-    },
-    onError: (_err, _eventId, context) => {
-      if (context?.previousWished) {
-        context.previousWished.forEach(([key, val]) => {
-          queryClient.setQueryData(key, val);
-        });
-      }
+      await removeWishedEventOptimistically(queryClient, eventId);
     },
     onSuccess: () => {
       void queryClient.invalidateQueries({
@@ -58,8 +39,11 @@ export const useUserSocialActions = () => {
         refetchType: 'none',
       });
       void queryClient.invalidateQueries({ queryKey: ['participated-events'] });
-      void queryClient.invalidateQueries({ queryKey: ['wished-events'], refetchType: 'none' });
       void queryClient.invalidateQueries({ queryKey: ['events'], refetchType: 'none' });
+    },
+    // Succès comme échec : le serveur a le dernier mot sur le contenu de la wishlist.
+    onSettled: () => {
+      scheduleWishlistRefresh(queryClient);
     },
   });
 
@@ -70,10 +54,8 @@ export const useUserSocialActions = () => {
         queryKey: PARTICIPATIONS_QUERY_KEY,
         refetchType: 'none',
       });
-      void queryClient.invalidateQueries({
-        queryKey: ['participated-events'],
-        refetchType: 'none',
-      });
+      // La liste "En cours" doit perdre l'événement tout de suite, pas au prochain montage.
+      void queryClient.invalidateQueries({ queryKey: ['participated-events'] });
       void queryClient.invalidateQueries({ queryKey: ['events'], refetchType: 'none' });
     },
   });
@@ -85,43 +67,23 @@ export const useUserSocialActions = () => {
     },
     onSuccess: () => {
       void queryClient.invalidateQueries({ queryKey: WISHES_QUERY_KEY });
-      void queryClient.invalidateQueries({ queryKey: ['wished-events'] });
+    },
+    onSettled: () => {
+      scheduleWishlistRefresh(queryClient);
     },
   });
 
   const unwishMutation = useMutation({
     mutationFn: (eventId: string) => socialApi.unwishEvent(eventId),
     onMutate: async (eventId: string) => {
-      await queryClient.cancelQueries({ queryKey: ['wished-events'] });
-      const previousWished = queryClient.getQueriesData({ queryKey: ['wished-events'] });
-
       // Retrait optimiste immédiat de la wishlist pour temps réel
-      queryClient.setQueriesData({ queryKey: ['wished-events'] }, (old: unknown) => {
-        const typedOld = old as
-          { pages?: Array<{ totalCount?: number; events: Array<{ id: string }> }> } | undefined;
-        if (!typedOld?.pages) return old;
-        return {
-          ...typedOld,
-          pages: typedOld.pages.map((page) => ({
-            ...page,
-            totalCount: Math.max(0, (page.totalCount ?? 1) - 1),
-            events: page.events.filter((e) => e.id !== eventId),
-          })),
-        };
-      });
-
-      return { previousWished };
-    },
-    onError: (_err, _eventId, context) => {
-      if (context?.previousWished) {
-        context.previousWished.forEach(([key, val]) => {
-          queryClient.setQueryData(key, val);
-        });
-      }
+      await removeWishedEventOptimistically(queryClient, eventId);
     },
     onSuccess: () => {
       void queryClient.invalidateQueries({ queryKey: WISHES_QUERY_KEY });
-      void queryClient.invalidateQueries({ queryKey: ['wished-events'], refetchType: 'none' });
+    },
+    onSettled: () => {
+      scheduleWishlistRefresh(queryClient);
     },
   });
 

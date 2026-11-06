@@ -93,6 +93,10 @@ describe('SocketProvider', () => {
         ['ranking'],
         ['post-likers'],
         ['comments-list'],
+        ['events'],
+        ['my-events'],
+        ['wished-events'],
+        ['participated-events'],
       ]),
     );
     RESYNC_QUERY_KEYS.forEach((queryKey) => {

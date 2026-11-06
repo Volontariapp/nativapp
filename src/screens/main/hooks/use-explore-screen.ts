@@ -10,10 +10,19 @@ import type { AppEvent } from '@/api/event/event.api';
 import { useGetEvents } from '@/api/event/hooks/use-get-events';
 import { useLocation } from '@/hooks/use-location';
 import type { UserCoordinates } from '@/hooks/use-location';
-import { EventState, EventType } from '@volontariapp/contracts';
-import { calculateDistanceInKm } from '@/shared/lib/location.utils';
+import { EventType } from '@volontariapp/contracts';
 import type { EventCategoryFilter } from '@/components/map/MapFilterBar';
 import { dedupeById } from '@/shared/utils/dedupe-by-id';
+import { useElapsed } from '@/hooks/use-elapsed';
+import {
+  buildExploreSearchParams,
+  isWithinDistance,
+  shouldLoadMoreMapEvents,
+} from './explore-search.utils';
+
+const DEFAULT_DISTANCE_KM = 5;
+/** Attente maximale de la position avant de chercher sans zone. */
+const LOCATION_WAIT_MS = 4000;
 
 // ─── Navigation Typing ────────────────────────────────────────────────────────
 // ExploreScreen vit dans un tab ("explorer") ET dans une stack (MainStack).
@@ -72,24 +81,44 @@ export function useExploreScreen(): UseExploreScreenResult {
 
   const { coordinates: userCoordinates, isPermissionDenied } = useLocation();
 
-  const centerLat = initialLocation?.latitude ?? userCoordinates?.latitude;
-  const centerLon = initialLocation?.longitude ?? userCoordinates?.longitude;
+  const [selectedDistance, setSelectedDistance] = useState<number | null>(DEFAULT_DISTANCE_KM);
 
-  const { data: eventsData, isLoading } = useGetEvents({
-    excludeCreatedByMe: true,
-    limit: 50,
-    statuses: [EventState.EVENT_STATE_PUBLISHED, EventState.EVENT_STATE_DRAFT],
-    ...(centerLat !== undefined &&
-      centerLon !== undefined && {
-        area: {
-          center: {
-            latitude: centerLat,
-            longitude: centerLon,
-          },
-          radiusMeters: 50000,
-        },
-      }),
-  });
+  // Meme centre pour la recherche serveur et pour le filtre de distance. Memorise sur ses
+  // coordonnees : `useLocation` recree son objet a chaque rendu.
+  const centerLatitude = (initialLocation ?? userCoordinates)?.latitude;
+  const centerLongitude = (initialLocation ?? userCoordinates)?.longitude;
+  const center = useMemo<UserCoordinates | undefined>(
+    () =>
+      centerLatitude !== undefined && centerLongitude !== undefined
+        ? { latitude: centerLatitude, longitude: centerLongitude }
+        : undefined,
+    [centerLatitude, centerLongitude],
+  );
+
+  // Sans position (GPS lent ou en echec), on n'attend pas indefiniment : la recherche part sans zone.
+  const hasWaitedForLocation = useElapsed(LOCATION_WAIT_MS);
+  const canSearch = center !== undefined || isPermissionDenied || hasWaitedForLocation;
+
+  const searchParams = useMemo(
+    () => buildExploreSearchParams({ center, distanceKm: selectedDistance }),
+    [center, selectedDistance],
+  );
+
+  const {
+    data: eventsData,
+    isLoading,
+    hasNextPage,
+    isFetchingNextPage,
+    fetchNextPage,
+  } = useGetEvents(searchParams, { enabled: canSearch });
+
+  // La carte affiche tous les events de la zone : les pages suivantes se chargent seules.
+  const loadedPages = eventsData?.pages.length ?? 0;
+  useEffect(() => {
+    if (shouldLoadMoreMapEvents({ hasNextPage, isFetchingNextPage, loadedPages })) {
+      void fetchNextPage();
+    }
+  }, [hasNextPage, isFetchingNextPage, loadedPages, fetchNextPage]);
 
   const events = useMemo(
     () => dedupeById(eventsData?.pages.flatMap((page) => page.events) ?? []),
@@ -107,7 +136,6 @@ export function useExploreScreen(): UseExploreScreenResult {
   const [selectedEvent, setSelectedEvent] = useState<AppEvent | null>(null);
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedCategory, setSelectedCategory] = useState<EventCategoryFilter>('ALL');
-  const [selectedDistance, setSelectedDistance] = useState<number | null>(5);
   const [selectedDate, setSelectedDate] = useState<string | null>(null);
 
   const filteredEvents = useMemo(() => {
@@ -134,16 +162,8 @@ export function useExploreScreen(): UseExploreScreenResult {
         if (!matchesTitle && !matchesLocation && !matchesDesc) return false;
       }
 
-      // Distance filter
-      if (selectedDistance !== null && userCoordinates && event.location) {
-        const distance = calculateDistanceInKm(
-          userCoordinates.latitude,
-          userCoordinates.longitude,
-          event.location.latitude,
-          event.location.longitude,
-        );
-        if (distance > selectedDistance) return false;
-      }
+      // Distance filter (meme centre que la recherche)
+      if (!isWithinDistance(event, center, selectedDistance)) return false;
 
       // Date filter
       if (selectedDate !== null && event.startAt.length > 0) {
@@ -164,7 +184,7 @@ export function useExploreScreen(): UseExploreScreenResult {
 
       return true;
     });
-  }, [events, selectedCategory, searchQuery, selectedDistance, userCoordinates, selectedDate]);
+  }, [events, selectedCategory, searchQuery, selectedDistance, center, selectedDate]);
 
   // Fermer la prévisualisation si l'événement sélectionné est filtré
   useEffect(() => {
@@ -194,7 +214,8 @@ export function useExploreScreen(): UseExploreScreenResult {
 
   return {
     events: filteredEvents,
-    isLoading,
+    // Tant qu'on attend la position, la recherche n'est pas partie : la carte est en chargement.
+    isLoading: isLoading || !canSearch,
     userCoordinates,
     initialLocation,
     mapKey,
