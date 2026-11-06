@@ -11,6 +11,13 @@ jest.mock(
       RANKING_READY: 'ranking.ready',
       POST_LIKED: 'POST_LIKED',
       POST_UNLIKED: 'POST_UNLIKED',
+      EVENT_CREATED: 'event.created',
+      EVENT_DELETED: 'event.deleted',
+      FALLBACK_CREATE_EVENT: 'event.fallback.create_event',
+      FALLBACK_UPDATE_EVENT: 'event.fallback.update_event',
+      FALLBACK_DELETE_EVENT: 'event.fallback.delete_event',
+      FALLBACK_CHANGE_EVENT_STATE: 'event.fallback.change_event_state',
+      FALLBACK_MANAGE_REQUIREMENTS: 'event.fallback.manage_requirements',
     },
   }),
   { virtual: true },
@@ -174,5 +181,107 @@ describe('useNotificationHandlers', () => {
 
     handler?.({ postId: 'p1', isEmitter: true });
     expect(mockInvalidateQueries).toHaveBeenCalledWith({ queryKey: ['my-likes'] });
+  });
+
+  describe('event lists', () => {
+    const EVENT_LIST_KEYS = [['events'], ['my-events'], ['wished-events'], ['participated-events']];
+
+    const invalidatedKeys = (): unknown[] =>
+      mockInvalidateQueries.mock.calls.map(([arg]) => (arg as { queryKey: unknown }).queryKey);
+
+    beforeEach(() => {
+      jest.useFakeTimers();
+    });
+
+    afterEach(() => {
+      jest.useRealTimers();
+    });
+
+    it('refreshes the event lists when someone else creates an event', () => {
+      renderHook(() => {
+        useNotificationHandlers(mockSocket as unknown as Socket, showNotificationMock);
+      });
+
+      listeners[WebsocketMessagingType.EVENT_CREATED]?.({ eventId: 'e1', isEmitter: false });
+      jest.advanceTimersByTime(500);
+
+      expect(invalidatedKeys()).toEqual(expect.arrayContaining(EVENT_LIST_KEYS));
+    });
+
+    it('still shows the toast when an event is created', () => {
+      renderHook(() => {
+        useNotificationHandlers(mockSocket as unknown as Socket, showNotificationMock);
+      });
+
+      listeners[WebsocketMessagingType.EVENT_CREATED]?.({ eventId: 'e1', isEmitter: false });
+
+      expect(showNotificationMock).toHaveBeenCalledWith("Un nouvel évènement vient d'être publié !");
+    });
+
+    it('refreshes the lists, the detail and the ranking when an event is deleted', () => {
+      renderHook(() => {
+        useNotificationHandlers(mockSocket as unknown as Socket, showNotificationMock);
+      });
+
+      listeners[WebsocketMessagingType.EVENT_DELETED]?.({ eventId: 'e1', isEmitter: false });
+      jest.advanceTimersByTime(500);
+
+      expect(invalidatedKeys()).toEqual(
+        expect.arrayContaining([...EVENT_LIST_KEYS, ['event', 'e1'], ['ranking']]),
+      );
+    });
+
+    it('coalesces a burst of events into one refresh of each list', () => {
+      renderHook(() => {
+        useNotificationHandlers(mockSocket as unknown as Socket, showNotificationMock);
+      });
+
+      for (let i = 0; i < 20; i += 1) {
+        listeners[WebsocketMessagingType.EVENT_CREATED]?.({ eventId: `e${String(i)}` });
+      }
+      jest.advanceTimersByTime(500);
+
+      expect(invalidatedKeys().filter((key) => String(key) === 'events')).toHaveLength(1);
+    });
+
+    it.each([
+      ['FALLBACK_CREATE_EVENT', WebsocketMessagingType.FALLBACK_CREATE_EVENT],
+      ['FALLBACK_UPDATE_EVENT', WebsocketMessagingType.FALLBACK_UPDATE_EVENT],
+      ['FALLBACK_DELETE_EVENT', WebsocketMessagingType.FALLBACK_DELETE_EVENT],
+      ['FALLBACK_CHANGE_EVENT_STATE', WebsocketMessagingType.FALLBACK_CHANGE_EVENT_STATE],
+      ['FALLBACK_MANAGE_REQUIREMENTS', WebsocketMessagingType.FALLBACK_MANAGE_REQUIREMENTS],
+    ])('%s refreshes the event lists once the change was applied', (_name, eventType) => {
+      renderHook(() => {
+        useNotificationHandlers(mockSocket as unknown as Socket, showNotificationMock);
+      });
+
+      listeners[eventType]?.({ status: 'SUCCESS' });
+      jest.advanceTimersByTime(500);
+
+      expect(invalidatedKeys()).toEqual(expect.arrayContaining(EVENT_LIST_KEYS));
+    });
+
+    it('leaves the lists alone when a fallback change failed', () => {
+      renderHook(() => {
+        useNotificationHandlers(mockSocket as unknown as Socket, showNotificationMock);
+      });
+
+      listeners[WebsocketMessagingType.FALLBACK_CREATE_EVENT]?.({ status: 'FAILED' });
+      jest.advanceTimersByTime(500);
+
+      expect(mockInvalidateQueries).not.toHaveBeenCalled();
+    });
+
+    it('does not refresh anything after unmount', () => {
+      const { unmount } = renderHook(() => {
+        useNotificationHandlers(mockSocket as unknown as Socket, showNotificationMock);
+      });
+      listeners[WebsocketMessagingType.EVENT_CREATED]?.({ eventId: 'e1' });
+
+      unmount();
+      jest.advanceTimersByTime(500);
+
+      expect(mockInvalidateQueries).not.toHaveBeenCalled();
+    });
   });
 });

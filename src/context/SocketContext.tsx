@@ -2,6 +2,7 @@ import React, { createContext, use, useEffect, useRef, useState, type ReactNode 
 import { AppState } from 'react-native';
 import { useQueryClient } from '@tanstack/react-query';
 import type { Socket } from 'socket.io-client';
+import { EVENT_LIST_QUERY_KEYS } from '@/api/event/event-cache';
 import { COMMENTS_LIST_QUERY_KEY } from '@/api/post/hooks/use-list-comments';
 import { LIKES_SUMMARY_QUERY_KEY } from '@/api/social/likes-summary.cache';
 import { PROFILE_QUERY_KEY } from '@/api/user/hooks/use-profile';
@@ -25,6 +26,7 @@ export const RESYNC_QUERY_KEYS: readonly (readonly unknown[])[] = [
   ['ranking'],
   COMMENTS_LIST_QUERY_KEY,
   ['post-likers'],
+  ...EVENT_LIST_QUERY_KEYS,
 ];
 
 /** Intervalle du filet de securite sur socket.connected (les evenements restent la source principale). */

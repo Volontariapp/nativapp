@@ -23,9 +23,12 @@ import {
   WebsocketMessagingType,
 } from '@volontariapp/messaging';
 import { COMMENTS_LIST_QUERY_KEY } from '@/api/post/hooks/use-list-comments';
+import { invalidateEventLists } from '@/api/event/event-cache';
 import { invalidateLikesSummary } from '@/api/social/likes-summary.cache';
 import { PROFILE_QUERY_KEY } from '@/api/user/hooks/use-profile';
 import { authExpiredBus, badgeAwardedBus, syncPendingBus } from '../services/event-bus.service';
+
+const EVENT_LISTS_DEBOUNCE_MS = 500;
 
 export const useNotificationHandlers = (
   socket: Socket | null,
@@ -34,12 +37,32 @@ export const useNotificationHandlers = (
   const queryClient = useQueryClient();
   const notifyRef = useRef(showNotification);
   const rankingDebounceTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const eventListsTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const rankingAlsoStaleRef = useRef(false);
   useEffect(() => {
     notifyRef.current = showNotification;
   }, [showNotification]);
 
   useEffect(() => {
     if (!socket) return;
+
+    // Rafales (seed, import) : une seule actualisation des listes une fois le flux calme.
+    const refreshEventLists = (options?: { alsoRanking?: boolean }): void => {
+      if (options?.alsoRanking === true) {
+        rankingAlsoStaleRef.current = true;
+      }
+      if (eventListsTimerRef.current != null) {
+        clearTimeout(eventListsTimerRef.current);
+      }
+      eventListsTimerRef.current = setTimeout(() => {
+        eventListsTimerRef.current = null;
+        invalidateEventLists(queryClient);
+        if (rankingAlsoStaleRef.current) {
+          rankingAlsoStaleRef.current = false;
+          void queryClient.invalidateQueries({ queryKey: ['ranking'] });
+        }
+      }, EVENT_LISTS_DEBOUNCE_MS);
+    };
 
     const handleRankingReady = (): void => {
       if (rankingDebounceTimerRef.current != null) {
@@ -122,14 +145,19 @@ export const useNotificationHandlers = (
           ? 'Votre évènement a été créé avec succès !'
           : "Un nouvel évènement vient d'être publié !";
       notifyRef.current(msg);
+      refreshEventLists();
     };
 
-    const handleEventDeleted = (data: { isEmitter?: boolean }): void => {
+    const handleEventDeleted = (data: { eventId?: string; isEmitter?: boolean }): void => {
       const msg =
         data.isEmitter === true
           ? 'Votre évènement a bien été supprimé.'
           : 'Un évènement a été supprimé.';
       notifyRef.current(msg);
+      if (data.eventId !== undefined) {
+        void queryClient.invalidateQueries({ queryKey: ['event', data.eventId] });
+      }
+      refreshEventLists({ alsoRanking: true });
     };
 
     const handleEventFailed = (): void => {
@@ -191,6 +219,9 @@ export const useNotificationHandlers = (
     const handleFallbackCreateEvent = (data: IFallbackCreateEventWebsocketPayload): void => {
       syncPendingBus.emit(false);
       const isSuccess = data.status !== 'FAILED';
+      if (isSuccess) {
+        refreshEventLists();
+      }
       notifyRef.current(
         isSuccess
           ? 'Votre évènement a été synchronisé.'
@@ -200,6 +231,9 @@ export const useNotificationHandlers = (
     const handleFallbackUpdateEvent = (data: IFallbackUpdateEventWebsocketPayload): void => {
       syncPendingBus.emit(false);
       const isSuccess = data.status !== 'FAILED';
+      if (isSuccess) {
+        refreshEventLists();
+      }
       notifyRef.current(
         isSuccess
           ? 'La modification de votre évènement a été synchronisée.'
@@ -209,6 +243,9 @@ export const useNotificationHandlers = (
     const handleFallbackDeleteEvent = (data: IFallbackDeleteEventWebsocketPayload): void => {
       syncPendingBus.emit(false);
       const isSuccess = data.status !== 'FAILED';
+      if (isSuccess) {
+        refreshEventLists();
+      }
       notifyRef.current(
         isSuccess
           ? 'La suppression de votre évènement a été synchronisée.'
@@ -220,6 +257,9 @@ export const useNotificationHandlers = (
     ): void => {
       syncPendingBus.emit(false);
       const isSuccess = data.status !== 'FAILED';
+      if (isSuccess) {
+        refreshEventLists();
+      }
       notifyRef.current(
         isSuccess
           ? 'Le statut de votre évènement a été synchronisé.'
@@ -231,6 +271,9 @@ export const useNotificationHandlers = (
     ): void => {
       syncPendingBus.emit(false);
       const isSuccess = data.status !== 'FAILED';
+      if (isSuccess) {
+        refreshEventLists();
+      }
       notifyRef.current(
         isSuccess
           ? 'Les besoins de votre évènement ont été synchronisés.'
@@ -302,6 +345,11 @@ export const useNotificationHandlers = (
         clearTimeout(rankingDebounceTimerRef.current);
         rankingDebounceTimerRef.current = null;
       }
+      if (eventListsTimerRef.current != null) {
+        clearTimeout(eventListsTimerRef.current);
+        eventListsTimerRef.current = null;
+      }
+      rankingAlsoStaleRef.current = false;
       socket.off(WebsocketMessagingType.POST_CREATED, handlePostCreated);
       socket.off(WebsocketMessagingType.POST_DELETED, handlePostDeleted);
       socket.off(WebsocketMessagingType.POST_CREATION_FAILED, handlePostFailed);
