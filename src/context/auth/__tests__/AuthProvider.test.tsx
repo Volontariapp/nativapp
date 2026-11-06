@@ -1,5 +1,6 @@
-import React from 'react';
+import React, { act } from 'react';
 import { render, waitFor } from '@testing-library/react-native';
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 
 jest.mock('@volontariapp/errors', () => ({}), { virtual: true });
 jest.mock('@volontariapp/shared', () => ({}), { virtual: true });
@@ -11,6 +12,16 @@ import * as jwtDecodeModule from 'jwt-decode';
 import { AuthContext } from '../auth.context';
 
 export const contextSpy = jest.fn();
+
+const renderProvider = (queryClient: QueryClient): void => {
+  void render(
+    <QueryClientProvider client={queryClient}>
+      <AuthProvider>
+        <TestComponent />
+      </AuthProvider>
+    </QueryClientProvider>,
+  );
+};
 
 const TestComponent = () => {
   const context = React.useContext(AuthContext);
@@ -63,11 +74,7 @@ describe('AuthProvider', () => {
       },
     });
 
-    void render(
-      <AuthProvider>
-        <TestComponent />
-      </AuthProvider>,
-    );
+    renderProvider(new QueryClient());
 
     expect(contextSpy).toHaveBeenCalledWith(expect.objectContaining({ isLoading: true }));
 
@@ -101,11 +108,7 @@ describe('AuthProvider', () => {
       return { exp: Date.now() / 1000 - 3600, id: 'user-1', sub: 'user-1' }; // Both expired
     });
 
-    void render(
-      <AuthProvider>
-        <TestComponent />
-      </AuthProvider>,
-    );
+    renderProvider(new QueryClient());
 
     await waitFor(
       () => {
@@ -121,5 +124,25 @@ describe('AuthProvider', () => {
 
     expect(apiFetchSpy).not.toHaveBeenCalled();
     expect(clearTokensSpy).toHaveBeenCalled();
+  });
+
+  it('clears cached server data on logout so the next account never sees the previous one', async () => {
+    getAccessTokenSpy.mockResolvedValue('access-token');
+    getRefreshTokenSpy.mockResolvedValue('refresh-token');
+    jwtDecodeSpy.mockReturnValue({ exp: Date.now() / 1000 + 3600, id: 'user-1', sub: 'user-1' });
+    const queryClient = new QueryClient();
+    queryClient.setQueryData(['wished-events', { limit: 10 }], { pages: [{ events: [] }] });
+
+    renderProvider(queryClient);
+    await waitFor(() => {
+      expect(contextSpy).toHaveBeenCalledWith(expect.objectContaining({ isAuthenticated: true }));
+    });
+    const lastCall = contextSpy.mock.calls.at(-1) as [{ logout: () => Promise<void> }];
+
+    await act(async () => {
+      await lastCall[0].logout();
+    });
+
+    expect(queryClient.getQueryData(['wished-events', { limit: 10 }])).toBeUndefined();
   });
 });

@@ -1,5 +1,6 @@
 import { useInfiniteQuery } from '@tanstack/react-query';
 import { rankingApi, type RankingFeedResult } from '../ranking.api';
+import { fallbackRefetchInterval } from '../ranking-polling';
 
 export const RANKING_FEED_QUERY_KEY = ['ranking', 'feed'] as const;
 
@@ -29,5 +30,8 @@ export const useRankingFeed = (options?: UseRankingFeedOptions) => {
       return undefined;
     },
     enabled: options?.enabled ?? true,
+    // Liste pas encore calculee (206) : on relance jusqu'a ce qu'elle arrive, meme si le
+    // WebSocket `ranking.ready` a ete manque.
+    refetchInterval: fallbackRefetchInterval,
   });
 };

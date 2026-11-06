@@ -14,6 +14,7 @@ import { useGetEvents } from '@/api/event/hooks/use-get-events';
 import { useSwipeEventMemory } from './use-swipe-event-memory';
 import { useUserSocialActions } from '@/api/social/hooks/use-user-social-actions';
 import { useSwipeLocation } from './use-swipe-location';
+import { useOnLeaveFallback } from './use-on-leave-fallback';
 import { useSwipePassFeedback } from './use-swipe-pass-feedback';
 import type { UserCoordinates } from '@/hooks/use-location';
 import { listVersionOf, useSwipeStackReload } from './use-swipe-stack-reload';
@@ -145,6 +146,13 @@ export function useSwipeScreen(): UseSwipeScreenResult {
       refreshExclusions();
       setCurrentIndex(0);
     },
+  });
+
+  // Le polling de secours peut faire arriver la liste ranking pendant qu'on parcourt la pile de
+  // repli : la pile change sous les cartes, on repart donc de la premiere (comme apres un rechargement).
+  useOnLeaveFallback(isFallbackMode, () => {
+    refreshExclusions();
+    setCurrentIndex(0);
   });
 
   const swipeStateRef = useRef({ events, hasNextPage, isFetchingNextPage, fetchNextPage, wish });

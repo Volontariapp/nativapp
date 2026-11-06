@@ -80,7 +80,7 @@ const sendRequest = async <TResponse>(
     timeout: REQUEST_TIMEOUT_MS,
   });
 
-  if (response.status === 206) {
+  if (response.status === 206 && options.signalSyncPending !== false) {
     syncPendingBus.emit(true);
   }
 
