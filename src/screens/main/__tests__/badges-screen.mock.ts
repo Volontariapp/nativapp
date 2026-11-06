@@ -2,6 +2,7 @@ import React from 'react';
 import { View } from 'react-native';
 
 export const mockUseProfile = jest.fn();
+export const mockUseBadgeProgress = jest.fn();
 
 interface mockHeaderStubProps {
   showBack?: boolean;

@@ -5,6 +5,8 @@ import { AppIcons } from '@/components/media/AppIcons';
 import { useAppTheme, useStyles } from '@/context/ThemeContext';
 import type { AppTheme } from '@/shared/themes/theme';
 import { Badge } from './badge';
+import { BadgeCatalogProgress } from './badge-catalog-progress';
+import { formatPoints } from './badge-progress.utils';
 import type { BadgeCatalogEntry } from './badge-catalog.types';
 
 interface BadgeCatalogRowProps {
@@ -18,7 +20,7 @@ interface BadgeCatalogRowProps {
 export const BadgeCatalogRow = ({ entry }: BadgeCatalogRowProps): React.JSX.Element => {
   const { theme } = useAppTheme();
   const styles = useStyles(createStyles);
-  const { definition, unlocked, variant } = entry;
+  const { definition, unlocked, variant, progress } = entry;
 
   return (
     <View
@@ -52,6 +54,13 @@ export const BadgeCatalogRow = ({ entry }: BadgeCatalogRowProps): React.JSX.Elem
         <AppText style={unlocked ? styles.rule : styles.lockedRule}>
           {definition.description}
         </AppText>
+
+        {progress !== undefined &&
+          (unlocked ? (
+            <AppText style={styles.earned}>{`${formatPoints(progress.points)} gagnés`}</AppText>
+          ) : (
+            <BadgeCatalogProgress progress={progress} />
+          ))}
       </View>
     </View>
   );
@@ -112,6 +121,11 @@ const createStyles = (theme: AppTheme) =>
     rule: {
       fontSize: theme.typography.fontSize.sm,
       color: theme.colors.grey,
+    },
+    earned: {
+      fontSize: theme.typography.fontSize.xs,
+      fontWeight: theme.typography.fontWeight.semibold,
+      color: theme.colors.badgeGreen,
     },
     lockedRule: {
       fontSize: theme.typography.fontSize.sm,
