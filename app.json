@@ -36,8 +36,7 @@
       [
         "expo-location",
         {
-          "locationAlwaysAndWhenInUsePermission": "Nous avons besoin de votre position pour vous montrer les événements à proximité.",
-          "locationWhenInUsePermission": "Nous avons besoin de votre position pour vous montrer les événements à proximité."
+          "locationWhenInUsePermission": "Nous avons besoin de votre position pour vous montrer les événements à proximité. Pendant un événement en direct, et seulement si vous l'activez, elle peut aussi être partagée avec l'organisateur, de façon approximative, tant que l'application est ouverte."
         }
       ]
     ],

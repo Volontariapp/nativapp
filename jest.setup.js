@@ -51,6 +51,20 @@ jest.mock(
   { virtual: true },
 );
 
+// Le paquet est en ESM pur : jest ne le resout pas. Seules les valeurs d'enum du direct sont
+// simulees ici ; les tests qui ont besoin d'autres valeurs declarent leur propre mock.
+jest.mock(
+  '@volontariapp/messaging',
+  () => ({
+    LiveWebsocketMessagingType: {
+      LIVE_POSITIONS_UPDATED: 'live.positions_updated',
+      LIVE_SHARING_STOPPED: 'live.sharing_stopped',
+    },
+    LiveClientMessageType: { LIVE_POSITION: 'live.position' },
+  }),
+  { virtual: true },
+);
+
 jest.mock('@volontariapp/errors', () => ({}), { virtual: true });
 jest.mock('@volontariapp/logger', () => ({}), { virtual: true });
 

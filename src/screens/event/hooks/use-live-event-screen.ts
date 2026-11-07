@@ -15,6 +15,8 @@ import {
 } from '@/api/event/live-events.utils';
 import { useUserSocialActions } from '@/api/social/hooks/use-user-social-actions';
 import { useCurrentPosition } from '@/hooks/use-current-position';
+import type { LiveSharingState } from '@/hooks/live-sharing.types';
+import { useLiveSharing } from '@/hooks/use-live-sharing';
 import type { MainStackParamList } from '@/navigation/stacks/MainStack';
 import { routingService, type Coordinates, type WalkingRoute } from '@/services/routing.service';
 
@@ -41,6 +43,8 @@ export interface UseLiveEventScreenResult {
   myEvents: LiveMyEvent[];
   participatingEventId: string | null;
   selectedRoute: LiveSelectedRoute | null;
+  sharing: LiveSharingState;
+  handleToggleSharing: (event: AppEvent, enabled: boolean) => void;
   handleParticipate: (event: AppEvent) => void;
   handleSelectRoute: (event: AppEvent) => void;
   handleClearRoute: () => void;
@@ -102,6 +106,7 @@ export function useLiveEventScreen(): UseLiveEventScreenResult {
   const participatedQuery = useGetParticipatedEvents(MY_EVENTS_PAGE_LIMIT);
   const myEventsQuery = useGetMyEvents(MY_EVENTS_PAGE_LIMIT);
   const { participate } = useUserSocialActions();
+  const { start: startSharing, stop: stopSharing, ...sharing } = useLiveSharing();
 
   const [joinedEvents, setJoinedEvents] = useState<AppEvent[]>([]);
   const [participatingEventId, setParticipatingEventId] = useState<string | null>(null);
@@ -152,6 +157,19 @@ export function useLiveEventScreen(): UseLiveEventScreenResult {
     [participate],
   );
 
+  const handleToggleSharing = useCallback(
+    (event: AppEvent, enabled: boolean) => {
+      if (!enabled) {
+        void stopSharing('STOPPED');
+        return;
+      }
+      if (event.location !== undefined) {
+        void startSharing({ eventId: event.id, location: event.location });
+      }
+    },
+    [startSharing, stopSharing],
+  );
+
   const handleRetry = useCallback(() => {
     if (positionStatus === 'ready' && query.isError) {
       void refetch();
@@ -199,6 +217,8 @@ export function useLiveEventScreen(): UseLiveEventScreenResult {
     myEvents,
     participatingEventId,
     selectedRoute,
+    sharing,
+    handleToggleSharing,
     handleParticipate,
     handleSelectRoute: setRouteEvent,
     handleClearRoute,
