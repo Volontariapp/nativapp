@@ -19,6 +19,7 @@ import { useSwipePassFeedback } from './use-swipe-pass-feedback';
 import type { UserCoordinates } from '@/hooks/use-location';
 import { listVersionOf, useSwipeStackReload } from './use-swipe-stack-reload';
 import { useRankingEvents } from '@/api/ranking/hooks/use-ranking-events';
+import { useStableDeck } from './use-stable-deck';
 
 type TabParamList = {
   accueil: undefined;
@@ -42,6 +43,8 @@ export interface UseSwipeScreenResult {
   isError: boolean;
   isEndReached: boolean;
   currentIndex: number;
+  /** Change quand la pile est remplacee : le deck doit etre remonte et repartir de la premiere carte. */
+  deckKey: number;
   userLocation: LocationObject | null;
   swiperRef: React.RefObject<Swiper<AppEvent> | null>;
   handleSwipeLeft: (cardIndex: number) => void;
@@ -81,6 +84,7 @@ export function useSwipeScreen(): UseSwipeScreenResult {
 
   const swiperRef = useRef<Swiper<AppEvent> | null>(null);
   const [currentIndex, setCurrentIndex] = useState(0);
+  const [deckKey, setDeckKey] = useState(0);
 
   // Écoute des transitions de cycle de vie de l'application
   useEffect(() => {
@@ -98,8 +102,8 @@ export function useSwipeScreen(): UseSwipeScreenResult {
     };
   }, [flushPendingPass, sendLocationIfAllowed]);
 
-  // Récupération des événements avec déduplication stricte par identifiant
-  const events = useMemo(() => {
+  // Liste servie, dédupliquée par identifiant (le deck affiché en est une copie stable, voir plus bas)
+  const servedEvents = useMemo(() => {
     let freshEvents: AppEvent[] = [];
     if (isFallbackMode) {
       freshEvents = fallbackQuery.data?.pages.flatMap((page) => page.events) ?? [];
@@ -116,6 +120,10 @@ export function useSwipeScreen(): UseSwipeScreenResult {
       return true;
     });
   }, [isFallbackMode, fallbackQuery.data, rankingQuery.data, excludedIds]);
+
+  // Un rafraichissement en arriere-plan n'ajoute que des cartes en bas : jamais de carte retiree ni
+  // reordonnee sous le deck (son index interne ne suit pas la liste).
+  const events = useStableDeck(servedEvents, deckKey);
 
   const activeQuery = isFallbackMode ? fallbackQuery : rankingQuery;
   const isLoading = activeQuery.isLoading;
@@ -145,6 +153,7 @@ export function useSwipeScreen(): UseSwipeScreenResult {
       // Nouvelle pile : les events traites en sortent et le deck repart de la premiere carte
       refreshExclusions();
       setCurrentIndex(0);
+      setDeckKey((previous) => previous + 1);
     },
   });
 
@@ -153,13 +162,28 @@ export function useSwipeScreen(): UseSwipeScreenResult {
   useOnLeaveFallback(isFallbackMode, () => {
     refreshExclusions();
     setCurrentIndex(0);
+    setDeckKey((previous) => previous + 1);
   });
+
+  // Le deck marque la pile comme epuisee des que la derniere carte est swipee, meme si la page
+  // suivante est encore en route : on le relance sur la premiere carte arrivee.
+  const previousLengthRef = useRef(events.length);
+  useEffect(() => {
+    const previousLength = previousLengthRef.current;
+    previousLengthRef.current = events.length;
+    if (events.length > previousLength && currentIndex === previousLength) {
+      swiperRef.current?.jumpToCardIndex(currentIndex);
+    }
+  }, [events.length, currentIndex]);
 
   const swipeStateRef = useRef({ events, hasNextPage, isFetchingNextPage, fetchNextPage, wish });
   useLayoutEffect(() => {
     swipeStateRef.current = { events, hasNextPage, isFetchingNextPage, fetchNextPage, wish };
   }, [events, hasNextPage, isFetchingNextPage, fetchNextPage, wish]);
 
+  // Plusieurs swipes avant le prochain rendu lisent encore `isFetchingNextPage` a false : sans ce
+  // verrou, chaque swipe relance la requete (et l'annule, `cancelRefetch` etant vrai par defaut).
+  const isPrefetchingRef = useRef(false);
   const triggerPrefetchIfNeeded = (cardIndex: number): void => {
     const {
       events: currentEvents,
@@ -170,9 +194,13 @@ export function useSwipeScreen(): UseSwipeScreenResult {
     if (
       cardIndex + 1 + SWIPE_PREFETCH_THRESHOLD >= currentEvents.length &&
       hasNext &&
-      !isFetching
+      !isFetching &&
+      !isPrefetchingRef.current
     ) {
-      void fetchNext();
+      isPrefetchingRef.current = true;
+      void Promise.resolve(fetchNext({ cancelRefetch: false })).finally(() => {
+        isPrefetchingRef.current = false;
+      });
     }
   };
 
@@ -229,6 +257,7 @@ export function useSwipeScreen(): UseSwipeScreenResult {
     isError,
     isEndReached,
     currentIndex,
+    deckKey,
     userLocation,
     swiperRef,
     handleSwipeLeft,

@@ -100,7 +100,11 @@ const createTestQueryClient = (): QueryClient =>
     },
   });
 
-const rankingEventsPage = (events: RankedAppEvent[], listVersion = 'v1'): RankingEventsResult => ({
+const rankingEventsPage = (
+  events: RankedAppEvent[],
+  listVersion = 'v1',
+  nextCursor = '',
+): RankingEventsResult => ({
   isFallback: false,
   events,
   totalCount: events.length,
@@ -108,10 +112,10 @@ const rankingEventsPage = (events: RankedAppEvent[], listVersion = 'v1'): Rankin
     source: 'FULL',
     computedAt: '2026-10-20T08:00:00.000Z',
     stale: false,
-    hasMore: false,
+    hasMore: nextCursor.length > 0,
     versionChanged: false,
     listVersion,
-    nextCursor: '',
+    nextCursor,
   },
 });
 
@@ -454,6 +458,100 @@ describe('useSwipeScreen', () => {
 
     await waitFor(() => {
       expect(mockUpdateLocation).toHaveBeenCalledWith(45.75, 4.85);
+    });
+  });
+
+  describe('deck stability while the ranking list is refreshed in the background', () => {
+    const ids = (events: { id: string }[]): string[] => events.map((event) => event.id);
+
+    const refetchRanking = async (queryClient: QueryClient): Promise<void> => {
+      await act(async () => {
+        await queryClient.refetchQueries({ queryKey: ['ranking', 'events'] });
+        // React Query notifie ses observateurs de facon asynchrone : on laisse la liste arriver.
+        await new Promise<void>((resolve) => {
+          setTimeout(resolve, 20);
+        });
+      });
+    };
+
+    it('keeps the cards already in the deck when a shorter list replaces the ranking mid-stack', async () => {
+      const first = ['evt-1', 'evt-2', 'evt-3', 'evt-4'].map((id) => createFakeEvent(id));
+      mockGetEvents
+        .mockResolvedValueOnce(rankingEventsPage(first))
+        .mockResolvedValue(rankingEventsPage([createFakeEvent('evt-4')], 'v2'));
+      const queryClient = createTestQueryClient();
+      const { result } = renderSwipeHook(queryClient);
+      await waitFor(() => {
+        expect(result.current.events).toHaveLength(4);
+      });
+      act(() => {
+        result.current.handleSwipeLeft(0);
+        result.current.handleSwipeLeft(1);
+      });
+
+      await refetchRanking(queryClient);
+
+      expect(ids(result.current.events)).toEqual(['evt-1', 'evt-2', 'evt-3', 'evt-4']);
+      expect(result.current.currentIndex).toBe(2);
+    });
+
+    it('puts an event that only appears in the refreshed list at the bottom of the deck', async () => {
+      const first = ['evt-1', 'evt-2', 'evt-3'].map((id) => createFakeEvent(id));
+      mockGetEvents
+        .mockResolvedValueOnce(rankingEventsPage(first))
+        .mockResolvedValue(
+          rankingEventsPage(
+            [createFakeEvent('evt-new'), ...first.slice(1)].map((event) => event),
+            'v2',
+          ),
+        );
+      const queryClient = createTestQueryClient();
+      const { result } = renderSwipeHook(queryClient);
+      await waitFor(() => {
+        expect(result.current.events).toHaveLength(3);
+      });
+      act(() => {
+        result.current.handleSwipeLeft(0);
+      });
+
+      await refetchRanking(queryClient);
+
+      expect(ids(result.current.events)).toEqual(['evt-1', 'evt-2', 'evt-3', 'evt-new']);
+    });
+
+    it('lets the swiper show the next card when it arrives after the last card was swiped', async () => {
+      let resolveNextPage: (page: RankingEventsResult) => void = () => undefined;
+      const firstPage = rankingEventsPage(
+        ['evt-1', 'evt-2'].map((id) => createFakeEvent(id)),
+        'v1',
+        'cursor-2',
+      );
+      mockGetEvents.mockResolvedValueOnce(firstPage).mockImplementationOnce(
+        () =>
+          new Promise<RankingEventsResult>((resolve) => {
+            resolveNextPage = resolve;
+          }),
+      );
+      const { result } = renderSwipeHook();
+      await waitFor(() => {
+        expect(result.current.events).toHaveLength(2);
+      });
+      const jumpToCardIndex = jest.fn();
+      result.current.swiperRef.current = { jumpToCardIndex } as never;
+
+      act(() => {
+        result.current.handleSwipeLeft(0);
+        result.current.handleSwipeLeft(1);
+      });
+      await act(async () => {
+        resolveNextPage(rankingEventsPage([createFakeEvent('evt-3')]));
+        await Promise.resolve();
+      });
+
+      await waitFor(() => {
+        expect(result.current.events).toHaveLength(3);
+      });
+      expect(jumpToCardIndex).toHaveBeenCalledWith(2);
     });
   });
 });
