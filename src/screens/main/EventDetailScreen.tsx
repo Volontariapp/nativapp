@@ -28,6 +28,8 @@ import { useUserSocialActions } from '@/api/social/hooks/use-user-social-actions
 import { useUserParticipations } from '@/api/social/hooks/use-user-participations';
 import { useProfile } from '@/api/user/hooks/use-profile';
 import { useAuth } from '@/context/AuthContext';
+import { liveApi } from '@/api/live/live.api';
+import { isEventJoinableLive } from '@/api/event/live-events.utils';
 
 import { EventCover } from '../../components/event/EventCover';
 import { EventInfoCards } from '../../components/event/EventInfoCards';
@@ -188,6 +190,9 @@ export function EventDetailScreen({ route }: Props): React.JSX.Element {
     [event.state],
   );
 
+  // Un participant peut toujours quitter un evenement en cours ; le rejoindre se fait depuis l'ecran direct.
+  const isLiveNow = isEventJoinableLive(event, Date.now());
+
   const { userId } = useAuth();
   const { participate, isParticipating, unparticipate, isUnparticipating } = useUserSocialActions();
   const { data: participations } = useUserParticipations(100, { autoFetchAll: true });
@@ -247,8 +252,14 @@ export function EventDetailScreen({ route }: Props): React.JSX.Element {
       });
   }, [participate, event.id, navigation, isOrganizer]);
 
-  const handleUnjoin = useCallback(() => {
-    unparticipate(event.id)
+  const leaveEvent = useCallback(() => {
+    // Un partage de position n'existe que pendant le direct : on l'arrete avant de quitter.
+    // Son absence n'est pas une erreur (le serveur repond 204 sans autorisation).
+    const stopSharing = isLiveNow
+      ? liveApi.stopSharing(event.id, 'LEFT').catch(() => undefined)
+      : Promise.resolve();
+    stopSharing
+      .then(() => unparticipate(event.id))
       .then(() => {
         setParticipantsDelta((prev) => prev - 1);
         Alert.alert('Succès', 'Vous ne participez plus à cet événement.');
@@ -256,7 +267,14 @@ export function EventDetailScreen({ route }: Props): React.JSX.Element {
       .catch(() => {
         Alert.alert('Erreur', 'Impossible de quitter cet événement.');
       });
-  }, [unparticipate, event.id]);
+  }, [unparticipate, event.id, isLiveNow]);
+
+  const handleUnjoin = useCallback(() => {
+    Alert.alert("Quitter l'événement", 'Voulez-vous vraiment ne plus y participer ?', [
+      { text: 'Annuler', style: 'cancel' },
+      { text: 'Quitter', style: 'destructive', onPress: leaveEvent },
+    ]);
+  }, [leaveEvent]);
 
   return (
     <View style={styles.container}>
@@ -299,7 +317,7 @@ export function EventDetailScreen({ route }: Props): React.JSX.Element {
 
       <EventDetailBody event={optimisticEvent} />
 
-      {!isOrganizer && isJoinable && (
+      {!isOrganizer && (isJoinable || (isLiveNow && isJoined)) && (
         <JoinBar
           isJoined={isJoined}
           isPending={isJoined ? isUnparticipating : isParticipating}
