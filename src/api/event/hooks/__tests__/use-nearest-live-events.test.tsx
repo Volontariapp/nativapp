@@ -19,7 +19,7 @@ describe('useNearestLiveEvents', () => {
     jest.restoreAllMocks();
   });
 
-  it('sends exactly the search parameters of the spec, without endAtFrom', async () => {
+  it('sends exactly the search parameters of the spec, with endAtFrom set to now', async () => {
     const getEvents = jest.spyOn(eventApi, 'getEvents').mockResolvedValue({
       events: [],
       totalCount: 0,
@@ -38,6 +38,7 @@ describe('useNearestLiveEvents', () => {
       statuses: [EventState.EVENT_STATE_PUBLISHED, EventState.EVENT_STATE_IN_PROGRESS],
       startDateFrom: new Date(NOW - 24 * 60 * 60 * 1000).toISOString(),
       startDateTo: new Date(NOW).toISOString(),
+      endAtFrom: new Date(NOW).toISOString(),
       onlyAvailable: false,
       excludeBlockedUsers: true,
       excludeParticipatedByMe: true,
@@ -45,7 +46,6 @@ describe('useNearestLiveEvents', () => {
       page: 1,
       limit: 30,
     });
-    expect(getEvents.mock.calls[0]?.[0]).not.toHaveProperty('endAtFrom');
   });
 
   it('skips OSRM when no event is a live candidate', async () => {
