@@ -42,6 +42,8 @@ export function LiveEventScreen(): React.JSX.Element {
     myEvents,
     participatingEventId,
     selectedRoute,
+    sharing,
+    handleToggleSharing,
     handleParticipate,
     handleSelectRoute,
     handleClearRoute,
@@ -80,6 +82,8 @@ export function LiveEventScreen(): React.JSX.Element {
         onShowRoute={handleSelectRoute}
         onOpenDetail={handleOpenDetail}
         onOpenMyEvents={handleOpenMyEvents}
+        sharing={sharing}
+        onToggleSharing={handleToggleSharing}
       />
       {hasRoute && selectedRoute.event.location !== undefined && (
         <LiveRouteMap

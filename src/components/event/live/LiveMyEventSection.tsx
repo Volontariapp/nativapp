@@ -7,7 +7,9 @@ import { EventStatusBadge } from '@/components/event/EventStatusBadge';
 import { useStyles } from '@/context/ThemeContext';
 import type { AppTheme } from '@/shared/themes/theme';
 import type { AppEvent } from '@/api/event/event.api';
+import type { LiveSharingState } from '@/hooks/live-sharing.types';
 import { formatParticipantsLabel, formatRemainingTime } from './live-format.utils';
+import { LiveSharingToggle } from './LiveSharingToggle';
 
 export interface LiveMyEventItem {
   event: AppEvent;
@@ -19,6 +21,9 @@ export interface LiveMyEventSectionProps {
   onShowRoute: (event: AppEvent) => void;
   onOpenDetail: (event: AppEvent) => void;
   onOpenMyEvents: () => void;
+  /** Etat du partage de position ; absent : pas de bascule. */
+  sharing?: LiveSharingState;
+  onToggleSharing?: (event: AppEvent, enabled: boolean) => void;
 }
 
 export function LiveMyEventSection({
@@ -26,6 +31,8 @@ export function LiveMyEventSection({
   onShowRoute,
   onOpenDetail,
   onOpenMyEvents,
+  sharing,
+  onToggleSharing,
 }: LiveMyEventSectionProps): React.JSX.Element | null {
   const styles = useStyles(createStyles);
   const now = useMemo(() => Date.now(), [items]);
@@ -77,6 +84,16 @@ export function LiveMyEventSection({
               onPress={onOpenMyEvents}
             />
           </View>
+          {!isOrganizer && sharing !== undefined && onToggleSharing !== undefined && (
+            <LiveSharingToggle
+              eventId={event.id}
+              status={sharing.activeEventId === event.id ? sharing.status : 'idle'}
+              lastStop={sharing.lastStop}
+              onToggle={(enabled) => {
+                onToggleSharing(event, enabled);
+              }}
+            />
+          )}
         </View>
       ))}
     </View>

@@ -7,3 +7,4 @@ export * from './event.endpoints';
 export * from './post.endpoints';
 export * from './storage.endpoints';
 export * from './ranking.endpoints';
+export * from './live.endpoints';
