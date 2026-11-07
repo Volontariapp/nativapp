@@ -9,3 +9,11 @@ export const mockSocialActions = {
   unparticipate: jest.fn(),
   isUnparticipating: false,
 };
+
+export interface MockParticipationsState {
+  data: { pages: { ids: string[] }[] } | undefined;
+}
+
+export const mockParticipations: MockParticipationsState = { data: undefined };
+
+export const mockAuthState: { userId: string | undefined } = { userId: undefined };
