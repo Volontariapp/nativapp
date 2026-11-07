@@ -136,6 +136,23 @@ describe('useUserSocialActions', () => {
     });
   });
 
+  describe('participate burst on the participated list', () => {
+    it('reloads the participated events once after a burst of participations, not once per tap', async () => {
+      const { result } = render();
+
+      await act(async () => {
+        await Promise.all([
+          result.current.participate('a'),
+          result.current.participate('b'),
+          result.current.participate('c'),
+        ]);
+      });
+
+      await settle();
+      expect(exactInvalidations(invalidateSpy, ['participated-events'])).toBe(1);
+    });
+  });
+
   describe('unwish', () => {
     it('keeps the count when the event was not in the cached wishlist', async () => {
       api.unwishEvent.mockResolvedValue({ success: true });

@@ -1,4 +1,5 @@
 import type { QueryClient } from '@tanstack/react-query';
+import { scheduleCoalescedInvalidation } from '../coalesced-invalidation';
 
 export const WISHED_EVENTS_QUERY_KEY = ['wished-events'] as const;
 
@@ -52,23 +53,11 @@ export const removeWishedEventOptimistically = async (
   );
 };
 
-const refreshTimers = new WeakMap<QueryClient, ReturnType<typeof setTimeout>>();
-
 /**
  * Recharge la wishlist depuis le serveur une fois les actions terminees. Une rafale d'actions
  * (plusieurs "Participer" a la suite) ne declenche qu'un seul rechargement : le retrait optimiste
  * est confirme ou corrige par le serveur, sans rollback sur un instantane devenu perime.
  */
 export const scheduleWishlistRefresh = (queryClient: QueryClient): void => {
-  const pending = refreshTimers.get(queryClient);
-  if (pending !== undefined) {
-    clearTimeout(pending);
-  }
-  refreshTimers.set(
-    queryClient,
-    setTimeout(() => {
-      refreshTimers.delete(queryClient);
-      void queryClient.invalidateQueries({ queryKey: WISHED_EVENTS_QUERY_KEY });
-    }, WISHLIST_REFRESH_DELAY_MS),
-  );
+  scheduleCoalescedInvalidation(queryClient, WISHED_EVENTS_QUERY_KEY, WISHLIST_REFRESH_DELAY_MS);
 };
