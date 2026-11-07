@@ -14,7 +14,10 @@ import {
 
 export const NEAREST_LIVE_EVENTS_QUERY_KEY = ['nearest-live-events'] as const;
 
-/** Parametres de 03 section 4 : pas de endAtFrom avant le palier 3. */
+/**
+ * Parametres de recherche des evenements en direct. Le serveur filtre maintenant la fin
+ * (endAtFrom) ; le filtre client de live-events.utils reste en garde-fou.
+ */
 export function buildLiveSearchParams(
   position: Coordinates,
   now: number,
@@ -24,6 +27,7 @@ export function buildLiveSearchParams(
     statuses: [EventState.EVENT_STATE_PUBLISHED, EventState.EVENT_STATE_IN_PROGRESS],
     startDateFrom: new Date(now - LIVE_START_LOOKBACK_MS).toISOString(),
     startDateTo: new Date(now).toISOString(),
+    endAtFrom: new Date(now).toISOString(),
     onlyAvailable: false,
     excludeBlockedUsers: true,
     excludeParticipatedByMe: true,
