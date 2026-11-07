@@ -17,6 +17,7 @@ import {
   EventParticipantsTab,
 } from '@/components/event';
 import { useAppTheme, useStyles } from '@/context/ThemeContext';
+import { useAuth } from '@/context/AuthContext';
 import type { AppTheme } from '@/shared/themes/theme';
 import type { EventState } from '@volontariapp/contracts';
 import { updateEventSchema, type UpdateEventFormValues } from '@/api/event/event.schema';
@@ -285,6 +286,7 @@ export function EventManagementScreen(): React.JSX.Element {
   const route = useRoute<EventManagementRouteProp>();
   const rootNavigation = useNavigation<NativeStackNavigationProp<MainStackParamList>>();
   const styles = useStyles(createStyles);
+  const { userId } = useAuth();
 
   const eventId = route.params.eventId;
   const initialEvent = route.params.initialEvent;
@@ -417,6 +419,7 @@ export function EventManagementScreen(): React.JSX.Element {
             void refetchParticipants();
           }}
           onParticipantPress={handleParticipantPress}
+          currentUserId={userId}
         />
       )}
 

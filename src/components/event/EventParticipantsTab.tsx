@@ -13,6 +13,7 @@ import { MIN_ATTENDEES_FOR_ORGANIZER_POINTS } from '@volontariapp/shared';
 
 import { SearchBar } from '@/components/ui';
 import { ParticipantGauge, ParticipantCard, ParticipantEmptyState } from '@/components/event';
+import { LiveOrganizerSection } from '@/components/event/live/LiveOrganizerSection';
 import { AppText } from '@/components/typography/AppText';
 import { useAppTheme, useStyles } from '@/context/ThemeContext';
 import type { AppTheme } from '@/shared/themes/theme';
@@ -34,6 +35,8 @@ export interface EventParticipantsTabProps {
   /** Vrai si le chargement des participants a echoue (affiche un bouton de reessai). */
   isError?: boolean;
   onParticipantPress: (userId: string) => void;
+  /** Utilisateur connecte : la carte des positions n'est montree qu'a l'organisateur. */
+  currentUserId?: string | null;
 }
 
 export function EventParticipantsTab({
@@ -47,6 +50,7 @@ export function EventParticipantsTab({
   isFetchingNextPage = false,
   isError = false,
   onParticipantPress,
+  currentUserId,
 }: EventParticipantsTabProps): React.JSX.Element {
   const { theme } = useAppTheme();
   const styles = useStyles(createStyles);
@@ -283,6 +287,13 @@ export function EventParticipantsTab({
         refreshControl={refreshControl}
         onEndReached={onEndReached}
         onEndReachedThreshold={0.5}
+        ListHeaderComponent={
+          <LiveOrganizerSection
+            event={currentEvent}
+            currentUserId={currentUserId}
+            participants={rawParticipants}
+          />
+        }
         ListFooterComponent={
           isFetchingNextPage ? (
             <ActivityIndicator style={styles.footerLoader} color={theme.colors.primarySocio} />
