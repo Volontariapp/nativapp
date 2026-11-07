@@ -1,4 +1,4 @@
-import { useCallback, useMemo } from 'react';
+import { useCallback, useMemo, useState } from 'react';
 import { useGetParticipatedEvents } from '@/api/event/hooks/use-get-participated-events';
 import { useGetWishedEvents } from '@/api/event/hooks/use-get-wished-events';
 import { useGetMyEvents } from '@/api/event/hooks/use-get-my-events';
@@ -15,6 +15,7 @@ import {
   type ParticipatedScope,
 } from '../manage-hub.utils';
 import { dedupeById } from '@/shared/utils/dedupe-by-id';
+import { useStableOrder } from './use-stable-order';
 
 interface EventsPage {
   events: AppEvent[];
@@ -67,7 +68,7 @@ export function useManageHubData(
   }, [participatedEvents]);
 
   // Filtrage et tri : le plus proche en premier
-  const filteredEvents = useMemo(() => {
+  const sortedEvents = useMemo(() => {
     const now = Date.now();
     const lists = { participated: participatedEvents, wished: wishedEvents, created: myEvents };
     const scoped =
@@ -79,10 +80,25 @@ export function useManageHubData(
     );
   }, [activeTab, participatedEvents, wishedEvents, myEvents, participatedScope, typeFilter]);
 
+  // Le tri n'est reapplique qu'au changement d'onglet ou de filtre et a un rafraichissement manuel :
+  // une mise a jour en arriere-plan (participation, WS) ajoute en bas, elle ne reordonne pas.
+  const [orderGeneration, setOrderGeneration] = useState(0);
+  const filteredEvents = useStableOrder(
+    sortedEvents,
+    `${activeTab}|${typeFilter}|${participatedScope}|${String(orderGeneration)}`,
+  );
+
   const { refetch, hasNextPage, isFetchingNextPage, fetchNextPage } = activeQuery;
 
+  // Le spinner du tirer-pour-rafraichir n'appartient qu'au geste de l'utilisateur, pas aux
+  // rechargements en arriere-plan (`isRefetching`).
+  const [isManualRefreshing, setIsManualRefreshing] = useState(false);
   const onRefresh = useCallback(() => {
-    void refetch();
+    setIsManualRefreshing(true);
+    setOrderGeneration((previous) => previous + 1);
+    void Promise.resolve(refetch()).finally(() => {
+      setIsManualRefreshing(false);
+    });
   }, [refetch]);
 
   const handleEndReached = useCallback(() => {
@@ -100,7 +116,7 @@ export function useManageHubData(
     liveCount,
     upcomingCount,
     onRefresh,
-    isRefreshing: activeQuery.isRefetching,
+    isRefreshing: isManualRefreshing,
     handleEndReached,
     currentIsInitialLoading: activeQuery.isLoading,
     currentIsFetchingNext: isFetchingNextPage,

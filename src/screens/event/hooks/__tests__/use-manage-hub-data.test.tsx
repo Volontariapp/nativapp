@@ -1,3 +1,4 @@
+import { act } from 'react';
 import { renderHook } from '@testing-library/react-native';
 import { EventState, EventType } from '@volontariapp/contracts';
 import type { AppEvent } from '@/api/event/event.api';
@@ -118,13 +119,14 @@ describe('useManageHubData', () => {
 
     const { result } = renderHook(() => useManageHubData('wished', 'all', 'all'));
 
-    result.current.onRefresh();
+    act(() => {
+      result.current.onRefresh();
+    });
     result.current.handleEndReached();
 
     expect(wished.refetch).toHaveBeenCalledTimes(1);
     expect(wished.fetchNextPage).toHaveBeenCalledTimes(1);
     expect(participated.refetch).not.toHaveBeenCalled();
-    expect(result.current.isRefreshing).toBe(true);
     expect(result.current.currentIsInitialLoading).toBe(true);
   });
 
@@ -137,5 +139,88 @@ describe('useManageHubData', () => {
 
     expect(wished.fetchNextPage).not.toHaveBeenCalled();
     expect(result.current.currentIsFetchingNext).toBe(true);
+  });
+
+  describe('background refreshes', () => {
+    const day = (n: number): Partial<AppEvent> => ({
+      startAt: `2999-01-0${String(n)}T10:00:00.000Z`,
+      endAt: `2999-01-0${String(n)}T12:00:00.000Z`,
+    });
+    const ids = (events: AppEvent[]): string[] => events.map((e) => e.id);
+
+    it('does not show the pull-to-refresh spinner for a background refetch', () => {
+      setup(makeQuery([]), makeQuery([makeEvent('w1')], { isRefetching: true }), makeQuery([]));
+
+      const { result } = renderHook(() => useManageHubData('wished', 'all', 'all'));
+
+      expect(result.current.isRefreshing).toBe(false);
+    });
+
+    it('shows the spinner only while a manual refresh runs', async () => {
+      let finishRefetch: () => void = () => undefined;
+      const wished = makeQuery([makeEvent('w1')], {
+        refetch: jest.fn(
+          () =>
+            new Promise<void>((resolve) => {
+              finishRefetch = resolve;
+            }),
+        ),
+      });
+      setup(makeQuery([]), wished, makeQuery([]));
+      const { result } = renderHook(() => useManageHubData('wished', 'all', 'all'));
+
+      act(() => {
+        result.current.onRefresh();
+      });
+      expect(result.current.isRefreshing).toBe(true);
+
+      await act(async () => {
+        finishRefetch();
+        await Promise.resolve();
+      });
+      expect(result.current.isRefreshing).toBe(false);
+    });
+
+    it('keeps the list order and puts a new participation at the bottom, even if it is earlier', () => {
+      const a = makeEvent('a', day(2));
+      const b = makeEvent('b', day(3));
+      setup(makeQuery([a, b]), makeQuery([]), makeQuery([]));
+      const { result, rerender } = renderHook(() => useManageHubData('participated', 'all', 'all'));
+      expect(ids(result.current.filteredEvents)).toEqual(['a', 'b']);
+
+      setup(makeQuery([a, b, makeEvent('c', day(1))]), makeQuery([]), makeQuery([]));
+      rerender({});
+
+      expect(ids(result.current.filteredEvents)).toEqual(['a', 'b', 'c']);
+    });
+
+    it('removes an event that left the list without moving the others', () => {
+      const a = makeEvent('a', day(2));
+      const b = makeEvent('b', day(3));
+      const c = makeEvent('c', day(4));
+      setup(makeQuery([a, b, c]), makeQuery([]), makeQuery([]));
+      const { result, rerender } = renderHook(() => useManageHubData('participated', 'all', 'all'));
+
+      setup(makeQuery([a, c]), makeQuery([]), makeQuery([]));
+      rerender({});
+
+      expect(ids(result.current.filteredEvents)).toEqual(['a', 'c']);
+    });
+
+    it('sorts the list again after a manual refresh', async () => {
+      const a = makeEvent('a', day(2));
+      const b = makeEvent('b', day(3));
+      setup(makeQuery([a, b]), makeQuery([]), makeQuery([]));
+      const { result, rerender } = renderHook(() => useManageHubData('participated', 'all', 'all'));
+      setup(makeQuery([a, b, makeEvent('c', day(1))]), makeQuery([]), makeQuery([]));
+      rerender({});
+
+      await act(async () => {
+        result.current.onRefresh();
+        await Promise.resolve();
+      });
+
+      expect(ids(result.current.filteredEvents)).toEqual(['c', 'a', 'b']);
+    });
   });
 });

@@ -1,6 +1,7 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { markEventHandled } from '@/api/event/hooks/use-handled-event-ids';
 import { socialApi } from '../social.api';
+import { scheduleCoalescedInvalidation } from '../../coalesced-invalidation';
 import { PARTICIPATIONS_QUERY_KEY } from './use-user-participations';
 import { MY_FOLLOWS_QUERY_KEY } from './use-get-my-follows';
 import { GET_IS_FOLLOWING_QUERY_KEY } from './use-get-is-following';
@@ -11,6 +12,10 @@ import {
   scheduleWishlistRefresh,
 } from '../wishlist-cache';
 const WISHES_QUERY_KEY = ['user-wishes'];
+const PARTICIPATED_EVENTS_QUERY_KEY = ['participated-events'] as const;
+
+/** Attente apres la derniere participation avant de recharger la liste depuis le serveur. */
+const REFRESH_DELAY_MS = 300;
 
 /**
  * Hook regroupant les mutations pour les interactions sociales de l'utilisateur connecté.
@@ -38,7 +43,8 @@ export const useUserSocialActions = () => {
         queryKey: PARTICIPATIONS_QUERY_KEY,
         refetchType: 'none',
       });
-      void queryClient.invalidateQueries({ queryKey: ['participated-events'] });
+      // Une rafale de participations ne recharge la liste qu'une fois, pas une fois par tap.
+      scheduleCoalescedInvalidation(queryClient, PARTICIPATED_EVENTS_QUERY_KEY, REFRESH_DELAY_MS);
       void queryClient.invalidateQueries({ queryKey: ['events'], refetchType: 'none' });
     },
     // Succès comme échec : le serveur a le dernier mot sur le contenu de la wishlist.
