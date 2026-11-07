@@ -113,6 +113,7 @@ export function SwipeScreen(): React.JSX.Element {
     isLoading,
     isError,
     isEndReached,
+    deckKey,
     userLocation,
     swiperRef,
     handleSwipeLeft,
@@ -144,9 +145,10 @@ export function SwipeScreen(): React.JSX.Element {
       <View style={styles.contentWrapper}>
         <View style={styles.swiperContainer}>
           <Swiper<AppEvent>
+            key={deckKey}
             ref={swiperRef}
             cards={events}
-            keyExtractor={(card: AppEvent) => card.id}
+            keyExtractor={(card: AppEvent | undefined) => card?.id ?? 'missing-card'}
             renderCard={(event: AppEvent | undefined, _index: number) => {
               if (!event) return <View style={{ flex: 1, backgroundColor: 'transparent' }} />;
               return (
