@@ -1,4 +1,4 @@
-import { useMemo, useRef } from 'react';
+import { useState } from 'react';
 import type { AppEvent } from '@/api/event/event.api';
 
 /**
@@ -28,15 +28,18 @@ interface DeckSnapshot {
  * Pile stable pour le deck de swipe. `generation` change quand la pile est volontairement
  * remplacee (rechargement en fin de pile, bascule repli vers ranking) : la liste servie repart
  * alors de zero. Entre deux, un rafraichissement en arriere-plan n'ajoute que des cartes en bas.
+ *
+ * La pile affichee est gardee dans un etat ajuste pendant le rendu (schema documente par React) :
+ * un ref ecrit pendant le rendu fuirait si React rejoue ou abandonne ce rendu.
  */
 export function useStableDeck(incoming: AppEvent[], generation: number): AppEvent[] {
-  const snapshotRef = useRef<DeckSnapshot>({ generation, cards: incoming });
+  const [snapshot, setSnapshot] = useState<DeckSnapshot>({ generation, cards: incoming });
 
-  return useMemo(() => {
-    const previous = snapshotRef.current;
-    const cards =
-      previous.generation === generation ? mergeDeck(previous.cards, incoming) : incoming;
-    snapshotRef.current = { generation, cards };
-    return cards;
-  }, [incoming, generation]);
+  const isSameGeneration = snapshot.generation === generation;
+  const cards = isSameGeneration ? mergeDeck(snapshot.cards, incoming) : incoming;
+
+  if (!isSameGeneration || cards !== snapshot.cards) {
+    setSnapshot({ generation, cards });
+  }
+  return cards;
 }
