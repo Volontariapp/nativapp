@@ -3,6 +3,7 @@ import { normalizeEventState } from '@/shared/lib/event-mappers.utils';
 import { isEventLive } from '@/screens/event/manage-hub.utils';
 import type { AppEvent } from './event.api';
 import type { Coordinates } from '@/services/routing.service';
+import { dedupeById } from '@/shared/utils/dedupe-by-id';
 
 export const LIVE_SEARCH_RADIUS_M = 2000;
 export const LIVE_SEARCH_LIMIT = 30;
@@ -59,6 +60,11 @@ export function isEventJoinableLive(
   }
 
   return isEventLive(event, now);
+}
+
+/** Fusionne des listes d'evenements (sans doublon) et ne garde que ceux en direct (D1). */
+export function selectJoinableLiveEvents(events: readonly AppEvent[], now: number): AppEvent[] {
+  return dedupeById(events).filter((event) => isEventJoinableLive(event, now));
 }
 
 export function haversineMeters(a: Coordinates, b: Coordinates): number {

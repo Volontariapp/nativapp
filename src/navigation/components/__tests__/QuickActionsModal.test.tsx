@@ -8,6 +8,8 @@ describe('QuickActionsModal', () => {
     onClose: jest.fn(),
     onSelectCreate: jest.fn(),
     onSelectManage: jest.fn(),
+    onSelectLive: jest.fn(),
+    hasLiveParticipation: false,
   };
 
   beforeEach(() => {
@@ -53,6 +55,48 @@ describe('QuickActionsModal', () => {
 
     fireEvent.press(getByLabelText('Gérer mes événements et posts'));
     expect(onSelectManage).toHaveBeenCalledTimes(1);
+  });
+
+  it('shows the join-a-live action when the user has no live participation', () => {
+    const { getByText, getByLabelText, queryByText } = render(
+      <QuickActionsModal {...defaultProps} />,
+    );
+
+    expect(getByText('Rejoindre un direct')).toBeTruthy();
+    expect(getByText('Événement en cours autour de vous')).toBeTruthy();
+    expect(getByLabelText('Rejoindre un événement en direct')).toBeTruthy();
+    expect(queryByText('Mon événement en direct')).toBeNull();
+  });
+
+  it('shows my live event action when the user has a live participation', () => {
+    const { getByText, getByLabelText, queryByText } = render(
+      <QuickActionsModal {...defaultProps} hasLiveParticipation />,
+    );
+
+    expect(getByText('Mon événement en direct')).toBeTruthy();
+    expect(getByText('Voir le trajet, le temps restant')).toBeTruthy();
+    expect(getByLabelText('Voir mon événement en direct')).toBeTruthy();
+    expect(queryByText('Rejoindre un direct')).toBeNull();
+  });
+
+  it('triggers onSelectLive when pressing the live action', () => {
+    const onSelectLive = jest.fn();
+    const { getByLabelText } = render(
+      <QuickActionsModal {...defaultProps} onSelectLive={onSelectLive} />,
+    );
+
+    fireEvent.press(getByLabelText('Rejoindre un événement en direct'));
+    expect(onSelectLive).toHaveBeenCalledTimes(1);
+  });
+
+  it('triggers onSelectLive from the live participation variant', () => {
+    const onSelectLive = jest.fn();
+    const { getByLabelText } = render(
+      <QuickActionsModal {...defaultProps} hasLiveParticipation onSelectLive={onSelectLive} />,
+    );
+
+    fireEvent.press(getByLabelText('Voir mon événement en direct'));
+    expect(onSelectLive).toHaveBeenCalledTimes(1);
   });
 
   it('triggers onClose when pressing the close icon', () => {

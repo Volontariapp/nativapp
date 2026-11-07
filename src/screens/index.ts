@@ -14,6 +14,7 @@ export * from './event/ManageEventsScreen';
 export * from './event/ManageHubScreen';
 export * from './event/MyEventsScreen';
 export * from './event/EventManagementScreen';
+export * from './event/LiveEventScreen';
 export * from './misc/SandBox';
 export * from './post/PostFormScreen';
 export * from './post/MyPostsScreen';

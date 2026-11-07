@@ -8,6 +8,7 @@ import { HomeScreen } from '@/screens';
 import { SwipeScreen, ExploreScreen } from '@/screens';
 import ProfileStack from './stacks/ProfileStack';
 import CreateEventStack from './stacks/CreateEventStack';
+import { useHasLiveParticipation } from '@/api/event/hooks/use-has-live-participation';
 import type { MainStackParamList } from './stacks/MainStack';
 import { AppIconsButton } from '@/components/buttons/AppIconsButton';
 import { AppIcons } from '@/components/media/AppIcons';
@@ -19,6 +20,7 @@ const Tab = createBottomTabNavigator();
 export default function MainAppNavigator(): React.JSX.Element {
   const [quickActionsVisible, setQuickActionsVisible] = useState(false);
   const navigation = useNavigation<NavigationProp<MainStackParamList>>();
+  const hasLiveParticipation = useHasLiveParticipation(quickActionsVisible);
 
   const handleSelectCreate = useCallback(() => {
     setQuickActionsVisible(false);
@@ -34,6 +36,11 @@ export default function MainAppNavigator(): React.JSX.Element {
       screen: 'create',
       params: { screen: 'ManageHub' },
     });
+  }, [navigation]);
+
+  const handleSelectLive = useCallback(() => {
+    setQuickActionsVisible(false);
+    navigation.navigate('LiveEvent');
   }, [navigation]);
 
   return (
@@ -150,6 +157,8 @@ export default function MainAppNavigator(): React.JSX.Element {
         }}
         onSelectCreate={handleSelectCreate}
         onSelectManage={handleSelectManage}
+        onSelectLive={handleSelectLive}
+        hasLiveParticipation={hasLiveParticipation}
       />
     </View>
   );
