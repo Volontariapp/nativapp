@@ -24,6 +24,10 @@ jest.mock('@react-navigation/native', () => {
   };
 });
 
+jest.mock('@/api/event/hooks/use-pending-check-in', () => ({
+  usePendingCheckIn: () => false,
+}));
+
 jest.mock('@/components/layout/AppHeader', () => {
   const { View } = jest.requireActual<typeof ReactNative>('react-native');
   return function MockAppHeader() {
