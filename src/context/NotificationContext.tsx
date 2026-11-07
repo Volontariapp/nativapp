@@ -12,6 +12,7 @@ import { Worklets } from '@/utils/worklets';
 import { AppText } from '@/components/typography/AppText';
 import { theme } from '@/shared/themes/theme';
 import { useSocket } from './SocketContext';
+import { useDebug } from './DebugContext';
 import { useNotificationHandlers } from '../hooks/useNotificationHandlers';
 import { badgeAwardedBus } from '../services/event-bus.service';
 import { useSyncPendingIndicator } from '../hooks/use-sync-pending-indicator';
@@ -42,6 +43,7 @@ export const NotificationProvider: React.FC<{ children: React.ReactNode }> = ({ 
   const translateY = useSharedValue(-150);
   const { socket } = useSocket();
   const insets = useSafeAreaInsets();
+  const { isDebugMode } = useDebug();
 
   React.useEffect(() => {
     const unsubscribeBadge = badgeAwardedBus.subscribe((badges) => {
@@ -76,7 +78,17 @@ export const NotificationProvider: React.FC<{ children: React.ReactNode }> = ({ 
     [insets.top, translateY],
   );
 
-  useNotificationHandlers(socket, showNotification);
+  // Les bandeaux issus des notifications WebSocket ne s'affichent qu'en mode debug.
+  const showSocketNotification = useCallback(
+    (msg: string) => {
+      if (isDebugMode) {
+        showNotification(msg);
+      }
+    },
+    [isDebugMode, showNotification],
+  );
+
+  useNotificationHandlers(socket, showSocketNotification);
 
   const animatedStyle = useAnimatedStyle(() => {
     return {
