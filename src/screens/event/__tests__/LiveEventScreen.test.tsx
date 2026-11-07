@@ -1,5 +1,5 @@
 import React from 'react';
-import { fireEvent, render, screen, waitFor } from '@testing-library/react-native';
+import { cleanup, fireEvent, render, screen, waitFor } from '@testing-library/react-native';
 import { QueryClient } from '@tanstack/react-query';
 import { EventState } from '@volontariapp/contracts';
 import { createQueryWrapper } from '@/api/__tests__/query-wrapper.factory';
@@ -52,6 +52,8 @@ describe('LiveEventScreen', () => {
   });
 
   afterEach(() => {
+    // Demonter avant de restaurer : un rendu tardif appellerait le vrai useCurrentPosition (ordre des hooks).
+    cleanup();
     jest.restoreAllMocks();
   });
 
