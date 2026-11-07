@@ -8,7 +8,7 @@ import { useGetMyEvents } from '@/api/event/hooks/use-get-my-events';
 import { useGetParticipatedEvents } from '@/api/event/hooks/use-get-participated-events';
 import { useNearestLiveEvents } from '@/api/event/hooks/use-nearest-live-events';
 import {
-  isEventJoinableLive,
+  selectJoinableLiveEvents,
   type LiveEventCandidate,
   type LiveEventsResult,
   type LiveScreenStatus,
@@ -17,7 +17,6 @@ import { useUserSocialActions } from '@/api/social/hooks/use-user-social-actions
 import { useCurrentPosition } from '@/hooks/use-current-position';
 import type { MainStackParamList } from '@/navigation/stacks/MainStack';
 import { routingService, type Coordinates, type WalkingRoute } from '@/services/routing.service';
-import { dedupeById } from '@/shared/utils/dedupe-by-id';
 
 /** Meme limite que ManageHub : les deux requetes partagent le cache React Query. */
 const MY_EVENTS_PAGE_LIMIT = 10;
@@ -90,9 +89,10 @@ function mergeMyLiveEvents(
   now: number,
 ): LiveMyEvent[] {
   const organizedIds = new Set(organized.map((event) => event.id));
-  return dedupeById([...organized, ...participated, ...joined])
-    .filter((event) => isEventJoinableLive(event, now))
-    .map((event) => ({ event, isOrganizer: organizedIds.has(event.id) }));
+  return selectJoinableLiveEvents([...organized, ...participated, ...joined], now).map((event) => ({
+    event,
+    isOrganizer: organizedIds.has(event.id),
+  }));
 }
 
 export function useLiveEventScreen(): UseLiveEventScreenResult {

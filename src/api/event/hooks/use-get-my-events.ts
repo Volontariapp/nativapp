@@ -3,7 +3,7 @@ import { eventApi } from '../event.api';
 
 const MY_EVENTS_QUERY_KEY = ['my-events'] as const;
 
-export const useGetMyEvents = (limit = 10) => {
+export const useGetMyEvents = (limit = 10, options: { enabled?: boolean } = {}) => {
   return useInfiniteQuery({
     queryKey: [...MY_EVENTS_QUERY_KEY, { limit }],
     queryFn: async ({ pageParam }) => {
@@ -20,6 +20,7 @@ export const useGetMyEvents = (limit = 10) => {
       }
     },
     initialPageParam: 1,
+    enabled: options.enabled ?? true,
     getNextPageParam: (lastPage, allPages) => {
       const currentCount = allPages.reduce((acc, page) => acc + page.events.length, 0);
       if (currentCount < lastPage.totalCount) {

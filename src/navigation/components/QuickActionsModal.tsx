@@ -23,6 +23,8 @@ export interface QuickActionsModalProps {
   onClose: () => void;
   onSelectCreate: () => void;
   onSelectManage: () => void;
+  onSelectLive: () => void;
+  hasLiveParticipation: boolean;
 }
 
 export function QuickActionsModal({
@@ -30,6 +32,8 @@ export function QuickActionsModal({
   onClose,
   onSelectCreate,
   onSelectManage,
+  onSelectLive,
+  hasLiveParticipation,
 }: QuickActionsModalProps): React.JSX.Element {
   const insets = useSafeAreaInsets();
   const { theme, themeMode } = useAppTheme();
@@ -239,6 +243,42 @@ export function QuickActionsModal({
 
                 <View style={[styles.arrowBadge, styles.arrowBadgeSocio]}>
                   <Feather name="chevron-right" size={16} color={theme.colors.primarySocio} />
+                </View>
+              </Pressable>
+
+              {/* Bouton 3 : Rejoindre un direct / Mon événement en direct */}
+              <Pressable
+                style={({ pressed }) => [
+                  styles.actionButton,
+                  pressed && styles.actionButtonPressed,
+                ]}
+                onPress={() => {
+                  handleAction(onSelectLive);
+                }}
+                accessibilityRole="button"
+                accessibilityLabel={
+                  hasLiveParticipation
+                    ? 'Voir mon événement en direct'
+                    : 'Rejoindre un événement en direct'
+                }
+              >
+                <View style={[styles.actionIconContainer, styles.actionIconEco]}>
+                  <Feather name="radio" size={22} color={theme.colors.white} />
+                </View>
+
+                <View style={styles.actionTextColumn}>
+                  <AppText style={styles.actionTitle}>
+                    {hasLiveParticipation ? 'Mon événement en direct' : 'Rejoindre un direct'}
+                  </AppText>
+                  <AppText style={styles.actionSubtitle}>
+                    {hasLiveParticipation
+                      ? 'Voir le trajet, le temps restant'
+                      : 'Événement en cours autour de vous'}
+                  </AppText>
+                </View>
+
+                <View style={[styles.arrowBadge, styles.arrowBadgeEco]}>
+                  <Feather name="chevron-right" size={16} color={theme.colors.primaryEco} />
                 </View>
               </Pressable>
             </View>

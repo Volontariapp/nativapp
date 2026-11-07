@@ -2,6 +2,9 @@ import React from 'react';
 import { render, fireEvent } from '@testing-library/react-native';
 import { NavigationContainer } from '@react-navigation/native';
 import MainAppNavigator from '../MainAppNavigator';
+import { useHasLiveParticipation } from '@/api/event/hooks/use-has-live-participation';
+
+jest.mock('@/api/event/hooks/use-has-live-participation');
 
 // Mock screens to keep test light
 jest.mock('@/screens', () => ({
@@ -27,6 +30,11 @@ jest.mock('@react-navigation/native', () => {
 describe('MainAppNavigator', () => {
   beforeEach(() => {
     jest.clearAllMocks();
+    jest.mocked(useHasLiveParticipation).mockReturnValue(false);
+  });
+
+  afterEach(() => {
+    jest.restoreAllMocks();
   });
 
   it('renders the central tab button with upward chevron by default', () => {
@@ -91,5 +99,44 @@ describe('MainAppNavigator', () => {
       screen: 'create',
       params: { screen: 'ManageHub' },
     });
+  });
+
+  it('enables the live participation lookup only while the modal is open', () => {
+    const { getByLabelText } = render(
+      <NavigationContainer>
+        <MainAppNavigator />
+      </NavigationContainer>,
+    );
+
+    expect(useHasLiveParticipation).toHaveBeenLastCalledWith(false);
+    fireEvent.press(getByLabelText('Ouvrir les actions rapides'));
+    expect(useHasLiveParticipation).toHaveBeenLastCalledWith(true);
+  });
+
+  it('navigates to LiveEvent when selecting the live action', () => {
+    const { getByLabelText } = render(
+      <NavigationContainer>
+        <MainAppNavigator />
+      </NavigationContainer>,
+    );
+
+    fireEvent.press(getByLabelText('Ouvrir les actions rapides'));
+    fireEvent.press(getByLabelText('Rejoindre un événement en direct'));
+
+    expect(mockNavigate).toHaveBeenCalledWith('LiveEvent');
+  });
+
+  it('shows my live event wording when the user has a live participation', () => {
+    jest.mocked(useHasLiveParticipation).mockReturnValue(true);
+    const { getByLabelText, getByText } = render(
+      <NavigationContainer>
+        <MainAppNavigator />
+      </NavigationContainer>,
+    );
+
+    fireEvent.press(getByLabelText('Ouvrir les actions rapides'));
+    fireEvent.press(getByText('Mon événement en direct'));
+
+    expect(mockNavigate).toHaveBeenCalledWith('LiveEvent');
   });
 });
