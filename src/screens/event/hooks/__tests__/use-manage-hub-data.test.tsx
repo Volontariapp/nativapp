@@ -107,7 +107,7 @@ describe('useManageHubData', () => {
     expect(created.result.current.myEventsCount).toBe(2);
   });
 
-  it('refreshes, paginates and reports loading for the active tab only', () => {
+  it('refreshes, paginates and reports loading for the active tab only', async () => {
     const wished = makeQuery([makeEvent('w1')], {
       hasNextPage: true,
       isLoading: true,
@@ -119,8 +119,10 @@ describe('useManageHubData', () => {
 
     const { result } = renderHook(() => useManageHubData('wished', 'all', 'all'));
 
-    act(() => {
+    // act asynchrone : le `finally` du rafraichissement remet le drapeau a false avant la fin du test
+    await act(() => {
       result.current.onRefresh();
+      return Promise.resolve();
     });
     result.current.handleEndReached();
 
@@ -215,9 +217,9 @@ describe('useManageHubData', () => {
       setup(makeQuery([a, b, makeEvent('c', day(1))]), makeQuery([]), makeQuery([]));
       rerender({});
 
-      await act(async () => {
+      await act(() => {
         result.current.onRefresh();
-        await Promise.resolve();
+        return Promise.resolve();
       });
 
       expect(ids(result.current.filteredEvents)).toEqual(['c', 'a', 'b']);
