@@ -2208,7 +2208,7 @@ __metadata:
     "@volontariapp/contracts": "npm:^4.10.0"
     "@volontariapp/errors": "npm:^0.6.5"
     "@volontariapp/logger": "npm:^0.4.0"
-    "@volontariapp/messaging": "npm:^2.33.0"
+    "@volontariapp/messaging": "npm:2.34.0"
     "@volontariapp/shared": "npm:^0.19.0"
     axios: "npm:^1.21.0"
     babel-plugin-transform-remove-console: "npm:^6.9.4"
@@ -4201,17 +4201,24 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@volontariapp/messaging@npm:^2.33.0":
-  version: 2.33.0
-  resolution: "@volontariapp/messaging@npm:2.33.0"
+"@volontariapp/messaging@npm:2.34.0":
+  version: 2.34.0
+  resolution: "@volontariapp/messaging@npm:2.34.0"
   dependencies:
     "@volontariapp/contracts": "npm:4.10.0"
-    "@volontariapp/shared": "npm:0.19.0"
-  checksum: 10c0/4ffd13860fec72e89c4b5eb33680a216f054651dada68870143eedd12df195821024d1e46bac299b7e3b3614a2b742dd631ae3ae0f81a256e31c88059dab17bb
+    "@volontariapp/shared": "npm:0.20.0"
+  checksum: 10c0/cb66ea3db82ff12cc8f393903a361b62b54ce84cddbcab09fdb3bf8c20dd2dca376338419bbbf9da1c7a51f7a67e7c68a471709322833cbfaf45ee06c94dc17d
   languageName: node
   linkType: hard
 
-"@volontariapp/shared@npm:0.19.0, @volontariapp/shared@npm:^0.19.0":
+"@volontariapp/shared@npm:0.20.0":
+  version: 0.20.0
+  resolution: "@volontariapp/shared@npm:0.20.0"
+  checksum: 10c0/5e9226514d3859cd8d09d957ec1d45da511c9b236efc73f4bdf15784a3bb6d86dade00442f5511deeb61e765eca5f9b4fd31359970781d8419d401a8ebc8e6d4
+  languageName: node
+  linkType: hard
+
+"@volontariapp/shared@npm:^0.19.0":
   version: 0.19.0
   resolution: "@volontariapp/shared@npm:0.19.0"
   checksum: 10c0/a18b506164618969343cf1402041b070ec69e9a500d9f4a60ee4499347f6b7d91c5757af7883e9630da2bb954e39d2045de2c10484238ae43a3cb2ff9db19038

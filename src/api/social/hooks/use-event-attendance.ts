@@ -2,14 +2,15 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import type { GetEventAttendeesResponse } from '@volontariapp/contracts';
 import { socialApi } from '../social.api';
 
+export const EVENT_ATTENDEES_QUERY_KEY = 'event-attendees' as const;
+
 export const useEventAttendees = (
   eventId?: string,
   params?: { page?: number; limit?: number },
-  options: { enabled?: boolean; refetchInterval?: number } = {},
+  options: { enabled?: boolean } = {},
 ) => {
   return useQuery<GetEventAttendeesResponse>({
-    refetchInterval: options.refetchInterval,
-    queryKey: ['event-attendees', eventId, params?.page, params?.limit],
+    queryKey: [EVENT_ATTENDEES_QUERY_KEY, eventId, params?.page, params?.limit],
     queryFn: async () => {
       if (eventId === undefined || eventId.length === 0) {
         return { attendees: [], pagination: undefined };
@@ -32,7 +33,7 @@ export const useSetEventAttendance = (eventId?: string) => {
     },
     onSuccess: async () => {
       if (eventId !== undefined && eventId.length > 0) {
-        await queryClient.invalidateQueries({ queryKey: ['event-attendees', eventId] });
+        await queryClient.invalidateQueries({ queryKey: [EVENT_ATTENDEES_QUERY_KEY, eventId] });
         await queryClient.invalidateQueries({ queryKey: ['event-participants', eventId] });
       }
     },

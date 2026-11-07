@@ -2,9 +2,6 @@ import type { EventAttendee } from '@volontariapp/contracts';
 import { isEventLive } from '@/screens/event/manage-hub.utils';
 import type { AppEvent } from './event.api';
 
-/** Intervalle de rafraichissement du statut de pointage tant que le WS ne le pousse pas. */
-export const CHECK_IN_REFETCH_INTERVAL_MS = 15 * 1000;
-
 /**
  * Vrai quand l'utilisateur participe a un evenement en cours sans etre l'organisateur :
  * seul cas ou un pointage par l'organisateur est attendu.
