@@ -21,11 +21,13 @@ import {
   type IUserBadgeAwardedWebsocketPayload,
   type IUserImpactScoreCreditedWebsocketPayload,
   type IRankingReadyWebsocketPayload,
+  type IEventAttendanceUpdatedWebsocketPayload,
   type RankingReadyListKind,
   WebsocketMessagingType,
 } from '@volontariapp/messaging';
 import { COMMENTS_LIST_QUERY_KEY } from '@/api/post/hooks/use-list-comments';
 import { invalidateEventLists } from '@/api/event/event-cache';
+import { EVENT_ATTENDEES_QUERY_KEY } from '@/api/social/hooks/use-event-attendance';
 import { RANKING_EVENTS_QUERY_KEY } from '@/api/ranking/hooks/use-ranking-events';
 import { RANKING_FEED_QUERY_KEY } from '@/api/ranking/hooks/use-ranking-feed';
 import { invalidateLikesSummary } from '@/api/social/likes-summary.cache';
@@ -176,6 +178,13 @@ export const useNotificationHandlers = (
         void queryClient.invalidateQueries({ queryKey: ['event', data.eventId] });
       }
       refreshEventLists({ alsoRanking: true });
+    };
+
+    // Pointage par l'organisateur : la carte de l'evenement relit la liste des inscrits.
+    const handleEventAttendanceUpdated = (data: IEventAttendanceUpdatedWebsocketPayload): void => {
+      void queryClient.invalidateQueries({
+        queryKey: [EVENT_ATTENDEES_QUERY_KEY, data.eventId],
+      });
     };
 
     const handleEventFailed = (): void => {
@@ -340,6 +349,7 @@ export const useNotificationHandlers = (
     socket.on(WebsocketMessagingType.EVENT_DELETED, handleEventDeleted);
     socket.on(WebsocketMessagingType.EVENT_CREATION_FAILED, handleEventFailed);
     socket.on(WebsocketMessagingType.EVENT_DELETION_FAILED, handleEventDeletionFailed);
+    socket.on(WebsocketMessagingType.EVENT_ATTENDANCE_UPDATED, handleEventAttendanceUpdated);
 
     socket.on(WebsocketMessagingType.USER_CREATED, handleUserCreated);
     socket.on(WebsocketMessagingType.USER_DELETED, handleUserDeleted);
@@ -385,6 +395,7 @@ export const useNotificationHandlers = (
       socket.off(WebsocketMessagingType.EVENT_DELETED, handleEventDeleted);
       socket.off(WebsocketMessagingType.EVENT_CREATION_FAILED, handleEventFailed);
       socket.off(WebsocketMessagingType.EVENT_DELETION_FAILED, handleEventDeletionFailed);
+      socket.off(WebsocketMessagingType.EVENT_ATTENDANCE_UPDATED, handleEventAttendanceUpdated);
 
       socket.off(WebsocketMessagingType.USER_CREATED, handleUserCreated);
       socket.off(WebsocketMessagingType.USER_DELETED, handleUserDeleted);
