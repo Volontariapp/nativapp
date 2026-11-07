@@ -1,5 +1,5 @@
 import { act } from 'react';
-import { renderHook, waitFor } from '@testing-library/react-native';
+import { cleanup, renderHook, waitFor } from '@testing-library/react-native';
 import { Alert } from 'react-native';
 import { EventState } from '@volontariapp/contracts';
 import { QueryClient } from '@tanstack/react-query';
@@ -47,6 +47,8 @@ describe('useLiveEventScreen', () => {
   });
 
   afterEach(() => {
+    // Demonter avant de restaurer : un rendu tardif appellerait le vrai useCurrentPosition (ordre des hooks).
+    cleanup();
     jest.restoreAllMocks();
   });
 
