@@ -88,6 +88,8 @@ const createSamplePost = (id: string, title: string): RankedAppPost => ({
   reasons: ['RECENT'],
 });
 
+const createdQueryClients: QueryClient[] = [];
+
 const createWrapper = () => {
   const queryClient = new QueryClient({
     defaultOptions: {
@@ -98,10 +100,21 @@ const createWrapper = () => {
     },
   });
 
+  createdQueryClients.push(queryClient);
+
   return ({ children }: { children: React.ReactNode }) => (
     <QueryClientProvider client={queryClient}>{children}</QueryClientProvider>
   );
 };
+
+// Declare apres l'import de la testing library : s'execute apres son demontage automatique.
+// writeLikeSummaries donne 30 minutes de gcTime aux resumes par post : sans clear(), leurs minuteries
+// gardent le processus jest ouvert (un run isole ne rend pas la main avant la fin du delai).
+afterEach(() => {
+  createdQueryClients.splice(0).forEach((client) => {
+    client.clear();
+  });
+});
 
 beforeEach(() => {
   mockGetLikesSummary.mockImplementation((ids) =>
@@ -114,6 +127,9 @@ beforeEach(() => {
 describe('useHomeScreen', () => {
   beforeEach(() => {
     jest.clearAllMocks();
+    // clearAllMocks garde les implementations : un test ne doit pas heriter des reponses du precedent.
+    mockGetFeed.mockReset();
+    mockRequestRefresh.mockReset();
     mockMyLikes([]);
     mockUseListPosts.mockReturnValue({
       data: {
@@ -462,6 +478,8 @@ describe('useHomeScreen pagination hygiene', () => {
 
   beforeEach(() => {
     jest.clearAllMocks();
+    mockGetFeed.mockReset();
+    mockRequestRefresh.mockReset();
     mockMyLikes([]);
     mockUseListPosts.mockReturnValue({
       data: { pages: [] },

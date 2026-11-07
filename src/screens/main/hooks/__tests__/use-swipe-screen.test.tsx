@@ -125,6 +125,10 @@ const renderSwipeHook = (queryClient: QueryClient = createTestQueryClient()) => 
 describe('useSwipeScreen', () => {
   beforeEach(() => {
     jest.clearAllMocks();
+    // clearAllMocks garde les implementations et les valeurs "une fois" : sans reset, un test
+    // herite des reponses du precedent, et un appel de plus que prevu renvoie undefined.
+    mockGetEvents.mockReset();
+    mockGetEvents.mockResolvedValue(rankingEventsPage([]));
     mockRequestRefresh.mockResolvedValue({
       accepted: true,
       refreshThrottled: false,
@@ -298,20 +302,11 @@ describe('useSwipeScreen', () => {
   });
 
   it('calls wish on swipe right', async () => {
-    mockGetEvents.mockResolvedValueOnce({
-      isFallback: false,
-      events: [createFakeEvent('evt-right')],
-      totalCount: 1,
-      ranking: {
-        source: 'FULL',
-        computedAt: '2026-10-20T08:00:00.000Z',
-        stale: false,
-        hasMore: false,
-        versionChanged: false,
-        listVersion: 'v1',
-        nextCursor: '',
-      },
-    });
+    // Apres la derniere carte, la pile se recharge : la liste suivante doit exister, sinon la
+    // requete ranking rend une page undefined et le rendu leve apres la fin du test.
+    mockGetEvents
+      .mockResolvedValueOnce(rankingEventsPage([createFakeEvent('evt-right')]))
+      .mockResolvedValue(rankingEventsPage([createFakeEvent('evt-next')], 'v2'));
 
     const { result } = renderSwipeHook();
 
@@ -324,6 +319,10 @@ describe('useSwipeScreen', () => {
     });
 
     expect(mockWish).toHaveBeenCalledWith('evt-right');
+
+    await waitFor(() => {
+      expect(result.current.events.map((event) => event.id)).toEqual(['evt-next']);
+    });
   });
 
   it('keeps the deck stable while swiping, then never shows a wished or passed event again when the screen opens again', async () => {
