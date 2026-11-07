@@ -12,6 +12,8 @@ import Feather from 'react-native-vector-icons/Feather';
 import Ionicons from 'react-native-vector-icons/Ionicons';
 import { Image } from 'expo-image';
 import { getEventImageUri } from '@/api/event/event-cover.utils';
+import { usePendingCheckIn } from '@/api/event/hooks/use-pending-check-in';
+import { CheckInPendingNotice } from '@/components/event/check-in-pending-notice';
 import { LIST_THUMBNAIL_RADIUS, LIST_THUMBNAIL_SIZE } from '@/components/event/event-image-frames';
 
 export interface EventCardProps {
@@ -40,6 +42,7 @@ function DetailRow({ icon, numberOfLines, children }: DetailRowProps): React.JSX
 
 export function EventCard({ event, onPress, onEdit }: EventCardProps): React.JSX.Element {
   const navigation = useNavigation<NativeStackNavigationProp<MainStackParamList>>();
+  const isCheckInPending = usePendingCheckIn(event);
 
   const isEcology =
     event.type === EventType.EVENT_TYPE_ECOLOGY ||
@@ -113,6 +116,8 @@ export function EventCard({ event, onPress, onEdit }: EventCardProps): React.JSX
         <DetailRow icon="calendar">
           {formattedDate} - {formattedTime}
         </DetailRow>
+
+        {isCheckInPending && <CheckInPendingNotice />}
       </View>
 
       {onEdit !== undefined && (

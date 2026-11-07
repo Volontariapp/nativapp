@@ -2,8 +2,13 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import type { GetEventAttendeesResponse } from '@volontariapp/contracts';
 import { socialApi } from '../social.api';
 
-export const useEventAttendees = (eventId?: string, params?: { page?: number; limit?: number }) => {
+export const useEventAttendees = (
+  eventId?: string,
+  params?: { page?: number; limit?: number },
+  options: { enabled?: boolean; refetchInterval?: number } = {},
+) => {
   return useQuery<GetEventAttendeesResponse>({
+    refetchInterval: options.refetchInterval,
     queryKey: ['event-attendees', eventId, params?.page, params?.limit],
     queryFn: async () => {
       if (eventId === undefined || eventId.length === 0) {
@@ -11,7 +16,7 @@ export const useEventAttendees = (eventId?: string, params?: { page?: number; li
       }
       return await socialApi.getEventAttendees(eventId, params);
     },
-    enabled: eventId !== undefined && eventId.length > 0,
+    enabled: (options.enabled ?? true) && eventId !== undefined && eventId.length > 0,
   });
 };
 
