@@ -1,14 +1,13 @@
-import React, { useMemo } from 'react';
+import React from 'react';
 import { StyleSheet, View } from 'react-native';
-import { EventState } from '@volontariapp/contracts';
 import { AppText } from '@/components/typography/AppText';
 import { AppButton } from '@/components/buttons/AppButton';
-import { EventStatusBadge } from '@/components/event/EventStatusBadge';
 import { useStyles } from '@/context/ThemeContext';
 import type { AppTheme } from '@/shared/themes/theme';
 import type { AppEvent } from '@/api/event/event.api';
 import type { LiveSharingState } from '@/hooks/live-sharing.types';
-import { formatParticipantsLabel, formatRemainingTime } from './live-format.utils';
+import { LiveEventCard } from './LiveEventCard';
+import { LiveEventIconActions } from './LiveEventIconActions';
 import { LiveSharingToggle } from './LiveSharingToggle';
 
 export interface LiveMyEventItem {
@@ -20,7 +19,9 @@ export interface LiveMyEventSectionProps {
   items: LiveMyEventItem[];
   onShowRoute: (event: AppEvent) => void;
   onOpenDetail: (event: AppEvent) => void;
-  onOpenMyEvents: () => void;
+  /** Quitter l'evenement (participant uniquement) ; absent : pas de bouton. */
+  onLeave?: (event: AppEvent) => void;
+  leavingEventId?: string | null;
   /** Etat du partage de position ; absent : pas de bascule. */
   sharing?: LiveSharingState;
   onToggleSharing?: (event: AppEvent, enabled: boolean) => void;
@@ -30,12 +31,12 @@ export function LiveMyEventSection({
   items,
   onShowRoute,
   onOpenDetail,
-  onOpenMyEvents,
+  onLeave,
+  leavingEventId = null,
   sharing,
   onToggleSharing,
 }: LiveMyEventSectionProps): React.JSX.Element | null {
   const styles = useStyles(createStyles);
-  const now = useMemo(() => Date.now(), [items]);
 
   if (items.length === 0) {
     return null;
@@ -45,56 +46,51 @@ export function LiveMyEventSection({
     <View style={styles.container} testID="live-my-event-section">
       <AppText style={styles.heading}>MON ÉVÉNEMENT</AppText>
       {items.map(({ event, isOrganizer }) => (
-        <View key={event.id} style={styles.card} testID={`live-my-event-${event.id}`}>
-          <View style={styles.titleRow}>
-            <AppText style={styles.title} numberOfLines={1}>
-              {event.title}
-            </AppText>
-            <EventStatusBadge state={EventState.EVENT_STATE_IN_PROGRESS} size="sm" />
-          </View>
-          <AppText style={styles.meta}>
-            {`${formatRemainingTime(event.endAt, now)} - ${formatParticipantsLabel(event.currentParticipants)}`}
-          </AppText>
-          <View style={styles.actions}>
-            {!isOrganizer && (
-              <AppButton
-                text="Trajet"
-                size="small"
-                variant="socio"
-                testID={`live-route-${event.id}`}
-                onPress={() => {
-                  onShowRoute(event);
+        <LiveEventCard
+          key={event.id}
+          event={event}
+          testID={`live-my-event-${event.id}`}
+          footer={
+            !isOrganizer && sharing !== undefined && onToggleSharing !== undefined ? (
+              <LiveSharingToggle
+                eventId={event.id}
+                status={sharing.activeEventId === event.id ? sharing.status : 'idle'}
+                lastStop={sharing.lastStop}
+                onToggle={(enabled) => {
+                  onToggleSharing(event, enabled);
                 }}
               />
-            )}
-            <AppButton
-              text="Détail"
-              size="small"
-              variant="secondary"
-              testID={`live-detail-${event.id}`}
-              onPress={() => {
-                onOpenDetail(event);
-              }}
-            />
-            <AppButton
-              text="Mes évts"
-              size="small"
-              variant="secondary"
-              testID={`live-my-events-${event.id}`}
-              onPress={onOpenMyEvents}
-            />
-          </View>
-          {!isOrganizer && sharing !== undefined && onToggleSharing !== undefined && (
-            <LiveSharingToggle
-              eventId={event.id}
-              status={sharing.activeEventId === event.id ? sharing.status : 'idle'}
-              lastStop={sharing.lastStop}
-              onToggle={(enabled) => {
-                onToggleSharing(event, enabled);
-              }}
-            />
+            ) : undefined
+          }
+        >
+          <LiveEventIconActions
+            eventId={event.id}
+            onShowRoute={
+              isOrganizer
+                ? undefined
+                : () => {
+                    onShowRoute(event);
+                  }
+            }
+            onOpenDetail={() => {
+              onOpenDetail(event);
+            }}
+          />
+          {!isOrganizer && onLeave !== undefined && (
+            <View style={styles.leave}>
+              <AppButton
+                text="Quitter l'événement"
+                size="small"
+                variant="danger"
+                loading={leavingEventId === event.id}
+                testID={`live-leave-${event.id}`}
+                onPress={() => {
+                  onLeave(event);
+                }}
+              />
+            </View>
           )}
-        </View>
+        </LiveEventCard>
       ))}
     </View>
   );
@@ -103,7 +99,6 @@ export function LiveMyEventSection({
 const createStyles = (theme: AppTheme) =>
   StyleSheet.create({
     container: {
-      gap: theme.spacing.sm,
       marginBottom: theme.spacing.lg,
     },
     heading: {
@@ -111,34 +106,11 @@ const createStyles = (theme: AppTheme) =>
       fontWeight: theme.typography.fontWeight.semibold,
       color: theme.colors.grey,
       letterSpacing: 1,
+      marginBottom: theme.spacing.sm,
     },
-    card: {
-      backgroundColor: theme.colors.white,
-      borderRadius: theme.radius.lg,
-      borderWidth: 1,
-      borderColor: theme.colors.lightGrey,
-      padding: theme.spacing.md,
-      gap: theme.spacing.sm,
-    },
-    titleRow: {
-      flexDirection: 'row',
-      alignItems: 'center',
-      justifyContent: 'space-between',
-      gap: theme.spacing.sm,
-    },
-    title: {
+    leave: {
       flex: 1,
-      fontSize: 15,
-      fontWeight: theme.typography.fontWeight.bold,
-      color: theme.colors.text,
-    },
-    meta: {
-      fontSize: theme.typography.fontSize.xs,
-      color: theme.colors.grey,
-    },
-    actions: {
-      flexDirection: 'row',
-      flexWrap: 'wrap',
-      gap: theme.spacing.sm,
+      alignItems: 'flex-end',
+      paddingLeft: theme.spacing.sm,
     },
   });

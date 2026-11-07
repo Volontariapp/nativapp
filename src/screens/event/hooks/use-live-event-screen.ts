@@ -42,15 +42,17 @@ export interface UseLiveEventScreenResult {
   result: LiveEventsResult;
   myEvents: LiveMyEvent[];
   participatingEventId: string | null;
+  leavingEventId: string | null;
   selectedRoute: LiveSelectedRoute | null;
   sharing: LiveSharingState;
   handleToggleSharing: (event: AppEvent, enabled: boolean) => void;
   handleParticipate: (event: AppEvent) => void;
+  /** Demande confirmation, puis arrete le partage, se desinscrit et retire l'evenement. */
+  handleLeave: (event: AppEvent) => void;
   handleSelectRoute: (event: AppEvent) => void;
   handleClearRoute: () => void;
   handleRetry: () => void;
   handleOpenDetail: (event: AppEvent) => void;
-  handleOpenMyEvents: () => void;
   handleBack: () => void;
 }
 
@@ -105,11 +107,13 @@ export function useLiveEventScreen(): UseLiveEventScreenResult {
   const query = useNearestLiveEvents(coordinates);
   const participatedQuery = useGetParticipatedEvents(MY_EVENTS_PAGE_LIMIT);
   const myEventsQuery = useGetMyEvents(MY_EVENTS_PAGE_LIMIT);
-  const { participate } = useUserSocialActions();
+  const { participate, unparticipate } = useUserSocialActions();
   const { start: startSharing, stop: stopSharing, ...sharing } = useLiveSharing();
 
   const [joinedEvents, setJoinedEvents] = useState<AppEvent[]>([]);
   const [participatingEventId, setParticipatingEventId] = useState<string | null>(null);
+  const [leavingEventId, setLeavingEventId] = useState<string | null>(null);
+  const [leftEventIds, setLeftEventIds] = useState<string[]>([]);
   const [routeEvent, setRouteEvent] = useState<AppEvent | null>(null);
 
   const { refetch } = query;
@@ -126,8 +130,8 @@ export function useLiveEventScreen(): UseLiveEventScreenResult {
         participatedQuery.data?.pages.flatMap((page) => page.events) ?? [],
         joinedEvents,
         Date.now(),
-      ),
-    [myEventsQuery.data, participatedQuery.data, joinedEvents],
+      ).filter(({ event }) => !leftEventIds.includes(event.id)),
+    [myEventsQuery.data, participatedQuery.data, joinedEvents, leftEventIds],
   );
 
   const result = useMemo<LiveEventsResult>(() => {
@@ -142,6 +146,7 @@ export function useLiveEventScreen(): UseLiveEventScreenResult {
       setParticipatingEventId(event.id);
       participate(event.id)
         .then(() => {
+          setLeftEventIds((previous) => previous.filter((id) => id !== event.id));
           setJoinedEvents((previous) => [
             ...previous,
             { ...event, currentParticipants: event.currentParticipants + 1 },
@@ -155,6 +160,43 @@ export function useLiveEventScreen(): UseLiveEventScreenResult {
         });
     },
     [participate],
+  );
+
+  const leaveEvent = useCallback(
+    async (event: AppEvent) => {
+      setLeavingEventId(event.id);
+      try {
+        // Le partage s'arrete d'abord : plus aucune position ne part vers un evenement quitte.
+        if (sharing.activeEventId === event.id && sharing.status !== 'idle') {
+          await stopSharing('LEFT');
+        }
+        await unparticipate(event.id);
+        setJoinedEvents((previous) => previous.filter((joined) => joined.id !== event.id));
+        setLeftEventIds((previous) => [...previous, event.id]);
+        setRouteEvent((current) => (current?.id === event.id ? null : current));
+      } catch {
+        Alert.alert('Erreur', 'Impossible de quitter cet événement.');
+      } finally {
+        setLeavingEventId(null);
+      }
+    },
+    [sharing.activeEventId, sharing.status, stopSharing, unparticipate],
+  );
+
+  const handleLeave = useCallback(
+    (event: AppEvent) => {
+      Alert.alert("Quitter l'événement", `Ne plus participer à « ${event.title} » ?`, [
+        { text: 'Annuler', style: 'cancel' },
+        {
+          text: 'Quitter',
+          style: 'destructive',
+          onPress: () => {
+            void leaveEvent(event);
+          },
+        },
+      ]);
+    },
+    [leaveEvent],
   );
 
   const handleToggleSharing = useCallback(
@@ -185,13 +227,6 @@ export function useLiveEventScreen(): UseLiveEventScreenResult {
     [navigation],
   );
 
-  const handleOpenMyEvents = useCallback(() => {
-    navigation.navigate('MainTabs', {
-      screen: 'create',
-      params: { screen: 'ManageHub', params: { initialTab: 'participated' } },
-    });
-  }, [navigation]);
-
   const handleBack = useCallback(() => {
     navigation.goBack();
   }, [navigation]);
@@ -216,15 +251,16 @@ export function useLiveEventScreen(): UseLiveEventScreenResult {
     result,
     myEvents,
     participatingEventId,
+    leavingEventId,
     selectedRoute,
     sharing,
     handleToggleSharing,
     handleParticipate,
+    handleLeave,
     handleSelectRoute: setRouteEvent,
     handleClearRoute,
     handleRetry,
     handleOpenDetail,
-    handleOpenMyEvents,
     handleBack,
   };
 }

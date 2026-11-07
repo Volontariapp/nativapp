@@ -1,9 +1,12 @@
 import React from 'react';
 import { cleanup, fireEvent, render, screen } from '@testing-library/react-native';
+import * as mockExpoImage from './expo-image.mock';
 import { createLiveEvent } from '@/api/event/__tests__/live-event.factory';
 import type { LiveSharingState } from '@/hooks/live-sharing.types';
 import { LiveMyEventSection } from '../LiveMyEventSection';
 import { createSharingState } from './live-sharing.factory';
+
+jest.mock('expo-image', () => mockExpoImage);
 
 const CONSENT =
   "Partager ma position avec l'organisateur jusqu'à mon arrivée. Position approximative (environ 100 m), visible de l'organisateur seul, jamais conservée.";
@@ -12,20 +15,22 @@ const renderSection = (options: {
   isOrganizer?: boolean;
   sharing?: LiveSharingState;
   onToggleSharing?: jest.Mock;
+  onLeave?: jest.Mock;
 }) => {
   const event = createLiveEvent({ id: 'evt-1' });
   const onToggleSharing = options.onToggleSharing ?? jest.fn();
+  const onLeave = options.onLeave ?? jest.fn();
   render(
     <LiveMyEventSection
       items={[{ event, isOrganizer: options.isOrganizer ?? false }]}
       onShowRoute={jest.fn()}
       onOpenDetail={jest.fn()}
-      onOpenMyEvents={jest.fn()}
+      onLeave={onLeave}
       sharing={options.sharing ?? createSharingState()}
       onToggleSharing={onToggleSharing}
     />,
   );
-  return { event, onToggleSharing };
+  return { event, onToggleSharing, onLeave };
 };
 
 describe('LiveMyEventSection sharing toggle', () => {
@@ -104,5 +109,46 @@ describe('LiveMyEventSection sharing toggle', () => {
     renderSection({ sharing: createSharingState({ status: 'error', activeEventId: 'evt-1' }) });
 
     expect(screen.getByText("Impossible d'activer le partage de position.")).toBeTruthy();
+  });
+});
+
+describe('LiveMyEventSection actions', () => {
+  afterEach(() => {
+    cleanup();
+    jest.restoreAllMocks();
+  });
+
+  it('has no "Mes évts" button', () => {
+    renderSection({});
+
+    expect(screen.queryByText('Mes évts')).toBeNull();
+  });
+
+  it('shows a labelled route icon and a labelled detail icon for a participant', () => {
+    renderSection({});
+
+    expect(screen.getByLabelText('Comment y aller')).toBeTruthy();
+    expect(screen.getByLabelText("Voir le détail de l'événement")).toBeTruthy();
+  });
+
+  it('shows the detail icon but no route icon for the organiser', () => {
+    renderSection({ isOrganizer: true });
+
+    expect(screen.queryByLabelText('Comment y aller')).toBeNull();
+    expect(screen.getByLabelText("Voir le détail de l'événement")).toBeTruthy();
+  });
+
+  it('asks to leave the event from a participant', () => {
+    const { event, onLeave } = renderSection({});
+
+    fireEvent.press(screen.getByText("Quitter l'événement"));
+
+    expect(onLeave).toHaveBeenCalledWith(event);
+  });
+
+  it('offers no leave button to the organiser', () => {
+    renderSection({ isOrganizer: true });
+
+    expect(screen.queryByText("Quitter l'événement")).toBeNull();
   });
 });
