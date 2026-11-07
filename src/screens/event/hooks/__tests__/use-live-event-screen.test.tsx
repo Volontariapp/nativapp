@@ -8,6 +8,8 @@ import { eventApi } from '@/api/event/event.api';
 import { createLiveEvent, LIVE_ORIGIN } from '@/api/event/__tests__/live-event.factory';
 import { socialApi } from '@/api/social/social.api';
 import * as positionHook from '@/hooks/use-current-position';
+import * as sharingHook from '@/hooks/use-live-sharing';
+import { createSharingState } from '@/components/event/live/__tests__/live-sharing.factory';
 import { routingService, type WalkingRoute } from '@/services/routing.service';
 import * as mockScreen from '../../__tests__/live-event-screen.mock';
 import { useLiveEventScreen } from '../use-live-event-screen';
@@ -41,9 +43,9 @@ describe('useLiveEventScreen', () => {
 
   beforeEach(() => {
     jest.clearAllMocks();
-    jest.spyOn(positionHook, 'useCurrentPosition').mockReturnValue(
-      mockScreen.createPositionState(),
-    );
+    jest
+      .spyOn(positionHook, 'useCurrentPosition')
+      .mockReturnValue(mockScreen.createPositionState());
   });
 
   afterEach(() => {
@@ -80,9 +82,11 @@ describe('useLiveEventScreen', () => {
     ['error', 'error'],
   ] as const)('maps the position status %s to %s', (positionStatus, expected) => {
     const { getEvents } = spyOnApis();
-    jest.spyOn(positionHook, 'useCurrentPosition').mockReturnValue(
-      mockScreen.createPositionState({ status: positionStatus, coordinates: null }),
-    );
+    jest
+      .spyOn(positionHook, 'useCurrentPosition')
+      .mockReturnValue(
+        mockScreen.createPositionState({ status: positionStatus, coordinates: null }),
+      );
 
     const { result } = renderScreenHook();
 
@@ -147,7 +151,9 @@ describe('useLiveEventScreen', () => {
     await waitFor(() => {
       expect(result.current.myEvents).toHaveLength(2);
     });
-    expect(result.current.myEvents.map(({ event, isOrganizer }) => [event.id, isOrganizer])).toEqual([
+    expect(
+      result.current.myEvents.map(({ event, isOrganizer }) => [event.id, isOrganizer]),
+    ).toEqual([
       ['organised', true],
       ['joined', true],
     ]);
@@ -223,17 +229,144 @@ describe('useLiveEventScreen', () => {
     expect(result.current.selectedRoute).toBeNull();
   });
 
-  it('opens the participations tab of ManageHub and goes back', () => {
+  it('goes back', () => {
     spyOnApis();
     const { result } = renderScreenHook();
 
-    result.current.handleOpenMyEvents();
     result.current.handleBack();
 
-    expect(mockScreen.mockNavigate).toHaveBeenCalledWith('MainTabs', {
-      screen: 'create',
-      params: { screen: 'ManageHub', params: { initialTab: 'participated' } },
-    });
     expect(mockScreen.mockGoBack).toHaveBeenCalledTimes(1);
+  });
+
+  describe('leaving an event', () => {
+    const joined = createLiveEvent({ id: 'joined', currentParticipants: 5 });
+
+    const setup = (sharing = createSharingState()) => {
+      spyOnApis();
+      jest
+        .spyOn(eventApi, 'getParticipatedEvents')
+        .mockResolvedValue({ events: [joined], totalCount: 1 });
+      const stop = jest.fn().mockResolvedValue(undefined);
+      jest
+        .spyOn(sharingHook, 'useLiveSharing')
+        .mockReturnValue({ ...sharing, start: jest.fn(), stop });
+      const unparticipate = jest
+        .spyOn(socialApi, 'unparticipate')
+        .mockResolvedValue({ success: true, message: 'ok' });
+      const alert = jest.spyOn(Alert, 'alert').mockImplementation(() => undefined);
+      return { stop, unparticipate, alert };
+    };
+
+    const confirmLeave = (alert: jest.SpiedFunction<typeof Alert.alert>) => {
+      const buttons = alert.mock.calls[0]?.[2] ?? [];
+      act(() => {
+        buttons.find((button) => button.text === 'Quitter')?.onPress?.();
+      });
+    };
+
+    it('asks for confirmation and does nothing until it is given', async () => {
+      const { unparticipate, alert } = setup();
+      const { result } = renderScreenHook();
+      await waitFor(() => {
+        expect(result.current.myEvents).toHaveLength(1);
+      });
+
+      act(() => {
+        result.current.handleLeave(joined);
+      });
+
+      expect(alert).toHaveBeenCalledTimes(1);
+      expect(unparticipate).not.toHaveBeenCalled();
+      expect(result.current.myEvents).toHaveLength(1);
+    });
+
+    it('unparticipates and removes the event once confirmed', async () => {
+      const { unparticipate, alert, stop } = setup();
+      const { result } = renderScreenHook();
+      await waitFor(() => {
+        expect(result.current.myEvents).toHaveLength(1);
+      });
+
+      act(() => {
+        result.current.handleLeave(joined);
+      });
+      confirmLeave(alert);
+
+      await waitFor(() => {
+        expect(result.current.myEvents).toHaveLength(0);
+      });
+      expect(unparticipate).toHaveBeenCalledWith('joined');
+      expect(stop).not.toHaveBeenCalled();
+    });
+
+    it('stops the position sharing with LEFT before unparticipating', async () => {
+      const order: string[] = [];
+      const { unparticipate, alert, stop } = setup(
+        createSharingState({ status: 'sharing', activeEventId: 'joined' }),
+      );
+      stop.mockImplementation(() => {
+        order.push('stop');
+        return Promise.resolve();
+      });
+      unparticipate.mockImplementation(() => {
+        order.push('unparticipate');
+        return Promise.resolve({ success: true, message: 'ok' });
+      });
+      const { result } = renderScreenHook();
+      await waitFor(() => {
+        expect(result.current.myEvents).toHaveLength(1);
+      });
+
+      act(() => {
+        result.current.handleLeave(joined);
+      });
+      confirmLeave(alert);
+
+      await waitFor(() => {
+        expect(result.current.myEvents).toHaveLength(0);
+      });
+      expect(stop).toHaveBeenCalledWith('LEFT');
+      expect(order).toEqual(['stop', 'unparticipate']);
+    });
+
+    it('does not stop a sharing that belongs to another event', async () => {
+      const { alert, stop } = setup(
+        createSharingState({ status: 'sharing', activeEventId: 'other' }),
+      );
+      const { result } = renderScreenHook();
+      await waitFor(() => {
+        expect(result.current.myEvents).toHaveLength(1);
+      });
+
+      act(() => {
+        result.current.handleLeave(joined);
+      });
+      confirmLeave(alert);
+
+      await waitFor(() => {
+        expect(result.current.myEvents).toHaveLength(0);
+      });
+      expect(stop).not.toHaveBeenCalled();
+    });
+
+    it('alerts and keeps the event when unparticipation fails', async () => {
+      const { unparticipate, alert } = setup();
+      unparticipate.mockRejectedValue(new Error('500'));
+      const { result } = renderScreenHook();
+      await waitFor(() => {
+        expect(result.current.myEvents).toHaveLength(1);
+      });
+
+      act(() => {
+        result.current.handleLeave(joined);
+      });
+      confirmLeave(alert);
+
+      await waitFor(() => {
+        expect(alert).toHaveBeenCalledTimes(2);
+      });
+      expect(result.current.myEvents).toHaveLength(1);
+      expect(result.current.leavingEventId).toBeNull();
+    });
   });
 });

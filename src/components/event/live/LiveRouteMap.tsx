@@ -1,5 +1,13 @@
-import React, { useEffect, useRef } from 'react';
-import { ActivityIndicator, StyleSheet, View } from 'react-native';
+import React, { useEffect, useRef, useState } from 'react';
+import {
+  ActivityIndicator,
+  Modal,
+  StyleSheet,
+  View,
+  type StyleProp,
+  type ViewStyle,
+} from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import MapView, { Marker, Polyline, UrlTile } from 'react-native-maps';
 import { AppText } from '@/components/typography/AppText';
 import { AppIconsButton } from '@/components/buttons/AppIconsButton';
@@ -20,6 +28,55 @@ export interface LiveRouteMapProps {
 
 const EDGE_PADDING = { top: 40, right: 40, bottom: 40, left: 40 };
 
+interface LiveRouteMapViewProps {
+  title: string;
+  origin: Coordinates;
+  destination: Coordinates;
+  geometry: Coordinates[] | undefined;
+  style: StyleProp<ViewStyle>;
+}
+
+function LiveRouteMapView({
+  title,
+  origin,
+  destination,
+  geometry,
+  style,
+}: LiveRouteMapViewProps): React.JSX.Element {
+  const { theme } = useAppTheme();
+  const mapRef = useRef<MapView | null>(null);
+
+  useEffect(() => {
+    const points = geometry !== undefined && geometry.length > 0 ? geometry : [origin, destination];
+    mapRef.current?.fitToCoordinates(points, { edgePadding: EDGE_PADDING, animated: false });
+  }, [geometry, origin, destination]);
+
+  return (
+    <MapView
+      ref={mapRef}
+      style={style}
+      initialRegion={{
+        latitude: origin.latitude,
+        longitude: origin.longitude,
+        latitudeDelta: 0.02,
+        longitudeDelta: 0.02,
+      }}
+      showsUserLocation={false}
+    >
+      <UrlTile
+        urlTemplate="https://a.tile.openstreetmap.org/{z}/{x}/{y}.png"
+        maximumZ={19}
+        flipY={false}
+      />
+      <Marker coordinate={origin} title="Ma position" pinColor={theme.colors.primarySocio} />
+      <Marker coordinate={destination} title={title} pinColor={theme.colors.primaryEco} />
+      {geometry !== undefined && geometry.length > 0 && (
+        <Polyline coordinates={geometry} strokeColor={theme.colors.primarySocio} strokeWidth={4} />
+      )}
+    </MapView>
+  );
+}
+
 export function LiveRouteMap({
   title,
   origin,
@@ -31,13 +88,9 @@ export function LiveRouteMap({
 }: LiveRouteMapProps): React.JSX.Element {
   const { theme } = useAppTheme();
   const styles = useStyles(createStyles);
-  const mapRef = useRef<MapView | null>(null);
+  const insets = useSafeAreaInsets();
+  const [isFullscreen, setIsFullscreen] = useState(false);
   const geometry = route?.geometry;
-
-  useEffect(() => {
-    const points = geometry !== undefined && geometry.length > 0 ? geometry : [origin, destination];
-    mapRef.current?.fitToCoordinates(points, { edgePadding: EDGE_PADDING, animated: false });
-  }, [geometry, origin, destination]);
 
   return (
     <View style={styles.container} testID="live-route-map">
@@ -55,6 +108,17 @@ export function LiveRouteMap({
         </View>
         {isLoading && <ActivityIndicator size="small" color={theme.colors.primaryEco} />}
         <AppIconsButton
+          icon="maximize-2"
+          size={24}
+          variant="white"
+          iconColor={theme.colors.grey}
+          onPress={() => {
+            setIsFullscreen(true);
+          }}
+          accessibilityLabel="Agrandir la carte en plein écran"
+          testID="live-route-fullscreen-open"
+        />
+        <AppIconsButton
           icon="x"
           size={24}
           variant="white"
@@ -64,33 +128,44 @@ export function LiveRouteMap({
         />
       </View>
       <View style={styles.mapWrapper}>
-        <MapView
-          ref={mapRef}
+        <LiveRouteMapView
+          title={title}
+          origin={origin}
+          destination={destination}
+          geometry={geometry}
           style={styles.map}
-          initialRegion={{
-            latitude: origin.latitude,
-            longitude: origin.longitude,
-            latitudeDelta: 0.02,
-            longitudeDelta: 0.02,
-          }}
-          showsUserLocation={false}
-        >
-          <UrlTile
-            urlTemplate="https://a.tile.openstreetmap.org/{z}/{x}/{y}.png"
-            maximumZ={19}
-            flipY={false}
-          />
-          <Marker coordinate={origin} title="Ma position" pinColor={theme.colors.primarySocio} />
-          <Marker coordinate={destination} title={title} pinColor={theme.colors.primaryEco} />
-          {geometry !== undefined && geometry.length > 0 && (
-            <Polyline
-              coordinates={geometry}
-              strokeColor={theme.colors.primarySocio}
-              strokeWidth={4}
-            />
-          )}
-        </MapView>
+        />
       </View>
+      <Modal
+        visible={isFullscreen}
+        animationType="slide"
+        onRequestClose={() => {
+          setIsFullscreen(false);
+        }}
+      >
+        <View style={styles.fullscreen} testID="live-route-fullscreen">
+          <LiveRouteMapView
+            title={title}
+            origin={origin}
+            destination={destination}
+            geometry={geometry}
+            style={styles.map}
+          />
+          <View style={[styles.fullscreenClose, { top: insets.top + theme.spacing.md }]}>
+            <AppIconsButton
+              icon="x"
+              size={36}
+              variant="white"
+              iconColor={theme.colors.text}
+              onPress={() => {
+                setIsFullscreen(false);
+              }}
+              accessibilityLabel="Fermer la carte plein écran"
+              testID="live-route-fullscreen-close"
+            />
+          </View>
+        </View>
+      </Modal>
     </View>
   );
 }
@@ -129,12 +204,20 @@ const createStyles = (theme: AppTheme) =>
       color: theme.colors.danger,
     },
     mapWrapper: {
-      height: 220,
+      height: 340,
       borderRadius: theme.radius.md,
       overflow: 'hidden',
     },
     map: {
       width: '100%',
       height: '100%',
+    },
+    fullscreen: {
+      flex: 1,
+      backgroundColor: theme.colors.background,
+    },
+    fullscreenClose: {
+      position: 'absolute',
+      right: theme.spacing.lg,
     },
   });

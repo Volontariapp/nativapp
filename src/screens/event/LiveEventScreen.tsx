@@ -41,15 +41,16 @@ export function LiveEventScreen(): React.JSX.Element {
     result,
     myEvents,
     participatingEventId,
+    leavingEventId,
     selectedRoute,
     sharing,
     handleToggleSharing,
     handleParticipate,
+    handleLeave,
     handleSelectRoute,
     handleClearRoute,
     handleRetry,
     handleOpenDetail,
-    handleOpenMyEvents,
     handleBack,
   } = useLiveEventScreen();
 
@@ -65,9 +66,12 @@ export function LiveEventScreen(): React.JSX.Element {
         onSelect={(candidate) => {
           handleSelectRoute(candidate.event);
         }}
+        onOpenDetail={(candidate) => {
+          handleOpenDetail(candidate.event);
+        }}
       />
     ),
-    [participatingEventId, handleParticipate, handleSelectRoute],
+    [participatingEventId, handleParticipate, handleSelectRoute, handleOpenDetail],
   );
 
   const statusMessage = STATUS_MESSAGES[status];
@@ -81,7 +85,8 @@ export function LiveEventScreen(): React.JSX.Element {
         items={myEvents}
         onShowRoute={handleSelectRoute}
         onOpenDetail={handleOpenDetail}
-        onOpenMyEvents={handleOpenMyEvents}
+        onLeave={handleLeave}
+        leavingEventId={leavingEventId}
         sharing={sharing}
         onToggleSharing={handleToggleSharing}
       />

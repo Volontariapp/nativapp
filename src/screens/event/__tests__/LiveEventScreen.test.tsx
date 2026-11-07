@@ -1,4 +1,5 @@
-import React from 'react';
+import React, { act } from 'react';
+import { Alert } from 'react-native';
 import { cleanup, fireEvent, render, screen, waitFor } from '@testing-library/react-native';
 import { QueryClient } from '@tanstack/react-query';
 import { EventState } from '@volontariapp/contracts';
@@ -7,12 +8,15 @@ import { eventApi } from '@/api/event/event.api';
 import type { AppEvent } from '@/api/event/event.api';
 import { createLiveEvent, LIVE_ORIGIN } from '@/api/event/__tests__/live-event.factory';
 import * as positionHook from '@/hooks/use-current-position';
+import { socialApi } from '@/api/social/social.api';
 import { routingService } from '@/services/routing.service';
 import * as mockMaps from './react-native-maps.mock';
 import * as mockScreen from './live-event-screen.mock';
+import * as mockExpoImage from '@/components/event/live/__tests__/expo-image.mock';
 import { LiveEventScreen } from '../LiveEventScreen';
 
 jest.mock('react-native-maps', () => mockMaps);
+jest.mock('expo-image', () => mockExpoImage);
 jest.mock('@/api/client', () => ({ apiFetch: jest.fn() }));
 jest.mock('@react-navigation/native', () => mockScreen.createNavigationModule());
 
@@ -24,21 +28,28 @@ interface ApiFixtures {
 }
 
 const spyOnApis = ({ search = [], participated = [], organized = [], durations }: ApiFixtures) => {
-  jest.spyOn(eventApi, 'getEvents').mockResolvedValue({ events: search, totalCount: search.length });
+  jest
+    .spyOn(eventApi, 'getEvents')
+    .mockResolvedValue({ events: search, totalCount: search.length });
   jest
     .spyOn(eventApi, 'getParticipatedEvents')
     .mockResolvedValue({ events: participated, totalCount: participated.length });
   jest
     .spyOn(eventApi, 'getMyEvents')
     .mockResolvedValue({ events: organized, totalCount: organized.length });
-  jest.spyOn(routingService, 'fetchWalkingDurations').mockImplementation((_o, destinations) =>
-    Promise.resolve({ durationsSeconds: durations ?? destinations.map(() => 300) }),
-  );
+  jest
+    .spyOn(routingService, 'fetchWalkingDurations')
+    .mockImplementation((_o, destinations) =>
+      Promise.resolve({ durationsSeconds: durations ?? destinations.map(() => 300) }),
+    );
 };
 
 const renderScreen = () => {
   const client = new QueryClient({
-    defaultOptions: { queries: { retry: false, gcTime: Infinity }, mutations: { gcTime: Infinity } },
+    defaultOptions: {
+      queries: { retry: false, gcTime: Infinity },
+      mutations: { gcTime: Infinity },
+    },
   });
   return render(<LiveEventScreen />, { wrapper: createQueryWrapper(client) });
 };
@@ -182,7 +193,7 @@ describe('LiveEventScreen', () => {
       expect(screen.getByTestId('live-my-event-joined')).toBeTruthy();
     });
     expect(screen.getByText('MON ÉVÉNEMENT')).toBeTruthy();
-    fireEvent.press(screen.getByTestId('live-route-joined'));
+    fireEvent.press(screen.getByLabelText('Comment y aller'));
 
     await waitFor(() => {
       expect(screen.getByTestId('mock-map-polyline')).toBeTruthy();
@@ -190,7 +201,7 @@ describe('LiveEventScreen', () => {
     expect(screen.getByText('Trajet vers Berges')).toBeTruthy();
   });
 
-  it('shows no route button for an organiser and opens ManageHub from Mes évts', async () => {
+  it('shows no route icon, no leave button and no "Mes évts" for an organiser', async () => {
     spyOnApis({ organized: [createLiveEvent({ id: 'mine' })] });
     renderScreen();
 
@@ -198,12 +209,59 @@ describe('LiveEventScreen', () => {
       expect(screen.getByTestId('live-my-event-mine')).toBeTruthy();
     });
     expect(screen.queryByTestId('live-route-mine')).toBeNull();
-    fireEvent.press(screen.getByTestId('live-my-events-mine'));
+    expect(screen.queryByTestId('live-leave-mine')).toBeNull();
+    expect(screen.queryByText('Mes évts')).toBeNull();
+  });
 
-    expect(mockScreen.mockNavigate).toHaveBeenCalledWith('MainTabs', {
-      screen: 'create',
-      params: { screen: 'ManageHub', params: { initialTab: 'participated' } },
+  it('opens the event detail from the detail icon of a candidate', async () => {
+    const event = createLiveEvent({ id: 'a' });
+    spyOnApis({ search: [event] });
+    renderScreen();
+
+    await waitFor(() => {
+      expect(screen.getByTestId('live-detail-a')).toBeTruthy();
     });
+    fireEvent.press(screen.getByTestId('live-detail-a'));
+
+    expect(mockScreen.mockNavigate).toHaveBeenCalledWith('EventDetail', { event });
+  });
+
+  it('shows the cover and the participants of a candidate card', async () => {
+    spyOnApis({
+      search: [createLiveEvent({ id: 'a', maxParticipants: 20, currentParticipants: 8 })],
+    });
+    renderScreen();
+
+    await waitFor(() => {
+      expect(screen.getByTestId('live-candidate-a')).toBeTruthy();
+    });
+    expect(screen.getByTestId('live-event-cover')).toBeTruthy();
+    expect(screen.getByText('8/20')).toBeTruthy();
+  });
+
+  it('leaves my event after confirmation and removes it from the section', async () => {
+    spyOnApis({ participated: [createLiveEvent({ id: 'joined', title: 'Berges' })] });
+    const unparticipate = jest
+      .spyOn(socialApi, 'unparticipate')
+      .mockResolvedValue({ success: true, message: 'ok' });
+    const alert = jest.spyOn(Alert, 'alert').mockImplementation(() => undefined);
+    renderScreen();
+
+    await waitFor(() => {
+      expect(screen.getByTestId('live-leave-joined')).toBeTruthy();
+    });
+    fireEvent.press(screen.getByTestId('live-leave-joined'));
+    const buttons = alert.mock.calls[0]?.[2] ?? [];
+    expect(unparticipate).not.toHaveBeenCalled();
+    await act(async () => {
+      buttons.find((button) => button.text === 'Quitter')?.onPress?.();
+      await Promise.resolve();
+    });
+
+    await waitFor(() => {
+      expect(screen.queryByTestId('live-my-event-section')).toBeNull();
+    });
+    expect(unparticipate).toHaveBeenCalledWith('joined');
   });
 
   it('goes back from the header', () => {
