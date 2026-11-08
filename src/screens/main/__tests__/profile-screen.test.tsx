@@ -15,6 +15,7 @@ import {
   mockNavigate,
   mockUseGetFollowers,
   mockUseGetMyPosts,
+  mockUseMyRank,
   mockUseGetFollows,
   mockUseProfile,
   mockUseProfileEvents,
@@ -26,6 +27,9 @@ jest.mock('@/api/social/hooks/use-likes-summary', () => ({
 }));
 jest.mock('@/api/user/hooks/use-profile', () => ({
   useProfile: (): unknown => mockUseProfile(),
+}));
+jest.mock('@/api/user/hooks/use-my-rank', () => ({
+  useMyRank: (): unknown => mockUseMyRank(),
 }));
 jest.mock('@/api/user/hooks/use-update-profile', () => ({
   useUpdateProfile: (): unknown => ({ mutateAsync: jest.fn(), isPending: false }),
@@ -65,6 +69,7 @@ const fontSizeOf = (element: TextElement): number | undefined =>
 
 describe('ProfileScreen header stats', () => {
   beforeEach(() => {
+    mockUseMyRank.mockReturnValue({ data: undefined });
     mockUseProfile.mockReturnValue({
       data: createProfile({ totalImpactScore: 350 }),
       isLoading: false,

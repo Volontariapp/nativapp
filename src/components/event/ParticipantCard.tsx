@@ -6,6 +6,7 @@ import { AppText } from '@/components/typography/AppText';
 import { useAppTheme, useStyles } from '@/context/ThemeContext';
 import type { AppTheme } from '@/shared/themes/theme';
 import type { UserWeb } from '@volontariapp/contracts';
+import { useRankFrameStyle } from '@/components/rank/use-rank-frame-style';
 
 export interface ParticipantCardProps {
   participant: UserWeb;
@@ -30,6 +31,7 @@ export function ParticipantCard({
 }: ParticipantCardProps): React.JSX.Element {
   const { theme } = useAppTheme();
   const styles = useStyles(createStyles);
+  const frameStyle = useRankFrameStyle(participant.id, 'thin');
 
   const avatarUri = participant.logoPath ?? `https://i.pravatar.cc/150?u=${participant.id}`;
   const isChecked = isCheckedIn === true;
@@ -39,6 +41,7 @@ export function ParticipantCard({
       style={({ pressed }) => [
         styles.card,
         pressed && Boolean(onPress) && styles.cardPressed,
+        frameStyle,
         style,
       ]}
       onPress={onPress}

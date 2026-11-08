@@ -6,10 +6,13 @@ import { AppText } from '@/components/typography/AppText';
 import { useAppTheme, useStyles } from '@/context/ThemeContext';
 import { lightTheme, type AppTheme } from '@/shared/themes/theme';
 import { getImpactRankStatus } from '@/shared/lib/impact-ranks';
+import { RankFrame } from '@/components/rank/rank-frame';
 
 import type { ProfileStatItem } from './ProfileStats';
 
 interface ProfileHeaderProps {
+  /** Utilisateur du profil : sert à poser le cadre de classement autour du pseudo et de la bio. */
+  userId?: string;
   pseudo: string;
   avatarUrl?: string;
   bio?: string;
@@ -20,6 +23,7 @@ interface ProfileHeaderProps {
 }
 
 export const ProfileHeader = ({
+  userId,
   pseudo,
   avatarUrl,
   bio,
@@ -60,29 +64,31 @@ export const ProfileHeader = ({
         </View>
       </View>
 
-      <View style={styles.bottomSection}>
-        <View style={styles.nameRow}>
-          <AppText style={styles.userName}>{pseudo}</AppText>
-          {impactScore !== undefined && (
-            <View testID="profile-rank-chip" style={styles.rankChip}>
-              <AppText style={styles.rankChipText}>
-                {getImpactRankStatus(impactScore).current.name}
-              </AppText>
-            </View>
+      <RankFrame userId={userId} intensity="strong">
+        <View style={styles.bottomSection}>
+          <View style={styles.nameRow}>
+            <AppText style={styles.userName}>{pseudo}</AppText>
+            {impactScore !== undefined && (
+              <View testID="profile-rank-chip" style={styles.rankChip}>
+                <AppText style={styles.rankChipText}>
+                  {getImpactRankStatus(impactScore).current.name}
+                </AppText>
+              </View>
+            )}
+          </View>
+          <AppText style={styles.bioText}>
+            {typeof bio === 'string' && bio.trim() !== ''
+              ? bio
+              : "Aucune bio n'a été renseignée pour le moment. Raconte-nous un peu qui tu es !"}
+          </AppText>
+          {headerAction !== undefined && headerAction !== null && (
+            <View style={styles.actionContainer}>{headerAction}</View>
+          )}
+          {bioAction !== undefined && bioAction !== null && (
+            <View style={styles.actionContainer}>{bioAction}</View>
           )}
         </View>
-        <AppText style={styles.bioText}>
-          {typeof bio === 'string' && bio.trim() !== ''
-            ? bio
-            : "Aucune bio n'a été renseignée pour le moment. Raconte-nous un peu qui tu es !"}
-        </AppText>
-        {headerAction !== undefined && headerAction !== null && (
-          <View style={styles.actionContainer}>{headerAction}</View>
-        )}
-        {bioAction !== undefined && bioAction !== null && (
-          <View style={styles.actionContainer}>{bioAction}</View>
-        )}
-      </View>
+      </RankFrame>
     </View>
   );
 };

@@ -50,6 +50,22 @@ export type AppThemeColors = {
   badgeGreenBackground: string;
   badgeEcoBackground: string;
   badgeSocioBackground: string;
+  emerald: string;
+  emeraldBorder: string;
+  emeraldBackground: string;
+  emeraldText: string;
+  ruby: string;
+  rubyBorder: string;
+  rubyBackground: string;
+  rubyText: string;
+  flame: string;
+  flameBorder: string;
+  flameBackground: string;
+  flameText: string;
+  ember: string;
+  emberBorder: string;
+  emberBackground: string;
+  emberText: string;
 };
 
 export const lightTheme = {
@@ -105,6 +121,22 @@ export const lightTheme = {
     badgeGreenBackground: '#E8F5E9',
     badgeEcoBackground: '#EAF5EC',
     badgeSocioBackground: '#E6F3F7',
+    emerald: '#10B981',
+    emeraldBorder: '#6EE7B7',
+    emeraldBackground: '#ECFDF5',
+    emeraldText: '#047857',
+    ruby: '#E11D48',
+    rubyBorder: '#FDA4AF',
+    rubyBackground: '#FFF1F2',
+    rubyText: '#9F1239',
+    flame: '#F59E0B',
+    flameBorder: '#FCD34D',
+    flameBackground: '#FFFBEB',
+    flameText: '#B45309',
+    ember: '#EA580C',
+    emberBorder: '#FDBA74',
+    emberBackground: '#FFF7ED',
+    emberText: '#9A3412',
   },
   section: {
     gap: 12,
@@ -212,6 +244,22 @@ export const darkTheme: AppTheme = {
     badgeGreenBackground: '#152A18',
     badgeEcoBackground: '#1A3320',
     badgeSocioBackground: '#152C36',
+    emerald: '#34D399',
+    emeraldBorder: '#047857',
+    emeraldBackground: '#0B2A20',
+    emeraldText: '#A7F3D0',
+    ruby: '#FB7185',
+    rubyBorder: '#9F1239',
+    rubyBackground: '#2D1118',
+    rubyText: '#FECDD3',
+    flame: '#FBBF24',
+    flameBorder: '#B45309',
+    flameBackground: '#2B2008',
+    flameText: '#FDE68A',
+    ember: '#FB923C',
+    emberBorder: '#9A3412',
+    emberBackground: '#2B170C',
+    emberText: '#FED7AA',
   },
 };
 

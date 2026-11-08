@@ -122,3 +122,11 @@ jest.mock('react-native-vector-icons/Feather', () => {
   FeatherIcon.displayName = 'MockFeatherIcon';
   return FeatherIcon;
 });
+
+// Les cadres de classement lisent les podiums via React Query. Hors des tests du classement, les
+// composants qui les posent (commentaire, participant, organisateur, profil, post) s'affichent sans
+// cadre et sans avoir besoin d'un QueryClientProvider.
+jest.mock('@/api/user/hooks/use-user-distinction', () => ({
+  useUserDistinction: jest.fn(() => undefined),
+  useDistinctionMap: jest.fn(() => new Map()),
+}));

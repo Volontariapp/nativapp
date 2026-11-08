@@ -9,6 +9,7 @@ import { ProfileEventsTabs } from './ProfileEventsTabs';
 import type { PaginatedEventListData } from './profile-events.types';
 
 interface ProfileLayoutProps {
+  userId?: string;
   pseudo: string;
   avatarUrl?: string;
   bio?: string;
@@ -34,6 +35,7 @@ interface ProfileLayoutProps {
  * par `headerAction`, `bioAction` et `children`.
  */
 export const ProfileLayout = ({
+  userId,
   pseudo,
   avatarUrl,
   bio,
@@ -49,6 +51,7 @@ export const ProfileLayout = ({
   return (
     <>
       <ProfileHeader
+        userId={userId}
         pseudo={pseudo}
         avatarUrl={avatarUrl}
         bio={bio}

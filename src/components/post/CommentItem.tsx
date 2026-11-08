@@ -14,6 +14,7 @@ import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import type { MainStackParamList } from '@/navigation/stacks/MainStack';
 import type { CommentWebResponse } from '@volontariapp/contracts';
 import { DELETED_USER_ID } from '@/shared/lib/user.constants';
+import { useRankFrameStyle } from '@/components/rank/use-rank-frame-style';
 
 interface CommentItemProps {
   comment: CommentWebResponse;
@@ -27,6 +28,7 @@ export function CommentItem({ comment }: CommentItemProps) {
   const { data: author } = useGetPublicUser(isDeletedUser ? undefined : comment.authorId);
   const { mutate: deleteComment, isPending } = useDeleteComment(comment.postId);
   const navigation = useNavigation<NativeStackNavigationProp<MainStackParamList>>();
+  const frameStyle = useRankFrameStyle(isDeletedUser ? undefined : comment.authorId, 'thin');
 
   const pseudo = isDeletedUser ? 'Utilisateur supprimé' : (author?.pseudo ?? 'Auteur inconnu');
   const date = new Date(comment.createdAt).toLocaleDateString('fr-FR');
@@ -46,7 +48,7 @@ export function CommentItem({ comment }: CommentItemProps) {
   };
 
   return (
-    <View style={styles.commentCard}>
+    <View style={[styles.commentCard, frameStyle]}>
       <View style={styles.commentHeader}>
         <Pressable
           style={styles.authorContainer}

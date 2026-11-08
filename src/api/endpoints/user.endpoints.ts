@@ -21,6 +21,10 @@ import type {
   GetEventParticipantsWebRequest,
   GetPostLikersWebRequest,
   GetMyBadgeProgressWebResponse,
+  GetLeaderboardRequest,
+  GetLeaderboardWebResponse,
+  GetMyRankRequest,
+  GetMyRankWebResponse,
 } from '@volontariapp/contracts';
 
 export const USER_ENDPOINTS = {
@@ -148,6 +152,18 @@ export const USER_ENDPOINTS = {
     requiresAuth: true,
     roles: [UserRoles.ORGANIZATION, UserRoles.VOLUNTEER, UserRoles.ADMIN],
   } as EndpointDefinition<void, GetMyBadgeProgressWebResponse>,
+  GET_LEADERBOARD: {
+    path: '/users/leaderboard',
+    method: 'GET',
+    requiresAuth: true,
+    roles: [UserRoles.ORGANIZATION, UserRoles.VOLUNTEER, UserRoles.ADMIN],
+  } as EndpointDefinition<GetLeaderboardRequest, GetLeaderboardWebResponse>,
+  GET_MY_RANK: {
+    path: '/users/me/rank',
+    method: 'GET',
+    requiresAuth: true,
+    roles: [UserRoles.ORGANIZATION, UserRoles.VOLUNTEER, UserRoles.ADMIN],
+  } as EndpointDefinition<GetMyRankRequest, GetMyRankWebResponse>,
   GET_EVENT_PARTICIPANTS: {
     path: '/users/event/:eventId/participants',
     method: 'GET',
