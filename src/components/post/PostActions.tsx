@@ -36,7 +36,7 @@ export function PostActions({
               color={isLiked ? theme.colors.danger : theme.colors.text}
             />
           </Pressable>
-          {likeCount >= 0 && (
+          {likeCount > 0 && (
             <Pressable onPress={onLikeCountPress}>
               <Text style={styles.actionText}>{likeCount}</Text>
             </Pressable>
