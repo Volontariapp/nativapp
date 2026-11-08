@@ -25,7 +25,6 @@ import { useLikePost } from '@/api/social/hooks/use-like-post';
 import { useUnlikePost } from '@/api/social/hooks/use-unlike-post';
 import { usePostLikeSummary } from '@/api/social/hooks/use-likes-summary';
 import { PostLikersModal } from './PostLikersModal';
-import { useRankFrameStyle } from '@/components/rank/use-rank-frame-style';
 import Animated, {
   useSharedValue,
   useAnimatedStyle,
@@ -55,7 +54,6 @@ function AppPostComponent({ post }: PostCardProps) {
   const isFallbackPost = isDebugMode && rankingScore === undefined && reasons.length === 0;
 
   const { data: author } = useGetPublicUser(post.authorId);
-  const frameStyle = useRankFrameStyle(post.authorId, 'medium');
   const { data: commentsData } = useListComments(post.id);
   // Resume lu depuis le cache alimente par le lot de la liste (useLikesSummary) : aucune requete ici.
   const { data: likeSummary } = usePostLikeSummary(post.id);
@@ -148,7 +146,7 @@ function AppPostComponent({ post }: PostCardProps) {
     .runOnJS(true);
 
   return (
-    <View style={[styles.card, frameStyle]}>
+    <View style={styles.card}>
       <PostAuthorHeader
         pseudo={author?.pseudo}
         authorId={post.authorId}

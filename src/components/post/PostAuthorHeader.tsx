@@ -3,6 +3,7 @@ import { UserAvatar } from '@/components/media/UserAvatar';
 import { useStyles } from '@/context/ThemeContext';
 import type { AppTheme } from '@/shared/themes/theme';
 import { PostFollowButton } from './PostFollowButton';
+import { useRankFrameStyle } from '@/components/rank/use-rank-frame-style';
 
 interface PostAuthorHeaderProps {
   pseudo?: string | null;
@@ -20,9 +21,11 @@ export function PostAuthorHeader({
   showFollowButton = false,
 }: PostAuthorHeaderProps) {
   const styles = useStyles(createStyles);
+  // Bannière du post pour le podium : cadre aux angles droits, le reste du post ne change pas.
+  const frameStyle = useRankFrameStyle(authorId, 'medium', { squared: true });
 
   return (
-    <View style={styles.container}>
+    <View testID="post-author-header" style={[styles.container, frameStyle]}>
       <Pressable
         style={styles.authorInfo}
         onPress={onPress}
