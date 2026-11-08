@@ -14,6 +14,7 @@ import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import type { MainStackParamList } from '@/navigation/stacks/MainStack';
 import type { CommentWebResponse } from '@volontariapp/contracts';
 import { DELETED_USER_ID } from '@/shared/lib/user.constants';
+import { useRankTextColor } from '@/components/rank/use-rank-text-color';
 
 interface CommentItemProps {
   comment: CommentWebResponse;
@@ -27,6 +28,7 @@ export function CommentItem({ comment }: CommentItemProps) {
   const { data: author } = useGetPublicUser(isDeletedUser ? undefined : comment.authorId);
   const { mutate: deleteComment, isPending } = useDeleteComment(comment.postId);
   const navigation = useNavigation<NativeStackNavigationProp<MainStackParamList>>();
+  const rankColor = useRankTextColor(isDeletedUser ? undefined : comment.authorId);
 
   const pseudo = isDeletedUser ? 'Utilisateur supprimé' : (author?.pseudo ?? 'Auteur inconnu');
   const date = new Date(comment.createdAt).toLocaleDateString('fr-FR');
@@ -58,7 +60,9 @@ export function CommentItem({ comment }: CommentItemProps) {
           }}
         >
           <UserAvatar uri={resolveAvatarUrl(author)} size={24} style={styles.avatarSpacing} />
-          <AppText style={styles.author}>{pseudo}</AppText>
+          <AppText style={[styles.author, rankColor !== undefined && { color: rankColor }]}>
+            {pseudo}
+          </AppText>
         </Pressable>
         <View style={styles.actionsContainer}>
           <AppText style={styles.date}>{date}</AppText>

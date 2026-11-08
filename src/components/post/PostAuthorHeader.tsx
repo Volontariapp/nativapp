@@ -3,6 +3,7 @@ import { UserAvatar } from '@/components/media/UserAvatar';
 import { useStyles } from '@/context/ThemeContext';
 import type { AppTheme } from '@/shared/themes/theme';
 import { PostFollowButton } from './PostFollowButton';
+import { useRankTextColor } from '@/components/rank/use-rank-text-color';
 
 interface PostAuthorHeaderProps {
   pseudo?: string | null;
@@ -20,6 +21,7 @@ export function PostAuthorHeader({
   showFollowButton = false,
 }: PostAuthorHeaderProps) {
   const styles = useStyles(createStyles);
+  const rankColor = useRankTextColor(authorId);
 
   return (
     <View style={styles.container}>
@@ -31,7 +33,10 @@ export function PostAuthorHeader({
         accessibilityLabel={`Profil de ${pseudo ?? 'Auteur inconnu'}`}
       >
         <UserAvatar uri={avatarUrl} size={32} style={styles.avatarSpacing} />
-        <Text style={styles.authorName} numberOfLines={1}>
+        <Text
+          style={[styles.authorName, rankColor !== undefined && { color: rankColor }]}
+          numberOfLines={1}
+        >
           {pseudo ?? 'Auteur inconnu'}
         </Text>
       </Pressable>

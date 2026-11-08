@@ -1,6 +1,9 @@
 import React from 'react';
+import { StyleSheet } from 'react-native';
 import { render, fireEvent } from '@testing-library/react-native';
 import { createUserWeb } from '@/api/user/__tests__/user.factory';
+import { useUserDistinction } from '@/api/user/hooks/use-user-distinction';
+import { lightTheme } from '@/shared/themes/theme';
 import { ParticipantCard } from '../ParticipantCard';
 
 jest.mock('expo-image', () => ({ Image: 'Image' }));
@@ -19,6 +22,16 @@ describe('ParticipantCard', () => {
     expect(getByText('SuperVolunteer')).toBeTruthy();
     expect(getByText('450 pts')).toBeTruthy();
     expect(getByText('volunteer@test.com')).toBeTruthy();
+  });
+
+  it('colors the pseudo of a podium user with the color of the distinction', () => {
+    jest.mocked(useUserDistinction).mockReturnValue({ scope: 'global', tier: 1 });
+
+    const { getByText } = render(<ParticipantCard participant={participant} />);
+
+    expect(StyleSheet.flatten(getByText('SuperVolunteer').props.style)).toMatchObject({
+      color: lightTheme.colors.goldText,
+    });
   });
 
   it('displays "Émarger" button when canCheckIn is true and not yet checked in', () => {

@@ -15,3 +15,17 @@ export const publicProfileQueryKey = (userId?: string) =>
  * a chaque like, voeu ou evenement termine, bien avant qu'un badge soit debloque.
  */
 export const BADGE_PROGRESS_QUERY_KEY = ['badge-progress', 'me'] as const;
+
+/** Racine des classements (liste, podiums et mon rang). */
+export const LEADERBOARD_QUERY_KEY = ['leaderboard'] as const;
+
+/** Les trois premiers d'un classement, utilises pour poser les cadres partout dans l'app. */
+export const podiumQueryKey = (scope: string) =>
+  [...LEADERBOARD_QUERY_KEY, 'podium', scope] as const;
+
+/** Liste complete (scroll infini) d'un classement. */
+export const leaderboardListQueryKey = (scope: string) =>
+  [...LEADERBOARD_QUERY_KEY, 'list', scope] as const;
+
+/** Mon rang et mes voisins sur un classement. */
+export const myRankQueryKey = (scope: string) => [...LEADERBOARD_QUERY_KEY, 'me', scope] as const;

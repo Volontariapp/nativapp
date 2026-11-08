@@ -8,6 +8,7 @@ import { useGetPublicUser } from '@/api/user/hooks/use-get-public-user';
 import { useNavigation } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import type { MainStackParamList } from '@/navigation/stacks/MainStack';
+import { useRankFrameStyle } from '@/components/rank/use-rank-frame-style';
 
 interface EventOrganizerProps {
   organizerId?: string;
@@ -18,11 +19,12 @@ export function EventOrganizer({ organizerId }: EventOrganizerProps) {
   const styles = useStyles(createStyles);
   const { data: user, isLoading } = useGetPublicUser(organizerId);
   const navigation = useNavigation<NativeStackNavigationProp<MainStackParamList>>();
+  const frameStyle = useRankFrameStyle(organizerId, 'medium');
 
   if (organizerId == null) return null;
 
   return (
-    <View style={styles.container}>
+    <View style={[styles.container, frameStyle]}>
       <AppText style={styles.label}>Organisé par</AppText>
       <Pressable
         style={styles.profileContainer}

@@ -126,6 +126,7 @@ export function PublicProfileScreen(): React.JSX.Element {
           showsVerticalScrollIndicator={false}
         >
           <ProfileLayout
+            userId={params.userId}
             pseudo={user.pseudo}
             avatarUrl={resolveAvatarUrl(user)}
             bio={user.bio}

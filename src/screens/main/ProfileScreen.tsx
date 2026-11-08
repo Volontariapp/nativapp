@@ -1,3 +1,4 @@
+import { MyRankChip } from '@/components/rank/my-rank-chip';
 import React, { useCallback, useMemo, useState } from 'react';
 import { View, StyleSheet, ScrollView } from 'react-native';
 import {
@@ -130,6 +131,14 @@ export function ProfileScreen(): React.JSX.Element {
         </View>
 
         <ProfileLayout
+          userId={profile.id}
+          headerAction={
+            <MyRankChip
+              onPress={() => {
+                mainNavigation.navigate('Leaderboard');
+              }}
+            />
+          }
           pseudo={profile.pseudo}
           avatarUrl={resolveAvatarUrl(profile)}
           bio={profile.bio}

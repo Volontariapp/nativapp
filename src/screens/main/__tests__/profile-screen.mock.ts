@@ -3,6 +3,7 @@ export const mockUseProfileEvents = jest.fn();
 export const mockUseGetFollows = jest.fn();
 export const mockUseGetFollowers = jest.fn();
 export const mockUseGetMyPosts = jest.fn();
+export const mockUseMyRank = jest.fn();
 export const mockNavigate = jest.fn();
 
 const emptyList = {
