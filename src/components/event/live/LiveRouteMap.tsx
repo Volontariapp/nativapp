@@ -1,4 +1,4 @@
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useEffect, useRef } from 'react';
 import {
   ActivityIndicator,
   Modal,
@@ -77,6 +77,11 @@ function LiveRouteMapView({
   );
 }
 
+/**
+ * Trajet a pied vers un evenement, directement en plein ecran : la carte occupe tout l'ecran et le
+ * titre, la duree et la distance s'affichent en bandeau par-dessus. Fermer (bouton ou retour
+ * Android) efface le trajet selectionne.
+ */
 export function LiveRouteMap({
   title,
   origin,
@@ -89,102 +94,73 @@ export function LiveRouteMap({
   const { theme } = useAppTheme();
   const styles = useStyles(createStyles);
   const insets = useSafeAreaInsets();
-  const [isFullscreen, setIsFullscreen] = useState(false);
-  const geometry = route?.geometry;
 
   return (
-    <View style={styles.container} testID="live-route-map">
-      <View style={styles.header}>
-        <View style={styles.headerText}>
-          <AppText style={styles.title} numberOfLines={1}>
-            {`Trajet vers ${title}`}
-          </AppText>
-          {route !== null && (
-            <AppText style={styles.meta}>
-              {`${formatWalkDuration(route.durationSeconds)} à pied - ${String(route.distanceMeters)} m`}
-            </AppText>
-          )}
-          {isError && <AppText style={styles.error}>Trajet indisponible pour le moment.</AppText>}
-        </View>
-        {isLoading && <ActivityIndicator size="small" color={theme.colors.primaryEco} />}
-        <AppIconsButton
-          icon="maximize-2"
-          size={24}
-          variant="white"
-          iconColor={theme.colors.grey}
-          onPress={() => {
-            setIsFullscreen(true);
-          }}
-          accessibilityLabel="Agrandir la carte en plein écran"
-          testID="live-route-fullscreen-open"
-        />
-        <AppIconsButton
-          icon="x"
-          size={24}
-          variant="white"
-          iconColor={theme.colors.grey}
-          onPress={onClose}
-          accessibilityLabel="Fermer le trajet"
-        />
-      </View>
-      <View style={styles.mapWrapper}>
+    <Modal visible animationType="slide" onRequestClose={onClose} testID="live-route-modal">
+      <View style={styles.fullscreen} testID="live-route-fullscreen">
         <LiveRouteMapView
           title={title}
           origin={origin}
           destination={destination}
-          geometry={geometry}
+          geometry={route?.geometry}
           style={styles.map}
         />
-      </View>
-      <Modal
-        visible={isFullscreen}
-        animationType="slide"
-        onRequestClose={() => {
-          setIsFullscreen(false);
-        }}
-      >
-        <View style={styles.fullscreen} testID="live-route-fullscreen">
-          <LiveRouteMapView
-            title={title}
-            origin={origin}
-            destination={destination}
-            geometry={geometry}
-            style={styles.map}
-          />
-          <View style={[styles.fullscreenClose, { top: insets.top + theme.spacing.md }]}>
-            <AppIconsButton
-              icon="x"
-              size={36}
-              variant="white"
-              iconColor={theme.colors.text}
-              onPress={() => {
-                setIsFullscreen(false);
-              }}
-              accessibilityLabel="Fermer la carte plein écran"
-              testID="live-route-fullscreen-close"
-            />
+        <View style={[styles.panel, { top: insets.top + theme.spacing.md }]}>
+          <View style={styles.headerText}>
+            <AppText style={styles.title} numberOfLines={1}>
+              {`Trajet vers ${title}`}
+            </AppText>
+            {route !== null && (
+              <AppText style={styles.meta}>
+                {`${formatWalkDuration(route.durationSeconds)} à pied - ${String(route.distanceMeters)} m`}
+              </AppText>
+            )}
+            {isError && <AppText style={styles.error}>Trajet indisponible pour le moment.</AppText>}
           </View>
+          {isLoading && (
+            <ActivityIndicator
+              size="small"
+              color={theme.colors.primaryEco}
+              testID="live-route-loading"
+            />
+          )}
+          <AppIconsButton
+            icon="x"
+            size={24}
+            variant="white"
+            iconColor={theme.colors.grey}
+            onPress={onClose}
+            accessibilityLabel="Fermer le trajet"
+            testID="live-route-fullscreen-close"
+          />
         </View>
-      </Modal>
-    </View>
+      </View>
+    </Modal>
   );
 }
 
 const createStyles = (theme: AppTheme) =>
   StyleSheet.create({
-    container: {
+    fullscreen: {
+      flex: 1,
+      backgroundColor: theme.colors.background,
+    },
+    map: {
+      width: '100%',
+      height: '100%',
+    },
+    panel: {
+      position: 'absolute',
+      left: theme.spacing.lg,
+      right: theme.spacing.lg,
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: theme.spacing.sm,
       backgroundColor: theme.colors.white,
       borderRadius: theme.radius.lg,
       borderWidth: 1,
       borderColor: theme.colors.lightGrey,
       padding: theme.spacing.md,
-      gap: theme.spacing.sm,
-      marginBottom: theme.spacing.lg,
-    },
-    header: {
-      flexDirection: 'row',
-      alignItems: 'center',
-      gap: theme.spacing.sm,
     },
     headerText: {
       flex: 1,
@@ -202,22 +178,5 @@ const createStyles = (theme: AppTheme) =>
     error: {
       fontSize: theme.typography.fontSize.xs,
       color: theme.colors.danger,
-    },
-    mapWrapper: {
-      height: 340,
-      borderRadius: theme.radius.md,
-      overflow: 'hidden',
-    },
-    map: {
-      width: '100%',
-      height: '100%',
-    },
-    fullscreen: {
-      flex: 1,
-      backgroundColor: theme.colors.background,
-    },
-    fullscreenClose: {
-      position: 'absolute',
-      right: theme.spacing.lg,
     },
   });

@@ -201,6 +201,34 @@ describe('LiveEventScreen', () => {
     expect(screen.getByText('Trajet vers Berges')).toBeTruthy();
   });
 
+  it('opens the route straight in fullscreen, without the inline card, and closes it', async () => {
+    spyOnApis({ participated: [createLiveEvent({ id: 'joined', title: 'Berges' })] });
+    jest.spyOn(routingService, 'fetchWalkingRoute').mockResolvedValue({
+      distanceMeters: 600,
+      durationSeconds: 480,
+      geometry: [LIVE_ORIGIN, { latitude: 48.8616, longitude: 2.3522 }],
+    });
+    renderScreen();
+    await waitFor(() => {
+      expect(screen.getByTestId('live-my-event-joined')).toBeTruthy();
+    });
+    expect(screen.queryByTestId('live-route-fullscreen')).toBeNull();
+
+    fireEvent.press(screen.getByLabelText('Comment y aller'));
+
+    await waitFor(() => {
+      expect(screen.getByTestId('live-route-fullscreen')).toBeTruthy();
+    });
+    expect(screen.queryByTestId('live-route-map')).toBeNull();
+    expect(screen.queryByLabelText('Agrandir la carte en plein écran')).toBeNull();
+
+    fireEvent.press(screen.getByTestId('live-route-fullscreen-close'));
+
+    await waitFor(() => {
+      expect(screen.queryByTestId('live-route-fullscreen')).toBeNull();
+    });
+  });
+
   it('shows no route icon, no leave button and no "Mes évts" for an organiser', async () => {
     spyOnApis({ organized: [createLiveEvent({ id: 'mine' })] });
     renderScreen();
