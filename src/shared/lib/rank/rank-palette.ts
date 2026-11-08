@@ -57,13 +57,13 @@ export const rankIconKind = (distinction: RankDistinction): RankIconKind => {
   return distinction.tier === 1 ? 'crown' : 'medal';
 };
 
-const TIER_WORDS: Record<RankTier, string> = { 1: 'Premier', 2: 'Deuxième', 3: 'Troisième' };
-const SCOPE_WORDS: Record<RankDistinction['scope'], string> = {
-  global: 'du classement',
-  month: 'du mois',
-  week: 'de la semaine',
+/** Nom de chaque distinction, tel qu'il est affiché : métaux (global), gemmes (mois), flammes (semaine). */
+const NAMES: Record<RankDistinction['scope'], Record<RankTier, string>> = {
+  global: { 1: "Couronne d'or", 2: "Médaille d'argent", 3: 'Médaille de bronze' },
+  month: { 1: 'Diamant', 2: 'Émeraude', 3: 'Rubis' },
+  week: { 1: 'Flamme dorée', 2: 'Flamme argentée', 3: 'Flamme de braise' },
 };
 
-/** Libellé lu par les lecteurs d'écran et affiché dans l'étiquette du cadre. */
+/** Nom affiché dans l'étiquette du cadre et lu par les lecteurs d'écran. */
 export const rankDistinctionLabel = (distinction: RankDistinction): string =>
-  `${TIER_WORDS[distinction.tier]} ${SCOPE_WORDS[distinction.scope]}`;
+  NAMES[distinction.scope][distinction.tier];

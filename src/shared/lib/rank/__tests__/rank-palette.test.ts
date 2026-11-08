@@ -35,9 +35,15 @@ describe('rank palette', () => {
     expect(rankIconKind({ scope: 'week', tier: 2 })).toBe('flame');
   });
 
-  it('writes a label with the place and the ranking', () => {
-    expect(rankDistinctionLabel({ scope: 'global', tier: 1 })).toBe('Premier du classement');
-    expect(rankDistinctionLabel({ scope: 'month', tier: 2 })).toBe('Deuxième du mois');
-    expect(rankDistinctionLabel({ scope: 'week', tier: 3 })).toBe('Troisième de la semaine');
+  it('names each distinction after its award, not after its place', () => {
+    expect(rankDistinctionLabel({ scope: 'global', tier: 1 })).toBe("Couronne d'or");
+    expect(rankDistinctionLabel({ scope: 'global', tier: 2 })).toBe("Médaille d'argent");
+    expect(rankDistinctionLabel({ scope: 'global', tier: 3 })).toBe('Médaille de bronze');
+    expect(rankDistinctionLabel({ scope: 'month', tier: 1 })).toBe('Diamant');
+    expect(rankDistinctionLabel({ scope: 'month', tier: 2 })).toBe('Émeraude');
+    expect(rankDistinctionLabel({ scope: 'month', tier: 3 })).toBe('Rubis');
+    expect(rankDistinctionLabel({ scope: 'week', tier: 1 })).toBe('Flamme dorée');
+    expect(rankDistinctionLabel({ scope: 'week', tier: 2 })).toBe('Flamme argentée');
+    expect(rankDistinctionLabel({ scope: 'week', tier: 3 })).toBe('Flamme de braise');
   });
 });

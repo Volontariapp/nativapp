@@ -49,7 +49,7 @@ describe('RankFrame', () => {
       borderColor: lightTheme.colors.gold,
       borderWidth: 2,
     });
-    expect(getByTestId('rank-label').props.accessibilityLabel).toBe('Premier du classement');
+    expect(getByTestId('rank-label').props.accessibilityLabel).toBe("Couronne d'or");
   });
 
   it('draws a thin frame without a label', () => {
