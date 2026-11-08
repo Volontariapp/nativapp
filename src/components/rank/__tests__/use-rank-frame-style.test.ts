@@ -16,27 +16,11 @@ describe('buildRankFrameStyle', () => {
     });
   });
 
-  it('draws square corners and no glow for a banner', () => {
-    const style = buildRankFrameStyle(lightTheme, GLOBAL_FIRST, 'medium', { squared: true });
-
-    expect(style).toMatchObject({
-      borderColor: lightTheme.colors.gold,
-      borderWidth: 2,
-      borderRadius: 0,
-      backgroundColor: lightTheme.colors.goldBackground,
-    });
-    expect(style.shadowColor).toBeUndefined();
-    expect(style.shadowRadius).toBeUndefined();
-  });
-
-  it('keeps a thin frame plain, rounded or squared', () => {
+  it('keeps a thin frame plain: border only, no tint and no glow', () => {
     expect(buildRankFrameStyle(lightTheme, GLOBAL_FIRST, 'thin')).toEqual({
       borderColor: lightTheme.colors.gold,
       borderWidth: 1,
       borderRadius: lightTheme.radius.md,
-    });
-    expect(buildRankFrameStyle(lightTheme, GLOBAL_FIRST, 'thin', { squared: true })).toMatchObject({
-      borderRadius: 0,
     });
   });
 });

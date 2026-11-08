@@ -8,28 +8,20 @@ import type { AppTheme } from '@/shared/themes/theme';
 
 const BORDER_WIDTH: Record<RankFrameIntensity, number> = { strong: 2, medium: 2, thin: 1 };
 
-export interface RankFrameOptions {
-  /** Angles droits et sans halo : pour une bannière pleine largeur (en-tête de post). */
-  squared?: boolean;
-}
-
 /** Style de cadre d'une distinction : bordure aux couleurs du thème, halo discret pour les cadres forts. */
 export const buildRankFrameStyle = (
   theme: AppTheme,
   distinction: RankDistinction,
   intensity: RankFrameIntensity,
-  options: RankFrameOptions = {},
 ): ViewStyle => {
   const keys = rankPaletteKeys(distinction);
   const borderColor = theme.colors[keys.border];
-  const squared = options.squared === true;
   const base: ViewStyle = {
     borderColor,
     borderWidth: BORDER_WIDTH[intensity],
-    borderRadius: squared ? 0 : theme.radius.md,
+    borderRadius: theme.radius.md,
   };
   if (intensity === 'thin') return base;
-  if (squared) return { ...base, backgroundColor: theme.colors[keys.background] };
   return {
     ...base,
     backgroundColor: theme.colors[keys.background],
@@ -47,16 +39,12 @@ export const buildRankFrameStyle = (
 export const useRankFrameStyle = (
   userId: string | undefined,
   intensity: RankFrameIntensity,
-  options: RankFrameOptions = {},
 ): ViewStyle | undefined => {
   const { theme } = useAppTheme();
   const distinction = useUserDistinction(userId);
-  const squared = options.squared === true;
   return useMemo(
     () =>
-      distinction === undefined
-        ? undefined
-        : buildRankFrameStyle(theme, distinction, intensity, { squared }),
-    [theme, distinction, intensity, squared],
+      distinction === undefined ? undefined : buildRankFrameStyle(theme, distinction, intensity),
+    [theme, distinction, intensity],
   );
 };

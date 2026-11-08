@@ -1,5 +1,5 @@
 import React from 'react';
-import { StyleSheet, type StyleProp, type ViewStyle } from 'react-native';
+import { StyleSheet, type StyleProp, type TextStyle } from 'react-native';
 import { render } from '@testing-library/react-native';
 import { useUserDistinction } from '@/api/user/hooks/use-user-distinction';
 import { lightTheme } from '@/shared/themes/theme';
@@ -14,9 +14,9 @@ const mockedUseUserDistinction = jest.mocked(useUserDistinction);
 
 const PHOTO_URL = 'https://cdn.test/user-avatar/5d0e4a3c.webp';
 
-type ViewElement = { props: { style?: StyleProp<ViewStyle> } };
+type TextElement = { props: { style?: StyleProp<TextStyle> } };
 
-const styleOf = (element: ViewElement): ViewStyle => StyleSheet.flatten(element.props.style);
+const styleOf = (element: TextElement): TextStyle => StyleSheet.flatten(element.props.style);
 
 describe('PostAuthorHeader', () => {
   beforeEach(() => {
@@ -41,26 +41,20 @@ describe('PostAuthorHeader', () => {
     expect(queryByTestId('user-avatar-image')).toBeNull();
   });
 
-  it('keeps the plain banner for an author who is not on a podium', () => {
-    const { getByTestId } = render(<PostAuthorHeader pseudo="john_doe" authorId="author-1" />);
+  it('keeps the usual pseudo color for an author who is not on a podium', () => {
+    const { getByText } = render(<PostAuthorHeader pseudo="john_doe" authorId="author-1" />);
 
-    expect(styleOf(getByTestId('post-author-header'))).toMatchObject({
-      borderBottomWidth: 1,
-      borderBottomColor: lightTheme.colors.lightGrey,
-    });
+    expect(styleOf(getByText('john_doe')).color).not.toBe(lightTheme.colors.goldText);
   });
 
-  it('frames only the banner, with square corners, for the global first', () => {
+  it('turns the pseudo gold for the global first, without framing the banner', () => {
     mockedUseUserDistinction.mockReturnValue({ scope: 'global', tier: 1 });
 
-    const { getByTestId } = render(<PostAuthorHeader pseudo="john_doe" authorId="author-1" />);
+    const { getByText, toJSON } = render(
+      <PostAuthorHeader pseudo="john_doe" authorId="author-1" />,
+    );
 
-    const style = styleOf(getByTestId('post-author-header'));
-    expect(style).toMatchObject({
-      borderColor: lightTheme.colors.gold,
-      borderWidth: 2,
-      borderRadius: 0,
-    });
-    expect(style.shadowColor).toBeUndefined();
+    expect(styleOf(getByText('john_doe')).color).toBe(lightTheme.colors.goldText);
+    expect(JSON.stringify(toJSON())).not.toContain(lightTheme.colors.gold);
   });
 });

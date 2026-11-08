@@ -3,7 +3,7 @@ import { UserAvatar } from '@/components/media/UserAvatar';
 import { useStyles } from '@/context/ThemeContext';
 import type { AppTheme } from '@/shared/themes/theme';
 import { PostFollowButton } from './PostFollowButton';
-import { useRankFrameStyle } from '@/components/rank/use-rank-frame-style';
+import { useRankTextColor } from '@/components/rank/use-rank-text-color';
 
 interface PostAuthorHeaderProps {
   pseudo?: string | null;
@@ -21,11 +21,10 @@ export function PostAuthorHeader({
   showFollowButton = false,
 }: PostAuthorHeaderProps) {
   const styles = useStyles(createStyles);
-  // Bannière du post pour le podium : cadre aux angles droits, le reste du post ne change pas.
-  const frameStyle = useRankFrameStyle(authorId, 'medium', { squared: true });
+  const rankColor = useRankTextColor(authorId);
 
   return (
-    <View testID="post-author-header" style={[styles.container, frameStyle]}>
+    <View style={styles.container}>
       <Pressable
         style={styles.authorInfo}
         onPress={onPress}
@@ -34,7 +33,10 @@ export function PostAuthorHeader({
         accessibilityLabel={`Profil de ${pseudo ?? 'Auteur inconnu'}`}
       >
         <UserAvatar uri={avatarUrl} size={32} style={styles.avatarSpacing} />
-        <Text style={styles.authorName} numberOfLines={1}>
+        <Text
+          style={[styles.authorName, rankColor !== undefined && { color: rankColor }]}
+          numberOfLines={1}
+        >
           {pseudo ?? 'Auteur inconnu'}
         </Text>
       </Pressable>
