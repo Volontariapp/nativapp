@@ -27,6 +27,14 @@ export class AppConfig implements FrontendConfig {
     delayMs: number;
   } = undefined as unknown as { delayMs: number };
 
+  // applicationId et clientToken viennent de l'environnement du build (voir app.config.js) ;
+  // absents, le monitoring Datadog est desactive.
+  monitoring: {
+    sessionSampleRate: number;
+    applicationId?: string;
+    clientToken?: string;
+  } = undefined as unknown as { sessionSampleRate: number };
+
   getLoggerFormat(): LoggerFormat {
     return this.logger.format;
   }
