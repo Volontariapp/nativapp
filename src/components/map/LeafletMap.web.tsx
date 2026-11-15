@@ -5,15 +5,24 @@ import L from 'leaflet';
 import { theme } from '@/shared/themes/theme';
 import { useAppTheme } from '@/context/ThemeContext';
 import { AppIconsButton } from '@/components/buttons/AppIconsButton';
-import { EventType } from '@volontariapp/contracts';
 import type { AppMapProps } from './AppMap';
-const createCustomMarkerIcon = (
+import { getMapPinColor, getMapPinSize } from './map-pin.utils';
+
+const markerIconCache = new Map<string, L.DivIcon>();
+
+const getOrCreateCustomMarkerIcon = (
   color: string = theme.colors.primaryEco,
   size: number = 40,
-) => {
+): L.DivIcon => {
+  const cacheKey = `${color}-${String(size)}`;
+  const cached = markerIconCache.get(cacheKey);
+  if (cached !== undefined) {
+    return cached;
+  }
+
   const sizeStr = size.toString();
   const iconSizeStr = Math.round(size * 0.5).toString();
-  return L.divIcon({
+  const icon = L.divIcon({
     className: 'custom-leaflet-marker-pin',
     html: `
       <div style="display: flex; flex-direction: column; align-items: center; justify-content: center; width: ${sizeStr}px; filter: drop-shadow(0 3px 4px rgba(0,0,0,0.35)); cursor: pointer;">
@@ -49,10 +58,10 @@ const createCustomMarkerIcon = (
     iconAnchor: [size / 2, size + 6],
     popupAnchor: [0, -(size + 6)],
   });
-};
 
-const ecoMarkerIcon = createCustomMarkerIcon(theme.colors.primaryEco, 40);
-const socioMarkerIcon = createCustomMarkerIcon(theme.colors.primarySocio, 40);
+  markerIconCache.set(cacheKey, icon);
+  return icon;
+};
 
 const userMarkerIcon = L.divIcon({
   className: 'custom-leaflet-user-marker',
@@ -181,10 +190,10 @@ export default function LeafletMap({
 
         {events.map((event) => {
           if (!event.location) return null;
-          const isSocial =
-            event.type === EventType.EVENT_TYPE_SOCIAL ||
-            (event.type as unknown) === 'EVENT_TYPE_SOCIAL';
-          const markerIcon = isSocial ? socioMarkerIcon : ecoMarkerIcon;
+          const markerIcon = getOrCreateCustomMarkerIcon(
+            getMapPinColor(event, appTheme),
+            getMapPinSize(event),
+          );
 
           return (
             <Marker

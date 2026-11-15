@@ -15,7 +15,7 @@ export interface CustomMarkerProps extends Omit<MapMarkerProps, 'children'> {
   size?: number;
 }
 
-export const CustomMarker: React.FC<CustomMarkerProps> = ({
+export const CustomMarker: React.FC<CustomMarkerProps> = React.memo(function CustomMarker({
   coordinate,
   title,
   description,
@@ -26,7 +26,7 @@ export const CustomMarker: React.FC<CustomMarkerProps> = ({
   onPress,
   onSelect,
   ...rest
-}) => {
+}) {
   const markerColor = color ?? pinColor ?? theme.colors.primaryEco;
   const [tracksViewChanges, setTracksViewChanges] = useState(true);
   const lastPressRef = useRef(0);
@@ -92,7 +92,7 @@ export const CustomMarker: React.FC<CustomMarkerProps> = ({
       </View>
     </Marker>
   );
-};
+});
 
 const styles = StyleSheet.create({
   container: {
