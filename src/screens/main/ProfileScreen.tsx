@@ -143,6 +143,9 @@ export function ProfileScreen(): React.JSX.Element {
           avatarUrl={resolveAvatarUrl(profile)}
           bio={profile.bio}
           impactScore={profile.totalImpactScore}
+          onRankPress={() => {
+            mainNavigation.navigate('Leaderboard');
+          }}
           badges={profile.badges}
           onSeeAllBadges={() => {
             mainNavigation.navigate('Badges');
@@ -152,6 +155,10 @@ export function ProfileScreen(): React.JSX.Element {
               label: 'Impact',
               value: profile.totalImpactScore,
               color: theme.colors.primaryEco,
+              testID: 'profile-stat-impact',
+              onPress: () => {
+                mainNavigation.navigate('Leaderboard');
+              },
             },
             {
               label: 'Follow',

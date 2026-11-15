@@ -1,5 +1,5 @@
 import React from 'react';
-import { View, StyleSheet } from 'react-native';
+import { View, StyleSheet, Pressable } from 'react-native';
 import { Image } from 'expo-image';
 import Icon from 'react-native-vector-icons/Feather';
 import { AppText } from '@/components/typography/AppText';
@@ -17,6 +17,7 @@ interface ProfileHeaderProps {
   avatarUrl?: string;
   bio?: string;
   impactScore?: number;
+  onRankPress?: () => void;
   stats?: ProfileStatItem[];
   headerAction?: React.ReactNode;
   bioAction?: React.ReactNode;
@@ -28,6 +29,7 @@ export const ProfileHeader = ({
   avatarUrl,
   bio,
   impactScore,
+  onRankPress,
   stats = [],
   headerAction,
   bioAction,
@@ -51,16 +53,34 @@ export const ProfileHeader = ({
         </View>
 
         <View style={styles.statsContainer}>
-          {displayedStats.map((stat) => (
-            <View key={stat.label} style={styles.statItem}>
-              <AppText style={styles.statValue} numberOfLines={1}>
-                {stat.value}
-              </AppText>
-              <AppText style={styles.statLabel} numberOfLines={1}>
-                {stat.label}
-              </AppText>
-            </View>
-          ))}
+          {displayedStats.map((stat) =>
+            stat.onPress ? (
+              <Pressable
+                key={stat.label}
+                testID={stat.testID}
+                style={({ pressed }) => [styles.statItem, pressed && styles.statItemPressed]}
+                onPress={stat.onPress}
+                accessibilityRole="button"
+                accessibilityLabel={`${stat.label}: ${String(stat.value)}`}
+              >
+                <AppText style={styles.statValue} numberOfLines={1}>
+                  {stat.value}
+                </AppText>
+                <AppText style={styles.statLabel} numberOfLines={1}>
+                  {stat.label}
+                </AppText>
+              </Pressable>
+            ) : (
+              <View key={stat.label} testID={stat.testID} style={styles.statItem}>
+                <AppText style={styles.statValue} numberOfLines={1}>
+                  {stat.value}
+                </AppText>
+                <AppText style={styles.statLabel} numberOfLines={1}>
+                  {stat.label}
+                </AppText>
+              </View>
+            ),
+          )}
         </View>
       </View>
 
@@ -68,13 +88,26 @@ export const ProfileHeader = ({
         <View style={styles.bottomSection}>
           <View style={styles.nameRow}>
             <AppText style={styles.userName}>{pseudo}</AppText>
-            {impactScore !== undefined && (
-              <View testID="profile-rank-chip" style={styles.rankChip}>
-                <AppText style={styles.rankChipText}>
-                  {getImpactRankStatus(impactScore).current.name}
-                </AppText>
-              </View>
-            )}
+            {impactScore !== undefined &&
+              (onRankPress ? (
+                <Pressable
+                  testID="profile-rank-chip"
+                  style={({ pressed }) => [styles.rankChip, pressed && styles.statItemPressed]}
+                  onPress={onRankPress}
+                  accessibilityRole="button"
+                  accessibilityLabel={`Rang d'impact : ${getImpactRankStatus(impactScore).current.name}`}
+                >
+                  <AppText style={styles.rankChipText}>
+                    {getImpactRankStatus(impactScore).current.name}
+                  </AppText>
+                </Pressable>
+              ) : (
+                <View testID="profile-rank-chip" style={styles.rankChip}>
+                  <AppText style={styles.rankChipText}>
+                    {getImpactRankStatus(impactScore).current.name}
+                  </AppText>
+                </View>
+              ))}
           </View>
           <AppText style={styles.bioText}>
             {typeof bio === 'string' && bio.trim() !== ''
@@ -135,6 +168,9 @@ const createStyles = (theme: AppTheme) =>
     statItem: {
       flex: 1,
       alignItems: 'center',
+    },
+    statItemPressed: {
+      opacity: 0.7,
     },
     statValue: {
       fontSize: theme.typography.fontSize.xl,

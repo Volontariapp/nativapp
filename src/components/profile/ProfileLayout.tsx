@@ -14,6 +14,7 @@ interface ProfileLayoutProps {
   avatarUrl?: string;
   bio?: string;
   impactScore?: number;
+  onRankPress?: () => void;
   stats: ProfileStatItem[];
   badges?: (BadgeWeb | string)[];
   /** Quand il est fourni, la section Badges propose « Tout voir » (catalogue complet). */
@@ -40,6 +41,7 @@ export const ProfileLayout = ({
   avatarUrl,
   bio,
   impactScore,
+  onRankPress,
   stats,
   badges,
   onSeeAllBadges,
@@ -56,6 +58,7 @@ export const ProfileLayout = ({
         avatarUrl={avatarUrl}
         bio={bio}
         impactScore={impactScore}
+        onRankPress={onRankPress}
         stats={stats}
         headerAction={headerAction}
         bioAction={bioAction}
