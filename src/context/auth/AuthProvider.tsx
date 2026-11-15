@@ -8,6 +8,7 @@ import type { JwtPayload } from './auth.types';
 import type { UserRoles } from '@volontariapp/shared';
 import { socketService } from '../../services/socket.service';
 import { apiFetch } from '../../api/client';
+import { clearMonitoringUser, setMonitoringUser } from '../../shared/lib/monitoring';
 
 export const AuthProvider = ({ children }: { children: ReactNode }): React.JSX.Element => {
   const [userId, setUserId] = useState<string | null>(null);
@@ -88,6 +89,16 @@ export const AuthProvider = ({ children }: { children: ReactNode }): React.JSX.E
   useEffect(() => {
     void loadToken();
   }, []);
+
+  // Les erreurs remontees a Datadog portent l'identifiant de l'utilisateur connecte, jamais son
+  // email ni son nom.
+  useEffect(() => {
+    if (userId === null) {
+      void clearMonitoringUser();
+      return;
+    }
+    void setMonitoringUser(userId);
+  }, [userId]);
 
   useEffect(() => {
     const unsubscribe = authExpiredBus.subscribe(() => {

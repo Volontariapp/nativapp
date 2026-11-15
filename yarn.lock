@@ -1119,6 +1119,37 @@ __metadata:
   languageName: node
   linkType: hard
 
+"@datadog/datadog-ci@npm:^5.27.0":
+  version: 5.27.0
+  resolution: "@datadog/datadog-ci@npm:5.27.0"
+  bin:
+    datadog-ci: dist/bundle.js
+  checksum: 10c0/c5a88ab34583a58e96ca60d0280a63ccd1c46a31a60271529c817bc3eb6435bd5ad1d0b2afc61d3d86ada669bcfb44f065474513461a5f8d844f044f93dfcc45
+  languageName: node
+  linkType: hard
+
+"@datadog/flagging-core@npm:~2.0.1":
+  version: 2.0.2
+  resolution: "@datadog/flagging-core@npm:2.0.2"
+  dependencies:
+    spark-md5: "npm:^3.0.2"
+  checksum: 10c0/77539a5d0c501a5d8fa6a0017a0c58e84702825278358a740c7ff3043f88542fdb7e03a9ed64142e6443e2f8708985756d29c6fa06d31d003a69955534ae4719
+  languageName: node
+  linkType: hard
+
+"@datadog/mobile-react-native@npm:^3.11.0":
+  version: 3.11.0
+  resolution: "@datadog/mobile-react-native@npm:3.11.0"
+  dependencies:
+    "@datadog/flagging-core": "npm:~2.0.1"
+    big-integer: "npm:^1.6.52"
+  peerDependencies:
+    react: ">=16.13.1"
+    react-native: ">=0.63.4 <1.0"
+  checksum: 10c0/78b55c879783cd1aa150fad44271b25039afac94590d35229cfb612fe7ab868ac7902eeabc490f7f0b06437d6ca55b7c93a9a80fba8aff653ded7e5f85c3fbd7
+  languageName: node
+  linkType: hard
+
 "@egjs/hammerjs@npm:^2.0.17":
   version: 2.0.17
   resolution: "@egjs/hammerjs@npm:2.0.17"
@@ -2190,6 +2221,8 @@ __metadata:
   resolution: "@monorepo/mobile@workspace:."
   dependencies:
     "@babel/core": "npm:^7.26.0"
+    "@datadog/datadog-ci": "npm:^5.27.0"
+    "@datadog/mobile-react-native": "npm:^3.11.0"
     "@eslint/js": "npm:^9.18.0"
     "@hookform/resolvers": "npm:^6.0.2"
     "@react-native-community/datetimepicker": "npm:8.4.4"
@@ -2217,6 +2250,7 @@ __metadata:
     expo: "npm:~54.0.38"
     expo-blur: "npm:~15.0.8"
     expo-constants: "npm:~18.0.14"
+    expo-datadog: "npm:~54.0.1"
     expo-dev-client: "npm:~6.0.21"
     expo-font: "npm:~14.0.12"
     expo-image: "npm:~3.0.11"
@@ -4847,7 +4881,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"big-integer@npm:1.6.x":
+"big-integer@npm:1.6.x, big-integer@npm:^1.6.52":
   version: 1.6.52
   resolution: "big-integer@npm:1.6.52"
   checksum: 10c0/9604224b4c2ab3c43c075d92da15863077a9f59e5d4205f4e7e76acd0cd47e8d469ec5e5dba8d9b32aa233951893b29329ca56ac80c20ce094b4a647a66abae0
@@ -6307,6 +6341,16 @@ __metadata:
     expo: "*"
     react-native: "*"
   checksum: 10c0/d3b41c8622d04be2c0bbf2a31e0002fd558ae02bc6afdf38091000366d5f8ed2fe78fc42e44413be75165b26ae9b3c3b1cec95f91cd3e558b822cee8f1ab7cec
+  languageName: node
+  linkType: hard
+
+"expo-datadog@npm:~54.0.1":
+  version: 54.0.1
+  resolution: "expo-datadog@npm:54.0.1"
+  peerDependencies:
+    "@datadog/mobile-react-native": ">=2.0.0"
+    expo: 54.x
+  checksum: 10c0/2ab0aa2517269e0d757cb781cbb6aab12a2e075bef5e524b300b84132329fad60712253406d29d7b5fd6e0850cc280237528c8e74d2bbf02b9fde89b32376e59
   languageName: node
   linkType: hard
 
@@ -11436,6 +11480,13 @@ __metadata:
   version: 0.6.1
   resolution: "source-map@npm:0.6.1"
   checksum: 10c0/ab55398007c5e5532957cb0beee2368529618ac0ab372d789806f5718123cc4367d57de3904b4e6a4170eb5a0b0f41373066d02ca0735a0c4d75c7d328d3e011
+  languageName: node
+  linkType: hard
+
+"spark-md5@npm:^3.0.2":
+  version: 3.0.2
+  resolution: "spark-md5@npm:3.0.2"
+  checksum: 10c0/3fd11735eac5e7d60d6006d99ac0a055f148a89e9baf5f0b51ac103022dec30556b44190b37f6737ca50f81e8e50dc13e724f9edf6290c412ff5ab2101ce7780
   languageName: node
   linkType: hard
 

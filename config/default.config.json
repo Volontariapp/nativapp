@@ -11,5 +11,8 @@
   },
   "swiper": {
     "delayMs": 250
+  },
+  "monitoring": {
+    "sessionSampleRate": 100
   }
 }

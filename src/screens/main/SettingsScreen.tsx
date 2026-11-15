@@ -20,6 +20,7 @@ import { TokenService } from '@/services/token.service';
 import { useDebug } from '@/context/DebugContext';
 import { useDeleteAccount } from '@/api/user/hooks/use-delete-account';
 import { StorageDebugLink } from '@/screens/debug/components/storage-debug-link';
+import { MonitoringTestErrorButton } from '@/screens/debug/components/monitoring-test-error-button';
 import { ClearCacheCard } from '@/screens/main/components/clear-cache-card';
 import { LogoutCard } from '@/screens/main/components/logout-card';
 
@@ -204,6 +205,7 @@ export function SettingsScreen() {
           </View>
 
           {isDebugMode && <StorageDebugLink />}
+          {isDebugMode && <MonitoringTestErrorButton />}
 
           <AppText style={[styles.settingTitle, { marginTop: theme.spacing.lg }]}>
             Debug (Test Auth)

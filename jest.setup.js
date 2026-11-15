@@ -130,3 +130,7 @@ jest.mock('@/api/user/hooks/use-user-distinction', () => ({
   useUserDistinction: jest.fn(() => undefined),
   useDistinctionMap: jest.fn(() => new Map()),
 }));
+
+// Le SDK Datadog a du code natif absent des tests : Datadog fournit ce mock (DdSdkReactNative, DdRum
+// et le reste en jest.fn).
+jest.mock('@datadog/mobile-react-native', () => require('@datadog/mobile-react-native/jest'));

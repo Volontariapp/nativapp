@@ -43,7 +43,7 @@ const getRawConfig = (): Record<string, unknown> => {
 
   const selectedConfig = configs[env];
 
-  const merged = {
+  const merged: Record<string, unknown> = {
     ...defaultCfg,
     ...selectedConfig,
   };
@@ -62,6 +62,17 @@ const getRawConfig = (): Record<string, unknown> => {
     merged['cloudflareAccess'] = {
       clientId: cfClientId,
       clientSecret: cfClientSecret,
+    };
+  }
+
+  const ddApplicationId = getFallback(undefined, extra?.['DD_RUM_APPLICATION_ID']);
+  const ddClientToken = getFallback(undefined, extra?.['DD_RUM_CLIENT_TOKEN']);
+  if (ddApplicationId !== undefined && ddClientToken !== undefined) {
+    merged['monitoring'] = {
+      ...defaultCfg.monitoring,
+      ...(selectedConfig['monitoring'] as Record<string, unknown> | undefined),
+      applicationId: ddApplicationId,
+      clientToken: ddClientToken,
     };
   }
 

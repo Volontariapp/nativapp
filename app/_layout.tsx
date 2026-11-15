@@ -2,6 +2,8 @@ import React, { useEffect } from 'react';
 import { QueryClientProvider } from '@tanstack/react-query';
 import { createQueryClient } from '@/shared/lib/query-client';
 import { setupQueryManagers } from '@/shared/lib/setup-query-managers';
+import { config } from '@/shared/config/base-config';
+import { initMonitoring } from '@/shared/lib/monitoring';
 import { AuthProvider } from '@/context/AuthContext';
 import { SocketProvider } from '@/context/SocketContext';
 import { NotificationProvider } from '@/context/NotificationContext';
@@ -10,6 +12,9 @@ import { ThemeProvider } from '@/context/ThemeContext';
 import AdminNavigator from '@/navigation/AdminNavigator';
 import { KeyboardProvider } from 'react-native-keyboard-controller';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
+
+// Au chargement du module, avant le premier rendu : les crashs du demarrage sont captes aussi.
+void initMonitoring(config.monitoring, config.nodeEnv);
 
 const queryClient = createQueryClient();
 
