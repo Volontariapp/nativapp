@@ -1,5 +1,5 @@
 import React from 'react';
-import { View, StyleSheet, ScrollView, Alert } from 'react-native';
+import { View, StyleSheet, ScrollView } from 'react-native';
 import { AppText, AppHeader, AppLoader, ProfileLayout, AppButton } from '@/components';
 import { useAppTheme, useStyles } from '@/context/ThemeContext';
 import type { AppTheme } from '@/shared/themes/theme';
@@ -49,17 +49,6 @@ function ProfileActions({
           text={isLoading ? '...' : button.label}
           disabled={isLoading || isPending}
           onPress={onFollowPress}
-        />
-      </View>
-      <View style={styles.buttonWrapper}>
-        <AppButton
-          variant="secondary"
-          size="small"
-          icon="message-circle"
-          text="Message"
-          onPress={() => {
-            Alert.alert('Message', 'Bientôt disponible 💬');
-          }}
         />
       </View>
     </View>

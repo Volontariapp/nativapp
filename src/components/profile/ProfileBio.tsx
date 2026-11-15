@@ -4,18 +4,20 @@ import { AppText } from '@/components/typography/AppText';
 import { useStyles } from '@/context/ThemeContext';
 import type { AppTheme } from '@/shared/themes/theme';
 
+import { EMPTY_BIO_PLACEHOLDER } from './ProfileHeader';
+
 interface ProfileBioProps {
   bio?: string;
 }
 
 export const ProfileBio = ({ bio }: ProfileBioProps): React.JSX.Element => {
   const styles = useStyles(createStyles);
+  const hasBio = typeof bio === 'string' && bio.trim() !== '';
+
   return (
     <View style={styles.bioCard}>
-      <AppText style={styles.bioText}>
-        {typeof bio === 'string' && bio.trim() !== ''
-          ? bio
-          : "Aucune bio n'a été renseignée pour le moment. Raconte-nous un peu qui tu es !"}
+      <AppText style={[styles.bioText, !hasBio && styles.bioPlaceholder]}>
+        {hasBio ? bio : EMPTY_BIO_PLACEHOLDER}
       </AppText>
     </View>
   );
@@ -33,5 +35,9 @@ const createStyles = (theme: AppTheme) =>
       fontSize: theme.typography.fontSize.md,
       lineHeight: 22,
       color: theme.colors.text,
+    },
+    bioPlaceholder: {
+      color: theme.colors.grey,
+      fontStyle: 'italic',
     },
   });

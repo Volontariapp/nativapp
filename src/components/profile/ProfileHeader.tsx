@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { View, StyleSheet, Pressable } from 'react-native';
 import { Image } from 'expo-image';
 import Icon from 'react-native-vector-icons/Feather';
@@ -9,6 +9,8 @@ import { getImpactRankStatus } from '@/shared/lib/impact-ranks';
 import { RankFrame } from '@/components/rank/rank-frame';
 
 import type { ProfileStatItem } from './ProfileStats';
+
+export const EMPTY_BIO_PLACEHOLDER = 'Aucune biographie pour le moment';
 
 interface ProfileHeaderProps {
   /** Utilisateur du profil : sert à poser le cadre de classement autour du pseudo et de la bio. */
@@ -34,18 +36,35 @@ export const ProfileHeader = ({
 }: ProfileHeaderProps): React.JSX.Element => {
   const { theme } = useAppTheme();
   const styles = useStyles(createStyles);
+  const [failedAvatarUrl, setFailedAvatarUrl] = useState<string | null>(null);
 
   const displayedStats = stats.slice(0, 4);
+  const hasValidAvatar =
+    typeof avatarUrl === 'string' &&
+    avatarUrl.trim() !== '' &&
+    failedAvatarUrl !== avatarUrl;
+  const hasBio = typeof bio === 'string' && bio.trim() !== '';
+  const initials = pseudo.trim().slice(0, 2).toUpperCase();
 
   return (
     <View style={styles.container}>
       <View style={styles.topRow}>
         <View style={styles.avatarContainer}>
-          {typeof avatarUrl === 'string' && avatarUrl !== '' ? (
-            <Image source={{ uri: avatarUrl }} style={styles.avatarImage} />
+          {hasValidAvatar ? (
+            <Image
+              source={{ uri: avatarUrl }}
+              style={styles.avatarImage}
+              onError={() => {
+                setFailedAvatarUrl(avatarUrl);
+              }}
+            />
           ) : (
             <View style={styles.avatarPlaceholder}>
-              <Icon name="user" size={40} color={theme.colors.grey} />
+              {initials.length > 0 ? (
+                <AppText style={styles.avatarInitials}>{initials}</AppText>
+              ) : (
+                <Icon name="user" size={40} color={theme.colors.grey} />
+              )}
             </View>
           )}
         </View>
@@ -94,10 +113,8 @@ export const ProfileHeader = ({
               </View>
             )}
           </View>
-          <AppText style={styles.bioText}>
-            {typeof bio === 'string' && bio.trim() !== ''
-              ? bio
-              : "Aucune bio n'a été renseignée pour le moment. Raconte-nous un peu qui tu es !"}
+          <AppText style={[styles.bioText, !hasBio && styles.bioPlaceholder]}>
+            {hasBio ? bio : EMPTY_BIO_PLACEHOLDER}
           </AppText>
           {headerAction !== undefined && headerAction !== null && (
             <View style={styles.actionContainer}>{headerAction}</View>
@@ -135,6 +152,11 @@ const createStyles = (theme: AppTheme) =>
       borderWidth: 2,
       borderColor: theme.colors.white,
       ...theme.shadows.card,
+    },
+    avatarInitials: {
+      fontSize: theme.typography.fontSize.xl,
+      fontWeight: theme.typography.fontWeight.bold,
+      color: theme.colors.grey,
     },
     avatarImage: {
       width: 80,
@@ -199,6 +221,10 @@ const createStyles = (theme: AppTheme) =>
       lineHeight: 20,
       color: theme.colors.text,
       marginBottom: theme.spacing.md,
+    },
+    bioPlaceholder: {
+      color: theme.colors.grey,
+      fontStyle: 'italic',
     },
     actionContainer: {
       marginBottom: theme.spacing.md,
