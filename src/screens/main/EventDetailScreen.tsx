@@ -20,6 +20,7 @@ import Feather from 'react-native-vector-icons/Feather';
 import { AppText } from '@/components/typography/AppText';
 import { AppIcons } from '@/components/media/AppIcons';
 import { useAppTheme, useStyles } from '@/context/ThemeContext';
+import { getEventTone } from '@/components/profile/event-tone.utils';
 import type { AppTheme } from '@/shared/themes/theme';
 import { EventState } from '@volontariapp/contracts';
 import type { AppEvent } from '@/api/event/event.api';
@@ -50,7 +51,9 @@ function EventDescription({ event }: { event: AppEvent }): React.JSX.Element {
       <AppText style={styles.sectionTitle}>Description</AppText>
       <AppText style={styles.descriptionText}>{event.description}</AppText>
 
-      {event.tags && event.tags.length > 0 && <EventTags tags={event.tags} />}
+      {event.tags && event.tags.length > 0 && (
+        <EventTags tags={event.tags} eventType={event.type} />
+      )}
     </View>
   );
 }
@@ -77,7 +80,7 @@ function EventExtras({ event }: { event: AppEvent }): React.JSX.Element {
   return (
     <>
       {event.requirements && event.requirements.length > 0 && (
-        <EventRequirements requirements={event.requirements} />
+        <EventRequirements requirements={event.requirements} eventType={event.type} />
       )}
       {event.location && <EventLocation event={event} />}
     </>
@@ -85,14 +88,18 @@ function EventExtras({ event }: { event: AppEvent }): React.JSX.Element {
 }
 
 function EventDetailBody({ event }: { event: AppEvent }): React.JSX.Element {
+  const { theme } = useAppTheme();
   const styles = useStyles(createStyles);
+  const tone = getEventTone(event.type, theme);
 
   return (
     <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
       <EventCover event={event} />
 
       <View style={styles.content}>
-        <AppText style={styles.categoryTitle}>{mapEventType(event.type)}</AppText>
+        <AppText style={[styles.categoryTitle, { color: tone.accent }]}>
+          {mapEventType(event.type)}
+        </AppText>
         <AppText style={styles.title}>{event.title}</AppText>
         <EventPointsBadge event={event} style={{ marginBottom: 16 }} />
 
@@ -112,6 +119,7 @@ interface BottomActionProps {
   isPending: boolean;
   onPress: () => void;
   highlighted?: boolean;
+  accentColor?: string;
 }
 
 function BottomAction({
@@ -120,6 +128,7 @@ function BottomAction({
   isPending,
   onPress,
   highlighted = false,
+  accentColor,
 }: BottomActionProps): React.JSX.Element {
   const { theme } = useAppTheme();
   const styles = useStyles(createStyles);
@@ -127,7 +136,11 @@ function BottomAction({
   return (
     <View style={styles.bottomBar}>
       <Pressable
-        style={[styles.joinButton, highlighted && styles.joinedButton]}
+        style={[
+          styles.joinButton,
+          accentColor !== undefined && { backgroundColor: accentColor },
+          highlighted && styles.joinedButton,
+        ]}
         onPress={onPress}
         disabled={isPending}
       >
@@ -149,9 +162,16 @@ interface JoinBarProps {
   isPending: boolean;
   onJoin: () => void;
   onUnjoin: () => void;
+  accentColor?: string;
 }
 
-function JoinBar({ isJoined, isPending, onJoin, onUnjoin }: JoinBarProps): React.JSX.Element {
+function JoinBar({
+  isJoined,
+  isPending,
+  onJoin,
+  onUnjoin,
+  accentColor,
+}: JoinBarProps): React.JSX.Element {
   return isJoined ? (
     <BottomAction
       icon="x"
@@ -161,7 +181,13 @@ function JoinBar({ isJoined, isPending, onJoin, onUnjoin }: JoinBarProps): React
       highlighted
     />
   ) : (
-    <BottomAction icon="user-plus" label="Rejoindre" isPending={isPending} onPress={onJoin} />
+    <BottomAction
+      icon="user-plus"
+      label="Rejoindre"
+      isPending={isPending}
+      onPress={onJoin}
+      accentColor={accentColor}
+    />
   );
 }
 
@@ -276,6 +302,11 @@ export function EventDetailScreen({ route }: Props): React.JSX.Element {
     ]);
   }, [leaveEvent]);
 
+  const tone = useMemo(
+    () => getEventTone(optimisticEvent.type, theme),
+    [optimisticEvent.type, theme],
+  );
+
   return (
     <View style={styles.container}>
       {/* Custom Top Bar */}
@@ -288,7 +319,7 @@ export function EventDetailScreen({ route }: Props): React.JSX.Element {
         >
           <AppIcons icon="arrow-left" size={24} color={theme.colors.black} />
         </Pressable>
-        <AppText style={styles.topBarTitle} numberOfLines={1}>
+        <AppText style={[styles.topBarTitle, { color: tone.accent }]} numberOfLines={1}>
           {optimisticEvent.title}
         </AppText>
         <View style={styles.topBarActions}>
@@ -323,6 +354,7 @@ export function EventDetailScreen({ route }: Props): React.JSX.Element {
           isPending={isJoined ? isUnparticipating : isParticipating}
           onJoin={handleJoin}
           onUnjoin={handleUnjoin}
+          accentColor={tone.accent}
         />
       )}
     </View>
