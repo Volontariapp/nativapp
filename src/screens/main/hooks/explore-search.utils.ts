@@ -15,26 +15,88 @@ interface ExploreSearchInput {
   center: UserCoordinates | undefined;
   /** Distance choisie en km ; null = toutes les distances. */
   distanceKm: number | null;
+  /** Borne temporelle basse (ISO 8601) pour exclure les événements déjà terminés côté serveur. */
+  endAtFrom?: string;
 }
 
 /**
  * Parametres de recherche de la carte. Le rayon suit la distance choisie : le filtre doit etre
  * applique par le serveur, sinon la limite de page est consommee par des events trop lointains
  * qui sont ensuite masques cote client. Sans centre ou en mode illimite, aucune zone n'est
- * demandee. Les brouillons ne sont jamais proposes (comme le swipe).
+ * demandee. Les brouillons et événements terminés ne sont jamais proposés.
  */
 export const buildExploreSearchParams = ({
   center,
   distanceKm,
+  endAtFrom,
 }: ExploreSearchInput): Partial<SearchEventsRequest> & { organizerId?: string } => ({
   excludeCreatedByMe: true,
   limit: MAP_EVENTS_PAGE_LIMIT,
   statuses: [EventState.EVENT_STATE_PUBLISHED],
+  ...(endAtFrom !== undefined && { endAtFrom }),
   ...(center !== undefined &&
     distanceKm !== null && {
       area: { center, radiusMeters: distanceKm * 1000 },
     }),
 });
+
+/**
+ * Filtre temporel côté client pour la carte : conserve uniquement les événements
+ * à venir ou actuellement en cours (non terminés, non annulés, non brouillons).
+ */
+export const isUpcomingMapEvent = (
+  event: AppEvent,
+  nowMs: number = Date.now(),
+): boolean => {
+  if (
+    event.state === EventState.EVENT_STATE_FINISHED ||
+    event.state === EventState.EVENT_STATE_CANCELLED ||
+    event.state === EventState.EVENT_STATE_DRAFT ||
+    event.state === EventState.UNRECOGNIZED
+  ) {
+    return false;
+  }
+
+  const endMs = event.endAt.length > 0 ? Date.parse(event.endAt) : Number.NaN;
+  const startMs = event.startAt.length > 0 ? Date.parse(event.startAt) : Number.NaN;
+  const cutoffMs = !Number.isNaN(endMs) ? endMs : startMs;
+
+  if (Number.isNaN(cutoffMs)) {
+    return false;
+  }
+
+  return cutoffMs >= nowMs;
+};
+
+/**
+ * Vérifie si un événement correspond à la date sélectionnée dans le filtre calendrier (YYYY-MM-DD ou DD/MM/YYYY).
+ */
+export const isMatchingSelectedDate = (
+  event: AppEvent,
+  selectedDate: string | null,
+): boolean => {
+  if (selectedDate === null || event.startAt.length === 0) {
+    return true;
+  }
+
+  const eventDate = event.startAt.split('T')[0];
+  if (selectedDate.includes('-')) {
+    return eventDate === selectedDate;
+  }
+
+  if (selectedDate.includes('/')) {
+    const parts = selectedDate.split('/');
+    if (parts.length === 3 && parts[0] != null && parts[1] != null && parts[2] != null) {
+      const day = parts[0].padStart(2, '0');
+      const month = parts[1].padStart(2, '0');
+      let year = parts[2];
+      if (year.length === 2) year = `20${year}`;
+      return eventDate === `${year}-${month}-${day}`;
+    }
+  }
+
+  return true;
+};
 
 /**
  * Filtre de distance cote client, mesure depuis le meme centre que la recherche serveur.
