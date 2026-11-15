@@ -40,7 +40,8 @@ export const EventParticipants = React.memo(function EventParticipants({
     setIsListOpen(false);
   }, []);
   const { currentPart, maxPart, fillPercentage } = useMemo(() => {
-    const current = Math.max(1, event.currentParticipants);
+    const loadedCount = participants?.length ?? 0;
+    const current = Math.max(1, event.currentParticipants, loadedCount);
     const max = event.maxParticipants;
     const percentage = max > 0 ? Math.min(100, Math.max(0, (current / max) * 100)) : 0;
 
@@ -49,7 +50,7 @@ export const EventParticipants = React.memo(function EventParticipants({
       maxPart: max,
       fillPercentage: percentage,
     };
-  }, [event.currentParticipants, event.maxParticipants]);
+  }, [event.currentParticipants, event.maxParticipants, participants?.length]);
 
   const displayCount = Math.min(currentPart, MAX_DISPLAYED_AVATARS);
   const remaining = currentPart - displayCount;
