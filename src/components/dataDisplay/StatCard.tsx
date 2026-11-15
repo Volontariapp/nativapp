@@ -1,5 +1,5 @@
 import React from 'react';
-import { View, StyleSheet } from 'react-native';
+import { View, StyleSheet, Pressable } from 'react-native';
 import { AppText } from '@/components/typography/AppText';
 import { useAppTheme, useStyles } from '@/context/ThemeContext';
 import type { AppTheme } from '@/shared/themes/theme';
@@ -8,19 +8,42 @@ interface StatCardProps {
   label: string;
   value: string | number;
   color?: string;
+  onPress?: () => void;
+  testID?: string;
 }
 
 /**
  * Composant réutilisable pour afficher une statistique sous forme de carte.
  * Utilisé principalement sur la page Profil.
  */
-export const StatCard = ({ label, value, color }: StatCardProps): React.JSX.Element => {
+export const StatCard = ({
+  label,
+  value,
+  color,
+  onPress,
+  testID,
+}: StatCardProps): React.JSX.Element => {
   const { theme } = useAppTheme();
   const styles = useStyles(createStyles);
   const resolvedColor = color ?? theme.colors.text;
 
+  if (onPress !== undefined) {
+    return (
+      <Pressable
+        testID={testID}
+        style={styles.statCard}
+        onPress={onPress}
+        accessibilityRole="button"
+        accessibilityLabel={`${label}: ${String(value)}`}
+      >
+        <AppText style={styles.statLabel}>{label}</AppText>
+        <AppText style={[styles.statValue, { color: resolvedColor }]}>{value}</AppText>
+      </Pressable>
+    );
+  }
+
   return (
-    <View style={styles.statCard}>
+    <View testID={testID} style={styles.statCard}>
       <AppText style={styles.statLabel}>{label}</AppText>
       <AppText style={[styles.statValue, { color: resolvedColor }]}>{value}</AppText>
     </View>

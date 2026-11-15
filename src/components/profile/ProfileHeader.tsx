@@ -1,5 +1,5 @@
 import React from 'react';
-import { View, StyleSheet } from 'react-native';
+import { View, StyleSheet, Pressable } from 'react-native';
 import { Image } from 'expo-image';
 import Icon from 'react-native-vector-icons/Feather';
 import { AppText } from '@/components/typography/AppText';
@@ -51,16 +51,34 @@ export const ProfileHeader = ({
         </View>
 
         <View style={styles.statsContainer}>
-          {displayedStats.map((stat) => (
-            <View key={stat.label} style={styles.statItem}>
-              <AppText style={styles.statValue} numberOfLines={1}>
-                {stat.value}
-              </AppText>
-              <AppText style={styles.statLabel} numberOfLines={1}>
-                {stat.label}
-              </AppText>
-            </View>
-          ))}
+          {displayedStats.map((stat) =>
+            stat.onPress !== undefined ? (
+              <Pressable
+                key={stat.label}
+                testID={stat.testID}
+                style={({ pressed }) => [styles.statItem, pressed && styles.statItemPressed]}
+                onPress={stat.onPress}
+                accessibilityRole="button"
+                accessibilityLabel={stat.label}
+              >
+                <AppText style={styles.statValue} numberOfLines={1}>
+                  {stat.value}
+                </AppText>
+                <AppText style={styles.statLabel} numberOfLines={1}>
+                  {stat.label}
+                </AppText>
+              </Pressable>
+            ) : (
+              <View key={stat.label} testID={stat.testID} style={styles.statItem}>
+                <AppText style={styles.statValue} numberOfLines={1}>
+                  {stat.value}
+                </AppText>
+                <AppText style={styles.statLabel} numberOfLines={1}>
+                  {stat.label}
+                </AppText>
+              </View>
+            ),
+          )}
         </View>
       </View>
 
@@ -135,6 +153,9 @@ const createStyles = (theme: AppTheme) =>
     statItem: {
       flex: 1,
       alignItems: 'center',
+    },
+    statItemPressed: {
+      opacity: 0.7,
     },
     statValue: {
       fontSize: theme.typography.fontSize.xl,
