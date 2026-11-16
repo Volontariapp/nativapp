@@ -7,7 +7,7 @@ import { useAppTheme } from '@/context/ThemeContext';
 import { AppIconsButton } from '@/components/buttons/AppIconsButton';
 import type { AppEvent } from '@/api/event/event.api';
 import { CustomMarker } from './MapPin';
-import { getMapPinColor, getMapPinSize } from './map-pin.utils';
+import { getMapPinBorderColor, getMapPinColor, getMapPinSize } from './map-pin.utils';
 import {
   useFloatingTabBarOffset,
   PREVUE_CARD_HEIGHT_ESTIMATE,
@@ -186,6 +186,7 @@ export default function AppMap({
                 longitude: event.location.longitude,
               }}
               color={getMapPinColor(event, appTheme)}
+              borderColor={getMapPinBorderColor(event, appTheme)}
               size={getMapPinSize(event)}
               onPress={() => {
                 handleMarkerPress(event);
