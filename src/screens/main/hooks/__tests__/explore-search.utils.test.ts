@@ -32,10 +32,13 @@ describe('buildExploreSearchParams', () => {
     expect(params.area).toBeUndefined();
   });
 
-  it('only asks for published events of other organizers', () => {
+  it('only asks for published and in-progress events of other organizers', () => {
     const params = buildExploreSearchParams({ center: PARIS, distanceKm: 5 });
 
-    expect(params.statuses).toEqual([EventState.EVENT_STATE_PUBLISHED]);
+    expect(params.statuses).toEqual([
+      EventState.EVENT_STATE_PUBLISHED,
+      EventState.EVENT_STATE_IN_PROGRESS,
+    ]);
     expect(params.excludeCreatedByMe).toBe(true);
   });
 
