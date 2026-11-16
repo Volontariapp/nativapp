@@ -27,12 +27,12 @@ export const StatCard = ({
   const styles = useStyles(createStyles);
   const resolvedColor = color ?? theme.colors.text;
 
-  if (onPress !== undefined) {
+  if (onPress) {
     return (
       <Pressable
-        testID={testID}
-        style={styles.statCard}
+        style={({ pressed }) => [styles.statCard, pressed && styles.statCardPressed]}
         onPress={onPress}
+        testID={testID}
         accessibilityRole="button"
         accessibilityLabel={`${label}: ${String(value)}`}
       >
@@ -43,7 +43,7 @@ export const StatCard = ({
   }
 
   return (
-    <View testID={testID} style={styles.statCard}>
+    <View style={styles.statCard} testID={testID}>
       <AppText style={styles.statLabel}>{label}</AppText>
       <AppText style={[styles.statValue, { color: resolvedColor }]}>{value}</AppText>
     </View>
@@ -59,6 +59,9 @@ const createStyles = (theme: AppTheme) =>
       borderRadius: theme.radius.md,
       alignItems: 'center',
       ...theme.shadows.card,
+    },
+    statCardPressed: {
+      opacity: 0.75,
     },
     statLabel: {
       fontSize: theme.typography.fontSize.xs,

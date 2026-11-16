@@ -1,20 +1,10 @@
 import React, { useEffect, useRef } from 'react';
-import {
-  ActivityIndicator,
-  Modal,
-  StyleSheet,
-  View,
-  type StyleProp,
-  type ViewStyle,
-} from 'react-native';
-import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { Modal, StyleSheet, View, type StyleProp, type ViewStyle } from 'react-native';
 import MapView, { Marker, Polyline, UrlTile } from 'react-native-maps';
-import { AppText } from '@/components/typography/AppText';
-import { AppIconsButton } from '@/components/buttons/AppIconsButton';
 import { useAppTheme, useStyles } from '@/context/ThemeContext';
 import type { AppTheme } from '@/shared/themes/theme';
 import type { Coordinates, WalkingRoute } from '@/services/routing.service';
-import { formatWalkDuration } from './live-format.utils';
+import { LiveRoutePanel } from './LiveRoutePanel';
 
 export interface LiveRouteMapProps {
   title: string;
@@ -91,9 +81,7 @@ export function LiveRouteMap({
   isError,
   onClose,
 }: LiveRouteMapProps): React.JSX.Element {
-  const { theme } = useAppTheme();
   const styles = useStyles(createStyles);
-  const insets = useSafeAreaInsets();
 
   return (
     <Modal visible animationType="slide" onRequestClose={onClose} testID="live-route-modal">
@@ -105,35 +93,13 @@ export function LiveRouteMap({
           geometry={route?.geometry}
           style={styles.map}
         />
-        <View style={[styles.panel, { top: insets.top + theme.spacing.md }]}>
-          <View style={styles.headerText}>
-            <AppText style={styles.title} numberOfLines={1}>
-              {`Trajet vers ${title}`}
-            </AppText>
-            {route !== null && (
-              <AppText style={styles.meta}>
-                {`${formatWalkDuration(route.durationSeconds)} à pied - ${String(route.distanceMeters)} m`}
-              </AppText>
-            )}
-            {isError && <AppText style={styles.error}>Trajet indisponible pour le moment.</AppText>}
-          </View>
-          {isLoading && (
-            <ActivityIndicator
-              size="small"
-              color={theme.colors.primaryEco}
-              testID="live-route-loading"
-            />
-          )}
-          <AppIconsButton
-            icon="x"
-            size={24}
-            variant="white"
-            iconColor={theme.colors.grey}
-            onPress={onClose}
-            accessibilityLabel="Fermer le trajet"
-            testID="live-route-fullscreen-close"
-          />
-        </View>
+        <LiveRoutePanel
+          title={title}
+          route={route}
+          isLoading={isLoading}
+          isError={isError}
+          onClose={onClose}
+        />
       </View>
     </Modal>
   );
@@ -148,35 +114,5 @@ const createStyles = (theme: AppTheme) =>
     map: {
       width: '100%',
       height: '100%',
-    },
-    panel: {
-      position: 'absolute',
-      left: theme.spacing.lg,
-      right: theme.spacing.lg,
-      flexDirection: 'row',
-      alignItems: 'center',
-      gap: theme.spacing.sm,
-      backgroundColor: theme.colors.white,
-      borderRadius: theme.radius.lg,
-      borderWidth: 1,
-      borderColor: theme.colors.lightGrey,
-      padding: theme.spacing.md,
-    },
-    headerText: {
-      flex: 1,
-      gap: 2,
-    },
-    title: {
-      fontSize: theme.typography.fontSize.sm,
-      fontWeight: theme.typography.fontWeight.bold,
-      color: theme.colors.text,
-    },
-    meta: {
-      fontSize: theme.typography.fontSize.xs,
-      color: theme.colors.grey,
-    },
-    error: {
-      fontSize: theme.typography.fontSize.xs,
-      color: theme.colors.danger,
     },
   });

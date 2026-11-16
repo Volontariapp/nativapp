@@ -19,6 +19,7 @@ interface ProfileHeaderProps {
   avatarUrl?: string;
   bio?: string;
   impactScore?: number;
+  onRankPress?: () => void;
   stats?: ProfileStatItem[];
   headerAction?: React.ReactNode;
   bioAction?: React.ReactNode;
@@ -30,6 +31,7 @@ export const ProfileHeader = ({
   avatarUrl,
   bio,
   impactScore,
+  onRankPress,
   stats = [],
   headerAction,
   bioAction,
@@ -71,14 +73,14 @@ export const ProfileHeader = ({
 
         <View style={styles.statsContainer}>
           {displayedStats.map((stat) =>
-            stat.onPress !== undefined ? (
+            stat.onPress ? (
               <Pressable
                 key={stat.label}
                 testID={stat.testID}
                 style={({ pressed }) => [styles.statItem, pressed && styles.statItemPressed]}
                 onPress={stat.onPress}
                 accessibilityRole="button"
-                accessibilityLabel={stat.label}
+                accessibilityLabel={`${stat.label}: ${String(stat.value)}`}
               >
                 <AppText style={styles.statValue} numberOfLines={1}>
                   {stat.value}
@@ -105,13 +107,26 @@ export const ProfileHeader = ({
         <View style={styles.bottomSection}>
           <View style={styles.nameRow}>
             <AppText style={styles.userName}>{pseudo}</AppText>
-            {impactScore !== undefined && (
-              <View testID="profile-rank-chip" style={styles.rankChip}>
-                <AppText style={styles.rankChipText}>
-                  {getImpactRankStatus(impactScore).current.name}
-                </AppText>
-              </View>
-            )}
+            {impactScore !== undefined &&
+              (onRankPress ? (
+                <Pressable
+                  testID="profile-rank-chip"
+                  style={({ pressed }) => [styles.rankChip, pressed && styles.statItemPressed]}
+                  onPress={onRankPress}
+                  accessibilityRole="button"
+                  accessibilityLabel={`Rang d'impact : ${getImpactRankStatus(impactScore).current.name}`}
+                >
+                  <AppText style={styles.rankChipText}>
+                    {getImpactRankStatus(impactScore).current.name}
+                  </AppText>
+                </Pressable>
+              ) : (
+                <View testID="profile-rank-chip" style={styles.rankChip}>
+                  <AppText style={styles.rankChipText}>
+                    {getImpactRankStatus(impactScore).current.name}
+                  </AppText>
+                </View>
+              ))}
           </View>
           <AppText style={[styles.bioText, !hasBio && styles.bioPlaceholder]}>
             {hasBio ? bio : EMPTY_BIO_PLACEHOLDER}
