@@ -11,6 +11,7 @@ import { theme } from '@/shared/themes/theme';
 
 export interface CustomMarkerProps extends Omit<MapMarkerProps, 'children'> {
   color?: string;
+  borderColor?: string;
   iconName?: keyof typeof Ionicons.glyphMap;
   size?: number;
 }
@@ -20,6 +21,7 @@ export const CustomMarker: React.FC<CustomMarkerProps> = React.memo(function Cus
   title,
   description,
   color,
+  borderColor,
   pinColor,
   iconName = 'calendar-outline',
   size = 40,
@@ -28,6 +30,8 @@ export const CustomMarker: React.FC<CustomMarkerProps> = React.memo(function Cus
   ...rest
 }) {
   const markerColor = color ?? pinColor ?? theme.colors.primaryEco;
+  const markerBorderColor = borderColor ?? theme.colors.white;
+  const hasCustomBorder = markerBorderColor !== theme.colors.white;
   const [tracksViewChanges, setTracksViewChanges] = useState(true);
   const lastPressRef = useRef(0);
 
@@ -41,7 +45,7 @@ export const CustomMarker: React.FC<CustomMarkerProps> = React.memo(function Cus
     return () => {
       clearTimeout(timer);
     };
-  }, [coordinate.latitude, coordinate.longitude, markerColor, iconName, size]);
+  }, [coordinate.latitude, coordinate.longitude, markerColor, markerBorderColor, iconName, size]);
 
   const handlePress = useCallback(
     (e: MarkerPressEvent | MarkerSelectEvent) => {
@@ -78,6 +82,8 @@ export const CustomMarker: React.FC<CustomMarkerProps> = React.memo(function Cus
             styles.bubble,
             {
               backgroundColor: markerColor,
+              borderColor: markerBorderColor,
+              borderWidth: hasCustomBorder ? 3 : 2,
               width: size,
               height: size,
               borderRadius: size / 2,
@@ -88,7 +94,7 @@ export const CustomMarker: React.FC<CustomMarkerProps> = React.memo(function Cus
         </View>
 
         {/* Pointe vers le bas */}
-        <View style={[styles.arrow, { borderTopColor: markerColor }]} />
+        <View style={[styles.arrow, { borderTopColor: hasCustomBorder ? markerBorderColor : markerColor }]} />
       </View>
     </Marker>
   );

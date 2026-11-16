@@ -1,5 +1,6 @@
 import { EventState, EventType } from '@volontariapp/contracts';
 import type { AppEvent } from '@/api/event/event.api';
+import { normalizeEventState } from '@/shared/lib/event-mappers.utils';
 import type { AppTheme } from '@/shared/themes/theme';
 
 export const MAP_PIN_SIZE_SMALL = 32;
@@ -52,10 +53,25 @@ export const getMapPinSize = (
   return MAP_PIN_SIZE_SMALL;
 };
 
-const isEventOngoing = (
-  event: Pick<AppEvent, 'startAt' | 'endAt'>,
-  nowMs: number,
+/**
+ * Indique si un événement est actuellement en cours (statut `IN_PROGRESS` ou plage horaire active).
+ */
+export const isMapEventOngoing = (
+  event: Pick<AppEvent, 'state' | 'startAt' | 'endAt'>,
+  nowMs: number = Date.now(),
 ): boolean => {
+  const state = normalizeEventState(event.state);
+  if (state === EventState.EVENT_STATE_IN_PROGRESS) {
+    return true;
+  }
+  if (
+    state === EventState.EVENT_STATE_FINISHED ||
+    state === EventState.EVENT_STATE_CANCELLED ||
+    state === EventState.EVENT_STATE_DRAFT
+  ) {
+    return false;
+  }
+
   const startMs = event.startAt.length > 0 ? Date.parse(event.startAt) : Number.NaN;
   const endMs = event.endAt.length > 0 ? Date.parse(event.endAt) : Number.NaN;
   if (Number.isNaN(startMs) || Number.isNaN(endMs)) {
@@ -65,21 +81,18 @@ const isEventOngoing = (
 };
 
 /**
- * Détermine la couleur du pin de carte selon le statut (`DRAFT`, `PUBLISHED`,
- * `ONGOING`, `FULL`, `FINISHED`, `CANCELLED`) et le type d'événement.
+ * Détermine la couleur de fond du pin de carte selon le statut et le type d'événement.
  */
-export const getMapPinColor = (
-  event: MapPinEventInput,
-  theme: AppTheme,
-  nowMs: number = Date.now(),
-): string => {
-  if (event.state === EventState.EVENT_STATE_DRAFT) {
+export const getMapPinColor = (event: MapPinEventInput, theme: AppTheme): string => {
+  const state = normalizeEventState(event.state);
+
+  if (state === EventState.EVENT_STATE_DRAFT) {
     return theme.colors.badgeNeutral;
   }
 
   if (
-    event.state === EventState.EVENT_STATE_FINISHED ||
-    event.state === EventState.EVENT_STATE_CANCELLED
+    state === EventState.EVENT_STATE_FINISHED ||
+    state === EventState.EVENT_STATE_CANCELLED
   ) {
     return theme.colors.grey;
   }
@@ -94,9 +107,20 @@ export const getMapPinColor = (
     event.type === EventType.EVENT_TYPE_SOCIAL ||
     (event.type as unknown) === 'EVENT_TYPE_SOCIAL';
 
-  if (isEventOngoing(event, nowMs)) {
-    return isSocial ? theme.colors.secondarySocio : theme.colors.secondaryEco;
-  }
-
   return isSocial ? theme.colors.primarySocio : theme.colors.primaryEco;
+};
+
+/**
+ * Retourne la couleur de bordure du pin de carte : rouge (`theme.colors.danger`) si l'événement
+ * est en cours, blanc (`theme.colors.white`) sinon.
+ */
+export const getMapPinBorderColor = (
+  event: Pick<AppEvent, 'state' | 'startAt' | 'endAt'>,
+  theme: AppTheme,
+  nowMs: number = Date.now(),
+): string => {
+  if (isMapEventOngoing(event, nowMs)) {
+    return theme.colors.danger;
+  }
+  return theme.colors.white;
 };

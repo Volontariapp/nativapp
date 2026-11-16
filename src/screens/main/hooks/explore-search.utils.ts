@@ -1,6 +1,7 @@
 import { EventState, type SearchEventsRequest } from '@volontariapp/contracts';
 import type { AppEvent } from '@/api/event/event.api';
 import type { UserCoordinates } from '@/hooks/use-location';
+import { normalizeEventState } from '@/shared/lib/event-mappers.utils';
 import { calculateDistanceInKm } from '@/shared/lib/location.utils';
 import { shouldLoadNextPage } from '@/shared/lib/paging.utils';
 
@@ -32,7 +33,7 @@ export const buildExploreSearchParams = ({
 }: ExploreSearchInput): Partial<SearchEventsRequest> & { organizerId?: string } => ({
   excludeCreatedByMe: true,
   limit: MAP_EVENTS_PAGE_LIMIT,
-  statuses: [EventState.EVENT_STATE_PUBLISHED],
+  statuses: [EventState.EVENT_STATE_PUBLISHED, EventState.EVENT_STATE_IN_PROGRESS],
   ...(endAtFrom !== undefined && { endAtFrom }),
   ...(center !== undefined &&
     distanceKm !== null && {
@@ -48,13 +49,18 @@ export const isUpcomingMapEvent = (
   event: AppEvent,
   nowMs: number = Date.now(),
 ): boolean => {
+  const state = normalizeEventState(event.state);
   if (
-    event.state === EventState.EVENT_STATE_FINISHED ||
-    event.state === EventState.EVENT_STATE_CANCELLED ||
-    event.state === EventState.EVENT_STATE_DRAFT ||
-    event.state === EventState.UNRECOGNIZED
+    state === EventState.EVENT_STATE_FINISHED ||
+    state === EventState.EVENT_STATE_CANCELLED ||
+    state === EventState.EVENT_STATE_DRAFT ||
+    state === EventState.UNRECOGNIZED
   ) {
     return false;
+  }
+
+  if (state === EventState.EVENT_STATE_IN_PROGRESS) {
+    return true;
   }
 
   const endMs = event.endAt.length > 0 ? Date.parse(event.endAt) : Number.NaN;

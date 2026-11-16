@@ -6,15 +6,16 @@ import { theme } from '@/shared/themes/theme';
 import { useAppTheme } from '@/context/ThemeContext';
 import { AppIconsButton } from '@/components/buttons/AppIconsButton';
 import type { AppMapProps } from './AppMap';
-import { getMapPinColor, getMapPinSize } from './map-pin.utils';
+import { getMapPinBorderColor, getMapPinColor, getMapPinSize } from './map-pin.utils';
 
 const markerIconCache = new Map<string, L.DivIcon>();
 
 const getOrCreateCustomMarkerIcon = (
   color: string = theme.colors.primaryEco,
   size: number = 40,
+  borderColor: string = theme.colors.white,
 ): L.DivIcon => {
-  const cacheKey = `${color}-${String(size)}`;
+  const cacheKey = `${color}-${String(size)}-${borderColor}`;
   const cached = markerIconCache.get(cacheKey);
   if (cached !== undefined) {
     return cached;
@@ -22,6 +23,9 @@ const getOrCreateCustomMarkerIcon = (
 
   const sizeStr = size.toString();
   const iconSizeStr = Math.round(size * 0.5).toString();
+  const hasCustomBorder = borderColor !== theme.colors.white;
+  const borderWidthPx = hasCustomBorder ? '3px' : '2px';
+  const arrowColor = hasCustomBorder ? borderColor : color;
   const icon = L.divIcon({
     className: 'custom-leaflet-marker-pin',
     html: `
@@ -31,7 +35,7 @@ const getOrCreateCustomMarkerIcon = (
           height: ${sizeStr}px;
           background-color: ${color};
           border-radius: 50%;
-          border: 2px solid #FFFFFF;
+          border: ${borderWidthPx} solid ${borderColor};
           display: flex;
           align-items: center;
           justify-content: center;
@@ -49,7 +53,7 @@ const getOrCreateCustomMarkerIcon = (
           height: 0;
           border-left: 6px solid transparent;
           border-right: 6px solid transparent;
-          border-top: 8px solid ${color};
+          border-top: 8px solid ${arrowColor};
           margin-top: -2px;
         "></div>
       </div>
@@ -193,6 +197,7 @@ export default function LeafletMap({
           const markerIcon = getOrCreateCustomMarkerIcon(
             getMapPinColor(event, appTheme),
             getMapPinSize(event),
+            getMapPinBorderColor(event, appTheme),
           );
 
           return (
