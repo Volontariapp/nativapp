@@ -122,11 +122,11 @@ describe('EventDetailScreen leave a live event', () => {
     expect(queryByText(LEAVE_LABEL)).toBeNull();
   });
 
-  it('does not offer to join a live event the user is not part of', () => {
+  it('offers to join a live event the user is not part of', () => {
     mockParticipations.data = { pages: [{ ids: [] }] };
-    const { queryByText } = renderScreen(createLiveEvent());
+    const { getByText, queryByText } = renderScreen(createLiveEvent());
     expect(queryByText(LEAVE_LABEL)).toBeNull();
-    expect(queryByText('Rejoindre')).toBeNull();
+    expect(getByText('Rejoindre')).toBeTruthy();
   });
 
   it.each([EventState.EVENT_STATE_FINISHED, EventState.EVENT_STATE_CANCELLED])(
