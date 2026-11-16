@@ -31,6 +31,8 @@ export function EventOrganizer({ organizerId }: EventOrganizerProps) {
         onPress={() => {
           navigation.navigate('PublicProfile', { userId: organizerId });
         }}
+        accessibilityRole="button"
+        accessibilityLabel={`Voir le profil de l'organisateur ${user?.pseudo ?? ''}`}
       >
         {isLoading ? (
           <ActivityIndicator size="small" color={theme.colors.primarySocio} />

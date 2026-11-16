@@ -1,22 +1,29 @@
 import { View, StyleSheet } from 'react-native';
 import { AppText } from '@/components/typography/AppText';
-import { useStyles } from '@/context/ThemeContext';
+import { useAppTheme, useStyles } from '@/context/ThemeContext';
+import { getEventTone } from '@/components/profile/event-tone.utils';
 import type { AppTheme } from '@/shared/themes/theme';
+import type { AppEvent } from '@/api/event/event.api';
 import type { Requirement } from '@volontariapp/contracts';
 
 interface EventRequirementsProps {
   requirements: Requirement[];
+  eventType?: AppEvent['type'];
 }
 
-export function EventRequirements({ requirements }: EventRequirementsProps) {
+export function EventRequirements({ requirements, eventType }: EventRequirementsProps) {
+  const { theme } = useAppTheme();
   const styles = useStyles(createStyles);
+  const bulletColor =
+    eventType !== undefined ? getEventTone(eventType, theme).accent : theme.colors.primarySocio;
+
   return (
     <View style={styles.section}>
       <AppText style={styles.title}>À ramener</AppText>
 
       {requirements.map((req) => (
         <View key={req.id} style={styles.itemContainer}>
-          <View style={styles.bulletPoint} />
+          <View style={[styles.bulletPoint, { backgroundColor: bulletColor }]} />
           <AppText style={styles.itemText}>{req.name}</AppText>
         </View>
       ))}

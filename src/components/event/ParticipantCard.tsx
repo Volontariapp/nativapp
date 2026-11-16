@@ -1,8 +1,9 @@
 import React from 'react';
 import { View, StyleSheet, Pressable, ActivityIndicator, type ViewStyle } from 'react-native';
-import { Image } from 'expo-image';
 import Feather from 'react-native-vector-icons/Feather';
 import { AppText } from '@/components/typography/AppText';
+import { UserAvatar } from '@/components/media/UserAvatar';
+import { resolveAvatarUrl } from '@/api/user/resolve-avatar-url';
 import { useAppTheme, useStyles } from '@/context/ThemeContext';
 import type { AppTheme } from '@/shared/themes/theme';
 import type { UserWeb } from '@volontariapp/contracts';
@@ -33,7 +34,6 @@ export function ParticipantCard({
   const styles = useStyles(createStyles);
   const rankColor = useRankTextColor(participant.id);
 
-  const avatarUri = participant.logoPath ?? `https://i.pravatar.cc/150?u=${participant.id}`;
   const isChecked = isCheckedIn === true;
 
   return (
@@ -49,7 +49,7 @@ export function ParticipantCard({
       accessibilityRole="button"
       accessibilityLabel={`Participant ${participant.pseudo}`}
     >
-      <Image source={{ uri: avatarUri }} style={styles.avatar} />
+      <UserAvatar uri={resolveAvatarUrl(participant)} size={44} style={styles.avatar} />
 
       <View style={styles.content}>
         <View style={styles.topRow}>
@@ -213,7 +213,7 @@ const createStyles = (theme: AppTheme) =>
       marginLeft: theme.spacing.sm,
     },
     checkInButtonActive: {
-      backgroundColor: '#f0fdf4',
+      backgroundColor: theme.colors.badgeEcoBackground,
       borderColor: theme.colors.primaryEco,
     },
     checkInButtonInactive: {
@@ -234,7 +234,7 @@ const createStyles = (theme: AppTheme) =>
       marginLeft: theme.spacing.sm,
     },
     statusBadgePresent: {
-      backgroundColor: '#f0fdf4',
+      backgroundColor: theme.colors.badgeEcoBackground,
     },
     statusBadgeAbsent: {
       backgroundColor: theme.colors.lightGrey,

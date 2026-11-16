@@ -2,6 +2,7 @@ import { View, StyleSheet } from 'react-native';
 import { AppText } from '@/components/typography/AppText';
 import { AppIcons } from '@/components/media/AppIcons';
 import { useAppTheme, useStyles } from '@/context/ThemeContext';
+import { getEventTone } from '@/components/profile/event-tone.utils';
 import type { AppTheme } from '@/shared/themes/theme';
 import type { AppEvent } from '@/api/event/event.api';
 
@@ -12,6 +13,7 @@ interface EventInfoCardsProps {
 export function EventInfoCards({ event }: EventInfoCardsProps) {
   const { theme } = useAppTheme();
   const styles = useStyles(createStyles);
+  const tone = getEventTone(event.type, theme);
   let dateString = 'À définir';
   if (event.startAt) {
     try {
@@ -30,8 +32,8 @@ export function EventInfoCards({ event }: EventInfoCardsProps) {
   return (
     <View style={styles.container}>
       <View style={styles.card}>
-        <AppIcons icon="calendar" iconLibrary="Feather" size={24} color={theme.colors.warning} />
-        <AppText style={styles.label}>Date & Time</AppText>
+        <AppIcons icon="calendar" iconLibrary="Feather" size={24} color={tone.accent} />
+        <AppText style={styles.label}>Date et heure</AppText>
         <AppText style={styles.value} numberOfLines={2}>
           {dateString}
         </AppText>
@@ -42,9 +44,9 @@ export function EventInfoCards({ event }: EventInfoCardsProps) {
           icon="map-pin"
           iconLibrary="Feather"
           size={24}
-          color={theme.colors.primarySocio}
+          color={tone.accent}
         />
-        <AppText style={styles.label}>Location</AppText>
+        <AppText style={styles.label}>Lieu</AppText>
         <AppText style={styles.value} numberOfLines={2}>
           {event.localisationName ? event.localisationName : 'Non spécifié'}
         </AppText>
