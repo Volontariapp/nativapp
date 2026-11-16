@@ -211,14 +211,12 @@ export function EventDetailScreen({ route }: Props): React.JSX.Element {
     () =>
       event.state === EventState.EVENT_STATE_PUBLISHED ||
       String(event.state) === EventState[EventState.EVENT_STATE_PUBLISHED] ||
-      event.state === EventState.EVENT_STATE_IN_PROGRESS ||
-      String(event.state) === EventState[EventState.EVENT_STATE_IN_PROGRESS] ||
       event.state === EventState.EVENT_STATE_DRAFT ||
       String(event.state) === EventState[EventState.EVENT_STATE_DRAFT],
     [event.state],
   );
 
-  // Un participant peut toujours quitter un evenement en cours ; le rejoindre se fait depuis l'ecran direct.
+  // Un événement en cours (non terminé) peut être rejoint ou quitté depuis sa fiche détail.
   const isLiveNow = isEventJoinableLive(event, Date.now());
 
   const { userId } = useAuth();
@@ -350,7 +348,7 @@ export function EventDetailScreen({ route }: Props): React.JSX.Element {
 
       <EventDetailBody event={optimisticEvent} />
 
-      {!isOrganizer && (isJoinable || (isLiveNow && isJoined)) && (
+      {!isOrganizer && (isJoinable || isLiveNow) && (
         <JoinBar
           isJoined={isJoined}
           isPending={isJoined ? isUnparticipating : isParticipating}
