@@ -5,6 +5,7 @@ import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import Feather from 'react-native-vector-icons/Feather';
 import { Image } from 'expo-image';
 import { AppText } from '@/components/typography/AppText';
+import { EventPointsBadge } from '@/components/event/EventPointsBadge';
 import { EventStatusBadge } from '@/components/event/EventStatusBadge';
 import { getEventImageUri } from '@/api/event/event-cover.utils';
 import type { AppEvent } from '@/api/event/event.api';
@@ -108,6 +109,12 @@ export function UpcomingEventCard({
               {event.localisationName}
             </AppText>
           </View>
+          <EventPointsBadge
+            event={event}
+            variant="chip"
+            style={styles.pointsChip}
+            textStyle={styles.pointsText}
+          />
         </View>
       </View>
     </Pressable>
@@ -191,5 +198,16 @@ const createStyles = (theme: AppTheme) =>
       marginLeft: theme.spacing.sm - 2,
       fontSize: theme.typography.fontSize.xs,
       color: theme.colors.grey,
+    },
+    pointsChip: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      marginTop: theme.spacing.xs,
+    },
+    pointsText: {
+      marginLeft: theme.spacing.sm - 2,
+      fontSize: theme.typography.fontSize.xs,
+      fontWeight: theme.typography.fontWeight.semibold,
+      color: theme.colors.primaryEco,
     },
   });

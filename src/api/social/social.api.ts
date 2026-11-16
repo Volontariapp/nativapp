@@ -341,6 +341,25 @@ export const socialApi = {
   },
 
   /**
+   * Récupère la liste des abonnés de l'utilisateur connecté.
+   */
+  async getMyFollowers(params?: { page?: number; limit?: number }): Promise<ListUsersWebResponse> {
+    const query = new URLSearchParams();
+    if (params?.page !== undefined) query.append('pagination[page]', params.page.toString());
+    if (params?.limit !== undefined) query.append('pagination[limit]', params.limit.toString());
+
+    const queryString = query.toString();
+    const path = queryString
+      ? `${SOCIAL_ENDPOINTS.GET_FOLLOWERS_SELF.path}?${queryString}`
+      : SOCIAL_ENDPOINTS.GET_FOLLOWERS_SELF.path;
+
+    return await apiFetch<ListUsersWebResponse>(path, {
+      method: SOCIAL_ENDPOINTS.GET_FOLLOWERS_SELF.method,
+      requiresAuth: SOCIAL_ENDPOINTS.GET_FOLLOWERS_SELF.requiresAuth,
+    });
+  },
+
+  /**
    * Récupère la liste des utilisateurs suivis par un utilisateur donné.
    */
   async getFollows(

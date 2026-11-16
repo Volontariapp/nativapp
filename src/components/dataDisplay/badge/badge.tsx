@@ -14,6 +14,8 @@ export function Badge({
   showLabel = false,
   onPress,
   disableModal = false,
+  awardedAt,
+  customDescription,
   style,
   testID,
 }: BadgeProps): React.JSX.Element {
@@ -59,6 +61,8 @@ export function Badge({
         <BadgeModal
           visible={modalVisible}
           variant={variant}
+          awardedAt={awardedAt}
+          customDescription={customDescription}
           onClose={() => {
             setModalVisible(false);
           }}

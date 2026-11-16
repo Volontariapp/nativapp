@@ -7,7 +7,7 @@ import { useAppTheme } from '@/context/ThemeContext';
 import { AppIconsButton } from '@/components/buttons/AppIconsButton';
 import type { AppEvent } from '@/api/event/event.api';
 import { CustomMarker } from './MapPin';
-import { EventType } from '@volontariapp/contracts';
+import { getMapPinBorderColor, getMapPinColor, getMapPinSize } from './map-pin.utils';
 import {
   useFloatingTabBarOffset,
   PREVUE_CARD_HEIGHT_ESTIMATE,
@@ -185,12 +185,9 @@ export default function AppMap({
                 latitude: event.location.latitude,
                 longitude: event.location.longitude,
               }}
-              color={
-                event.type === EventType.EVENT_TYPE_SOCIAL ||
-                (event.type as unknown) === 'EVENT_TYPE_SOCIAL'
-                  ? theme.colors.primarySocio
-                  : theme.colors.primaryEco
-              }
+              color={getMapPinColor(event, appTheme)}
+              borderColor={getMapPinBorderColor(event, appTheme)}
+              size={getMapPinSize(event)}
               onPress={() => {
                 handleMarkerPress(event);
               }}

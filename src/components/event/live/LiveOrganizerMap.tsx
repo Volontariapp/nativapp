@@ -8,12 +8,8 @@ import type { AppTheme } from '@/shared/themes/theme';
 import type { Coordinates } from '@/services/routing.service';
 import type { LiveOrganizerPosition } from '@/hooks/live-organizer.types';
 import { formatPositionAge } from '@/hooks/live-organizer.utils';
-import {
-  labelInitial,
-  LIVE_ORGANIZER_APPROXIMATE_NOTE,
-  LIVE_ORGANIZER_EMPTY_MESSAGE,
-  resolveParticipantLabel,
-} from './live-organizer.utils';
+import { LiveOrganizerList } from './LiveOrganizerList';
+import { LIVE_ORGANIZER_APPROXIMATE_NOTE, resolveParticipantLabel } from './live-organizer.utils';
 
 export interface LiveOrganizerMapProps {
   eventTitle: string;
@@ -34,6 +30,7 @@ export function LiveOrganizerMap({
   const { theme } = useAppTheme();
   const styles = useStyles(createStyles);
   const entries = positions.map((position) => ({
+    userId: position.userId,
     position,
     label: resolveParticipantLabel(position.userId, participants),
     age: formatPositionAge(position.updatedAt, now),
@@ -74,23 +71,7 @@ export function LiveOrganizerMap({
           ))}
         </MapView>
       </View>
-      {entries.length === 0 ? (
-        <AppText style={styles.empty}>{LIVE_ORGANIZER_EMPTY_MESSAGE}</AppText>
-      ) : (
-        <View style={styles.list}>
-          {entries.map(({ position, label, age }) => (
-            <View key={position.userId} style={styles.row}>
-              <View style={styles.avatar}>
-                <AppText style={styles.avatarText}>{labelInitial(label)}</AppText>
-              </View>
-              <AppText style={styles.rowLabel} numberOfLines={1}>
-                {label}
-              </AppText>
-              <AppText style={styles.rowAge}>{age}</AppText>
-            </View>
-          ))}
-        </View>
-      )}
+      <LiveOrganizerList entries={entries} />
       <AppText style={styles.note}>{LIVE_ORGANIZER_APPROXIMATE_NOTE}</AppText>
     </View>
   );
@@ -120,40 +101,6 @@ const createStyles = (theme: AppTheme) =>
     map: {
       width: '100%',
       height: '100%',
-    },
-    empty: {
-      fontSize: theme.typography.fontSize.sm,
-      color: theme.colors.grey,
-    },
-    list: {
-      gap: theme.spacing.xs,
-    },
-    row: {
-      flexDirection: 'row',
-      alignItems: 'center',
-      gap: theme.spacing.sm,
-    },
-    avatar: {
-      width: 24,
-      height: 24,
-      borderRadius: 12,
-      alignItems: 'center',
-      justifyContent: 'center',
-      backgroundColor: theme.colors.primarySocio,
-    },
-    avatarText: {
-      fontSize: theme.typography.fontSize.xs,
-      fontWeight: theme.typography.fontWeight.bold,
-      color: theme.colors.white,
-    },
-    rowLabel: {
-      flex: 1,
-      fontSize: theme.typography.fontSize.sm,
-      color: theme.colors.text,
-    },
-    rowAge: {
-      fontSize: theme.typography.fontSize.xs,
-      color: theme.colors.grey,
     },
     note: {
       fontSize: theme.typography.fontSize.xs,

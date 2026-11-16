@@ -146,24 +146,18 @@ function DateFilterContent({
           />
         </View>
 
-        {/* Calendar */}
         <View style={styles.calendarWrapper}>
           <AppCalendar
             current={tempDate ?? getTodayString()}
+            minDate={getTodayString()}
             markedDates={markedDates}
             onDayPress={handleDayPress}
             containerStyle={styles.calendarContainer}
           />
         </View>
 
-        {/* Actions */}
         <View style={styles.actionContainer}>
-          <AppButton
-            text="Appliquer"
-            variant="eco"
-            size="default"
-            onPress={handleConfirm}
-          />
+          <AppButton text="Appliquer" variant="eco" size="default" onPress={handleConfirm} />
         </View>
       </Pressable>
     </Pressable>

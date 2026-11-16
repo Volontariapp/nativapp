@@ -1,5 +1,5 @@
-import React from 'react';
-import { View, StyleSheet } from 'react-native';
+import React, { useState } from 'react';
+import { View, StyleSheet, Pressable } from 'react-native';
 import { Image } from 'expo-image';
 import Icon from 'react-native-vector-icons/Feather';
 import { AppText } from '@/components/typography/AppText';
@@ -10,6 +10,8 @@ import { RankFrame } from '@/components/rank/rank-frame';
 
 import type { ProfileStatItem } from './ProfileStats';
 
+export const EMPTY_BIO_PLACEHOLDER = 'Aucune biographie pour le moment';
+
 interface ProfileHeaderProps {
   /** Utilisateur du profil : sert à poser le cadre de classement autour du pseudo et de la bio. */
   userId?: string;
@@ -17,6 +19,7 @@ interface ProfileHeaderProps {
   avatarUrl?: string;
   bio?: string;
   impactScore?: number;
+  onRankPress?: () => void;
   stats?: ProfileStatItem[];
   headerAction?: React.ReactNode;
   bioAction?: React.ReactNode;
@@ -28,39 +31,75 @@ export const ProfileHeader = ({
   avatarUrl,
   bio,
   impactScore,
+  onRankPress,
   stats = [],
   headerAction,
   bioAction,
 }: ProfileHeaderProps): React.JSX.Element => {
   const { theme } = useAppTheme();
   const styles = useStyles(createStyles);
+  const [failedAvatarUrl, setFailedAvatarUrl] = useState<string | null>(null);
 
   const displayedStats = stats.slice(0, 4);
+  const hasValidAvatar =
+    typeof avatarUrl === 'string' &&
+    avatarUrl.trim() !== '' &&
+    failedAvatarUrl !== avatarUrl;
+  const hasBio = typeof bio === 'string' && bio.trim() !== '';
+  const initials = pseudo.trim().slice(0, 2).toUpperCase();
 
   return (
     <View style={styles.container}>
       <View style={styles.topRow}>
         <View style={styles.avatarContainer}>
-          {typeof avatarUrl === 'string' && avatarUrl !== '' ? (
-            <Image source={{ uri: avatarUrl }} style={styles.avatarImage} />
+          {hasValidAvatar ? (
+            <Image
+              source={{ uri: avatarUrl }}
+              style={styles.avatarImage}
+              onError={() => {
+                setFailedAvatarUrl(avatarUrl);
+              }}
+            />
           ) : (
             <View style={styles.avatarPlaceholder}>
-              <Icon name="user" size={40} color={theme.colors.grey} />
+              {initials.length > 0 ? (
+                <AppText style={styles.avatarInitials}>{initials}</AppText>
+              ) : (
+                <Icon name="user" size={40} color={theme.colors.grey} />
+              )}
             </View>
           )}
         </View>
 
         <View style={styles.statsContainer}>
-          {displayedStats.map((stat) => (
-            <View key={stat.label} style={styles.statItem}>
-              <AppText style={styles.statValue} numberOfLines={1}>
-                {stat.value}
-              </AppText>
-              <AppText style={styles.statLabel} numberOfLines={1}>
-                {stat.label}
-              </AppText>
-            </View>
-          ))}
+          {displayedStats.map((stat) =>
+            stat.onPress ? (
+              <Pressable
+                key={stat.label}
+                testID={stat.testID}
+                style={({ pressed }) => [styles.statItem, pressed && styles.statItemPressed]}
+                onPress={stat.onPress}
+                accessibilityRole="button"
+                accessibilityLabel={`${stat.label}: ${String(stat.value)}`}
+              >
+                <AppText style={styles.statValue} numberOfLines={1}>
+                  {stat.value}
+                </AppText>
+                <AppText style={styles.statLabel} numberOfLines={1}>
+                  {stat.label}
+                </AppText>
+              </Pressable>
+            ) : (
+              <View key={stat.label} testID={stat.testID} style={styles.statItem}>
+                <AppText style={styles.statValue} numberOfLines={1}>
+                  {stat.value}
+                </AppText>
+                <AppText style={styles.statLabel} numberOfLines={1}>
+                  {stat.label}
+                </AppText>
+              </View>
+            ),
+          )}
         </View>
       </View>
 
@@ -68,18 +107,29 @@ export const ProfileHeader = ({
         <View style={styles.bottomSection}>
           <View style={styles.nameRow}>
             <AppText style={styles.userName}>{pseudo}</AppText>
-            {impactScore !== undefined && (
-              <View testID="profile-rank-chip" style={styles.rankChip}>
-                <AppText style={styles.rankChipText}>
-                  {getImpactRankStatus(impactScore).current.name}
-                </AppText>
-              </View>
-            )}
+            {impactScore !== undefined &&
+              (onRankPress ? (
+                <Pressable
+                  testID="profile-rank-chip"
+                  style={({ pressed }) => [styles.rankChip, pressed && styles.statItemPressed]}
+                  onPress={onRankPress}
+                  accessibilityRole="button"
+                  accessibilityLabel={`Rang d'impact : ${getImpactRankStatus(impactScore).current.name}`}
+                >
+                  <AppText style={styles.rankChipText}>
+                    {getImpactRankStatus(impactScore).current.name}
+                  </AppText>
+                </Pressable>
+              ) : (
+                <View testID="profile-rank-chip" style={styles.rankChip}>
+                  <AppText style={styles.rankChipText}>
+                    {getImpactRankStatus(impactScore).current.name}
+                  </AppText>
+                </View>
+              ))}
           </View>
-          <AppText style={styles.bioText}>
-            {typeof bio === 'string' && bio.trim() !== ''
-              ? bio
-              : "Aucune bio n'a été renseignée pour le moment. Raconte-nous un peu qui tu es !"}
+          <AppText style={[styles.bioText, !hasBio && styles.bioPlaceholder]}>
+            {hasBio ? bio : EMPTY_BIO_PLACEHOLDER}
           </AppText>
           {headerAction !== undefined && headerAction !== null && (
             <View style={styles.actionContainer}>{headerAction}</View>
@@ -118,6 +168,11 @@ const createStyles = (theme: AppTheme) =>
       borderColor: theme.colors.white,
       ...theme.shadows.card,
     },
+    avatarInitials: {
+      fontSize: theme.typography.fontSize.xl,
+      fontWeight: theme.typography.fontWeight.bold,
+      color: theme.colors.grey,
+    },
     avatarImage: {
       width: 80,
       height: 80,
@@ -135,6 +190,9 @@ const createStyles = (theme: AppTheme) =>
     statItem: {
       flex: 1,
       alignItems: 'center',
+    },
+    statItemPressed: {
+      opacity: 0.7,
     },
     statValue: {
       fontSize: theme.typography.fontSize.xl,
@@ -178,6 +236,10 @@ const createStyles = (theme: AppTheme) =>
       lineHeight: 20,
       color: theme.colors.text,
       marginBottom: theme.spacing.md,
+    },
+    bioPlaceholder: {
+      color: theme.colors.grey,
+      fontStyle: 'italic',
     },
     actionContainer: {
       marginBottom: theme.spacing.md,

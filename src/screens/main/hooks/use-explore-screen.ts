@@ -16,6 +16,8 @@ import { dedupeById } from '@/shared/utils/dedupe-by-id';
 import { useElapsed } from '@/hooks/use-elapsed';
 import {
   buildExploreSearchParams,
+  isMatchingSelectedDate,
+  isUpcomingMapEvent,
   isWithinDistance,
   shouldLoadMoreMapEvents,
 } from './explore-search.utils';
@@ -99,9 +101,11 @@ export function useExploreScreen(): UseExploreScreenResult {
   const hasWaitedForLocation = useElapsed(LOCATION_WAIT_MS);
   const canSearch = center !== undefined || isPermissionDenied || hasWaitedForLocation;
 
+  const endAtFrom = useMemo(() => new Date().toISOString(), []);
+
   const searchParams = useMemo(
-    () => buildExploreSearchParams({ center, distanceKm: selectedDistance }),
-    [center, selectedDistance],
+    () => buildExploreSearchParams({ center, distanceKm: selectedDistance, endAtFrom }),
+    [center, selectedDistance, endAtFrom],
   );
 
   const {
@@ -139,7 +143,11 @@ export function useExploreScreen(): UseExploreScreenResult {
   const [selectedDate, setSelectedDate] = useState<string | null>(null);
 
   const filteredEvents = useMemo(() => {
+    const nowMs = Date.now();
     return events.filter((event) => {
+      // Temporal filter: only upcoming or ongoing events
+      if (!isUpcomingMapEvent(event, nowMs)) return false;
+
       // Category filter
       if (selectedCategory === 'ECOLOGY') {
         const isEco =
@@ -166,21 +174,7 @@ export function useExploreScreen(): UseExploreScreenResult {
       if (!isWithinDistance(event, center, selectedDistance)) return false;
 
       // Date filter
-      if (selectedDate !== null && event.startAt.length > 0) {
-        const eventDate = event.startAt.split('T')[0];
-        if (selectedDate.includes('-')) {
-          if (eventDate !== selectedDate) return false;
-        } else if (selectedDate.includes('/')) {
-          const parts = selectedDate.split('/');
-          if (parts.length === 3 && parts[0] != null && parts[1] != null && parts[2] != null) {
-            const day = parts[0].padStart(2, '0');
-            const month = parts[1].padStart(2, '0');
-            let year = parts[2];
-            if (year.length === 2) year = `20${year}`;
-            if (eventDate !== `${year}-${month}-${day}`) return false;
-          }
-        }
-      }
+      if (!isMatchingSelectedDate(event, selectedDate)) return false;
 
       return true;
     });

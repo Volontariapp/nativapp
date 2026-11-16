@@ -4,6 +4,7 @@ import type { DimensionValue } from 'react-native';
 import { AppText } from '@/components/typography/AppText';
 import { UserAvatar } from '@/components/media/UserAvatar';
 import { useAppTheme, useStyles } from '@/context/ThemeContext';
+import { getEventTone } from '@/components/profile/event-tone.utils';
 import { useEventParticipants } from '@/api/user/hooks/use-event-participants';
 import { resolveAvatarUrl } from '@/api/user/resolve-avatar-url';
 import type { AppTheme } from '@/shared/themes/theme';
@@ -23,6 +24,7 @@ export const EventParticipants = React.memo(function EventParticipants({
 }: EventParticipantsProps): React.JSX.Element {
   const { theme } = useAppTheme();
   const styles = useStyles(createStyles);
+  const tone = getEventTone(event.type, theme);
   const { data: participants } = useEventParticipants(event.id);
   // La liste complete n'est montee (et ne charge rien) qu'a la premiere ouverture, puis gardee
   // montee pour que la fermeture garde son animation.
@@ -40,7 +42,8 @@ export const EventParticipants = React.memo(function EventParticipants({
     setIsListOpen(false);
   }, []);
   const { currentPart, maxPart, fillPercentage } = useMemo(() => {
-    const current = Math.max(1, event.currentParticipants);
+    const loadedCount = participants?.length ?? 0;
+    const current = Math.max(1, event.currentParticipants, loadedCount);
     const max = event.maxParticipants;
     const percentage = max > 0 ? Math.min(100, Math.max(0, (current / max) * 100)) : 0;
 
@@ -49,7 +52,7 @@ export const EventParticipants = React.memo(function EventParticipants({
       maxPart: max,
       fillPercentage: percentage,
     };
-  }, [event.currentParticipants, event.maxParticipants]);
+  }, [event.currentParticipants, event.maxParticipants, participants?.length]);
 
   const displayCount = Math.min(currentPart, MAX_DISPLAYED_AVATARS);
   const remaining = currentPart - displayCount;
@@ -67,7 +70,7 @@ export const EventParticipants = React.memo(function EventParticipants({
           accessibilityLabel="Voir tous les participants"
           style={({ pressed }) => [pressed && styles.linkPressed]}
         >
-          <AppText style={styles.link}>voir plus</AppText>
+          <AppText style={[styles.link, { color: tone.accent }]}>voir plus</AppText>
         </Pressable>
       </View>
 
@@ -88,7 +91,13 @@ export const EventParticipants = React.memo(function EventParticipants({
             />
           ))}
           {remaining > 0 && (
-            <View style={[styles.remainingBadge, styles.avatarOverlap, { zIndex: 0 }]}>
+            <View
+              style={[
+                styles.remainingBadge,
+                styles.avatarOverlap,
+                { backgroundColor: tone.accent, zIndex: 0 },
+              ]}
+            >
               <AppText style={styles.remainingText}>+{remaining}</AppText>
             </View>
           )}
@@ -106,7 +115,10 @@ export const EventParticipants = React.memo(function EventParticipants({
         <View
           style={[
             styles.progressBarFill,
-            { width: `${String(fillPercentage)}%` as DimensionValue },
+            {
+              width: `${String(fillPercentage)}%` as DimensionValue,
+              backgroundColor: tone.accent,
+            },
           ]}
         />
       </View>

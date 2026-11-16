@@ -1,9 +1,14 @@
-import React, { useCallback } from 'react';
-import { View, StyleSheet, FlatList } from 'react-native';
+import React, { useCallback, useState } from 'react';
+import { View, StyleSheet, FlatList, Pressable } from 'react-native';
 import { Image } from 'expo-image';
 import { AppText } from '@/components/typography/AppText';
 import { AppIcons } from '@/components/media/AppIcons';
-import { Badge, resolveBadgeVariant } from '@/components/dataDisplay/badge';
+import {
+  Badge,
+  BadgeModal,
+  resolveBadgeVariant,
+  type CustomBadgeDetails,
+} from '@/components/dataDisplay/badge';
 import { useAppTheme, useStyles } from '@/context/ThemeContext';
 import type { AppTheme } from '@/shared/themes/theme';
 import type { BadgeWeb } from '@volontariapp/contracts';
@@ -12,13 +17,45 @@ export interface ProfileBadgesProps {
   badges?: (BadgeWeb | string)[];
 }
 
-const DEMO_BADGES: (BadgeWeb | string)[] = [
-  //   'EVENT_PARTICIPATION_TIER_4',
-  //   'EVENT_HYBRID_ECO_SOCIAL_TIER_1',
-  //   'EVENT_SOCIAL_TIER_2',
-  //   'SOCIAL_LIKE_COUNT_10',
-  //   'EVENT_HOST_COUNT_1',
-];
+interface BadgeMetadataCandidate {
+  id?: string;
+  slug?: string;
+  name?: string;
+  description?: string;
+  iconPath?: string;
+  awardedAt?: string;
+  obtainedAt?: string;
+  createdAt?: string;
+}
+
+function extractBadgeMetadata(item: BadgeWeb | string): {
+  description?: string;
+  awardedAt?: string;
+  iconPath?: string;
+  name?: string;
+} {
+  if (typeof item !== 'object') {
+    return {};
+  }
+  const candidate = item as BadgeMetadataCandidate;
+  const description =
+    typeof candidate.description === 'string' && candidate.description.trim() !== ''
+      ? candidate.description
+      : undefined;
+  const rawDate = candidate.awardedAt ?? candidate.obtainedAt ?? candidate.createdAt;
+  const awardedAt =
+    typeof rawDate === 'string' && rawDate.trim() !== '' ? rawDate : undefined;
+  const iconPath =
+    typeof candidate.iconPath === 'string' && candidate.iconPath.trim() !== ''
+      ? candidate.iconPath
+      : undefined;
+  const name =
+    typeof candidate.name === 'string' && candidate.name.trim() !== ''
+      ? candidate.name
+      : undefined;
+
+  return { description, awardedAt, iconPath, name };
+}
 
 /**
  * Liste horizontale des badges de l'utilisateur sur son profil.
@@ -27,38 +64,73 @@ const DEMO_BADGES: (BadgeWeb | string)[] = [
 export const ProfileBadges = ({ badges }: ProfileBadgesProps): React.JSX.Element => {
   const { theme } = useAppTheme();
   const styles = useStyles(createStyles);
+  const [selectedCustomBadge, setSelectedCustomBadge] = useState<CustomBadgeDetails | null>(
+    null,
+  );
 
-  const badgesList = badges != null && badges.length > 0 ? badges : DEMO_BADGES;
+  const badgesList = badges != null && badges.length > 0 ? badges : [];
 
   const renderItem = useCallback(
     ({ item }: { item: BadgeWeb | string }) => {
       const variant = resolveBadgeVariant(item);
+      const metadata = extractBadgeMetadata(item);
 
       if (variant != null) {
         return (
           <View style={styles.badgeItemContainer}>
-            <Badge variant={variant} showLabel size="md" />
+            <Badge
+              variant={variant}
+              showLabel
+              size="md"
+              awardedAt={metadata.awardedAt}
+              customDescription={metadata.description}
+            />
           </View>
         );
       }
 
-      const legacyItem = typeof item === 'object' ? item : null;
-      const legacyName = legacyItem?.name ?? (typeof item === 'string' ? item : 'Badge');
-      const iconPath = legacyItem?.iconPath;
+      const legacyName =
+        metadata.name ?? (typeof item === 'string' && item.trim() !== '' ? item : 'Badge');
+      const iconPath = metadata.iconPath;
 
       return (
-        <View style={styles.badgeItemContainer}>
+        <Pressable
+          style={({ pressed }) => [
+            styles.badgeItemContainer,
+            pressed && styles.fallbackPressed,
+          ]}
+          accessibilityRole="button"
+          accessibilityLabel={`Badge ${legacyName}`}
+          accessibilityHint="Appuyer pour afficher les détails de ce badge"
+          onPress={() => {
+            setSelectedCustomBadge({
+              name: legacyName,
+              description: metadata.description,
+              iconPath,
+              awardedAt: metadata.awardedAt,
+            });
+          }}
+        >
           <View style={styles.fallbackWrapper}>
             {typeof iconPath === 'string' && iconPath !== '' ? (
-              <Image source={{ uri: iconPath }} style={styles.fallbackImage} contentFit="contain" />
+              <Image
+                source={{ uri: iconPath }}
+                style={styles.fallbackImage}
+                contentFit="contain"
+              />
             ) : (
-              <AppIcons icon="award" iconLibrary="Feather" size={26} color={theme.colors.grey} />
+              <AppIcons
+                icon="award"
+                iconLibrary="Feather"
+                size={26}
+                color={theme.colors.grey}
+              />
             )}
           </View>
           <AppText style={styles.fallbackName} numberOfLines={1}>
             {legacyName}
           </AppText>
-        </View>
+        </Pressable>
       );
     },
     [styles, theme.colors.grey],
@@ -81,15 +153,26 @@ export const ProfileBadges = ({ badges }: ProfileBadgesProps): React.JSX.Element
   }
 
   return (
-    <FlatList
-      horizontal
-      showsHorizontalScrollIndicator={false}
-      style={styles.badgesRow}
-      contentContainerStyle={styles.listContent}
-      data={badgesList}
-      keyExtractor={keyExtractor}
-      renderItem={renderItem}
-    />
+    <>
+      <FlatList
+        horizontal
+        showsHorizontalScrollIndicator={false}
+        style={styles.badgesRow}
+        contentContainerStyle={styles.listContent}
+        data={badgesList}
+        keyExtractor={keyExtractor}
+        renderItem={renderItem}
+      />
+
+      <BadgeModal
+        visible={selectedCustomBadge !== null}
+        variant={null}
+        customBadge={selectedCustomBadge}
+        onClose={() => {
+          setSelectedCustomBadge(null);
+        }}
+      />
+    </>
   );
 };
 
@@ -107,6 +190,10 @@ const createStyles = (theme: AppTheme) =>
       alignItems: 'center',
       minWidth: 64,
       maxWidth: 80,
+    },
+    fallbackPressed: {
+      opacity: 0.75,
+      transform: [{ scale: 0.96 }],
     },
     fallbackWrapper: {
       width: 58,
