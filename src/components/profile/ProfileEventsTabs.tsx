@@ -42,8 +42,8 @@ const TABS: TabConfig[] = [
     key: 'created',
     icon: 'plus',
     activeVariant: 'eco',
-    title: 'Mes événements créés',
-    emptyText: 'Aucun événement créé pour le moment.',
+    title: 'Événements',
+    emptyText: 'Aucun événement pour le moment.',
   },
 ];
 

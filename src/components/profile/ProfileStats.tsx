@@ -8,6 +8,8 @@ export interface ProfileStatItem {
   label: string;
   value: number;
   color: string;
+  onPress?: () => void;
+  testID?: string;
 }
 
 interface ProfileStatsProps {
@@ -22,7 +24,14 @@ export const ProfileStats = ({ stats }: ProfileStatsProps): React.JSX.Element =>
   return (
     <View style={styles.statsContainer}>
       {stats.map((stat) => (
-        <StatCard key={stat.label} label={stat.label} value={stat.value} color={stat.color} />
+        <StatCard
+          key={stat.label}
+          label={stat.label}
+          value={stat.value}
+          color={stat.color}
+          onPress={stat.onPress}
+          testID={stat.testID}
+        />
       ))}
     </View>
   );

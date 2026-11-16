@@ -35,12 +35,21 @@ export interface BadgeDefinition {
   isHybrid?: boolean;
 }
 
+export interface CustomBadgeDetails {
+  name: string;
+  description?: string;
+  iconPath?: string;
+  awardedAt?: string;
+}
+
 export interface BadgeProps {
   variant: BadgeVariant;
   size?: BadgeSize;
   showLabel?: boolean;
   onPress?: (variant: BadgeVariant) => void;
   disableModal?: boolean;
+  awardedAt?: string;
+  customDescription?: string;
   style?: StyleProp<ViewStyle>;
   testID?: string;
 }
@@ -48,5 +57,8 @@ export interface BadgeProps {
 export interface BadgeModalProps {
   visible: boolean;
   variant: BadgeVariant | null;
+  customBadge?: CustomBadgeDetails | null;
+  awardedAt?: string;
+  customDescription?: string;
   onClose: () => void;
 }
