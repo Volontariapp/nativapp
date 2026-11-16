@@ -211,6 +211,8 @@ export function EventDetailScreen({ route }: Props): React.JSX.Element {
     () =>
       event.state === EventState.EVENT_STATE_PUBLISHED ||
       String(event.state) === EventState[EventState.EVENT_STATE_PUBLISHED] ||
+      event.state === EventState.EVENT_STATE_IN_PROGRESS ||
+      String(event.state) === EventState[EventState.EVENT_STATE_IN_PROGRESS] ||
       event.state === EventState.EVENT_STATE_DRAFT ||
       String(event.state) === EventState[EventState.EVENT_STATE_DRAFT],
     [event.state],
